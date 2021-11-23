@@ -95,7 +95,7 @@
  * @brief Get lense from ynode.label.
  *
  * @param[in] YNODE Node ynode which may not have the label set.
- * @return Lense of ynode.label or NULL.
+ * @return Lense of ay_ynode.label or NULL.
  */
 #define AY_LABEL_LENS(YNODE) \
     YNODE->label ? YNODE->label->lens : NULL
@@ -104,7 +104,7 @@
  * @brief Get lense from ynode.value.
  *
  * @param[in] YNODE Node ynode which may not have the value set.
- * @return Lense of ynode.value or NULL.
+ * @return Lense of ay_ynode.value or NULL.
  */
 #define AY_VALUE_LENS(YNODE) \
     YNODE->value ? YNODE->value->lens : NULL
@@ -113,7 +113,7 @@
  * @brief Get lense from ynode.snode.
  *
  * @param[in] YNODE Node ynode which may not have the snode set.
- * @return Lense of ynode.snode or NULL.
+ * @return Lense of ay_ynode.snode or NULL.
  */
 #define AY_SNODE_LENS(YNODE) \
     YNODE->snode ? YNODE->snode->lens : NULL
@@ -154,7 +154,9 @@
 /**
  * @brief Maximum size of regular expression (yang statement pattern).
  */
-#define AY_MAX_REGEX_SIZE 64
+#define AY_MAX_REGEX_SIZE 128
+
+/* error codes */
 
 #define AYE_MEMORY 1
 #define AYE_LENSE_NOT_FOUND 2
@@ -164,68 +166,124 @@
 #define AYE_IDENT_LIMIT 6
 #define AYE_REGEX_LIMIT 7
 
-#define AY_LV_TYPE_ANY   0
-#define AY_LV_TYPE_VALUE 2
-#define AY_LV_TYPE_LABEL 3
-
+/**
+ * @brief Check if lense tag belongs to ynode.label.
+ *
+ * @param[in] TAG Tag of the lense.
+ */
 #define AY_TAG_IS_LABEL(TAG) \
     ((TAG == L_LABEL) || (TAG == L_KEY) || (TAG == L_SEQ))
 
+/**
+ * @brief Check if lense tag belongs to ynode.value.
+ *
+ * @param[in] TAG Tag of the lense.
+ */
 #define AY_TAG_IS_VALUE(TAG) \
     ((tag == L_STORE) || (tag == L_VALUE))
 
+/**
+ * @brief Prefix of imported yang module which contains extensions for generated yang module.
+ */
 #define AY_EXT_PREFIX "augex"
+
+/**
+ * @brief Extension name for showing the path in the augeas data tree.
+ */
 #define AY_EXT_PATH "data-path"
 
-struct ay_ynode;
-
+/**
+ * @brief Wrapper for lense node.
+ *
+ * Interconnection of lense structures is not suitable for comfortable browsing. Therefore, an ay_lnode wrapper has
+ * been created that contains a better connection between the nodes.
+ * The lnode nodes are stored in the Sized array and the number of nodes should not be modified.
+ */
 struct ay_lnode {
-    struct ay_lnode *parent;
-    struct ay_lnode *next;
-    struct ay_lnode *child;
-    uint32_t descendants;
+    struct ay_lnode *parent;    /**< Pointer to the parent node. */
+    struct ay_lnode *next;      /**< Pointer to the next sibling node. */
+    struct ay_lnode *child;     /**< Pointer to the first child node. */
+    uint32_t descendants;       /**< Number of descendants in the subtree where current node is the root. */
 
-    struct lens *lens;
+    struct lens *lens;          /**< Pointer to lense node. Always set. */
 };
 
+/**
+ * @brief Type of the ynode.
+ */
 enum yang_type {
-    YN_UNKNOWN = 0,
-    YN_LEAF,
-    YN_LEAFLIST,
-    YN_LIST,
-    YN_CONTAINER,
-    YN_ROOT,
-    YN_KEY,
+    YN_UNKNOWN = 0,     /**< Unknown or undefined type. */
+    YN_LEAF,            /**< Yang statement "leaf". */
+    YN_LEAFLIST,        /**< Yang statement "leaf-list". */
+    YN_LIST,            /**< Yang statement "list". */
+    YN_CONTAINER,       /**< Yang statement "container". */
+    YN_KEY,             /**< Yang statement "leaf". Also indicates that node is a key in the yang "list". */
+    YN_ROOT,            /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
+                             It has no printing application only makes writing algorithms easier. */
 };
 
+/**
+ * @brief Node for printing the yang node.
+ *
+ * The ynode node represents the yang data node. It is generally created from a lense with tag L_SUBTREE, but can also
+ * be created later, in which case ay_ynode.snode is set to NULL. Nodes are stored in the Sized array, so if a node is
+ * added or removed from the array, then the ay_ynode pointers must be reset to the correct address so that the tree
+ * structure made sense. Functions ay_ynode_insert_* and ay_ynode_remove_node() are intended for these modifications.
+ * These modifications are applied in transformations and they are gradually applied in the ay_ynode_transformations(),
+ * which results in a print-ready yang format. The structure of the ynode tree should be adjusted in these
+ * transformations. The ynode tree is created by the ynode forest (it has multiple root nodes), which is made up of a
+ * lnode tree. In the ynode tree is always one root node with type YN_ROOT.
+ *
+ * Node ynode is also a bit like an augeas node. The Augeas manages its tree consisting of nodes that consist of
+ * a label, value and children. The same items contains ynode. Unfortunately, the ynode tree cannot be the same as the
+ * augeas tree, so an yang extension statement containing a path is added to the printed yang nodes to make the mapping
+ * between the two trees clear. This path generation is handled in the ay_print_yang_data_path().
+ *
+ * One ynode can contain multiple labels/values because they can be separated by the union operator ('|', L_UNION).
+ * So, for example, if a node has multiple labels, the ay_lnode_next_lv() returns the next one. (TODO)
+ *
+ * Note that choice-case node from yang laguage is not considered as a ynode. The ynode nodes are indirectly connected
+ * via ay_ynode.choice pointer, which serves as an identifier of that choice-case relationship.
+ */
 struct ay_ynode {
-    struct ay_ynode *parent;
-    struct ay_ynode *next;
-    struct ay_ynode *child;
-    uint32_t descendants;
+    struct ay_ynode *parent;    /**< Pointer to the parent node. */
+    struct ay_ynode *next;      /**< Pointer to the next sibling node. */
+    struct ay_ynode *child;     /**< Pointer to the first child node. */
+    uint32_t descendants;       /**< Number of descendants in the subtree where current node is the root. */
 
-    enum yang_type type;
-    struct ay_lnode *snode;  /* L_SUBTREE */
-    struct ay_lnode *label;  /* L_KEY, L_LABEL, L_SEQ */
-    struct ay_lnode *value;  /* L_STORE, L_VALUE */
-    struct ay_lnode *choice; /* L_UNION */
+    enum yang_type type;        /**< Type of the ynode. */
+    struct ay_lnode *snode;     /**< Pointer to the corresponding lnode with lense tag L_SUBTREE.
+                                     Can be NULL if the ynode was inserted by some transformation. */
+    struct ay_lnode *label;     /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL or L_SEQ.
+                                     Can be NULL. */
+    struct ay_lnode *value;     /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
+                                     Can be NULL. */
+    struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
+                                     Set if the node is under the influence of the union operator. */
 };
 
 struct lprinter_ctx;
+
+/**
+ * @brief Callback functions for debug printer.
+ */
 struct lprinter_ctx_f
 {
-    void (*main)(struct lprinter_ctx *);
-    ly_bool (*filter)(struct lprinter_ctx *);
-    void (*transition)(struct lprinter_ctx *);
-    void (*extension)(struct lprinter_ctx *);
+    void (*main)(struct lprinter_ctx *);        /**< Printer can start by this function. */
+    ly_bool (*filter)(struct lprinter_ctx *);   /**< To ignore a node so it doesn't print. */
+    void (*transition)(struct lprinter_ctx *);  /**< Transition function to the next node. */
+    void (*extension)(struct lprinter_ctx *);   /**< To print extended information for the node. */
 };
 
+/**
+ * @brief Context for the debug printer.
+ */
 struct lprinter_ctx
 {
-    uint32_t space;
-    void *data;
-    struct lprinter_ctx_f func;
-    struct ly_out *out;
+    uint32_t space;                 /**< Current indent. */
+    void *data;                     /**< General pointer to node. */
+    struct lprinter_ctx_f func;     /**< Callbacks to customize the print. */
+    struct ly_out *out;             /**< Output to which it is printed. */
 };
 
 struct yprinter_ctx
@@ -1091,11 +1149,11 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
     case YN_CONTAINER:
         ret = ay_print_yang_container(ctx, node);
         break;
-    case YN_ROOT:
-        ret = ay_print_yang_children(ctx, node);
-        break;
     case YN_KEY:
         ret = ay_print_yang_leaf_key(ctx, node);
+        break;
+    case YN_ROOT:
+        ret = ay_print_yang_children(ctx, node);
         break;
     }
 
@@ -1263,6 +1321,22 @@ ay_print_lnode_transition(struct lprinter_ctx *ctx)
     }
 }
 
+
+/**
+ * @brief For ay_lnode_next_lv(), find next label or value.
+ */
+#define AY_LV_TYPE_ANY   0
+
+/**
+ * @brief For ay_lnode_next_lv(), find next value.
+ */
+#define AY_LV_TYPE_VALUE 1
+
+/**
+ * @brief For ay_lnode_next_lv(), find next label.
+ */
+#define AY_LV_TYPE_LABEL 2
+
 static struct ay_lnode *
 ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
 {
@@ -1384,11 +1458,11 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     case YN_CONTAINER:
         ly_print(ctx->out, "%*s ynode_tag: YN_CONTAINER\n", ctx->space, "");
         break;
-    case YN_ROOT:
-        ly_print(ctx->out, "%*s ynode_tag: YN_ROOT\n", ctx->space, "");
-        break;
     case YN_KEY:
         ly_print(ctx->out, "%*s ynode_tag: YN_KEY\n", ctx->space, "");
+        break;
+    case YN_ROOT:
+        ly_print(ctx->out, "%*s ynode_tag: YN_ROOT\n", ctx->space, "");
         break;
     }
 
