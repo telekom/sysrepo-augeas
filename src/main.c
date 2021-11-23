@@ -1,5 +1,5 @@
 /**
- * @file augyang_main.c
+ * @file main.c
  * @author Adam Piecek <piecek@cesnet.cz>
  * @brief Main code for augyang executable file.
  *
@@ -302,7 +302,7 @@ int main(int argc, char **argv)
             outdir = optarg;
             break;
         case 's':
-            show = 1; 
+            show = 1;
             break;
         case 'v':
             vercode = aym_get_vercode(optarg);
