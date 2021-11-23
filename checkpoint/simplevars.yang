@@ -1,0 +1,26 @@
+module simplevars {
+  namespace "aug:simplevars";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container simplevars {
+    list entry {
+      key "key";
+      leaf key {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "$key";
+      }
+      leaf node {
+        type string {
+          pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+        }
+        augex:data-path "$key";
+      }
+    }
+  }
+}

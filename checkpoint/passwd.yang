@@ -1,0 +1,234 @@
+module passwd {
+  namespace "aug:passwd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container passwd {
+    list entry {
+      key "username";
+      leaf username {
+        type string {
+          pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+        }
+        augex:data-path "$username";
+      }
+      leaf password {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "$username/password";
+      }
+      leaf uid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "$username/uid";
+      }
+      leaf gid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "$username/gid";
+      }
+      leaf name {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "$username/name";
+      }
+      leaf home {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "$username/home";
+      }
+      leaf shell {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "$username/shell";
+      }
+    }
+    list nisentry {
+      key "username";
+      leaf username {
+        type string {
+          pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+        }
+        augex:data-path "$username";
+      }
+      leaf password {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@nis/password";
+      }
+      leaf uid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@nis/uid";
+      }
+      leaf gid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@nis/gid";
+      }
+      leaf name {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@nis/name";
+      }
+      leaf home {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@nis/home";
+      }
+      leaf shell {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "@nis/shell";
+      }
+    }
+    list nisdefault {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf password {
+        type string {
+          pattern "[^:\n]*";
+        }
+        augex:data-path "@nisdefault/password";
+      }
+      leaf uid {
+        type string {
+          pattern "([0-9]+){0,1}";
+        }
+        augex:data-path "@nisdefault/uid";
+      }
+      leaf gid {
+        type string {
+          pattern "([0-9]+){0,1}";
+        }
+        augex:data-path "@nisdefault/gid";
+      }
+      leaf name {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@nisdefault/name";
+      }
+      leaf home {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@nisdefault/home";
+      }
+      leaf shell {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "@nisdefault/shell";
+      }
+    }
+    list nisuserplus {
+      key "username";
+      leaf username {
+        type string {
+          pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+        }
+        augex:data-path "$username";
+      }
+      leaf password {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@+nisuser/password";
+      }
+      leaf uid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@+nisuser/uid";
+      }
+      leaf gid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@+nisuser/gid";
+      }
+      leaf name {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@+nisuser/name";
+      }
+      leaf home {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@+nisuser/home";
+      }
+      leaf shell {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "@+nisuser/shell";
+      }
+    }
+    list nisuserminus {
+      key "username";
+      leaf username {
+        type string {
+          pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+        }
+        augex:data-path "$username";
+      }
+      leaf password {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@-nisuser/password";
+      }
+      leaf uid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@-nisuser/uid";
+      }
+      leaf gid {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "@-nisuser/gid";
+      }
+      leaf name {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@-nisuser/name";
+      }
+      leaf home {
+        type string {
+          pattern "[^:\n]+";
+        }
+        augex:data-path "@-nisuser/home";
+      }
+      leaf shell {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "@-nisuser/shell";
+      }
+    }
+  }
+}

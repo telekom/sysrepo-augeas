@@ -1,0 +1,36 @@
+module csv {
+  namespace "aug:csv";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container csv {
+    list entry {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      choice entry {
+        case field {
+          leaf-list field {
+            type string {
+              pattern "([^\n\"#;])*";
+            }
+            augex:data-path "$key/$AY_UINT";
+          }
+        }
+        case field2 {
+          leaf-list field2 {
+            type string {
+              pattern "(\"[^\"#]*\")+";
+            }
+            augex:data-path "$key/$AY_UINT";
+          }
+        }
+      }
+    }
+  }
+}

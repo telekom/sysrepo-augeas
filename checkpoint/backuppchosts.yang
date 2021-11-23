@@ -1,0 +1,42 @@
+module backuppchosts {
+  namespace "aug:backuppchosts";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container backuppchosts {
+    list record {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf host {
+        type string {
+          pattern "[^#, \n\t/]+";
+        }
+        augex:data-path "$key/host";
+      }
+      leaf dhcp {
+        type string {
+          pattern "[^#, \n\t/]+";
+        }
+        augex:data-path "$key/dhcp";
+      }
+      leaf user {
+        type string {
+          pattern "[^#, \n\t/]+";
+        }
+        augex:data-path "$key/user";
+      }
+      leaf-list moreusers {
+        type string {
+          pattern "[^#, \n\t/]+";
+        }
+        augex:data-path "$key/moreusers";
+      }
+    }
+  }
+}

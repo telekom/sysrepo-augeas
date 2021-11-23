@@ -1,0 +1,26 @@
+module iproute2 {
+  namespace "aug:iproute2";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container iproute2 {
+    list record {
+      key "id";
+      leaf id {
+        type string {
+          pattern "(0x[0-9a-fA-F]+)|([0-9]+)";
+        }
+        augex:data-path "$id";
+      }
+      leaf node {
+        type string {
+          pattern "[a-zA-Z0-9/-]+";
+        }
+        augex:data-path "$id";
+      }
+    }
+  }
+}

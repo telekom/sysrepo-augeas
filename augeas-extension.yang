@@ -1,0 +1,9 @@
+module augeas-extension {
+    yang-version 1.1;
+    namespace "aug:augeas-extension";
+    prefix augex;
+
+    extension data-path {
+        argument "path";
+    }
+}
