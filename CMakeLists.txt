@@ -149,7 +149,7 @@ ExternalProject_Add(augeas
     CONFIGURE_COMMAND ${AUGEAS_DIR}/autogen.sh --gnulib-srcdir=${GNULIB_DIR} --disable-gnulib-tests --enable-debug
     BUILD_COMMAND make
     INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${AUGEAS_OBJS}
+    BUILD_BYPRODUCTS ${AUGEAS_OBJS} ${GNULIB_OBJS}
 )
 
 add_dependencies(augyang augeas)
