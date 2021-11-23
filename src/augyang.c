@@ -14,13 +14,13 @@
 
 #define _GNU_SOURCE
 
+#include <libyang/out.h>
 #include <libyang/tree.h>
 #include <libyang/tree_edit.h>
-#include <libyang/out.h>
 
+#include "augyang.h"
 #include "lens.h"
 #include "transform.h"
-#include "augyang.h"
 
 /**
  * @brief Alignment size of the output text when nesting.
@@ -218,7 +218,7 @@ enum yang_type {
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
     YN_KEY,             /**< Yang statement "leaf". Also indicates that node is a key in the yang "list". */
-    YN_ROOT,            /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
+    YN_ROOT             /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
                              It has no printing application only makes writing algorithms easier. */
 };
 
@@ -379,8 +379,8 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
 {
     (*ltree_size)++;
     *yforest_size = lens->tag == L_SUBTREE ?
-        *yforest_size + 1 :
-        *yforest_size;
+            *yforest_size + 1 :
+            *yforest_size;
     *l_rec |= lens->tag == L_REC;
 
     if (AY_LENSE_HAS_NO_CHILD(lens->tag)) {
@@ -634,7 +634,7 @@ ay_get_ident_standardized(char *ident, char *buffer)
 
     stop = (int64_t) strlen(ident);
     for (i = 0, j = 0; i < stop; i++, j++) {
-        switch(ident[i]) {
+        switch (ident[i]) {
         case '@':
             j--;
             break;
@@ -682,7 +682,7 @@ ay_get_regex_standardized(const struct regexp *rp, char *buffer)
     struct regex_map regmap[] = {
         {"[_.A-Za-z0-9][-_.A-Za-z0-9]*\\\\$?", "[_.A-Za-z0-9][-_.A-Za-z0-9]*"},
     };
-    //TODO: if right side of the regsub rule is bigger -> danger of valgrind error
+    // TODO: if right side of the regsub rule is bigger -> danger of valgrind error
     struct regex_map regsub[] = {
         {"\\/", "/"}
     };
@@ -705,9 +705,9 @@ ay_get_regex_standardized(const struct regexp *rp, char *buffer)
             hit = (char *)strstr(regex, regdel[i]);
             if (hit) {
                 /* remove needle from haystack */
-                memmove(hit, hit + strlen(regdel[i]), (regex + strlen(regex) + 1) - (hit + strlen(regdel[i]))); 
+                memmove(hit, hit + strlen(regdel[i]), (regex + strlen(regex) + 1) - (hit + strlen(regdel[i])));
             }
-        } while(hit);
+        } while (hit);
     }
 
     for (uint32_t i = 0; i < sizeof(regsub) / sizeof(struct regex_map); i++) {
@@ -715,13 +715,13 @@ ay_get_regex_standardized(const struct regexp *rp, char *buffer)
             hit = (char *)strstr(regex, regsub[i].aug);
             if (hit) {
                 /* remove needle from haystack */
-                memmove(hit, hit + strlen(regsub[i].aug), (regex + strlen(regex) + 1) - (hit + strlen(regsub[i].aug))); 
+                memmove(hit, hit + strlen(regsub[i].aug), (regex + strlen(regex) + 1) - (hit + strlen(regsub[i].aug)));
                 /* make space for regsub[i].yang */
-                memmove(hit + strlen(regsub[i].yang), hit, (regex + strlen(regex) + 1) - hit); 
+                memmove(hit + strlen(regsub[i].yang), hit, (regex + strlen(regex) + 1) - hit);
                 /* copy regsub[i].yang */
                 strncpy(hit, regsub[i].yang, strlen(regsub[i].yang));
             }
-        } while(hit);
+        } while (hit);
     }
 
     /* count number of \" character */
@@ -847,7 +847,6 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "%s", ident);
     }
 
-
     return ret;
 }
 
@@ -858,7 +857,7 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *node
 
     for (iter = node->parent->child; iter; iter = iter->next) {
         if (iter->type == YN_KEY) {
-            //TODO: more keys?
+            // TODO: more keys?
             ly_print(ctx->out, "$");
             ay_print_yang_ident(ctx, iter);
             break;
@@ -885,15 +884,15 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "$");
         ay_print_yang_ident(ctx, node);
     } else if (node->parent && (node->parent->type == YN_LIST) &&
-                parent_label && (parent_label->tag == L_LABEL)) {
+            parent_label && (parent_label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", parent_label->string->str);
         ly_print(ctx->out, "/");
         ay_print_yang_ident(ctx, node);
     } else if (node->parent && (node->parent->type == YN_LIST) &&
-                (node->value) && (node->value == node->parent->value)) {
+            (node->value) && (node->value == node->parent->value)) {
         ay_print_yang_data_path_item_key(ctx, node);
     } else if (node->parent && (node->parent->type == YN_LIST) && (node->type == YN_LEAFLIST) &&
-                label && (label->tag == L_LABEL)) {
+            label && (label->tag == L_LABEL)) {
         ay_print_yang_data_path_item_key(ctx, node);
         ly_print(ctx->out, "/");
         ly_print(ctx->out, "%s", label->string->str);
@@ -939,7 +938,7 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (node->type == YN_LIST) {
         return;
     }
-    ly_print(ctx->out, "%*s"AY_EXT_PREFIX":"AY_EXT_PATH" \"", ctx->space, "");
+    ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
     ay_print_yang_data_path_r(ctx, node->parent);
     ay_print_yang_data_path_item(ctx, node);
     ly_print(ctx->out, "\";\n");
@@ -1264,7 +1263,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ly_print(out, "\";\n");
     ly_print(out, "  prefix aug;\n\n");
     ly_print(out, "  import augeas-extension {\n");
-    ly_print(out, "    prefix "AY_EXT_PREFIX";\n");
+    ly_print(out, "    prefix "AY_EXT_PREFIX ";\n");
     ly_print(out, "  }\n\n");
 
     ret = ay_print_yang_node(&ctx, tree);
@@ -1321,7 +1320,6 @@ ay_print_lnode_transition(struct lprinter_ctx *ctx)
     }
 }
 
-
 /**
  * @brief For ay_lnode_next_lv(), find next label or value.
  */
@@ -1347,7 +1345,7 @@ ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
         return NULL;
     }
 
-    for (iter = lv->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent);
+    for (iter = lv->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {}
     assert(iter->lens->tag == L_SUBTREE);
 
     stop = iter + iter->descendants + 1;
@@ -1369,6 +1367,7 @@ static void
 ay_print_ynode_label_value(struct lprinter_ctx *ctx, struct ay_ynode *node)
 {
     struct ay_lnode *iter;
+
     void (*transition)(struct lprinter_ctx *);
     void (*extension)(struct lprinter_ctx *);
 
@@ -1623,7 +1622,7 @@ ay_ynode_connect1(struct ay_ynode *forest, struct ay_ynode *parent, struct ay_yn
         parent->child = child;
     } else if (parent) {
         /* set next */
-        for (iter = parent->child; iter->next; iter = iter->next);
+        for (iter = parent->child; iter->next; iter = iter->next) {}
         iter->next = child;
     } else if (!parent && (LY_ARRAY_COUNT(forest) > 1)) {
         /* set 'next' for the second and the others root nodes */
@@ -1655,7 +1654,7 @@ ay_ynode_create_forest_r(struct ay_ynode *yforest, struct ay_lnode *lnode, struc
     uint32_t iter_start;
     enum lens_tag tag;
 
-    iter_start = parent ? 1 : 0; 
+    iter_start = parent ? 1 : 0;
 
     for (uint32_t i = iter_start; i < lnode->descendants; i++) {
         tag = lnode[i].lens->tag;
@@ -1965,7 +1964,8 @@ ay_ynode_insert_wrapper(struct ay_ynode *dst, uint32_t index)
 static void
 ay_ynode_insert_parent(struct ay_ynode *dst, uint32_t index)
 {
-    struct ay_ynode *parent, *wrapper;;
+    struct ay_ynode *parent, *wrapper;
+
     assert(dst->type == YN_ROOT);
 
     wrapper = dst[index].parent;
@@ -2086,7 +2086,7 @@ ay_remove_comment(struct ay_ynode *dst)
     for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
         iter = &dst[i];
         label = AY_LABEL_LENS(iter);
-        if (label && label->tag == L_LABEL) {
+        if (label && (label->tag == L_LABEL)) {
             if (!strcmp("#comment", label->string->str)) {
                 ay_ynode_remove_node(dst, i);
                 i--;
@@ -2111,7 +2111,7 @@ ay_remove_useless_leaf_r(struct ay_ynode *tree, uint32_t index)
         child_idx = index + 1 + i;
         iter1 = &tree[child_idx];
         ay_remove_useless_leaf_r(tree, child_idx);
-        if (iter1->snode && iter1->type == YN_LEAF) {
+        if (iter1->snode && (iter1->type == YN_LEAF)) {
             wanted = iter1->snode->lens;
             for (iter2 = parent->child; iter2; iter2 = iter2->next) {
                 if (iter2->snode && (iter2->type == YN_LEAFLIST) && (iter2->snode->lens == wanted)) {

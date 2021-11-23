@@ -15,15 +15,15 @@
 #define _GNU_SOURCE
 
 #include <argz.h>
-#include <getopt.h>
 #include <dirent.h>
+#include <getopt.h>
 
+#include <locale.h>
+#include "augeas.h"
+#include "augyang.h"
+#include "errcode.h"
 #include "list.h"
 #include "syntax.h"
-#include "augeas.h"
-#include "errcode.h"
-#include "augyang.h"
-#include <locale.h>
 
 /**
  * @brief Buffer for filename including the path.
@@ -54,9 +54,10 @@
  * @brief Print help to stderr.
  */
 __attribute__((noreturn))
-static void aym_usage(void)
+static void
+aym_usage(void)
 {
-    fprintf(stderr, "Usage: "AYM_PROGNAME" [OPTIONS] MODULE...\n");
+    fprintf(stderr, "Usage: "AYM_PROGNAME " [OPTIONS] MODULE...\n");
     fprintf(stderr, "Generate YANG module (.yang) from Augeas MODULE (.aug).\n");
     fprintf(stderr, "Information about the YANG format is in the RFC 7950.\n");
     fprintf(stderr, "\nOptions:\n\n");
@@ -74,8 +75,8 @@ static void aym_usage(void)
     fprintf(stderr,
             "  -v, --verbose HEX  bitmask for various debug outputs\n");
     fprintf(stderr, "\nExample:\n"
-            AYM_PROGNAME" passwd backuppchosts\n"
-            AYM_PROGNAME" -e -I ./mylenses -O ./genyang someAugfile\n");
+            AYM_PROGNAME " passwd backuppchosts\n"
+            AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n");
 
     exit(EXIT_FAILURE);
 }
@@ -99,7 +100,7 @@ aym_get_vercode(char *optarg)
 
     errno = 0;
     ret = strtoull(optarg, &endptr, 16);
-    if (errno || (&optarg[strlen(optarg)] != endptr))  {
+    if (errno || (&optarg[strlen(optarg)] != endptr)) {
         fprintf(stderr, "ERROR: Verbose code conversion error\n");
         aym_usage();
     }
@@ -140,7 +141,7 @@ aym_argz_max_string_len(const char *argz, size_t argz_len)
     size_t ret = 0;
     const char *iter = NULL;
 
-    while((iter = argz_next(argz, argz_len, iter))) {
+    while ((iter = argz_next(argz, argz_len, iter))) {
         ret = strlen(iter) > ret ? strlen(iter) : ret;
     }
 
@@ -237,7 +238,7 @@ aym_find_aug_module(const char *argz, size_t argz_len, char *filename)
     bool succ = 0;
     const char *iter = NULL, *next = NULL;
 
-    while(!succ && (iter = argz_next(argz, argz_len, next))) {
+    while (!succ && (iter = argz_next(argz, argz_len, next))) {
         aym_insert_dirpath(iter, filename);
         succ = aym_file_exists(filename);
         aym_remove_dirpath(iter, filename);
@@ -262,7 +263,8 @@ aym_insert_filename(const char *name, const char *suffix, char *filename)
     strcpy(&filename[strlen(filename)], suffix);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int opt, ret = 0, ret2 = 0, vercode = 0, explicit = 0, show = 0;
     struct augeas *aug = NULL;
@@ -272,26 +274,27 @@ int main(int argc, char **argv)
     struct module *mod;
     char filename[AYM_MAX_FILENAME_LEN];
     FILE *file = NULL;
+
     enum {
         VAL_NO_STDINC = CHAR_MAX + 1,
         VAL_NO_TYPECHECK = VAL_NO_STDINC + 1,
         VAL_VERSION = VAL_NO_TYPECHECK + 1
     };
     struct option options[] = {
-        { "help",      0, 0, 'h' },
-        { "explicit",  0, 0, 'e' },
-        { "include",   1, 0, 'I' },
-        { "outdir",    1, 0, 'O' },
-        { "show",      0, 0, 's' },
-        { "verbose",   1, 0, 'v' },
-        { 0, 0, 0, 0}
+        {"help",      0, 0, 'h'},
+        {"explicit",  0, 0, 'e'},
+        {"include",   1, 0, 'I'},
+        {"outdir",    1, 0, 'O'},
+        {"show",      0, 0, 's'},
+        {"verbose",   1, 0, 'v'},
+        {0, 0, 0, 0}
     };
     int idx;
-    unsigned int flags = AUG_TYPE_CHECK|AUG_NO_MODL_AUTOLOAD;
+    unsigned int flags = AUG_TYPE_CHECK | AUG_NO_MODL_AUTOLOAD;
 
     setlocale(LC_ALL, "");
     while ((opt = getopt_long(argc, argv, "heI:O:sv:", options, &idx)) != -1) {
-        switch(opt) {
+        switch (opt) {
         case 'e':
             explicit = 1;
             break;
