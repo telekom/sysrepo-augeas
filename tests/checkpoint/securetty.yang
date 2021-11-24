@@ -1,0 +1,24 @@
+module securetty {
+  namespace "aug:securetty";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container securetty {
+    list record {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf word {
+        type string {
+          pattern "[^ \t\n#]+";
+        }
+        augex:data-path "$key";
+      }
+    }
+  }
+}
