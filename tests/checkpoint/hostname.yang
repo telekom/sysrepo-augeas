@@ -1,0 +1,17 @@
+module hostname {
+  namespace "aug:hostname";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container hostname {
+    leaf hostname {
+      type string {
+        pattern "[A-Za-z0-9_.-]+";
+      }
+      augex:data-path "hostname";
+    }
+  }
+}
