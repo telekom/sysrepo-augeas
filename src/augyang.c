@@ -1836,7 +1836,10 @@ ay_ynode_has_repetition(struct ay_ynode *node)
 static ly_bool
 ay_ynode_rule_list(struct ay_ynode *node)
 {
-    return node->child && node->label && ay_ynode_has_repetition(node);
+    ly_bool has_key;
+
+    has_key = node->label ? node->label->lens->tag == L_KEY : 0;
+    return (node->child || has_key) && node->label && ay_ynode_has_repetition(node);
 }
 
 static ly_bool
@@ -2134,41 +2137,6 @@ ay_remove_comment(struct ay_ynode *dst)
 }
 
 static void
-ay_remove_useless_leaf_r(struct ay_ynode *tree, uint32_t index)
-{
-    struct ay_ynode *parent, *iter1, *iter2;
-    struct lens *wanted;
-    uint32_t child_idx;
-
-    parent = &tree[index];
-    if (!parent->child) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < parent->descendants; i++) {
-        child_idx = index + 1 + i;
-        iter1 = &tree[child_idx];
-        ay_remove_useless_leaf_r(tree, child_idx);
-        if (iter1->snode && (iter1->type == YN_LEAF)) {
-            wanted = iter1->snode->lens;
-            for (iter2 = parent->child; iter2; iter2 = iter2->next) {
-                if (iter2->snode && (iter2->type == YN_LEAFLIST) && (iter2->snode->lens == wanted)) {
-                    ay_ynode_remove_node(tree, AY_INDEX(tree, iter1));
-                    i--;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static void
-ay_remove_useless_leaf(struct ay_ynode *tree)
-{
-    ay_remove_useless_leaf_r(tree, 0);
-}
-
-static void
 ay_remove_top_choice(struct ay_ynode *tree)
 {
     struct ay_ynode *iter;
@@ -2191,6 +2159,93 @@ ay_remove_top_choice(struct ay_ynode *tree)
     /* remove choice */
     for (iter = tree->child; iter; iter = iter->next) {
         iter->choice = NULL;
+    }
+}
+
+static void
+ay_ynode_remove_build_list(struct ay_ynode *tree)
+{
+    struct ay_ynode *node1, *node2;
+    struct ay_lnode *iter1, *iter2, *concat;
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        node1 = &tree[i];
+        for (uint32_t j = i + 1; j < LY_ARRAY_COUNT(tree); j++) {
+            node2 = &tree[j];
+
+            /* node1 == node2 */
+            if (!node1->snode || !node2->snode || (node1->snode->lens != node2->snode->lens)) {
+                continue;
+            }
+
+            /* node1 and node2 have the same concat operator */
+            concat = NULL;
+            for (iter1 = node1->snode->parent; iter1 && !concat; iter1 = iter1->parent) {
+                if (iter1->lens->tag != L_CONCAT) {
+                    continue;
+                }
+                for (iter2 = node2->snode->parent; iter2 && !concat; iter2 = iter2->parent) {
+                    if (iter2->lens->tag != L_CONCAT) {
+                        continue;
+                    }
+                    concat = iter1 == iter2 ? iter1 : NULL;
+                }
+            }
+            if (!concat) {
+                continue;
+            }
+
+            /* node1 should not have an asterisk */
+            for (iter1 = node1->snode->parent; (iter1 != concat) && (iter1->lens->tag != L_STAR);
+                    iter1 = iter1->parent) {}
+            if (iter1->lens->tag == L_STAR) {
+                continue;
+            }
+
+            /* node2 should have an asterisk */
+            for (iter2 = node2->snode->parent; (iter2 != concat) && (iter2->lens->tag != L_STAR);
+                    iter2 = iter2->parent) {}
+            if (iter2->lens->tag != L_STAR) {
+                continue;
+            }
+
+            /* remove node1 because it is useless */
+            ay_ynode_remove_node(tree, AY_INDEX(tree, node1));
+            i--;
+            break;
+        }
+    }
+}
+
+static void
+ay_ynode_remove_lonely_key(struct ay_ynode *tree)
+{
+    struct ay_ynode *iter, *node;
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
+        if (!node->choice || !node->label || (node->label->lens->tag != L_KEY)) {
+            continue;
+        }
+
+        /* node and node2 must have the same choice_id */
+repeat:
+        for (iter = node->next; iter; iter = iter->next) {
+            if (!iter->choice || !iter->label || (iter->label->lens->tag != L_KEY)) {
+                continue;
+            }
+            if (node->choice != iter->choice) {
+                continue;
+            }
+            if (!node->value && (iter->value->lens->tag == L_STORE)) {
+                ay_ynode_remove_node(tree, AY_INDEX(tree, node));
+                i--;
+                break;
+            } else if (!iter->value && (node->value->lens->tag == L_STORE)) {
+                ay_ynode_remove_node(tree, AY_INDEX(tree, iter));
+                goto repeat;
+            }
+        }
     }
 }
 
@@ -2306,13 +2361,18 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
+    /* remove "lns . ( sep . lns )*" pattern (TODO bilateral) */
+    ay_ynode_remove_build_list(*tree);
+
+    /* remove "[key lns1 store lns2] | [key lns1]" pattern (bilateral) */
+    ay_ynode_remove_lonely_key(*tree);
+
     /* set type */
     ay_ynode_set_type(*tree);
 
     /* remove unnecessary nodes */
     ay_remove_type_unknown(*tree);
     ay_remove_comment(*tree);
-    ay_remove_useless_leaf(*tree);
     ay_remove_top_choice(*tree);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_REMOVE, *tree);
