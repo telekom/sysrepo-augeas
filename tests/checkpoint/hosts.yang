@@ -1,0 +1,36 @@
+module hosts {
+  namespace "aug:hosts";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container hosts {
+    list record {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf ipaddr {
+        type string {
+          pattern "[^# \n\t]+";
+        }
+        augex:data-path "$key/ipaddr";
+      }
+      leaf canonical {
+        type string {
+          pattern "[^# \n\t]+";
+        }
+        augex:data-path "$key/canonical";
+      }
+      leaf-list alias {
+        type string {
+          pattern "[^# \n\t]+";
+        }
+        augex:data-path "$key/alias";
+      }
+    }
+  }
+}
