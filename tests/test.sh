@@ -12,12 +12,30 @@
 #
 #     https://opensource.org/licenses/BSD-3-Clause
 
-for entry in "checkpoint"/*
+if [ -d "./checkpoint" ]; then
+    # script runs where it is
+    checkdir="./checkpoint"
+    augyangPath="../build"
+    extensionPath="../"
+elif [ -d "../../tests/checkpoint" ]; then
+    # script run in build/tests
+    checkdir="../../tests/checkpoint"
+    augyangPath="../"
+    extensionPath="../../"
+else
+    echo $(pwd)
+    echo "Error: checkpoint directory not found"
+    exit 1
+fi
+
+retcode=0
+
+for entry in $checkdir/*
 do
     # get filename without .yang suffix
     filename=$(basename $entry .yang)
     # run augyang
-    augyang=$(build/augyang -s $filename)
+    augyang=$($augyangPath/augyang -s $filename)
     # get content of checkpoint
     checkpoint=$(cat $entry)
     # call diff ( <() is a "process substitution" )
@@ -25,10 +43,14 @@ do
     # check return code
     if [ $? -ne 0 ]; then
         echo "Error for file $entry"
+        retcode=1
     fi
     # check by yanglint
-    yanglint augeas-extension.yang $entry
+    yanglint $extensionPath/augeas-extension.yang $entry
     if [ $? -ne 0 ]; then
         echo "yanglint failed for file $entry"
+        retcode=1
     fi
 done
+
+exit $retcode
