@@ -1,9 +1,25 @@
 module augeas-extension {
-    yang-version 1.1;
-    namespace "aug:augeas-extension";
-    prefix augex;
+  yang-version 1.1;
+  namespace "aug:augeas-extension";
+  prefix augex;
 
-    extension data-path {
-        argument "path";
-    }
+  extension data-path {
+    argument path;
+    description
+      "The string contains the path to the data node in the augeas tree.
+       Each data node in the augeas tree has a 'label' indicating the node name.
+       The 'label' can be specified directly using the lense primitive 'label STR',
+       or it can be variable using the regular expression 'key RE',
+       or variable using the number 'seq STR'.
+       The data node address therefore consists of the 'labels' sequence of the parent nodes.
+
+       The variable ones 'key STR' and 'seq STR' must be somehow marked in the data-path.
+       In the data-path, these variables are denoted by the symbol '$' followed by the name
+       of the yang node (refers to 'key STR') or it is followed by a keyword.
+       The keyword '$AY_UINT' indicates a numeric value and refers to 'seq STR'.
+
+       NOTE: Look at the corresponding tests of a particular augeas module
+       (located somewhere in augeas/lenses/tests/test_*) for a better understanding
+       of what the path consists of.";
+  }
 }
