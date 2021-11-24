@@ -286,14 +286,23 @@ struct lprinter_ctx
     struct ly_out *out;             /**< Output to which it is printed. */
 };
 
+/**
+ * @brief Context for the yang printer.
+ */
 struct yprinter_ctx
 {
-    uint32_t space;
-    struct module *mod;
-    struct ay_ynode *tree;
-    struct ly_out *out;
+    uint32_t space;         /**< Current indent. */
+    struct module *mod;     /**< Augeas module. */
+    struct ay_ynode *tree;  /**< Pointer to the Sized array. */
+    struct ly_out *out;     /**< Output to which it is printed. */
 };
 
+/**
+ * @brief Get error message base on the code.
+ *
+ * @param[in] err_code Error code;
+ * @return String with message.
+ */
 const char *
 augyang_get_error_message(int err_code)
 {
@@ -317,6 +326,14 @@ augyang_get_error_message(int err_code)
     }
 }
 
+/**
+ * @brief Compare two strings and print them if they differ.
+ *
+ * @param[in] subject For readability, what is actually compared.
+ * @param[in] str1 First string to comparison.
+ * @param[in] str2 Second string to comparison.
+ * @return 0 on success, otherwise 1.
+ */
 static int
 ay_print_debug_compare(const char *subject, const char *str1, const char *str2)
 {
@@ -331,6 +348,12 @@ ay_print_debug_compare(const char *subject, const char *str1, const char *str2)
     return 0;
 }
 
+/**
+ * @brief Get main lense which augeas will use for parsing.
+ *
+ * @param[in] mod Current augeas module.
+ * @return Main lense or NULL.
+ */
 static struct lens *
 ay_lense_get_root(struct module *mod)
 {
@@ -357,6 +380,13 @@ ay_lense_get_root(struct module *mod)
     }
 }
 
+/**
+ * @brief Get name of a file (without filename extension) from path.
+ *
+ * @param[in] path String containing the path to process.
+ * @param[out] name Set to part where filename is is.
+ * @param[out] len Length of the name.
+ */
 static void
 ay_get_filename(char *path, char **name, size_t *len)
 {
@@ -374,6 +404,14 @@ ay_get_filename(char *path, char **name, size_t *len)
     }
 }
 
+/**
+ * @brief Go through all the lenses and set various counters.
+ *
+ * @param[in] lens Main lense where to start.
+ * @param[out] ltree_size Number of lenses.
+ * @param[out] yforest_size Number of lenses with L_SUBTREE tag.
+ * @param[out] l_rec Flag if some lense has tag L_REC tag.
+ */
 static void
 ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size, ly_bool *l_rec)
 {
