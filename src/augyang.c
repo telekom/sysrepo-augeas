@@ -1886,7 +1886,7 @@ ay_ynode_insert_node(struct ay_ynode *dst, uint32_t index)
 
     LY_ARRAY_INCREMENT(dst);
     for (uint32_t i = 0; i < index; i++) {
-        dst[i].next = dst[i].next > &dst[index] ? dst[i].next + 1 : dst[i].next;
+        dst[i].next = dst[i].next >= &dst[index] ? dst[i].next + 1 : dst[i].next;
     }
     for (uint32_t i = index + 1; i < LY_ARRAY_COUNT(dst); i++) {
         if (dst[i].parent >= &dst[index]) {
