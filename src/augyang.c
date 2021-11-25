@@ -623,12 +623,11 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
 static void
 ay_print_yang_module_name(struct yprinter_ctx *ctx)
 {
-    char *name;
+    char *name, *path;
     size_t namelen;
-    struct lens *lens;
 
-    lens = ay_lense_get_root(ctx->mod);
-    ay_get_filename(lens->info->filename->str, &name, &namelen);
+    path = ctx->mod->bindings->value->info->filename->str;
+    ay_get_filename(path, &name, &namelen);
 
     ly_print(ctx->out, "%.*s", namelen, name);
 }
@@ -1268,7 +1267,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ctx.tree = tree;
     ctx.out = out;
 
-    ly_print(out, "module ", mod->name);
+    ly_print(out, "module ");
     ay_print_yang_module_name(&ctx);
     ly_print(out, " {\n");
     ly_print(out, "  namespace \"aug:");

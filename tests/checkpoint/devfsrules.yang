@@ -1,12 +1,12 @@
-module inifile {
-  namespace "aug:inifile";
+module devfsrules {
+  namespace "aug:devfsrules";
   prefix aug;
 
   import augeas-extension {
     prefix augex;
   }
 
-  container inifile {
+  container devfsrules {
     list record {
       key "key";
       leaf key {
