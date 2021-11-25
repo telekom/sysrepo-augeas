@@ -1,0 +1,26 @@
+module login_defs {
+  namespace "aug:login_defs";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container login_defs {
+    list record {
+      key "key";
+      leaf key {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "$key";
+      }
+      leaf node {
+        type string {
+          pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";
+        }
+        augex:data-path "$key";
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+module grubenv {
+  namespace "aug:grubenv";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container grubenv {
+    list record {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf name {
+        type string {
+          pattern "[A-Za-z_][A-Za-z0-9_]*";
+        }
+        augex:data-path "$key/name";
+      }
+      leaf value {
+        type string {
+          pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+        }
+        augex:data-path "$key/value";
+      }
+    }
+  }
+}
