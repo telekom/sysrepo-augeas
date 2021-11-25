@@ -1,0 +1,39 @@
+module inifile {
+  namespace "aug:inifile";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container inifile {
+    list record {
+      key "key";
+      leaf key {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "$key";
+      }
+      leaf id {
+        type string {
+          pattern "[0-9]+";
+        }
+        augex:data-path "$key/id";
+      }
+      list entry {
+        key "key";
+        leaf key {
+          type uint64;
+          augex:data-path "$key/$key";
+        }
+        leaf line_re {
+          type string {
+            pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
+          }
+          augex:data-path "$key/$key";
+        }
+      }
+    }
+  }
+}

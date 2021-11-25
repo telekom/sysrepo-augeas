@@ -893,7 +893,7 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *node
 {
     struct ay_ynode *iter;
 
-    for (iter = node->parent->child; iter; iter = iter->next) {
+    for (iter = node->child; iter; iter = iter->next) {
         if (iter->type == YN_KEY) {
             // TODO: more keys?
             ly_print(ctx->out, "$");
@@ -903,68 +903,48 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *node
     }
 }
 
-static ly_bool
+static void
 ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    ly_bool ret = 0;
-    struct lens *parent_label = NULL, *label = NULL;
+    struct lens *label, *value;
 
-    if (node->parent) {
-        parent_label = AY_LABEL_LENS(node->parent);
-    }
     label = AY_LABEL_LENS(node);
+    value = AY_VALUE_LENS(node);
 
-    if (node->type == YN_LIST) {
-        /* list is ignored */
-    } else if (node->parent && (node->type == YN_CONTAINER) && (node->parent->type == YN_ROOT)) {
-        /* top-level data-container */
-    } else if (node->parent && (node->parent->type == YN_LIST) && (node->type == YN_KEY)) {
-        ly_print(ctx->out, "$");
-        ay_print_yang_ident(ctx, node);
-    } else if (node->parent && (node->parent->type == YN_LIST) &&
-            parent_label && (parent_label->tag == L_LABEL)) {
-        ly_print(ctx->out, "%s", parent_label->string->str);
+    if (node->parent && (node->type == YN_CONTAINER) && (node->parent->type == YN_ROOT)) {
+        return;
+    } else if (node->type == YN_KEY) {
+        return;
+    } else if (!node->snode && !node->label && value && (value->tag == L_STORE)) {
+        return;
+    }
+
+    if (node->parent->parent->type != YN_ROOT) {
         ly_print(ctx->out, "/");
-        ay_print_yang_ident(ctx, node);
-    } else if (node->parent && (node->parent->type == YN_LIST) &&
-            (node->value) && (node->value == node->parent->value)) {
-        ay_print_yang_data_path_item_key(ctx, node);
-    } else if (node->parent && (node->parent->type == YN_LIST) && (node->type == YN_LEAFLIST) &&
-            label && (label->tag == L_LABEL)) {
-        ay_print_yang_data_path_item_key(ctx, node);
-        ly_print(ctx->out, "/");
+    }
+
+    if ((node->type == YN_LIST) && label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
-    } else if (node->parent && (node->parent->type == YN_LIST) && (node->type == YN_LEAFLIST)) {
+    } else if (node->type == YN_LIST) {
         ay_print_yang_data_path_item_key(ctx, node);
-        ly_print(ctx->out, "/$AY_UINT");
+    } else if ((node->type == YN_LEAFLIST) && label && (label->tag == L_LABEL)) {
+        ly_print(ctx->out, "%s", label->string->str);
     } else if (node->type == YN_LEAFLIST) {
         ly_print(ctx->out, "$AY_UINT");
-    } else if (node->parent && (node->parent->type == YN_LIST)) {
-        ay_print_yang_data_path_item_key(ctx, node);
-        ly_print(ctx->out, "/");
-        ay_print_yang_ident(ctx, node);
     } else {
         ay_print_yang_ident(ctx, node);
-        ret = 1;
     }
-
-    return ret;
 }
 
 static void
 ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    ly_bool ret;
-
     if (!node || (node->type == YN_ROOT)) {
         return;
     }
 
     ay_print_yang_data_path_r(ctx, node->parent);
-    ret = ay_print_yang_data_path_item(ctx, node);
-    if (ret) {
-        ly_print(ctx->out, "/");
-    }
+    ay_print_yang_data_path_item(ctx, node);
 }
 
 static void

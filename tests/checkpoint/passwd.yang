@@ -58,7 +58,7 @@ module passwd {
         type string {
           pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
         }
-        augex:data-path "$username";
+        augex:data-path "@nis";
       }
       leaf password {
         type string {
@@ -101,7 +101,7 @@ module passwd {
       key "key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
+        augex:data-path "@nisdefault";
       }
       leaf password {
         type string {
@@ -146,7 +146,7 @@ module passwd {
         type string {
           pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
         }
-        augex:data-path "$username";
+        augex:data-path "@+nisuser";
       }
       leaf password {
         type string {
@@ -191,7 +191,7 @@ module passwd {
         type string {
           pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
         }
-        augex:data-path "$username";
+        augex:data-path "@-nisuser";
       }
       leaf password {
         type string {
