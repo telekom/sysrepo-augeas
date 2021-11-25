@@ -151,11 +151,6 @@
  */
 #define AY_MAX_IDENT_SIZE 64
 
-/**
- * @brief Maximum size of regular expression (yang statement pattern).
- */
-#define AY_MAX_REGEX_SIZE 128
-
 /* error codes */
 
 #define AYE_MEMORY 1
@@ -164,7 +159,6 @@
 #define AYE_DEBUG_FAILED 4
 #define AYE_IDENT_NOT_FOUND 5
 #define AYE_IDENT_LIMIT 6
-#define AYE_REGEX_LIMIT 7
 
 /**
  * @brief Check if lense tag belongs to ynode.label.
@@ -319,8 +313,6 @@ augyang_get_error_message(int err_code)
         return AY_NAME " ERROR: identifier not found. Output YANG is not valid.\n";
     case AYE_IDENT_LIMIT:
         return AY_NAME " ERROR: identifier is too long. Output YANG is not valid.\n";
-    case AYE_REGEX_LIMIT:
-        return AY_NAME " ERROR: regex string is too long. Output YANG is not valid.\n";
     default:
         return AY_NAME " INTERNAL ERROR: error message not defined.\n";
     }
@@ -715,10 +707,9 @@ struct regex_map
 };
 
 static int
-ay_get_regex_standardized(const struct regexp *rp, char *buffer)
+ay_get_regex_standardized(const struct regexp *rp, char **regout)
 {
-    char *regex = NULL;
-    char *hit = NULL;
+    char *hit = NULL, *regex;
     uint32_t cnt;
 
     struct regex_map regmap[] = {
@@ -737,8 +728,10 @@ ay_get_regex_standardized(const struct regexp *rp, char *buffer)
 
     for (uint32_t i = 0; i < sizeof(regmap) / sizeof(struct regex_map); i++) {
         if (!strcmp(regex, regmap[i].aug)) {
-            strcpy(buffer, regmap[i].yang);
-            goto end;
+            free(regex);
+            *regout = strdup(regmap[i].yang);
+            AY_CHECK_COND(!(*regout), AYE_MEMORY);
+            return 0;
         }
     }
 
@@ -784,10 +777,7 @@ ay_get_regex_standardized(const struct regexp *rp, char *buffer)
         }
     }
 
-    strcpy(buffer, regex);
-
-end:
-    free(regex);
+    *regout = regex;
 
     return 0;
 }
@@ -971,7 +961,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
     const struct regexp *rp;
-    char buffer[AY_MAX_REGEX_SIZE];
+    char *regex = NULL;
     struct lens *label, *value;
 
     if (!node->label && !node->value) {
@@ -992,9 +982,10 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     ay_print_yang_nesting_begin(ctx);
-    ret = ay_get_regex_standardized(rp, buffer);
+    ret = ay_get_regex_standardized(rp, &regex);
     AY_CHECK_RET(ret);
-    ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", buffer);
+    ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", regex);
+    free(regex);
     ay_print_yang_nesting_end(ctx);
 
     return ret;

@@ -1,0 +1,30 @@
+module ethers {
+  namespace "aug:ethers";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container ethers {
+    list record {
+      key "key";
+      leaf key {
+        type uint64;
+        augex:data-path "$key";
+      }
+      leaf mac {
+        type string {
+          pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
+        }
+        augex:data-path "$key/mac";
+      }
+      leaf ip {
+        type string {
+          pattern "[^# \n\t]+";
+        }
+        augex:data-path "$key/ip";
+      }
+    }
+  }
+}
