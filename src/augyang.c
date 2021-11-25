@@ -415,11 +415,15 @@ ay_get_filename(char *path, char **name, size_t *len)
 static void
 ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size, ly_bool *l_rec)
 {
+    if (lens->tag == L_REC) {
+        *l_rec = 1;
+        return;
+    }
+
     (*ltree_size)++;
     *yforest_size = lens->tag == L_SUBTREE ?
             *yforest_size + 1 :
             *yforest_size;
-    *l_rec |= lens->tag == L_REC;
 
     if (AY_LENSE_HAS_NO_CHILD(lens->tag)) {
         return;
