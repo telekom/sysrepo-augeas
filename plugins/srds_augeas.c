@@ -20,6 +20,7 @@
 #include <sysrepo/plugins_datastore.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <fcntl.h>
 
 #include <augeas.h>
@@ -31,11 +32,75 @@
 #define AUG_LOG_ERRMEM SRPLG_LOG_ERR(srpds_name, "Memory allocation failed (%s:%d).", __FILE__, __LINE__)
 
 #define AUG_LOG_ERRINT_RET AUG_LOG_ERRINT;return SR_ERR_INTERNAL
+#define AUG_LOG_ERRINT_GOTO(rc, label) AUG_LOG_ERRINT;rc = SR_ERR_INTERNAL; goto label
+#define AUG_LOG_ERRMEM_GOTO(rc, label) AUG_LOG_ERRMEM;rc = SR_ERR_NO_MEMORY; goto label
 
 static augeas *aug; /**< augeas handle */
 
+/**
+ * @brief Get augeas lens name from a YANG module.
+ *
+ * @param[in] mod YANG module to use.
+ * @return Augeas lens name.
+ * @return NULL on error.
+ */
+static char *
+augds_get_lens(const struct lys_module *mod)
+{
+    char *lens;
+
+    lens = strdup(mod->name);
+    if (!lens) {
+        return NULL;
+    }
+
+    lens[0] = toupper(lens[0]);
+    return lens;
+}
+
+/**
+ * @brief Check for augeas errors.
+ *
+ * @param[in] aug Augeas handle.
+ * @return SR error code to return.
+ */
+static int
+augds_check_erraug(augeas *aug)
+{
+    const char *aug_err_mmsg, *aug_err_details;
+
+    if (!aug) {
+        SRPLG_LOG_ERR(srpds_name, "Augeas init failed.");
+        return SR_ERR_OPERATION_FAILED;
+    }
+
+    if (aug_error(aug) == AUG_NOERROR) {
+        /* no error */
+        return SR_ERR_OK;
+    }
+
+    if (aug_error(aug) == AUG_ENOMEM) {
+        /* memory error */
+        AUG_LOG_ERRMEM;
+        return SR_ERR_NO_MEMORY;
+    }
+
+    /* complex augeas error */
+    aug_err_mmsg = aug_error_minor_message(aug);
+    aug_err_details = aug_error_details(aug);
+    SRPLG_LOG_ERR(srpds_name, "Augeas init failed (%s%s%s%s%s).", aug_error_message(aug),
+            aug_err_mmsg ? "; " : "", aug_err_mmsg ? aug_err_mmsg : "", aug_err_details ? "; " : "",
+            aug_err_details ? aug_err_details : "");
+    return SR_ERR_OPERATION_FAILED;
+}
+
+/**
+ * @brief Log libyang errors.
+ *
+ * @param[in] ly_ctx Context to read errors from.
+ */
 static void
-aug_log_errly(const struct ly_ctx *ly_ctx)
+augds_log_errly(const struct ly_ctx *ly_ctx)
 {
     struct ly_err_item *e;
 
@@ -59,11 +124,26 @@ aug_log_errly(const struct ly_ctx *ly_ctx)
     ly_err_clean((struct ly_ctx *)ly_ctx, NULL);
 }
 
+/**
+ * @brief Append converted augeas data to YANG data. Convert all data handled by a YANG module
+ * using the context in the augeas handle.
+ *
+ * @param[in] aug Augeas handle.
+ * @param[in] mod YANG module.
+ * @param[in,out] mod_data YANG module data to append to.
+ * @return SR error code.
+ */
+static int
+augds_aug2yang(augeas *aug, const struct lys_module *mod, struct lyd_node **mod_data)
+{
+    return SR_ERR_OK;
+}
+
 static int
 srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owner, const char *group, mode_t perm)
 {
-    int rc;
-    const char *aug_err_mmsg, *aug_err_details;
+    int rc = SR_ERR_OK;
+    char *lens = NULL, *path = NULL;
 
     assert(perm);
 
@@ -72,32 +152,35 @@ srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owne
         return SR_ERR_UNSUPPORTED;
     }
 
+    /* init augeas with all modules but no loaded files */
+    aug = aug_init(NULL, NULL, AUG_NO_LOAD | AUG_NO_ERR_CLOSE);
+    if ((rc = augds_check_erraug(aug))) {
+        goto cleanup;
+    }
+
+    /* get lens name */
+    lens = augds_get_lens(mod);
+    if (!lens) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+
+    /* remove all lenses except this one */
+    if (asprintf(&path, "/augeas/load/*[label() != '%s']", lens) == -1) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+    aug_rm(aug, path);
+
     /* check owner/group/perms */
     /* TODO */
 
-    /* init augeas */
-    aug = aug_init(NULL, NULL, AUG_NO_LOAD | AUG_NO_ERR_CLOSE);
-    if (!aug) {
-        if (aug_error(aug) == AUG_ENOMEM) {
-            AUG_LOG_ERRMEM;
-            rc = SR_ERR_NO_MEMORY;
-        } else if (aug_error(aug) == AUG_NOERROR) {
-            AUG_LOG_ERRINT;
-            rc = SR_ERR_INTERNAL;
-        } else {
-            aug_err_mmsg = aug_error_minor_message(aug);
-            aug_err_details = aug_error_details(aug);
-            SRPLG_LOG_ERR(srpds_name, "Augeas init failed (%s%s%s%s%s).", aug_error_message(aug),
-                    aug_err_mmsg ? "; " : "", aug_err_mmsg ? aug_err_mmsg : "", aug_err_details ? "; " : "",
-                    aug_err_details ? aug_err_details : "");
-            rc = SR_ERR_OPERATION_FAILED;
-        }
+cleanup:
+    free(lens);
+    free(path);
+    if (rc) {
         aug_close(aug);
         aug = NULL;
-        return rc;
     }
-
-    return SR_ERR_OK;
+    return rc;
 }
 
 static int
@@ -130,7 +213,60 @@ static int
 srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpaths, uint32_t xpath_count,
         struct lyd_node **mod_data)
 {
+    int rc = SR_ERR_OK, i, match_count = 0;
+    char **matches = NULL;
+    const char *value;
 
+    *mod_data = NULL;
+
+    /* load data */
+    aug_load(aug);
+    if ((rc = augds_check_erraug(aug))) {
+        goto cleanup;
+    }
+
+    /* get parsed file path nodes */
+    match_count = aug_match(aug, "/augeas/files//path", &matches);
+    if (match_count == -1) {
+        rc = augds_check_erraug(aug);
+        assert(rc);
+        goto cleanup;
+    }
+
+    /* get all their values and append their YANG data */
+    for (i = 0; i < match_count; ++i) {
+        if (aug_get(aug, matches[i], &value) != 1) {
+            AUG_LOG_ERRINT_GOTO(rc, cleanup);
+        }
+
+        /* set context of this file */
+        if (aug_set(aug, "/augeas/context", value) == -1) {
+            rc = augds_check_erraug(aug);
+            assert(rc);
+            goto cleanup;
+        }
+
+        /* transform augeas context data to YANG data */
+        if ((rc = augds_aug2yang(aug, mod, mod_data))) {
+            goto cleanup;
+        }
+    }
+
+    /* TODO debug */
+    FILE *f = fopen("out.txt", "w");
+    aug_print(aug, f, "/*");
+    fclose(f);
+
+cleanup:
+    for (i = 0; i < match_count; ++i) {
+        free(matches[i]);
+    }
+    free(matches);
+    if (rc) {
+        lyd_free_siblings(*mod_data);
+        *mod_data = NULL;
+    }
+    return rc;
 }
 
 static int
@@ -154,7 +290,7 @@ srpds_aug_update_differ(const struct lys_module *old_mod, const struct lyd_node 
     /* check for data difference */
     lyrc = lyd_compare_siblings(new_mod_data, old_mod_data, LYD_COMPARE_FULL_RECURSION | LYD_COMPARE_DEFAULTS);
     if (lyrc && (lyrc != LY_ENOT)) {
-        aug_log_errly(new_mod->ctx);
+        augds_log_errly(new_mod->ctx);
         return SR_ERR_LY;
     }
 
@@ -210,7 +346,7 @@ srpds_aug_access_check(const struct lys_module *mod, sr_datastore_t ds, int *rea
     /* TODO */
 }
 
-const struct srplg_ds_s srpds_lyb = {
+SRPLG_DATASTORE = {
     .name = srpds_name,
     .init_cb = srpds_aug_init,
     .destroy_cb = srpds_aug_destroy,

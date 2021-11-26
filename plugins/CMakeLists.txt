@@ -11,7 +11,7 @@ project(srds_augeas C)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../CMakeModules/")
 
 # global C flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -std=c11")
 
 #
 # targets
@@ -30,5 +30,5 @@ include_directories(${AUGEAS_INCLUDE_DIRS})
 
 # sysrepo
 find_package(Sysrepo 7 REQUIRED)
-#target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
+target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
 include_directories(${SYSREPO_INCLUDE_DIRS})
