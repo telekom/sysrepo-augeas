@@ -16,12 +16,12 @@ if [ -d "./yang_expected" ]; then
     # script runs where it is
     checkdir="./yang_expected"
     augyangPath="../build"
-    extensionPath="../"
+    extensionPath="../modules/"
 elif [ -d "../../tests/yang_expected" ]; then
     # script run in build/tests
     checkdir="../../tests/yang_expected"
     augyangPath="../"
-    extensionPath="../../"
+    extensionPath="../../modules/"
 else
     echo $(pwd)
     echo "Error: yang_expected directory not found"

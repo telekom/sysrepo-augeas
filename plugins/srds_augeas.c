@@ -170,6 +170,22 @@ srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owne
     }
     aug_rm(aug, path);
 
+#ifdef AUG_TEST_INPUT_FILE
+    /* for testing, remove all default includes */
+    free(path);
+    if (asprintf(&path, "/augeas/load/%s/incl", lens) == -1) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+    aug_rm(aug, path);
+
+    /* set only this single test file to be loaded */
+    if (aug_set(aug, path, AUG_TEST_INPUT_FILE) == -1) {
+        rc = augds_check_erraug(aug);
+        assert(rc);
+        goto cleanup;
+    }
+#endif
+
     /* check owner/group/perms */
     /* TODO */
 
@@ -251,11 +267,6 @@ srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpa
             goto cleanup;
         }
     }
-
-    /* TODO debug */
-    FILE *f = fopen("out.txt", "w");
-    aug_print(aug, f, "/*");
-    fclose(f);
 
 cleanup:
     for (i = 0; i < match_count; ++i) {
