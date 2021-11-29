@@ -86,17 +86,6 @@ else()
 endif()
 option(ENABLE_AUGYANG "Build augyang lens2yang converter" ON)
 
-# local augeas lib paths
-set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
-set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
-set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
-set(AUGEAS_BUILD_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build)
-set(AUGEAS_SRC_DIR ${AUGEAS_BUILD_DIR}/src)
-
-# local GNU lib paths
-set(GNULIB_DIR ${AUGEAS_DIR}/.gnulib)
-set(GNULIB_SRC_DIR ${AUGEAS_BUILD_DIR}/gnulib/lib)
-
 #
 # checks
 #
@@ -124,6 +113,17 @@ endif()
 if(ENABLE_AUGYANG)
     # required for augeas internal headers include
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
+
+    # local augeas lib paths
+    set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
+    set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
+    set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
+    set(AUGEAS_BUILD_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build)
+    set(AUGEAS_SRC_DIR ${AUGEAS_BUILD_DIR}/src)
+
+    # local GNU lib paths
+    set(GNULIB_DIR ${AUGEAS_DIR}/.gnulib)
+    set(GNULIB_SRC_DIR ${AUGEAS_BUILD_DIR}/gnulib/lib)
 endif()
 
 if ("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")
