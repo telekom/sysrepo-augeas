@@ -12,19 +12,19 @@
 #
 #     https://opensource.org/licenses/BSD-3-Clause
 
-if [ -d "./checkpoint" ]; then
+if [ -d "./yang_expected" ]; then
     # script runs where it is
-    checkdir="./checkpoint"
+    checkdir="./yang_expected"
     augyangPath="../build"
     extensionPath="../"
-elif [ -d "../../tests/checkpoint" ]; then
+elif [ -d "../../tests/yang_expected" ]; then
     # script run in build/tests
-    checkdir="../../tests/checkpoint"
+    checkdir="../../tests/yang_expected"
     augyangPath="../"
     extensionPath="../../"
 else
     echo $(pwd)
-    echo "Error: checkpoint directory not found"
+    echo "Error: yang_expected directory not found"
     exit 1
 fi
 
@@ -36,10 +36,10 @@ do
     filename=$(basename $entry .yang)
     # run augyang
     augyang=$($augyangPath/augyang -s $filename)
-    # get content of checkpoint
-    checkpoint=$(cat $entry)
+    # get content of yang_expected
+    yang_expected=$(cat $entry)
     # call diff ( <() is a "process substitution" )
-    diff <(echo "$checkpoint") <(echo "$augyang")
+    diff <(echo "$yang_expected") <(echo "$augyang")
     # check return code
     if [ $? -ne 0 ]; then
         echo "Error for file $entry"
