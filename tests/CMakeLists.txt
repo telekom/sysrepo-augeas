@@ -16,8 +16,19 @@ if(SOURCE_FORMAT_ENABLED)
 endif()
 
 if(ENABLE_AUGYANG)
-    # YANG module check
-    add_test(NAME yang COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test.sh)
+    set(YANG_EXP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/yang_expected)
+    set(YANG_GEN_DIR ${CMAKE_BINARY_DIR}/tests/augyang)
+    file(MAKE_DIRECTORY ${YANG_GEN_DIR})
+    find_program(YANGLINT_BIN yanglint)
+
+    file(GLOB yang_expected_files "${YANG_EXP_DIR}/*.yang")
+    foreach(expfile ${yang_expected_files})
+        get_filename_component(mod ${expfile} NAME_WE)
+        set(genfile ${YANG_GEN_DIR}/${mod}.yang)
+
+        add_test(NAME "aytest_${mod}" COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/AYtest.cmake
+            ${PROJECT_SOURCE_DIR} ${YANG_EXP_DIR} ${YANG_GEN_DIR} $<TARGET_FILE:augyang> ${YANGLINT_BIN} ${mod})
+    endforeach()
 endif()
 
 # lists of all the DS plugin tests
@@ -48,3 +59,8 @@ if(ENABLE_VALGRIND_TESTS)
         add_test(NAME ${test_name}_valgrind COMMAND valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $<TARGET_FILE:${test_name}>)
     endforeach()
 endif()
+
+# make ay_new_expected
+# Copy generated yang files to the tests/yang_expected directory.
+# Useful for uploading modified test yang files to the git repository.
+add_custom_target(ay_new_expected COMMAND cp -R ${YANG_GEN_DIR}/*.yang ${YANG_EXP_DIR})
