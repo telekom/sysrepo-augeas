@@ -150,6 +150,14 @@ find_package(Augeas REQUIRED)
 target_link_libraries(srds_augeas ${AUGEAS_LIBRARIES})
 include_directories(${AUGEAS_INCLUDE_DIRS})
 
+# libyang
+find_package(LibYANG ${LIBYANG_DEP_SOVERSION} REQUIRED)
+target_link_libraries(srds_augeas ${LIBYANG_LIBRARIES})
+if(ENABLE_AUGYANG)
+    target_link_libraries(augyang ${LIBYANG_LIBRARIES})
+endif()
+include_directories(${LIBYANG_INCLUDE_DIRS})
+
 # sysrepo
 find_package(Sysrepo 7 REQUIRED)
 target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
@@ -173,15 +181,6 @@ if(ENABLE_AUGYANG)
 
     # selinux
     target_link_libraries(augyang selinux)
-endif()
-
-if(ENABLE_AUGYANG OR ENABLE_TESTS)
-    # libyang
-    find_package(LibYANG ${LIBYANG_DEP_SOVERSION} REQUIRED)
-    if(ENABLE_AUGYANG)
-        target_link_libraries(augyang ${LIBYANG_LIBRARIES})
-    endif()
-    include_directories(${LIBYANG_INCLUDE_DIRS})
 endif()
 
 # tests
