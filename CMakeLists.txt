@@ -111,9 +111,6 @@ if(ENABLE_TESTS)
 endif()
 
 if(ENABLE_AUGYANG)
-    # required for augeas internal headers include
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
-
     # local augeas lib paths
     set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
     set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
@@ -138,8 +135,9 @@ add_library(srds_augeas MODULE ${SRDS_AUGEAS_SRC})
 set_target_properties(srds_augeas PROPERTIES PREFIX "")
 
 if(ENABLE_AUGYANG)
-    # agyang executable
+    # augyang executable
     add_executable(augyang ${AUGYANG_SRC})
+    target_compile_options(augyang PRIVATE "-std=gnu11")
     include_directories(${PROJECT_SOURCE_DIR}/src)
 endif()
 
