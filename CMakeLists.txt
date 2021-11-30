@@ -118,12 +118,10 @@ if(ENABLE_AUGYANG)
     set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
     set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
     set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
-    set(AUGEAS_BUILD_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build)
-    set(AUGEAS_SRC_DIR ${AUGEAS_BUILD_DIR}/src)
+    set(AUGEAS_SRC_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build/src)
 
     # local GNU lib paths
     set(GNULIB_DIR ${AUGEAS_DIR}/.gnulib)
-    set(GNULIB_SRC_DIR ${AUGEAS_BUILD_DIR}/gnulib/lib)
 endif()
 
 if ("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")
@@ -140,44 +138,8 @@ add_library(srds_augeas MODULE ${SRDS_AUGEAS_SRC})
 set_target_properties(srds_augeas PROPERTIES PREFIX "")
 
 if(ENABLE_AUGYANG)
-    set(AUGEAS_OBJS
-        ${AUGEAS_SRC_DIR}/ast.o
-        ${AUGEAS_SRC_DIR}/builtin.o
-        ${AUGEAS_SRC_DIR}/fa.o
-        ${AUGEAS_SRC_DIR}/hash.o
-        ${AUGEAS_SRC_DIR}/internal.o
-        ${AUGEAS_SRC_DIR}/lens.o
-        ${AUGEAS_SRC_DIR}/memory.o
-        ${AUGEAS_SRC_DIR}/pathx.o
-        ${AUGEAS_SRC_DIR}/ref.o
-        ${AUGEAS_SRC_DIR}/syntax.o
-        ${AUGEAS_SRC_DIR}/augeas.o
-        ${AUGEAS_SRC_DIR}/errcode.o
-        ${AUGEAS_SRC_DIR}/get.o
-        ${AUGEAS_SRC_DIR}/info.o
-        ${AUGEAS_SRC_DIR}/jmt.o
-        ${AUGEAS_SRC_DIR}/liblexer_la-lexer.o
-        ${AUGEAS_SRC_DIR}/parser.o
-        ${AUGEAS_SRC_DIR}/put.o
-        ${AUGEAS_SRC_DIR}/regexp.o
-        ${AUGEAS_SRC_DIR}/transform.o
-    )
-
-    set(GNULIB_OBJS
-        ${GNULIB_SRC_DIR}/free.o
-        ${GNULIB_SRC_DIR}/getfilecon.o
-        ${GNULIB_SRC_DIR}/hard-locale.o
-        ${GNULIB_SRC_DIR}/mbrtowc.o
-        ${GNULIB_SRC_DIR}/nl_langinfo.o
-        ${GNULIB_SRC_DIR}/regex.o
-        ${GNULIB_SRC_DIR}/setlocale_null.o
-
-        ${GNULIB_SRC_DIR}/malloc/dynarray_emplace_enlarge.o
-        ${GNULIB_SRC_DIR}/malloc/dynarray_finalize.o
-        ${GNULIB_SRC_DIR}/malloc/dynarray_resize.o)
-
     # agyang executable
-    add_executable(augyang ${AUGYANG_SRC} ${AUGEAS_OBJS} ${GNULIB_OBJS})
+    add_executable(augyang ${AUGYANG_SRC})
     include_directories(${PROJECT_SOURCE_DIR}/src)
 endif()
 
@@ -204,10 +166,10 @@ if(ENABLE_AUGYANG)
         CONFIGURE_COMMAND ${AUGEAS_DIR}/autogen.sh --gnulib-srcdir=${GNULIB_DIR} --disable-gnulib-tests --enable-debug
         BUILD_COMMAND make
         INSTALL_COMMAND ""
-        BUILD_BYPRODUCTS ${AUGEAS_OBJS} ${GNULIB_OBJS}
     )
     add_dependencies(augyang augeas_ext)
-    target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_BUILD_DIR}/src)
+    target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
+    target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
     target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
 
     # selinux
