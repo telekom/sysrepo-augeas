@@ -159,10 +159,11 @@ include_directories(${SYSREPO_INCLUDE_DIRS})
 
 if(ENABLE_AUGYANG)
     # augeas external project
+    set(AUGEAS_DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas "${AUGEAS_DIR}" 2> /dev/null || true)
+    set(GNULIB_DOWNLOAD_COMMAND git clone https://git.savannah.gnu.org/git/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
     ExternalProject_Add(augeas_ext
         PREFIX ${AUGEAS_PREFIX}
-        DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas ${AUGEAS_DIR} &&
-            git clone https://git.savannah.gnu.org/git/gnulib.git ${GNULIB_DIR}
+        DOWNLOAD_COMMAND ${AUGEAS_DOWNLOAD_COMMAND} && ${GNULIB_DOWNLOAD_COMMAND}
         CONFIGURE_COMMAND ${AUGEAS_DIR}/autogen.sh --gnulib-srcdir=${GNULIB_DIR} --disable-gnulib-tests --enable-debug
         BUILD_COMMAND make
         INSTALL_COMMAND ""
