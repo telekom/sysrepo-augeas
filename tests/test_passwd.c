@@ -81,9 +81,14 @@ test_load(void **state)
 {
     struct state *st = (struct state *)*state;
     struct lyd_node *data;
+    char *str;
 
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &data));
+    lyd_print_mem(&str, data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
     lyd_free_siblings(data);
+
+    assert_string_equal(str, "");
+    free(str);
 }
 
 int

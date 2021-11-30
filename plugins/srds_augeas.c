@@ -59,6 +59,39 @@ augds_get_lens(const struct lys_module *mod)
 }
 
 /**
+ * @brief Get path matching all relevant augeas data for this node.
+ *
+ * @param[in] node Schema node to use.
+ * @param[out] aug_path Augeas data path to use for matching, NULL if none defined.
+ * @return SR error code.
+ */
+static int
+augds_get_aug_path(const struct lysc_node *node, char **aug_path)
+{
+    LY_ARRAY_COUNT_TYPE u;
+    const struct lysc_ext *ext;
+    const char *ext_path = NULL;
+
+    *aug_path = NULL;
+
+    LY_ARRAY_FOR(node->exts, u) {
+        ext = node->exts[u].def;
+        if (!strcmp(ext->module->name, "augeas-extension") && !strcmp(ext->name, "data-path")) {
+            ext_path = node->exts[u].argument;
+            break;
+        }
+    }
+    if (!ext_path) {
+        /* no path defined */
+        return SR_ERR_OK;
+    }
+
+    /* TODO */
+
+    return SR_ERR_OK;
+}
+
+/**
  * @brief Check for augeas errors.
  *
  * @param[in] aug Augeas handle.
@@ -136,6 +169,27 @@ augds_log_errly(const struct ly_ctx *ly_ctx)
 static int
 augds_aug2yang(augeas *aug, const struct lys_module *mod, struct lyd_node **mod_data)
 {
+    const struct lysc_node *node;
+    char *aug_path;
+    int r;
+
+    LYSC_TREE_DFS_BEGIN(mod->compiled->data, node) {
+        /* get path to find all relevant values in augeas data */
+        if ((r = augds_get_aug_path(node, &aug_path))) {
+            return r;
+        }
+
+        if (aug_path) {
+            /* TODO */
+        } else if (!(node->nodetype & LYD_NODE_INNER)) {
+            /* nodes without the extension can be skipped but only inner nodes are expected */
+            SRPLG_LOG_WRN(srpds_name, "Module \"%s\" node \"%s\" without augeas path extension.",
+                    node->module->name, node->name);
+        }
+
+        LYSC_TREE_DFS_END(mod->compiled->data, node);
+    }
+
     return SR_ERR_OK;
 }
 
@@ -186,8 +240,10 @@ srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owne
     }
 #endif
 
-    /* check owner/group/perms */
-    /* TODO */
+    /* keep owner/group/perms as they are */
+    (void)owner;
+    (void)group;
+    (void)perm;
 
 cleanup:
     free(lens);
