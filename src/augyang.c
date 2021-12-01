@@ -430,6 +430,13 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
     }
 }
 
+/**
+ * @brief Go through all the ynode nodes and increment counter based on the rule.
+ *
+ * @param[in] forest Forest of ynodes.
+ * @param[in] rule Callback function returns 1 to increment counter.
+ * @param[out] cnt Counter how many times the @p rule returned 1.
+ */
 static void
 ay_ynode_summary(struct ay_ynode *forest, ly_bool (*rule)(struct ay_ynode *), uint32_t *cnt)
 {
@@ -440,6 +447,14 @@ ay_ynode_summary(struct ay_ynode *forest, ly_bool (*rule)(struct ay_ynode *), ui
     }
 }
 
+/**
+ * @brief Print basic debug information about lense.
+ *
+ * @param[in] out Output where the data are printed.
+ * @param[in] lens Lense to print.
+ * @param[in] space Current indent.
+ * @param[in] lens_tag String representation of the @p lens tag.
+ */
 static void
 ay_print_lens_node_header(struct ly_out *out, struct lens *lens, int space, const char *lens_tag)
 {
@@ -455,6 +470,12 @@ ay_print_lens_node_header(struct ly_out *out, struct lens *lens, int space, cons
     ly_print(out, "%*s location: %.*s, %u, %u\n", space, "", len + 4, filename, first_line, first_column);
 }
 
+/**
+ * @brief Print debug information about lense and go to the next lense.
+ *
+ * @param[in,out] ctx Context for printing.
+ * @param[in] lens Lense to print.
+ */
 static void
 ay_print_lens_node(struct lprinter_ctx *ctx, struct lens *lens)
 {
@@ -561,6 +582,15 @@ ay_print_lens_node(struct lprinter_ctx *ctx, struct lens *lens)
     ctx->space = sp;
 }
 
+/**
+ * @brief Print debug information about lenses.
+ *
+ * @param[in] data General pointer to a node (eg lense or ynode).
+ * @param[in] func Callback functions for debug printer.
+ * @param[in] root_lense Lense where to begin.
+ * @param[out] str_out Printed result.
+ * @return 0 on success.
+ */
 static int
 ay_print_lens(void *data, struct lprinter_ctx_f *func, struct lens *root_lense, char **str_out)
 {
@@ -589,6 +619,13 @@ ay_print_lens(void *data, struct lprinter_ctx_f *func, struct lens *root_lense, 
 
 static int ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node);
 
+/**
+ * @brief Get a name of the lense.
+ *
+ * @param[in] mod Module where to find lense name.
+ * @param[in] lens Lense for which the name is to be found.
+ * @return Name of the lense or NULL.
+ */
 static char *
 ay_get_lense_name(struct module *mod, struct lens *lens)
 {
@@ -620,18 +657,29 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
     return ret;
 }
 
+/**
+ * @brief Print module name.
+ *
+ * @param[in] mod Module whose name is to be printed.
+ * @param[in] out Output for printing.
+ */
 static void
-ay_print_yang_module_name(struct yprinter_ctx *ctx)
+ay_print_yang_module_name(struct module *mod, struct ly_out *out)
 {
     char *name, *path;
     size_t namelen;
 
-    path = ctx->mod->bindings->value->info->filename->str;
+    path = mod->bindings->value->info->filename->str;
     ay_get_filename(path, &name, &namelen);
 
-    ly_print(ctx->out, "%.*s", namelen, name);
+    ly_print(out, "%.*s", namelen, name);
 }
 
+/**
+ * @brief Print opening curly brace and set new indent.
+ *
+ * @param[in,out] ctx Context for printing.
+ */
 static void
 ay_print_yang_nesting_begin(struct yprinter_ctx *ctx)
 {
@@ -639,6 +687,11 @@ ay_print_yang_nesting_begin(struct yprinter_ctx *ctx)
     ctx->space += SPACE_INDENT;
 }
 
+/**
+ * @brief Print closing curly brace and set new indent.
+ *
+ * @param[in,out] ctx Context for printing.
+ */
 static void
 ay_print_yang_nesting_end(struct yprinter_ctx *ctx)
 {
@@ -646,6 +699,13 @@ ay_print_yang_nesting_end(struct yprinter_ctx *ctx)
     ly_print(ctx->out, "%*s}\n", ctx->space, "");
 }
 
+/**
+ * @brief Iterate over to all node's children and call print function.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[node] node Current node which may have children.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -660,6 +720,15 @@ ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Modify the identifier to conform to the constraints of the yang identifier.
+ *
+ * TODO: complete for all input characters.
+ *
+ * @param[in] ident Identifier for standardization.
+ * @param[out] buffer Buffer in which a valid identifier will be written.
+ * @return 0 on success.
+ */
 static int
 ay_get_ident_standardized(char *ident, char *buffer)
 {
@@ -699,12 +768,26 @@ ay_get_ident_standardized(char *ident, char *buffer)
     return 0;
 }
 
+/**
+ * @brief Substitution of regular pattern parts.
+ *
+ * Auxiliary structure for ay_get_regex_standardized()
+ */
 struct regex_map
 {
-    const char *aug;
-    const char *yang;
+    const char *aug;    /**< Input string to match. */
+    const char *yang;   /**< Substituent satisfying yang language. */
 };
 
+/**
+ * @brief Modify augeas regular pattern to conform to the constraints of the yang regular pattern.
+ *
+ * TODO: add reliable conversion.
+ *
+ * @param[in] rp Regular pattern to check or possibly change.
+ * @param[out] regout Regular pattern that conforms to the yang language. The caller must free memory.
+ * @param 0 on success.
+ */
 static int
 ay_get_regex_standardized(const struct regexp *rp, char **regout)
 {
@@ -781,6 +864,14 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
     return 0;
 }
 
+/**
+ * @brief Evaluate the identifier for the node.
+ *
+ * @param[in] ctx Current printing context.
+ * @param[in] node Node for which the identifier is to be derived.
+ * @param[out] buffer Buffer in which the obtained identifier is written.
+ * @return 0 on success.
+ */
 static int
 ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
 {
@@ -843,6 +934,13 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
     return ret;
 }
 
+/**
+ * @brief Print node identifier according to the yang language.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the identifier will be printed.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -853,13 +951,14 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
     uint32_t duplicates = 1;
 
     if (node->parent && (node->parent->type == YN_ROOT)) {
-        ay_print_yang_module_name(ctx);
+        ay_print_yang_module_name(ctx->mod, ctx->out);
         return ret;
     }
 
     ret = ay_get_yang_ident(ctx, node, ident);
     AY_CHECK_RET(ret);
 
+    /* Make duplicate identifiers unique. */
     iter_start = node->parent ? node->parent->child : &ctx->tree[0];
     for (iter = iter_start; iter; iter = iter->next) {
         if (iter == node) {
@@ -1268,10 +1367,10 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ctx.out = out;
 
     ly_print(out, "module ");
-    ay_print_yang_module_name(&ctx);
+    ay_print_yang_module_name(ctx.mod, ctx.out);
     ly_print(out, " {\n");
     ly_print(out, "  namespace \"aug:");
-    ay_print_yang_module_name(&ctx);
+    ay_print_yang_module_name(ctx.mod, ctx.out);
     ly_print(out, "\";\n");
     ly_print(out, "  prefix aug;\n\n");
     ly_print(out, "  import augeas-extension {\n");
