@@ -1652,7 +1652,7 @@ ay_ynode_debug_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
 
     assert(tree->type == YN_ROOT);
 
-    if (!(vercode & vermask)) {
+    if (!vercode) {
         return 0;
     }
 
@@ -1661,7 +1661,9 @@ ay_ynode_debug_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
     ret = ay_print_lens(tree, &print_func, NULL, &str1);
     AY_CHECK_RET(ret);
 
-    printf("%s\n", str1);
+    if (vercode & vermask) {
+        printf("%s\n", str1);
+    }
     free(str1);
 
     return ret;

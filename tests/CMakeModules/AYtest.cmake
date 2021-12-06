@@ -37,8 +37,8 @@ set(GENFILE "${YANG_GEN_DIR}/${MOD}.yang")
 set(EXPFILE "${YANG_EXP_DIR}/${MOD}.yang")
 
 # generate yang file
-execute_process(COMMAND ${AUGYANG_BIN} -O ${YANG_GEN_DIR} ${MOD} RESULT_VARIABLE ret)
-if(ret EQUAL 1)
+execute_process(COMMAND ${AUGYANG_BIN} -v 0x8000 -O ${YANG_GEN_DIR} ${MOD} RESULT_VARIABLE ret)
+if(NOT ret EQUAL 0)
     message(FATAL_ERROR "[aytest] '${MOD}' module generation failed.")
 endif()
 
