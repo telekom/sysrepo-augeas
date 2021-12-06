@@ -2164,6 +2164,83 @@ ay_ynode_insert_sibling(struct ay_ynode *dst, uint32_t index)
 }
 
 static int
+ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+{
+    struct ay_ynode *buffer, *iter;
+    int64_t offset;
+    uint32_t count;
+
+    count = tree[src].descendants + 1;
+    buffer = malloc(count * sizeof *tree);
+    if (!buffer) {
+        return AYE_MEMORY;
+    }
+
+    memcpy(buffer, &tree[src], count * sizeof *tree);
+    for (uint32_t i = 0; i < count; i++) {
+        ay_ynode_delete_node(tree, src);
+    }
+    if (dst < src) {
+        for (uint32_t i = 0; i < count; i++) {
+            ay_ynode_insert_gap(tree, dst);
+        }
+        offset = ((int64_t) dst) - src;
+    } else {
+        for (uint32_t i = 0; i < count; i++) {
+            ay_ynode_insert_gap(tree, dst - count);
+        }
+        dst -= count;
+        offset = ((int64_t) dst) - src;
+    }
+    memcpy(&tree[dst], buffer, count * sizeof *tree);
+    free(buffer);
+
+    for (uint32_t i = 1; i < count; i++) {
+        iter = &tree[dst + i];
+        iter->parent = iter->parent ? iter->parent + offset : NULL;
+        iter->next = iter->next ? iter->next + offset : NULL;
+        iter->child = iter->child ? iter->child + offset : NULL;
+    }
+
+    return 0;
+}
+
+static int
+ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+{
+    int ret;
+    struct ay_ynode *iter, *node, *subtree;
+    uint32_t subtree_nodes;
+
+    if (dst == src) {
+        return 0;
+    }
+
+    subtree_nodes = tree[src].descendants + 1;
+    ret = ay_ynode_move_subtree(tree, dst + tree[dst].descendants + 1, src);
+    AY_CHECK_RET(ret);
+
+    if (dst < src) {
+        node = &tree[dst];
+    } else {
+        node = &tree[dst - subtree_nodes];
+    }
+    subtree = node + node->descendants + 1;
+
+    subtree->parent = node->parent;
+    subtree->next = node->next ? subtree + subtree->descendants + 1 : NULL;
+    subtree->child = subtree->child ? subtree + 1 : NULL;
+
+    node->next = subtree;
+
+    for (iter = node->parent; iter; iter = iter->parent) {
+        iter->descendants += subtree->descendants + 1;
+    }
+
+    return ret;
+}
+
+static int
 ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
 {
     for (uint32_t i = 0; i < count; i++) {
@@ -2242,6 +2319,47 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i].next));
         AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
+    }
+
+end:
+    if (ret) {
+        printf(AY_NAME " DEBUG: %s failed\n", msg);
+    }
+    LY_ARRAY_FREE(dupl);
+    LY_ARRAY_FREE(snap);
+
+    return ret;
+
+error:
+    ret = AYE_DEBUG_FAILED;
+    goto end;
+}
+
+static int
+ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
+{
+    int ret = 0;
+    struct ay_ynode *dupl = NULL, *snap = NULL;
+    const char *msg;
+
+    if (!vercode) {
+        return ret;
+    }
+
+    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree), ret, end);
+    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, end);
+    ay_ynode_copy(dupl, tree);
+    memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
+
+    msg = "ynode move_subtree";
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
+        if (dupl[i].next && dupl[i].next->next) {
+            ret = ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
+            AY_CHECK_GOTO(ret, error);
+            ret = ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, dupl[i].next->next), AY_INDEX(dupl, dupl[i].next));
+            AY_CHECK_GOTO(ret, error);
+            AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        }
     }
 
 end:
@@ -2574,6 +2692,8 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
 
     /* Apply transformations. */
     ret = ay_ynode_debug_insert_delete(vercode, ytree);
+    AY_CHECK_GOTO(ret, end);
+    ret = ay_ynode_debug_move_subtree(vercode, ytree);
     AY_CHECK_GOTO(ret, end);
     ret = ay_ynode_transformations(vercode, &ytree);
     AY_CHECK_GOTO(ret, end);
