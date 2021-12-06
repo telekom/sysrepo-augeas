@@ -9,9 +9,9 @@ module securetty {
   container securetty {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       leaf word {
         type string {

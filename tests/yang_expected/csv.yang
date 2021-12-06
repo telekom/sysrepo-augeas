@@ -9,9 +9,9 @@ module csv {
   container csv {
     list entry {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       choice entry {
         case field {

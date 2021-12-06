@@ -9,11 +9,11 @@ module cmdline {
   container cmdline {
     list list {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
-        augex:data-path "$key";
       }
       leaf node {
         type string {

@@ -9,11 +9,11 @@ module login_defs {
   container login_defs {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
-        augex:data-path "$key";
       }
       leaf node {
         type string {

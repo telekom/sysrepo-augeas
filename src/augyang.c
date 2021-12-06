@@ -1042,11 +1042,18 @@ ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
+    struct ay_ynode *iter;
+
     if (node->parent && (node->type == YN_CONTAINER) && (node->parent->type == YN_ROOT)) {
         /* top-level data-container */
         return;
     } else if (node->type == YN_LIST) {
-        return;
+        for (iter = node->child; iter; iter = iter->next) {
+            if (iter->type == YN_KEY) {
+                node = iter;
+                break;
+            }
+        }
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
     ay_print_yang_data_path_r(ctx, node->parent);
@@ -1169,7 +1176,6 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_default_value(ctx, node);
         AY_CHECK_RET(ret);
     }
-    ay_print_yang_data_path(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     return ret;
@@ -1222,7 +1228,6 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_ident(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
-    ay_print_yang_data_path(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);

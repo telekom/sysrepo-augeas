@@ -9,9 +9,9 @@ module backuppchosts {
   container backuppchosts {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       leaf host {
         type string {

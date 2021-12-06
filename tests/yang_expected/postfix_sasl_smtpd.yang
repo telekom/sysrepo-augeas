@@ -9,11 +9,11 @@ module postfix_sasl_smtpd {
   container postfix_sasl_smtpd {
     list list {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "pwcheck_method";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -24,11 +24,11 @@ module postfix_sasl_smtpd {
     }
     list list2 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "auxprop_plugin";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -39,11 +39,11 @@ module postfix_sasl_smtpd {
     }
     list list3 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "saslauthd_path";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -54,11 +54,11 @@ module postfix_sasl_smtpd {
     }
     list list4 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "mech_list";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -69,11 +69,11 @@ module postfix_sasl_smtpd {
     }
     list list5 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "sql_engine";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -84,11 +84,11 @@ module postfix_sasl_smtpd {
     }
     list list6 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "log_level";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {
@@ -99,11 +99,11 @@ module postfix_sasl_smtpd {
     }
     list list7 {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "auto_transition";
         }
-        augex:data-path "$key";
       }
       leaf value_to_eol {
         type string {

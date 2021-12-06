@@ -9,11 +9,11 @@ module devfsrules {
   container devfsrules {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
-        augex:data-path "$key";
       }
       leaf id {
         type string {
@@ -23,9 +23,9 @@ module devfsrules {
       }
       list entry {
         key "key";
+        augex:data-path "$key/$key";
         leaf key {
           type uint64;
-          augex:data-path "$key/$key";
         }
         leaf line_re {
           type string {

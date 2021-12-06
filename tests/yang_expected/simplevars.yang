@@ -9,11 +9,11 @@ module simplevars {
   container simplevars {
     list entry {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
-        augex:data-path "$key";
       }
       leaf to_comment_re {
         type string {

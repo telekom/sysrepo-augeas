@@ -9,9 +9,9 @@ module ethers {
   container ethers {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       leaf mac {
         type string {

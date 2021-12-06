@@ -9,9 +9,9 @@ module grubenv {
   container grubenv {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       leaf name {
         type string {

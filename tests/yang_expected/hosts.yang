@@ -9,9 +9,9 @@ module hosts {
   container hosts {
     list record {
       key "key";
+      augex:data-path "$key";
       leaf key {
         type uint64;
-        augex:data-path "$key";
       }
       leaf ipaddr {
         type string {
