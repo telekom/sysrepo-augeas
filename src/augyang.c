@@ -222,7 +222,7 @@ enum yang_type {
  * The ynode node represents the yang data node. It is generally created from a lense with tag L_SUBTREE, but can also
  * be created later, in which case ay_ynode.snode is set to NULL. Nodes are stored in the Sized array, so if a node is
  * added or removed from the array, then the ay_ynode pointers must be reset to the correct address so that the tree
- * structure made sense. Functions ay_ynode_insert_* and ay_ynode_remove_node() are intended for these modifications.
+ * structure made sense. Functions ay_ynode_insert_* and ay_ynode_delete_node() are intended for these modifications.
  * These modifications are applied in transformations and they are gradually applied in the ay_ynode_transformations(),
  * which results in a print-ready yang format. The structure of the ynode tree should be adjusted in these
  * transformations. The ynode tree is created by the ynode forest (it has multiple root nodes), which is made up of a
@@ -1997,7 +1997,7 @@ ay_ynode_insert_node(struct ay_ynode *dst, uint32_t index)
 }
 
 static void
-ay_ynode_remove_node_(struct ay_ynode *dst, uint32_t index)
+ay_ynode_delete_node_(struct ay_ynode *dst, uint32_t index)
 {
     memmove(&dst[index], &dst[index + 1], (LY_ARRAY_COUNT(dst) - index - 1) * sizeof *dst);
 
@@ -2013,7 +2013,7 @@ ay_ynode_remove_node_(struct ay_ynode *dst, uint32_t index)
 }
 
 static void
-ay_ynode_remove_node(struct ay_ynode *dst, uint32_t index)
+ay_ynode_delete_node(struct ay_ynode *dst, uint32_t index)
 {
     struct ay_ynode *iter, *removed, *last = NULL;
 
@@ -2048,7 +2048,7 @@ ay_ynode_remove_node(struct ay_ynode *dst, uint32_t index)
         }
     }
 
-    ay_ynode_remove_node_(dst, index);
+    ay_ynode_delete_node_(dst, index);
 }
 
 static void
@@ -2124,7 +2124,7 @@ ay_ynode_insert_child(struct ay_ynode *dst, uint32_t index)
 }
 
 static int
-ay_ynode_debug_insert_remove(uint64_t vercode, struct ay_ynode *forest)
+ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *forest)
 {
     int ret = 0;
     const char *msg;
@@ -2142,7 +2142,7 @@ ay_ynode_debug_insert_remove(uint64_t vercode, struct ay_ynode *forest)
         ay_ynode_copy(dupl, forest);
         memcpy(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest);
         ay_ynode_insert_child(dupl, i);
-        ay_ynode_remove_node(dupl, i + 1);
+        ay_ynode_delete_node(dupl, i + 1);
         AY_CHECK_GOTO(memcmp(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -2160,7 +2160,7 @@ ay_ynode_debug_insert_remove(uint64_t vercode, struct ay_ynode *forest)
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
-        ay_ynode_remove_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
+        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
         AY_CHECK_GOTO(memcmp(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -2181,18 +2181,18 @@ error:
 }
 
 static void
-ay_remove_type_unknown(struct ay_ynode *dst)
+ay_delete_type_unknown(struct ay_ynode *dst)
 {
     for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
         if ((dst[i].type == YN_UNKNOWN) && (!dst[i].child)) {
-            ay_ynode_remove_node(dst, i);
+            ay_ynode_delete_node(dst, i);
             i--;
         }
     }
 }
 
 static void
-ay_remove_comment(struct ay_ynode *dst)
+ay_delete_comment(struct ay_ynode *dst)
 {
     struct ay_ynode *iter;
     struct lens *label;
@@ -2202,7 +2202,7 @@ ay_remove_comment(struct ay_ynode *dst)
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL)) {
             if (!strcmp("#comment", label->string->str)) {
-                ay_ynode_remove_node(dst, i);
+                ay_ynode_delete_node(dst, i);
                 i--;
             }
         }
@@ -2210,7 +2210,7 @@ ay_remove_comment(struct ay_ynode *dst)
 }
 
 static void
-ay_remove_top_choice(struct ay_ynode *tree)
+ay_delete_top_choice(struct ay_ynode *tree)
 {
     struct ay_ynode *iter;
     struct ay_lnode *choice;
@@ -2236,7 +2236,7 @@ ay_remove_top_choice(struct ay_ynode *tree)
 }
 
 static void
-ay_ynode_remove_build_list(struct ay_ynode *tree)
+ay_ynode_delete_build_list(struct ay_ynode *tree)
 {
     struct ay_ynode *node1, *node2;
     struct ay_lnode *iter1, *iter2, *concat;
@@ -2282,8 +2282,8 @@ ay_ynode_remove_build_list(struct ay_ynode *tree)
                 continue;
             }
 
-            /* remove node1 because it is useless */
-            ay_ynode_remove_node(tree, AY_INDEX(tree, node1));
+            /* delete node1 because it is useless */
+            ay_ynode_delete_node(tree, AY_INDEX(tree, node1));
             i--;
             break;
         }
@@ -2291,7 +2291,7 @@ ay_ynode_remove_build_list(struct ay_ynode *tree)
 }
 
 static void
-ay_ynode_remove_lonely_key(struct ay_ynode *tree)
+ay_ynode_delete_lonely_key(struct ay_ynode *tree)
 {
     struct ay_ynode *iter, *node;
 
@@ -2311,11 +2311,11 @@ repeat:
                 continue;
             }
             if (!node->value && (iter->value->lens->tag == L_STORE)) {
-                ay_ynode_remove_node(tree, AY_INDEX(tree, node));
+                ay_ynode_delete_node(tree, AY_INDEX(tree, node));
                 i--;
                 break;
             } else if (!iter->value && (node->value->lens->tag == L_STORE)) {
-                ay_ynode_remove_node(tree, AY_INDEX(tree, iter));
+                ay_ynode_delete_node(tree, AY_INDEX(tree, iter));
                 goto repeat;
             }
         }
@@ -2434,19 +2434,19 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
-    /* remove "lns . ( sep . lns )*" pattern (TODO bilateral) */
-    ay_ynode_remove_build_list(*tree);
+    /* delete "lns . ( sep . lns )*" pattern (TODO bilateral) */
+    ay_ynode_delete_build_list(*tree);
 
-    /* remove "[key lns1 store lns2] | [key lns1]" pattern (bilateral) */
-    ay_ynode_remove_lonely_key(*tree);
+    /* delete "[key lns1 store lns2] | [key lns1]" pattern (bilateral) */
+    ay_ynode_delete_lonely_key(*tree);
 
     /* set type */
     ay_ynode_set_type(*tree);
 
-    /* remove unnecessary nodes */
-    ay_remove_type_unknown(*tree);
-    ay_remove_comment(*tree);
-    ay_remove_top_choice(*tree);
+    /* delete unnecessary nodes */
+    ay_delete_type_unknown(*tree);
+    ay_delete_comment(*tree);
+    ay_delete_top_choice(*tree);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_REMOVE, *tree);
     AY_CHECK_RET(ret);
@@ -2485,7 +2485,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ay_ynode_debug_forest(vercode, mod, yforest);
 
     AY_CHECK_GOTO(ay_ynode_debug_copy(vercode, yforest), end);
-    AY_CHECK_GOTO(ay_ynode_debug_insert_remove(vercode, yforest), end);
+    AY_CHECK_GOTO(ay_ynode_debug_insert_delete(vercode, yforest), end);
 
     ret = ay_ynode_create_tree(yforest, &ytree);
     AY_CHECK_GOTO(ret, end);
