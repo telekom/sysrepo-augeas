@@ -1978,7 +1978,7 @@ ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
 }
 
 static void
-ay_ynode_insert_node(struct ay_ynode *dst, uint32_t index)
+ay_ynode_insert_gap(struct ay_ynode *dst, uint32_t index)
 {
     memmove(&dst[index + 1], &dst[index], (LY_ARRAY_COUNT(dst) - index) * sizeof *dst);
     memset(&dst[index], 0, sizeof *dst);
@@ -1986,27 +1986,30 @@ ay_ynode_insert_node(struct ay_ynode *dst, uint32_t index)
     LY_ARRAY_INCREMENT(dst);
     for (uint32_t i = 0; i < index; i++) {
         dst[i].next = dst[i].next >= &dst[index] ? dst[i].next + 1 : dst[i].next;
+        dst[i].child = dst[i].child >= &dst[index] ? dst[i].child + 1 : dst[i].child;
     }
     for (uint32_t i = index + 1; i < LY_ARRAY_COUNT(dst); i++) {
-        if (dst[i].parent >= &dst[index]) {
-            dst[i].parent += 1;
-        }
+        dst[i].parent = dst[i].parent >= &dst[index] ? dst[i].parent + 1 : dst[i].parent;
         dst[i].child = dst[i].child ? dst[i].child + 1 : NULL;
         dst[i].next = dst[i].next ? dst[i].next + 1 : NULL;
     }
 }
 
 static void
-ay_ynode_delete_node_(struct ay_ynode *dst, uint32_t index)
+ay_ynode_delete_gap(struct ay_ynode *dst, uint32_t index)
 {
     memmove(&dst[index], &dst[index + 1], (LY_ARRAY_COUNT(dst) - index - 1) * sizeof *dst);
+    memset(dst + LY_ARRAY_COUNT(dst) - 1, 0, sizeof *dst);
 
     LY_ARRAY_DECREMENT(dst);
     for (uint32_t i = 0; i < index; i++) {
+        // assert((dst[i].next != &dst[index]) && (dst[i].child != &dst[index]));
         dst[i].next = dst[i].next > &dst[index] ? dst[i].next - 1 : dst[i].next;
+        dst[i].child = dst[i].child > &dst[index] ? dst[i].child - 1 : dst[i].child;
     }
     for (uint32_t i = index; i < LY_ARRAY_COUNT(dst); i++) {
-        dst[i].parent = dst[i].parent >= &dst[index] ? dst[i].parent - 1 : dst[i].parent;
+        // assert(dst[i].parent != &dst[index]);
+        dst[i].parent = dst[i].parent > &dst[index] ? dst[i].parent - 1 : dst[i].parent;
         dst[i].child = dst[i].child ? dst[i].child - 1 : NULL;
         dst[i].next = dst[i].next ? dst[i].next - 1 : NULL;
     }
@@ -2048,7 +2051,7 @@ ay_ynode_delete_node(struct ay_ynode *dst, uint32_t index)
         }
     }
 
-    ay_ynode_delete_node_(dst, index);
+    ay_ynode_delete_gap(dst, index);
 }
 
 static void
@@ -2058,7 +2061,7 @@ ay_ynode_insert_wrapper(struct ay_ynode *dst, uint32_t index)
 
     wrapper = &dst[index];
     child = &dst[index + 1];
-    ay_ynode_insert_node(dst, index);
+    ay_ynode_insert_gap(dst, index);
 
     wrapper->parent = child->parent;
     wrapper->next = child->next;
@@ -2070,8 +2073,17 @@ ay_ynode_insert_wrapper(struct ay_ynode *dst, uint32_t index)
     child->parent = wrapper;
     child->next = NULL;
 
-    for (iter = wrapper->parent; iter; iter = iter->parent) {
-        iter->descendants++;
+    if (wrapper->parent) {
+        for (iter = wrapper->parent->child; iter; iter = iter->next) {
+            if (iter->next == wrapper + 1) {
+                iter->next = wrapper;
+                break;
+            }
+        }
+
+        for (iter = wrapper->parent; iter; iter = iter->parent) {
+            iter->descendants++;
+        }
     }
 }
 
@@ -2105,7 +2117,7 @@ ay_ynode_insert_child(struct ay_ynode *dst, uint32_t index)
 
     parent = &dst[index];
     new_child = &dst[index + 1];
-    ay_ynode_insert_node(dst, index + 1);
+    ay_ynode_insert_gap(dst, index + 1);
 
     new_child->parent = parent;
     new_child->next = parent->child ? &dst[index + 2] : NULL;
