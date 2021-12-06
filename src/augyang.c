@@ -2137,6 +2137,32 @@ ay_ynode_insert_child(struct ay_ynode *dst, uint32_t index)
     }
 }
 
+static void
+ay_ynode_insert_sibling(struct ay_ynode *dst, uint32_t index)
+{
+    struct ay_ynode *iter, *node, *new_sibling;
+
+    node = &dst[index];
+    new_sibling = node + node->descendants + 1;
+    ay_ynode_insert_gap(dst, AY_INDEX(dst, new_sibling));
+
+    new_sibling->parent = node->parent;
+    new_sibling->next = node->next ? node->next + 1 : NULL;
+    new_sibling->child = NULL;
+    new_sibling->descendants = 0;
+    new_sibling->snode = NULL;
+    new_sibling->type = YN_UNKNOWN;
+    new_sibling->label = NULL;
+    new_sibling->value = NULL;
+    new_sibling->choice = NULL;
+
+    node->next = new_sibling;
+
+    for (iter = node->parent; iter; iter = iter->parent) {
+        iter->descendants++;
+    }
+}
+
 static int
 ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
 {
@@ -2204,6 +2230,16 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
+        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_SET_LY_ARRAY_SIZE(dupl, 0);
+    }
+
+    msg = "ynode insert_sibling";
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        ay_ynode_copy(dupl, tree);
+        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
+        ay_ynode_insert_sibling(dupl, i);
+        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i].next));
         AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
