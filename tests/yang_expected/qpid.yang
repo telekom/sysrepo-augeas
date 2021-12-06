@@ -19,7 +19,7 @@ module qpid {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }

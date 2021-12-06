@@ -19,7 +19,7 @@ module device_map {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }

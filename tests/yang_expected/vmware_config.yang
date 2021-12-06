@@ -19,7 +19,7 @@ module vmware_config {
         type string {
           pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }

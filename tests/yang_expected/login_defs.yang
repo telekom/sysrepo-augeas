@@ -19,7 +19,7 @@ module login_defs {
         type string {
           pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }

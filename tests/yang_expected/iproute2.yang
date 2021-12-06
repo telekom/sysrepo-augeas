@@ -19,7 +19,7 @@ module iproute2 {
         type string {
           pattern "[a-zA-Z0-9/-]+";
         }
-        augex:data-path "$id";
+        augex:data-path "^id";
       }
     }
   }

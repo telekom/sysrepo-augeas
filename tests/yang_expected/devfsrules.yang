@@ -31,7 +31,7 @@ module devfsrules {
           type string {
             pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
           }
-          augex:data-path "$key/$key";
+          augex:data-path "$key/^key";
         }
       }
     }

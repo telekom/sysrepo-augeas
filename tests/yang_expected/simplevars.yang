@@ -19,7 +19,7 @@ module simplevars {
         type string {
           pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }

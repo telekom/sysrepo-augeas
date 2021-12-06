@@ -19,7 +19,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list2 {
@@ -34,7 +34,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list3 {
@@ -49,7 +49,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list4 {
@@ -64,7 +64,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list5 {
@@ -79,7 +79,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list6 {
@@ -94,7 +94,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
     list list7 {
@@ -109,7 +109,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$key";
+        augex:data-path "^key";
       }
     }
   }
