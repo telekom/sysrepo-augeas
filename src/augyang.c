@@ -2138,36 +2138,65 @@ ay_ynode_insert_child(struct ay_ynode *dst, uint32_t index)
 }
 
 static int
-ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *forest)
+ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        if (arr1[i].parent != arr2[i].parent) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.parent\n", iter, i);
+            return 1;
+        } else if (arr1[i].next != arr2[i].next) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.next\n", iter, i);
+            return 1;
+        } else if (arr1[i].child != arr2[i].child) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.child\n", iter, i);
+            return 1;
+        } else if (arr1[i].descendants != arr2[i].descendants) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.descendants\n", iter, i);
+            return 1;
+        } else if (arr1[i].type != arr2[i].type) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.type\n", iter, i);
+            return 1;
+        } else if (arr1[i].snode != arr2[i].snode) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.snode\n", iter, i);
+            return 1;
+        } else if (arr1[i].label != arr2[i].label) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.label\n", iter, i);
+            return 1;
+        } else if (arr1[i].value != arr2[i].value) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.value\n", iter, i);
+            return 1;
+        } else if (arr1[i].choice != arr2[i].choice) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.choice\n", iter, i);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int
+ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
 {
     int ret = 0;
     const char *msg;
-    struct ay_ynode *dupl = NULL, *snap = NULL, *tree = NULL;
+    struct ay_ynode *dupl = NULL, *snap = NULL;
 
     if (!vercode) {
         return ret;
     }
 
-    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(forest) + 1, ret, end);
-    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(forest), ret, end);
-
-    msg = "ynode insert_child";
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
-        ay_ynode_copy(dupl, forest);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest);
-        ay_ynode_insert_child(dupl, i);
-        ay_ynode_delete_node(dupl, i + 1);
-        AY_CHECK_GOTO(memcmp(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-    LY_ARRAY_FREE(dupl);
-    LY_ARRAY_FREE(snap);
-    dupl = snap = NULL;
-    ret = ay_ynode_create_tree(forest, &tree);
-    AY_CHECK_GOTO(ret, end);
     LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree) + 1, ret, end);
     LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, end);
+
+    msg = "ynode insert_child";
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        ay_ynode_copy(dupl, tree);
+        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
+        ay_ynode_insert_child(dupl, i);
+        ay_ynode_delete_node(dupl, i + 1);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_SET_LY_ARRAY_SIZE(dupl, 0);
+    }
 
     msg = "ynode insert_parent";
     for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
@@ -2175,7 +2204,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *forest)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
-        AY_CHECK_GOTO(memcmp(snap, dupl, LY_ARRAY_COUNT(forest) * sizeof *forest), error);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -2185,7 +2214,6 @@ end:
     }
     LY_ARRAY_FREE(dupl);
     LY_ARRAY_FREE(snap);
-    LY_ARRAY_FREE(tree);
 
     return ret;
 
@@ -2490,22 +2518,27 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ay_lense_summary(lens, &ltree_size, &yforest_size, &l_rec);
     AY_CHECK_COND(l_rec, AYE_L_REC);
 
+    /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, end);
     ay_lnode_create_tree(ltree, lens, ltree);
     ay_lnode_debug_tree(vercode, mod, ltree);
 
+    /* Create ynode forest. */
     LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, end);
     ay_ynode_create_forest(ltree, yforest);
     ay_ynode_debug_forest(vercode, mod, yforest);
 
-    AY_CHECK_GOTO(ay_ynode_debug_copy(vercode, yforest), end);
-    AY_CHECK_GOTO(ay_ynode_debug_insert_delete(vercode, yforest), end);
-
+    /* Convert ynode forest to tree. */
+    ret = ay_ynode_debug_copy(vercode, yforest);
+    AY_CHECK_GOTO(ret, end);
     ret = ay_ynode_create_tree(yforest, &ytree);
     AY_CHECK_GOTO(ret, end);
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE, ytree);
     AY_CHECK_GOTO(ret, end);
 
+    /* Apply transformations. */
+    ret = ay_ynode_debug_insert_delete(vercode, ytree);
+    AY_CHECK_GOTO(ret, end);
     ret = ay_ynode_transformations(vercode, &ytree);
     AY_CHECK_GOTO(ret, end);
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
