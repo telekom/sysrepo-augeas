@@ -993,10 +993,16 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
                     target->value && (target->value->lens->tag == L_STORE)) {
                 /* implicitly generated yang node with 'store' */
                 ly_print(ctx->out, "^");
+                ay_print_yang_ident(ctx, iter);
+            } else if ((target == list) && !iter->label && !iter->value) {
+                /* implicitly generated list key with unsigned integer type */
+                ly_print(ctx->out, "<position>");
+            } else if (list->label && (list->label->lens->tag == L_LABEL)) {
+                ly_print(ctx->out, "%s", list->label->lens->string->str);
             } else {
                 ly_print(ctx->out, "$");
+                ay_print_yang_ident(ctx, iter);
             }
-            ay_print_yang_ident(ctx, iter);
             break;
         }
     }
@@ -1022,9 +1028,7 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
         ly_print(ctx->out, "/");
     }
 
-    if ((node->type == YN_LIST) && label && (label->tag == L_LABEL)) {
-        ly_print(ctx->out, "%s", label->string->str);
-    } else if (node->type == YN_LIST) {
+    if (node->type == YN_LIST) {
         ay_print_yang_data_path_item_key(ctx, node, target);
     } else if ((node->type == YN_LEAFLIST) && label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
@@ -1049,18 +1053,9 @@ ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node, struc
 static void
 ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    struct ay_ynode *iter;
-
     if (node->parent && (node->type == YN_CONTAINER) && (node->parent->type == YN_ROOT)) {
         /* top-level data-container */
         return;
-    } else if (node->type == YN_LIST) {
-        for (iter = node->child; iter; iter = iter->next) {
-            if (iter->type == YN_KEY) {
-                node = iter;
-                break;
-            }
-        }
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
     ay_print_yang_data_path_r(ctx, node->parent, node);

@@ -22,6 +22,9 @@ module augeas-extension {
        This symbol indicates that the node was implicitly generated for the list key
        and stores the augeas value of the node specified by 'store' lens primitive.
 
+       The special keyword '<position>' may occur at the yang list node and indicates
+       that the key was implicitly generated only for the indexing list's records.
+
        NOTE: Look at the corresponding tests of a particular augeas module
        (located somewhere in augeas/lenses/tests/test_*) for a better understanding
        of what the path consists of.";
