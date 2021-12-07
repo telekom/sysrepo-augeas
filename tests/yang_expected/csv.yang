@@ -13,7 +13,7 @@ module csv {
       leaf _id {
         type uint64;
       }
-      choice entry {
+      choice ch_entry {
         case field {
           leaf-list field {
             type string {

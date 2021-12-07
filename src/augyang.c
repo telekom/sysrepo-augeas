@@ -796,6 +796,16 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
 
     struct regex_map regmap[] = {
         {"[_.A-Za-z0-9][-_.A-Za-z0-9]*\\\\$?", "[_.A-Za-z0-9][-_.A-Za-z0-9]*"},
+
+        {"#commen((t[^]\\n\\r\\/]|[^]\\n\\r\\/t])[^]\\n\\r\\/]*|)|#comme([^]\\n\\r\\/n][^]\\n\\r\\/]*|)|"
+            "#comm([^]\\n\\r\\/e][^]\\n\\r\\/]*|)|#com([^]\\n\\r\\/m][^]\\n\\r\\/]*|)|"
+            "#co([^]\\n\\r\\/m][^]\\n\\r\\/]*|)|#c([^]\\n\\r\\/o][^]\\n\\r\\/]*|)|"
+            "(#[^]\\n\\r\\/c]|[^]\\n\\r#\\/][^]\\n\\r\\/])[^]\\n\\r\\/]*|#|[^]\\n\\r#\\/]",
+
+            "#commen((t[^\\\\]\\n/]|[^\\\\]\\n/t])[^\\\\]\\n/]*|)|#comme([^\\\\]\\n/n][^\\\\]\\n/]*|)|"
+            "#comm([^\\\\]\\n/e][^\\\\]\\n/]*|)|#com([^\\\\]\\n/m][^\\\\]\\n/]*|)|"
+            "#co([^\\\\]\\n/m][^\\\\]\\n/]*|)|#c([^\\\\]\\n/o][^\\\\]\\n/]*|)|"
+            "(#[^\\\\]\\n/c]|[^\\\\]\\n#/][^\\\\]\\n/])[^\\\\]\\n/]*|#|[^\\\\]\\n#/]"},
     };
     // TODO: if right side of the regsub rule is bigger -> danger of valgrind error
     struct regex_map regsub[] = {
@@ -1297,7 +1307,7 @@ static int
 ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     if (node->parent) {
-        ly_print(ctx->out, "%*schoice ", ctx->space, "");
+        ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
         ay_print_yang_ident(ctx, node->parent);
     } else {
         ly_print(ctx->out, "%*schoice %s", ctx->space, "", ctx->mod->name);
@@ -1321,7 +1331,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
     choice = node->choice;
     iter_start = node->parent ? node->parent->child : &ctx->tree[0];
     for (iter = iter_start; iter; iter = iter->next) {
-        if (iter->snode && (iter->choice == choice)) {
+        if (iter->choice == choice) {
             first = iter == node ? 1 : 0;
             break;
         }
@@ -2073,13 +2083,18 @@ ay_ynode_delete_node(struct ay_ynode *dst, uint32_t index)
 static void
 ay_ynode_insert_wrapper(struct ay_ynode *dst, uint32_t index)
 {
-    struct ay_ynode *iter, *wrapper, *child;
+    struct ay_ynode *iter, *parent, *wrapper, *child;
 
     wrapper = &dst[index];
     child = &dst[index + 1];
     ay_ynode_insert_gap(dst, index);
 
-    wrapper->parent = child->parent;
+    parent = child->parent;
+    if (parent) {
+        parent->child = parent->child == child ? wrapper : parent->child;
+    }
+
+    wrapper->parent = parent;
     wrapper->next = child->next;
     wrapper->child = child;
     wrapper->descendants = child->descendants + 1;
@@ -2194,7 +2209,7 @@ ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
     for (uint32_t i = 0; i < count; i++) {
         ay_ynode_delete_node(tree, src);
     }
-    if (dst < src) {
+    if (dst <= src) {
         for (uint32_t i = 0; i < count; i++) {
             ay_ynode_insert_gap(tree, dst);
         }
@@ -2579,6 +2594,71 @@ repeat:
     }
 }
 
+static int
+ay_delete_list_with_same_key(struct ay_ynode *tree)
+{
+    int ret = 0;
+    struct ay_ynode *iter, *list1, *list2, *cont1, *cont2, *node;
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        if ((tree[i].type != YN_LIST) || (!tree[i].choice) || (!tree[i].label)) {
+            continue;
+        }
+        list1 = &tree[i];
+
+        for (iter = list1->next; iter && (iter->choice == list1->choice); iter = iter->next) {
+            if ((tree[i].type != YN_LIST) || (!tree[i].label)) {
+                continue;
+            }
+            list2 = iter;
+
+            if (list1->label->lens != list2->label->lens) {
+                continue;
+            }
+
+            /* delete list2 keys */
+            for (uint32_t j = 0; j < list2->descendants; j++) {
+                node = &list2[j + 1];
+                if (node->type == YN_KEY) {
+                    ay_ynode_delete_node(tree, AY_INDEX(tree, node));
+                    j--;
+                }
+            }
+
+            /* change list2 to container */
+            cont2 = list2;
+            cont2->type = YN_CONTAINER;
+            cont2->label = cont2->value = NULL;
+
+            /* insert container for list1 nodes */
+            ay_ynode_insert_parent(tree, AY_INDEX(tree, list1->child));
+            cont2++;
+            cont1 = list1->child;
+            cont1->type = YN_CONTAINER;
+            /* set cont1 the same choice */
+            cont1->choice = cont2->choice;
+            list1->choice = NULL;
+
+            /* move keys from cont1 to list1 */
+            for (uint32_t j = 0; j < list1->descendants; j++) {
+                node = &list1[j + 1];
+                if (node->type == YN_KEY) {
+                    ret = ay_ynode_move_subtree_as_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, node));
+                    AY_CHECK_RET(ret);
+                    j--;
+                    cont1++;
+                }
+            }
+
+            /* move cont2 next to cont1 */
+            ret = ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, cont1), AY_INDEX(tree, cont2));
+            AY_CHECK_RET(ret);
+        }
+    }
+
+    return ret;
+}
+
 static void
 ay_insert_data_container(struct ay_ynode *dst)
 {
@@ -2712,6 +2792,9 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key, 2);
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_LIST_KEY, *tree);
+    AY_CHECK_RET(ret);
+
+    ret = ay_delete_list_with_same_key(*tree);
     AY_CHECK_RET(ret);
 
     return ret;
