@@ -2346,7 +2346,7 @@ static int
 ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
 {
     int ret = 0;
-    struct ay_ynode *dupl = NULL, *snap = NULL;
+    struct ay_ynode *dupl = NULL, *snap = NULL, *place;
     const char *msg;
 
     if (!vercode) {
@@ -2358,12 +2358,13 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     ay_ynode_copy(dupl, tree);
     memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
 
-    msg = "ynode move_subtree";
+    msg = "ynode move_subtree_as_sibling";
     for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->next) {
             ret = ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
             AY_CHECK_GOTO(ret, error);
-            ret = ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, dupl[i].next->next), AY_INDEX(dupl, dupl[i].next));
+            place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
+            ret = ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
             AY_CHECK_GOTO(ret, error);
             AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
