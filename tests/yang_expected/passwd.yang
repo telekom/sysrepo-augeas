@@ -9,7 +9,7 @@ module passwd {
   container passwd {
     list entry {
       key "username";
-      augex:data-path "$username";
+      augex:data-path "$$username";
       leaf username {
         type string {
           pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
@@ -19,37 +19,37 @@ module passwd {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$username/password";
+        augex:data-path "$$username/password";
       }
       leaf uid {
         type string {
           pattern "[0-9]+";
         }
-        augex:data-path "$username/uid";
+        augex:data-path "$$username/uid";
       }
       leaf gid {
         type string {
           pattern "[0-9]+";
         }
-        augex:data-path "$username/gid";
+        augex:data-path "$$username/gid";
       }
       leaf name {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$username/name";
+        augex:data-path "$$username/name";
       }
       leaf home {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$username/home";
+        augex:data-path "$$username/home";
       }
       leaf shell {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$username/shell";
+        augex:data-path "$$username/shell";
       }
     }
     list nisentry {

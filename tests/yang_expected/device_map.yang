@@ -9,7 +9,7 @@ module device_map {
   container device_map {
     list map {
       key "_id";
-      augex:data-path "$_id";
+      augex:data-path "$$_id";
       leaf _id {
         type string {
           pattern "(((h|f|c)d[0-9]+(,[0-9a-zA-Z]+){0,2})|(0x[0-9a-fA-F]+))|([0-9]+)";
@@ -19,7 +19,7 @@ module device_map {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "^_id";
+        augex:data-path "^^_id";
       }
     }
   }

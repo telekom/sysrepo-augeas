@@ -9,7 +9,7 @@ module hosts {
   container hosts {
     list record {
       key "_id";
-      augex:data-path "$_id";
+      augex:data-path "$$_id";
       leaf _id {
         type uint64;
       }
@@ -17,19 +17,19 @@ module hosts {
         type string {
           pattern "[^# \n\t]+";
         }
-        augex:data-path "$_id/ipaddr";
+        augex:data-path "$$_id/ipaddr";
       }
       leaf canonical {
         type string {
           pattern "[^# \n\t]+";
         }
-        augex:data-path "$_id/canonical";
+        augex:data-path "$$_id/canonical";
       }
       leaf-list alias {
         type string {
           pattern "[^# \n\t]+";
         }
-        augex:data-path "$_id/alias";
+        augex:data-path "$$_id/alias";
       }
     }
   }

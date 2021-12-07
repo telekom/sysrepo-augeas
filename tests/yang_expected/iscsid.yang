@@ -9,7 +9,7 @@ module iscsid {
   container iscsid {
     list kv {
       key "key_re";
-      augex:data-path "$key_re";
+      augex:data-path "$$key_re";
       leaf key_re {
         type string {
           pattern "[][A-Za-z0-9_.-]+";
@@ -19,7 +19,7 @@ module iscsid {
         type string {
           pattern "[^ \t\n](.*[^ \t\n])?";
         }
-        augex:data-path "^key_re";
+        augex:data-path "^^key_re";
       }
     }
   }

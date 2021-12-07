@@ -9,7 +9,7 @@ module securetty {
   container securetty {
     list record {
       key "_id";
-      augex:data-path "$_id";
+      augex:data-path "$$_id";
       leaf _id {
         type uint64;
       }
@@ -17,7 +17,7 @@ module securetty {
         type string {
           pattern "[^ \t\n#]+";
         }
-        augex:data-path "^_id";
+        augex:data-path "^^_id";
       }
     }
   }

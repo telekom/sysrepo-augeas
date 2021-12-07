@@ -992,7 +992,7 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
                     !target->snode && !target->label &&
                     target->value && (target->value->lens->tag == L_STORE)) {
                 /* implicitly generated yang node with 'store' */
-                ly_print(ctx->out, "^");
+                ly_print(ctx->out, "^^");
                 ay_print_yang_ident(ctx, iter);
             } else if ((target == list) && !iter->label && !iter->value) {
                 /* implicitly generated list key with unsigned integer type */
@@ -1000,7 +1000,7 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
             } else if (list->label && (list->label->lens->tag == L_LABEL)) {
                 ly_print(ctx->out, "%s", list->label->lens->string->str);
             } else {
-                ly_print(ctx->out, "$");
+                ly_print(ctx->out, "$$");
                 ay_print_yang_ident(ctx, iter);
             }
             break;

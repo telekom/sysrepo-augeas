@@ -9,7 +9,7 @@ module login_defs {
   container login_defs {
     list record {
       key "_id";
-      augex:data-path "$_id";
+      augex:data-path "$$_id";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -19,7 +19,7 @@ module login_defs {
         type string {
           pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";
         }
-        augex:data-path "^_id";
+        augex:data-path "^^_id";
       }
     }
   }

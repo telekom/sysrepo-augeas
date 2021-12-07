@@ -9,7 +9,7 @@ module devfsrules {
   container devfsrules {
     list record {
       key "_id";
-      augex:data-path "$_id";
+      augex:data-path "$$_id";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -19,11 +19,11 @@ module devfsrules {
         type string {
           pattern "[0-9]+";
         }
-        augex:data-path "$_id/id";
+        augex:data-path "$$_id/id";
       }
       list entry {
         key "_id";
-        augex:data-path "$_id/$_id";
+        augex:data-path "$$_id/$$_id";
         leaf _id {
           type uint64;
         }
@@ -31,7 +31,7 @@ module devfsrules {
           type string {
             pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
           }
-          augex:data-path "$_id/^_id";
+          augex:data-path "$$_id/^^_id";
         }
       }
     }
