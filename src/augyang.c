@@ -2248,6 +2248,41 @@ ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t s
 }
 
 static int
+ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+{
+    int ret;
+    struct ay_ynode *iter, *node, *subtree;
+    uint32_t subtree_nodes;
+
+    if (dst == src) {
+        return 0;
+    }
+
+    subtree_nodes = tree[src].descendants + 1;
+    ret = ay_ynode_move_subtree(tree, dst + 1, src);
+    AY_CHECK_RET(ret);
+
+    if (dst < src) {
+        node = &tree[dst];
+    } else {
+        node = &tree[dst - subtree_nodes];
+    }
+    subtree = node + 1;
+
+    subtree->parent = node;
+    subtree->next = node->child ? subtree + subtree->descendants + 1 : NULL;
+    subtree->child = subtree->child ? subtree + 1 : NULL;
+
+    node->child = subtree;
+
+    for (iter = node; iter; iter = iter->parent) {
+        iter->descendants += subtree->descendants + 1;
+    }
+
+    return ret;
+}
+
+static int
 ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
 {
     for (uint32_t i = 0; i < count; i++) {
@@ -2365,6 +2400,17 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
             AY_CHECK_GOTO(ret, error);
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
             ret = ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
+            AY_CHECK_GOTO(ret, error);
+            AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        }
+    }
+
+    msg = "ynode move_subtree_as_child";
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
+        if (dupl[i].next && dupl[i].next->child) {
+            ret = ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
+            AY_CHECK_GOTO(ret, error);
+            ret = ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
             AY_CHECK_GOTO(ret, error);
             AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
