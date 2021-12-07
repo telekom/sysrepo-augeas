@@ -994,9 +994,11 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
                 /* implicitly generated yang node with 'store' */
                 ly_print(ctx->out, "^^");
                 ay_print_yang_ident(ctx, iter);
-            } else if ((target == list) && !iter->label && !iter->value) {
+            } else if ((target == list) && !iter->label && !iter->value &&
+                    list->label && (list->label->lens->tag == L_LABEL)) {
                 /* implicitly generated list key with unsigned integer type */
-                ly_print(ctx->out, "<position>");
+                ly_print(ctx->out, "##");
+                ly_print(ctx->out, "%s", list->label->lens->string->str);
             } else if (list->label && (list->label->lens->tag == L_LABEL)) {
                 ly_print(ctx->out, "%s", list->label->lens->string->str);
             } else {
@@ -1170,8 +1172,13 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_nesting_begin(ctx);
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if ((label && (label->tag == L_SEQ)) || (!label && !value)) {
+    if (label && (label->tag == L_SEQ)) {
         ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
+    } else if (!label && !value) {
+        ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
+        ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
+        ly_print(ctx->out, "%*s\"Implicitly generated list key representing the position in augeas data.\";\n",
+                ctx->space + SPACE_INDENT, "");
     } else {
         ret = ay_print_yang_type(ctx, node);
         AY_CHECK_RET(ret);
