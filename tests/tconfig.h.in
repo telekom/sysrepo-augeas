@@ -16,6 +16,8 @@
 #ifndef AUG_TCONFIG_H_
 #define AUG_TCONFIG_H_
 
+#define AUG_CONFIG_FILES_DIR "@CMAKE_CURRENT_SOURCE_DIR@/config_files"
+
 #define AUG_EXPECTED_YANG_DIR "@CMAKE_CURRENT_SOURCE_DIR@/yang_expected"
 
 #define AUG_MODULES_DIR "@PROJECT_SOURCE_DIR@/modules"

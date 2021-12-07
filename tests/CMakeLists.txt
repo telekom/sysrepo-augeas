@@ -7,8 +7,6 @@ set(CMAKE_MACOSX_RPATH TRUE)
 
 # generate config
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tconfig.h.in" "${CMAKE_CURRENT_BINARY_DIR}/tconfig.h" ESCAPE_QUOTES @ONLY)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})
 
 # format
 if(SOURCE_FORMAT_ENABLED)
@@ -34,13 +32,11 @@ endif()
 # lists of all the DS plugin tests
 set(tests test_passwd)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/plugins)
+include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})
 foreach(test_name IN LISTS tests)
-    add_executable(${test_name} ${test_name}.c ${SRDS_AUGEAS_SRC})
+    add_executable(${test_name} ${test_name}.c)
     set_target_properties(${test_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-    # config file to use as input for augeas for the test
-    string(SUBSTRING "${test_name}" 5 -1 TEST_FILE)
-    target_compile_definitions(${test_name} PUBLIC AUG_TEST_INPUT_FILE=\"${CMAKE_CURRENT_SOURCE_DIR}/config_files/${TEST_FILE}\")
 endforeach()
 
 # set common attributes of all tests

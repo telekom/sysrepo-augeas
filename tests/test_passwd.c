@@ -14,20 +14,21 @@
  *     https://opensource.org/licenses/BSD-3-Clause
  */
 
+#include "tconfig.h"
+
+/* augeas SR DS plugin */
+#define AUG_TEST_INPUT_FILE AUG_CONFIG_FILES_DIR "/passwd"
+#include "srds_augeas.c"
+
 #include <assert.h>
 #include <dlfcn.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <unistd.h>
 
-#include "tconfig.h"
-
 #include <cmocka.h>
 #include <libyang/libyang.h>
 #include <sysrepo/plugins_datastore.h>
-
-/* augeas SR DS plugin */
-extern const struct srplg_ds_s srpds__;
 
 struct state {
     struct ly_ctx *ctx;
