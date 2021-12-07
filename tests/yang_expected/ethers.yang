@@ -8,22 +8,22 @@ module ethers {
 
   container ethers {
     list record {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type uint64;
       }
       leaf mac {
         type string {
           pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
         }
-        augex:data-path "$key/mac";
+        augex:data-path "$_id/mac";
       }
       leaf ip {
         type string {
           pattern "[^# \n\t]+";
         }
-        augex:data-path "$key/ip";
+        augex:data-path "$_id/ip";
       }
     }
   }

@@ -8,34 +8,34 @@ module backuppchosts {
 
   container backuppchosts {
     list record {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type uint64;
       }
       leaf host {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$key/host";
+        augex:data-path "$_id/host";
       }
       leaf dhcp {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$key/dhcp";
+        augex:data-path "$_id/dhcp";
       }
       leaf user {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$key/user";
+        augex:data-path "$_id/user";
       }
       leaf-list moreusers {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$key/moreusers";
+        augex:data-path "$_id/moreusers";
       }
     }
   }

@@ -885,15 +885,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
 
     if (node->type == YN_KEY) {
         if (!label && !value) {
-            str = (char *)"key";
+            str = (char *)"_id";
         } else if (!label && value && (value->tag == L_STORE)) {
             str = ay_get_lense_name(ctx->mod, value);
             str = !str ? (char *)"value" : str;
         } else if (label->tag == L_KEY) {
             str = ay_get_lense_name(ctx->mod, label);
-            str = !str ? (char *)"key" : str;
+            str = !str ? (char *)"_id" : str;
         } else if (label->tag == L_SEQ) {
-            str = (char *)"key";
+            str = (char *)"_id";
         } else if (label->tag == L_LABEL) {
             str = label->string->str;
         } else {

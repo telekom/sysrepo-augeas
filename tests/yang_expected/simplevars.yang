@@ -8,9 +8,9 @@ module simplevars {
 
   container simplevars {
     list entry {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
@@ -19,7 +19,7 @@ module simplevars {
         type string {
           pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
   }

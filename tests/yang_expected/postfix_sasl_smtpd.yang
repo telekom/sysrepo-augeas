@@ -8,9 +8,9 @@ module postfix_sasl_smtpd {
 
   container postfix_sasl_smtpd {
     list list {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "pwcheck_method";
         }
@@ -19,13 +19,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list2 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "auxprop_plugin";
         }
@@ -34,13 +34,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list3 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "saslauthd_path";
         }
@@ -49,13 +49,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list4 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "mech_list";
         }
@@ -64,13 +64,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list5 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "sql_engine";
         }
@@ -79,13 +79,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list6 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "log_level";
         }
@@ -94,13 +94,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
     list list7 {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "auto_transition";
         }
@@ -109,7 +109,7 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
   }

@@ -8,16 +8,16 @@ module securetty {
 
   container securetty {
     list record {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type uint64;
       }
       leaf word {
         type string {
           pattern "[^ \t\n#]+";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
   }

@@ -8,22 +8,22 @@ module grubenv {
 
   container grubenv {
     list record {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type uint64;
       }
       leaf name {
         type string {
           pattern "[A-Za-z_][A-Za-z0-9_]*";
         }
-        augex:data-path "$key/name";
+        augex:data-path "$_id/name";
       }
       leaf value {
         type string {
           pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
         }
-        augex:data-path "$key/value";
+        augex:data-path "$_id/value";
       }
     }
   }

@@ -8,9 +8,9 @@ module cmdline {
 
   container cmdline {
     list list {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
         }
@@ -19,7 +19,7 @@ module cmdline {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "^key";
+        augex:data-path "^_id";
       }
     }
   }

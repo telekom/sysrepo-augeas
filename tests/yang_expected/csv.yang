@@ -8,9 +8,9 @@ module csv {
 
   container csv {
     list entry {
-      key "key";
-      augex:data-path "$key";
-      leaf key {
+      key "_id";
+      augex:data-path "$_id";
+      leaf _id {
         type uint64;
       }
       choice entry {
@@ -19,7 +19,7 @@ module csv {
             type string {
               pattern "([^\n\"#;])*";
             }
-            augex:data-path "$key/$AY_UINT";
+            augex:data-path "$_id/$AY_UINT";
           }
         }
         case field2 {
@@ -27,7 +27,7 @@ module csv {
             type string {
               pattern "(\"[^\"#]*\")+";
             }
-            augex:data-path "$key/$AY_UINT";
+            augex:data-path "$_id/$AY_UINT";
           }
         }
       }

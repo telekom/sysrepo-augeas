@@ -98,9 +98,9 @@ module passwd {
       }
     }
     list nisdefault {
-      key "key";
+      key "_id";
       augex:data-path "<position>";
-      leaf key {
+      leaf _id {
         type uint64;
       }
       leaf password {
