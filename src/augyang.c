@@ -1743,66 +1743,39 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
 }
 
 static void
-ay_ynode_connect1(struct ay_ynode *forest, struct ay_ynode *parent, struct ay_ynode **child_out)
+ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
 {
-    struct ay_ynode *child, *iter;
-
-    /* memory location assignment */
-    child = &forest[LY_ARRAY_COUNT(forest)];
-    LY_ARRAY_INCREMENT(forest);
-
-    /* set parent */
-    child->parent = parent;
-
-    if (parent && !parent->child) {
-        /* set child */
-        parent->child = child;
-    } else if (parent) {
-        /* set next */
-        for (iter = parent->child; iter->next; iter = iter->next) {}
-        iter->next = child;
-    } else if (!parent && (LY_ARRAY_COUNT(forest) > 1)) {
-        /* set 'next' for the second and the others root nodes */
-        for (uint32_t j = 0; j < LY_ARRAY_COUNT(forest); j++) {
-            iter = &forest[j];
-            if (!iter->next) {
-                iter->next = child;
-                break;
+    for (uint32_t i = 0, j = 0; i < lnode->descendants; i++) {
+        if (lnode[i].lens->tag == L_SUBTREE) {
+            LY_ARRAY_INCREMENT(ynode);
+            ynode[j].snode = &lnode[i];
+            ynode[j].descendants = 0;
+            for (uint32_t k = 0; k < lnode[i].descendants; k++) {
+                if (lnode[i + 1 + k].lens->tag == L_SUBTREE) {
+                    ynode[j].descendants++;
+                }
             }
-            j += iter->descendants;
+            j++;
         }
-    }
-
-    *child_out = child;
-}
-
-static void
-ay_ynode_connect2(struct ay_ynode *parent, struct ay_ynode *child)
-{
-    if (parent) {
-        parent->descendants += 1 + child->descendants;
     }
 }
 
 static void
-ay_ynode_create_forest_r(struct ay_ynode *yforest, struct ay_lnode *lnode, struct ay_ynode *parent)
+ay_ynode_forest_connect_topnodes(struct ay_ynode *forest)
 {
-    struct ay_ynode *child;
-    uint32_t iter_start;
-    enum lens_tag tag;
+    struct ay_ynode *last;
 
-    iter_start = parent ? 1 : 0;
+    if (!LY_ARRAY_COUNT(forest)) {
+        return;
+    }
 
-    for (uint32_t i = iter_start; i < lnode->descendants; i++) {
-        tag = lnode[i].lens->tag;
-        if (tag == L_SUBTREE) {
-            ay_ynode_connect1(yforest, parent, &child);
-            child->snode = &lnode[i];
-            ay_ynode_create_forest_r(yforest, &lnode[i], child);
-            ay_ynode_connect2(parent, child);
-            i += lnode[i].descendants;
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
+        if (!forest[i].parent) {
+            last = &forest[i];
+            forest[i].next = last->descendants ? last + last->descendants + 1 : last + 1;
         }
     }
+    last->next = NULL;
 }
 
 static void
@@ -1845,9 +1818,33 @@ ay_ynode_add_choice(struct ay_ynode *forest)
 }
 
 static void
+ay_ynode_tree_correction(struct ay_ynode *tree)
+{
+    struct ay_ynode *parent, *iter, *next;
+    uint32_t sum;
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        parent = &tree[i];
+        iter = parent->descendants ? parent + 1 : NULL;
+        parent->child = iter;
+        sum = 0;
+        while (iter) {
+            iter->parent = parent;
+            iter->child = iter->descendants ? iter + 1 : NULL;
+            sum += iter->descendants + 1;
+            next = sum != parent->descendants ? iter + iter->descendants + 1 : NULL;
+            iter->next = next;
+            iter = next;
+        }
+    }
+}
+
+static void
 ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
 {
-    ay_ynode_create_forest_r(yforest, ltree, NULL);
+    ay_ynode_create_forest_(yforest, ltree);
+    ay_ynode_tree_correction(yforest);
+    ay_ynode_forest_connect_topnodes(yforest);
     ay_ynode_add_label_value(yforest);
     ay_ynode_add_choice(yforest);
 }
