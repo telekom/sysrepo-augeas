@@ -1,0 +1,32 @@
+module aptcacherngsecurity {
+  namespace "aug:aptcacherngsecurity";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container aptcacherngsecurity {
+    list record {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "AdminAuth";
+        }
+      }
+      leaf authpair {
+        type string {
+          pattern "[^ \t:/]*";
+        }
+        augex:data-path "$$_id/authpair";
+      }
+      leaf node {
+        type string {
+          pattern "[^: \t\n]*";
+        }
+        augex:data-path "$$_id/^^authpair";
+      }
+    }
+  }
+}
