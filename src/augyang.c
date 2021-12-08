@@ -1865,16 +1865,16 @@ ay_ynode_copy(struct ay_ynode *dst, struct ay_ynode *src)
 }
 
 static void
-ay_ynode_shift_right(struct ay_ynode *dst)
+ay_ynode_shift_right(struct ay_ynode *tree)
 {
-    memmove(&dst[1], dst, LY_ARRAY_COUNT(dst) * sizeof *dst);
-    LY_ARRAY_INCREMENT(dst);
-    memset(dst, 0, sizeof *dst);
+    memmove(&tree[1], tree, LY_ARRAY_COUNT(tree) * sizeof *tree);
+    LY_ARRAY_INCREMENT(tree);
+    memset(tree, 0, sizeof *tree);
 
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(dst); i++) {
-        dst[i].parent = dst[i].parent ? dst[i].parent + 1 : NULL;
-        dst[i].next = dst[i].next ? dst[i].next + 1 : NULL;
-        dst[i].child = dst[i].child ? dst[i].child + 1 : NULL;
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        tree[i].parent = tree[i].parent ? tree[i].parent + 1 : NULL;
+        tree[i].next = tree[i].next ? tree[i].next + 1 : NULL;
+        tree[i].child = tree[i].child ? tree[i].child + 1 : NULL;
     }
 }
 
