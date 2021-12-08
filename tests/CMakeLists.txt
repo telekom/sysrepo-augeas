@@ -5,6 +5,12 @@ endif()
 # correct RPATH usage on OS X
 set(CMAKE_MACOSX_RPATH TRUE)
 
+# find diff
+find_program(DIFF_EXECUTABLE diff)
+if(NOT DIFF_EXECUTABLE)
+    message(FATAL_ERROR "Failed to find diff(1) executable.")
+endif()
+
 # generate config
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tconfig.h.in" "${CMAKE_CURRENT_BINARY_DIR}/tconfig.h" ESCAPE_QUOTES @ONLY)
 
@@ -39,6 +45,15 @@ foreach(test_name IN LISTS tests)
     set_target_properties(${test_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 
+set(TEST_CLEAR_AUGEAS_NEW_FILES_COMMAND "rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/config_files/*.augnew")
+if(${CMAKE_VERSION} VERSION_GREATER "3.7")
+    # tests cleanup fixture
+    add_test(NAME tests_done
+        COMMAND sh -c ${TEST_CLEAR_AUGEAS_NEW_FILES_COMMAND}
+    )
+    set_tests_properties(tests_done PROPERTIES FIXTURES_CLEANUP tests_cleanup)
+endif()
+
 # set common attributes of all tests
 foreach(test_name IN LISTS tests)
     target_link_libraries(${test_name} ${CMOCKA_LIBRARIES} ${AUGEAS_LIBRARIES} ${SYSREPO_LIBRARIES} ${LIBYANG_LIBRARIES})
@@ -47,12 +62,18 @@ foreach(test_name IN LISTS tests)
         "MALLOC_CHECK_=3"
         "CMOCKA_TEST_ABORT=1"
     )
+    if(${CMAKE_VERSION} VERSION_GREATER "3.7")
+        set_tests_properties(${test_name} PROPERTIES FIXTURES_REQUIRED tests_cleanup)
+    endif()
 endforeach()
 
 # valgrind tests
 if(ENABLE_VALGRIND_TESTS)
     foreach(test_name IN LISTS tests)
         add_test(NAME ${test_name}_valgrind COMMAND valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $<TARGET_FILE:${test_name}>)
+        if(${CMAKE_VERSION} VERSION_GREATER "3.7")
+            set_tests_properties(${test_name}_valgrind PROPERTIES FIXTURES_REQUIRED tests_cleanup)
+        endif()
     endforeach()
 endif()
 

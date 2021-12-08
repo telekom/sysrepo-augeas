@@ -22,4 +22,6 @@
 
 #define AUG_MODULES_DIR "@PROJECT_SOURCE_DIR@/modules"
 
+#define AUG_DIFF_EXECUTABLE "@DIFF_EXECUTABLE@"
+
 #endif /* AUG_TCONFIG_H_ */
