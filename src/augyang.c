@@ -2001,304 +2001,159 @@ ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
 }
 
 static void
-ay_ynode_insert_gap(struct ay_ynode *dst, uint32_t index)
+ay_ynode_insert_gap(struct ay_ynode *tree, uint32_t index)
 {
-    memmove(&dst[index + 1], &dst[index], (LY_ARRAY_COUNT(dst) - index) * sizeof *dst);
-    memset(&dst[index], 0, sizeof *dst);
-
-    LY_ARRAY_INCREMENT(dst);
-    for (uint32_t i = 0; i < index; i++) {
-        dst[i].next = dst[i].next >= &dst[index] ? dst[i].next + 1 : dst[i].next;
-        dst[i].child = dst[i].child >= &dst[index] ? dst[i].child + 1 : dst[i].child;
-    }
-    for (uint32_t i = index + 1; i < LY_ARRAY_COUNT(dst); i++) {
-        dst[i].parent = dst[i].parent >= &dst[index] ? dst[i].parent + 1 : dst[i].parent;
-        dst[i].child = dst[i].child ? dst[i].child + 1 : NULL;
-        dst[i].next = dst[i].next ? dst[i].next + 1 : NULL;
-    }
+    memmove(&tree[index + 1], &tree[index], (LY_ARRAY_COUNT(tree) - index) * sizeof *tree);
+    memset(&tree[index], 0, sizeof *tree);
+    LY_ARRAY_INCREMENT(tree);
 }
 
 static void
-ay_ynode_delete_gap(struct ay_ynode *dst, uint32_t index)
+ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 {
-    memmove(&dst[index], &dst[index + 1], (LY_ARRAY_COUNT(dst) - index - 1) * sizeof *dst);
-    memset(dst + LY_ARRAY_COUNT(dst) - 1, 0, sizeof *dst);
-
-    LY_ARRAY_DECREMENT(dst);
-    for (uint32_t i = 0; i < index; i++) {
-        // assert((dst[i].next != &dst[index]) && (dst[i].child != &dst[index]));
-        dst[i].next = dst[i].next > &dst[index] ? dst[i].next - 1 : dst[i].next;
-        dst[i].child = dst[i].child > &dst[index] ? dst[i].child - 1 : dst[i].child;
-    }
-    for (uint32_t i = index; i < LY_ARRAY_COUNT(dst); i++) {
-        // assert(dst[i].parent != &dst[index]);
-        dst[i].parent = dst[i].parent > &dst[index] ? dst[i].parent - 1 : dst[i].parent;
-        dst[i].child = dst[i].child ? dst[i].child - 1 : NULL;
-        dst[i].next = dst[i].next ? dst[i].next - 1 : NULL;
-    }
+    memmove(&tree[index], &tree[index + 1], (LY_ARRAY_COUNT(tree) - index - 1) * sizeof *tree);
+    memset(tree + LY_ARRAY_COUNT(tree) - 1, 0, sizeof *tree);
+    LY_ARRAY_DECREMENT(tree);
 }
 
 static void
-ay_ynode_delete_node(struct ay_ynode *dst, uint32_t index)
+ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
 {
-    struct ay_ynode *iter, *removed, *last = NULL;
+    struct ay_ynode *iter;
 
-    removed = &dst[index];
-
-    /* the number of descendants is reduced by one */
-    for (iter = removed->parent; iter; iter = iter->parent) {
+    for (iter = tree[index].parent; iter; iter = iter->parent) {
         iter->descendants--;
     }
-
-    /* for all children */
-    for (iter = removed->child; iter; iter = iter->next) {
-        /* set new parent for children */
-        iter->parent = removed->parent;
-        /* remember last child */
-        last = iter;
-    }
-    if (last) {
-        /* set last child's sibling */
-        last->next = removed->next;
-    }
-
-    if (removed->parent && !removed->parent->descendants) {
-        /* removed node is an only child */
-        removed->parent->child = NULL;
-    }
-
-    if (!removed->next && removed->parent && !removed->child) {
-        /* set 'next' for the previous sibling to NULL */
-        for (iter = removed->parent->child; iter; iter = iter->next) {
-            iter->next = iter->next == removed ? NULL : iter->next;
-        }
-    }
-
-    ay_ynode_delete_gap(dst, index);
+    ay_ynode_delete_gap(tree, index);
+    ay_ynode_tree_correction(tree);
 }
 
 static void
-ay_ynode_insert_wrapper(struct ay_ynode *dst, uint32_t index)
+ay_ynode_insert_wrapper(struct ay_ynode *tree, uint32_t index)
 {
-    struct ay_ynode *iter, *parent, *wrapper, *child;
+    struct ay_ynode *iter, *wrapper;
 
-    wrapper = &dst[index];
-    child = &dst[index + 1];
-    ay_ynode_insert_gap(dst, index);
-
-    parent = child->parent;
-    if (parent) {
-        parent->child = parent->child == child ? wrapper : parent->child;
-    }
-
-    wrapper->parent = parent;
-    wrapper->next = child->next;
-    wrapper->child = child;
-    wrapper->descendants = child->descendants + 1;
-    wrapper->snode = NULL;
-    wrapper->type = YN_UNKNOWN;
-
-    child->parent = wrapper;
-    child->next = NULL;
-
-    if (wrapper->parent) {
-        for (iter = wrapper->parent->child; iter; iter = iter->next) {
-            if (iter->next == wrapper + 1) {
-                iter->next = wrapper;
-                break;
-            }
-        }
-
-        for (iter = wrapper->parent; iter; iter = iter->parent) {
-            iter->descendants++;
-        }
-    }
-}
-
-static void
-ay_ynode_insert_parent(struct ay_ynode *dst, uint32_t index)
-{
-    struct ay_ynode *parent, *wrapper;
-
-    assert(dst->type == YN_ROOT);
-
-    wrapper = dst[index].parent;
-    ay_ynode_insert_wrapper(dst, AY_INDEX(dst, wrapper));
-    parent = wrapper->child;
-
-    wrapper->type = parent->type;
-    wrapper->snode = parent->snode;
-    wrapper->label = parent->label;
-    wrapper->value = parent->value;
-    wrapper->choice = parent->choice;
-    parent->type = YN_UNKNOWN;
-    parent->snode = NULL;
-    parent->label = NULL;
-    parent->value = NULL;
-    parent->choice = NULL;
-}
-
-static void
-ay_ynode_insert_child(struct ay_ynode *dst, uint32_t index)
-{
-    struct ay_ynode *iter, *parent, *new_child;
-
-    parent = &dst[index];
-    new_child = &dst[index + 1];
-    ay_ynode_insert_gap(dst, index + 1);
-
-    new_child->parent = parent;
-    new_child->next = parent->child ? &dst[index + 2] : NULL;
-    new_child->child = NULL;
-    new_child->descendants = 0;
-    new_child->snode = NULL;
-    new_child->type = YN_UNKNOWN;
-    new_child->label = NULL;
-    new_child->choice = NULL;
-
-    parent->child = new_child;
-
-    for (iter = parent; iter; iter = iter->parent) {
+    for (iter = tree[index].parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
+    ay_ynode_insert_gap(tree, index);
+    wrapper = &tree[index];
+    wrapper->descendants = (wrapper + 1)->descendants + 1;
+    ay_ynode_tree_correction(tree);
 }
 
 static void
-ay_ynode_insert_sibling(struct ay_ynode *dst, uint32_t index)
+ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
 {
-    struct ay_ynode *iter, *node, *new_sibling;
+    struct ay_ynode *iter, *parent;
+    uint32_t index;
 
-    node = &dst[index];
-    new_sibling = node + node->descendants + 1;
-    ay_ynode_insert_gap(dst, AY_INDEX(dst, new_sibling));
-
-    new_sibling->parent = node->parent;
-    new_sibling->next = node->next ? node->next + 1 : NULL;
-    new_sibling->child = NULL;
-    new_sibling->descendants = 0;
-    new_sibling->snode = NULL;
-    new_sibling->type = YN_UNKNOWN;
-    new_sibling->label = NULL;
-    new_sibling->value = NULL;
-    new_sibling->choice = NULL;
-
-    node->next = new_sibling;
-
-    for (iter = node->parent; iter; iter = iter->parent) {
+    for (iter = tree[child].parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
+    index = AY_INDEX(tree, tree[child].parent->child);
+    ay_ynode_insert_gap(tree, index);
+    parent = &tree[index];
+    parent->descendants = (parent - 1)->descendants - 1;
+    ay_ynode_tree_correction(tree);
 }
 
-static int
+static void
+ay_ynode_insert_child(struct ay_ynode *tree, uint32_t parent)
+{
+    struct ay_ynode *iter, *child;
+    uint32_t index;
+
+    for (iter = &tree[parent]; iter; iter = iter->parent) {
+        iter->descendants++;
+    }
+    index = parent + 1;
+    ay_ynode_insert_gap(tree, index);
+    child = &tree[index];
+    child->descendants = 0;
+    ay_ynode_tree_correction(tree);
+}
+
+static void
+ay_ynode_insert_sibling(struct ay_ynode *tree, uint32_t node)
+{
+    struct ay_ynode *iter, *sibling;
+    uint32_t index;
+
+    for (iter = tree[node].parent; iter; iter = iter->parent) {
+        iter->descendants++;
+    }
+    index = node + tree[node].descendants + 1;
+    ay_ynode_insert_gap(tree, index);
+    sibling = &tree[index];
+    sibling->descendants = 0;
+    ay_ynode_tree_correction(tree);
+}
+
+static void
 ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
-    struct ay_ynode *buffer, *iter;
-    int64_t offset;
-    uint32_t count;
+    uint32_t subtree_size;
+    struct ay_ynode node;
 
-    count = tree[src].descendants + 1;
-    buffer = malloc(count * sizeof *tree);
-    if (!buffer) {
-        return AYE_MEMORY;
+    if (dst == src) {
+        return;
     }
 
-    memcpy(buffer, &tree[src], count * sizeof *tree);
-    for (uint32_t i = 0; i < count; i++) {
-        ay_ynode_delete_node(tree, src);
+    subtree_size = tree[src].descendants + 1;
+    for (uint32_t i = 0; i < subtree_size; i++) {
+        node = tree[src];
+        ay_ynode_delete_gap(tree, src);
+        dst = dst > src ? dst - 1 : dst;
+        ay_ynode_insert_gap(tree, dst);
+        src = src > dst ? src + 1 : src;
+        tree[dst] = node;
+        dst++;
     }
-    if (dst <= src) {
-        for (uint32_t i = 0; i < count; i++) {
-            ay_ynode_insert_gap(tree, dst);
-        }
-        offset = ((int64_t) dst) - src;
-    } else {
-        for (uint32_t i = 0; i < count; i++) {
-            ay_ynode_insert_gap(tree, dst - count);
-        }
-        dst -= count;
-        offset = ((int64_t) dst) - src;
-    }
-    memcpy(&tree[dst], buffer, count * sizeof *tree);
-    free(buffer);
-
-    for (uint32_t i = 1; i < count; i++) {
-        iter = &tree[dst + i];
-        iter->parent = iter->parent ? iter->parent + offset : NULL;
-        iter->next = iter->next ? iter->next + offset : NULL;
-        iter->child = iter->child ? iter->child + offset : NULL;
-    }
-
-    return 0;
 }
 
-static int
+static void
 ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
-    int ret;
-    struct ay_ynode *iter, *node, *subtree;
-    uint32_t subtree_nodes;
+    struct ay_ynode *iter;
+    uint32_t subtree_size, index;
 
-    if (dst == src) {
-        return 0;
+    if (tree[dst].next == &tree[src]) {
+        return;
     }
 
-    subtree_nodes = tree[src].descendants + 1;
-    ret = ay_ynode_move_subtree(tree, dst + tree[dst].descendants + 1, src);
-    AY_CHECK_RET(ret);
-
-    if (dst < src) {
-        node = &tree[dst];
-    } else {
-        node = &tree[dst - subtree_nodes];
+    subtree_size = tree[src].descendants + 1;
+    for (iter = tree[src].parent; iter; iter = iter->parent) {
+        iter->descendants -= subtree_size;
     }
-    subtree = node + node->descendants + 1;
-
-    subtree->parent = node->parent;
-    subtree->next = node->next ? subtree + subtree->descendants + 1 : NULL;
-    subtree->child = subtree->child ? subtree + 1 : NULL;
-
-    node->next = subtree;
-
-    for (iter = node->parent; iter; iter = iter->parent) {
-        iter->descendants += subtree->descendants + 1;
+    for (iter = tree[dst].parent; iter; iter = iter->parent) {
+        iter->descendants += subtree_size;
     }
-
-    return ret;
+    index = dst + tree[dst].descendants + 1;
+    ay_ynode_move_subtree(tree, index, src);
+    ay_ynode_tree_correction(tree);
 }
 
-static int
+static void
 ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
-    int ret;
-    struct ay_ynode *iter, *node, *subtree;
-    uint32_t subtree_nodes;
+    struct ay_ynode *iter;
+    uint32_t subtree_size, index;
 
-    if (dst == src) {
-        return 0;
+    if (tree[dst].child == &tree[src]) {
+        return;
     }
 
-    subtree_nodes = tree[src].descendants + 1;
-    ret = ay_ynode_move_subtree(tree, dst + 1, src);
-    AY_CHECK_RET(ret);
-
-    if (dst < src) {
-        node = &tree[dst];
-    } else {
-        node = &tree[dst - subtree_nodes];
+    subtree_size = tree[src].descendants + 1;
+    for (iter = tree[src].parent; iter; iter = iter->parent) {
+        iter->descendants -= subtree_size;
     }
-    subtree = node + 1;
-
-    subtree->parent = node;
-    subtree->next = node->child ? subtree + subtree->descendants + 1 : NULL;
-    subtree->child = subtree->child ? subtree + 1 : NULL;
-
-    node->child = subtree;
-
-    for (iter = node; iter; iter = iter->parent) {
-        iter->descendants += subtree->descendants + 1;
+    for (iter = &tree[dst]; iter; iter = iter->parent) {
+        iter->descendants += subtree_size;
     }
-
-    return ret;
+    index = dst + 1;
+    ay_ynode_move_subtree(tree, index, src);
+    ay_ynode_tree_correction(tree);
 }
 
 static int
@@ -2362,6 +2217,16 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
+    msg = "ynode insert_wrapper";
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        ay_ynode_copy(dupl, tree);
+        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
+        ay_ynode_insert_wrapper(dupl, i);
+        ay_ynode_delete_node(dupl, i);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_SET_LY_ARRAY_SIZE(dupl, 0);
+    }
+
     msg = "ynode insert_parent";
     for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
@@ -2415,11 +2280,9 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     msg = "ynode move_subtree_as_sibling";
     for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->next) {
-            ret = ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
-            AY_CHECK_GOTO(ret, error);
+            ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
-            ret = ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
-            AY_CHECK_GOTO(ret, error);
+            ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
             AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
@@ -2427,10 +2290,8 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     msg = "ynode move_subtree_as_child";
     for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->child) {
-            ret = ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
-            AY_CHECK_GOTO(ret, error);
-            ret = ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
-            AY_CHECK_GOTO(ret, error);
+            ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
+            ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
             AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
@@ -2591,10 +2452,9 @@ repeat:
     }
 }
 
-static int
+static void
 ay_delete_list_with_same_key(struct ay_ynode *tree)
 {
-    int ret = 0;
     struct ay_ynode *iter, *list1, *list2, *cont1, *cont2, *node;
 
     for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
@@ -2640,20 +2500,16 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             for (uint32_t j = 0; j < list1->descendants; j++) {
                 node = &list1[j + 1];
                 if (node->type == YN_KEY) {
-                    ret = ay_ynode_move_subtree_as_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, node));
-                    AY_CHECK_RET(ret);
+                    ay_ynode_move_subtree_as_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, node));
                     j--;
                     cont1++;
                 }
             }
 
             /* move cont2 next to cont1 */
-            ret = ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, cont1), AY_INDEX(tree, cont2));
-            AY_CHECK_RET(ret);
+            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, cont1), AY_INDEX(tree, cont2));
         }
     }
-
-    return ret;
 }
 
 static void
@@ -2791,8 +2647,7 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_LIST_KEY, *tree);
     AY_CHECK_RET(ret);
 
-    ret = ay_delete_list_with_same_key(*tree);
-    AY_CHECK_RET(ret);
+    ay_delete_list_with_same_key(*tree);
 
     return ret;
 }
