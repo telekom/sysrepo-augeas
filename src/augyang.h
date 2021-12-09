@@ -20,9 +20,10 @@
 #define AYV_TRANS_REMOVE        0x8
 #define AYV_TRANS_INSERT1       0x10
 
+struct augeas;
 struct module;
 
 int augyang_print_input_lenses(struct module *mod, char **str);
-int augyang_print_yang(struct module *mod, uint64_t vercode, char **str);
+int augyang_print_yang(struct augeas *aug, struct module *mod, uint64_t vercode, char **str);
 
 const char *augyang_get_error_message(int err_code);

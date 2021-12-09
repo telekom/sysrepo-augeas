@@ -286,10 +286,11 @@ struct lprinter_ctx
  */
 struct yprinter_ctx
 {
-    uint32_t space;         /**< Current indent. */
-    struct module *mod;     /**< Augeas module. */
+    struct augeas *aug;     /**< Augeas context. */
+    struct module *mod;     /**< Current Augeas module. */
     struct ay_ynode *tree;  /**< Pointer to the Sized array. */
     struct ly_out *out;     /**< Output to which it is printed. */
+    uint32_t space;         /**< Current indent. */
 };
 
 /**
@@ -654,6 +655,24 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
             }
         }
     }
+
+    return ret;
+}
+
+static char *
+ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct lens *lens)
+{
+    char *ret;
+    struct module *mod = NULL;
+
+    list_for_each(mod_iter, aug->modules) {
+        if (!strcmp(mod_iter->name, modname)) {
+            mod = mod_iter;
+            break;
+        }
+    }
+
+    ret = mod ? ay_get_lense_name(mod, lens) : NULL;
 
     return ret;
 }
@@ -1114,39 +1133,73 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 static int
-ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
+ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
 {
     int ret = 0;
-    const struct regexp *rp;
     char *regex = NULL;
-    struct lens *label, *value;
 
-    if (!node->label && !node->value) {
+    if (!rp) {
+        ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
         return ret;
     }
 
     ly_print(ctx->out, "%*stype string", ctx->space, "");
-
-    label = AY_LABEL_LENS(node);
-    value = AY_VALUE_LENS(node);
-    if (node->type == YN_VALUE) {
-        assert(value && (value->tag == L_STORE));
-        rp = value->regexp;
-    } else if (label && (label->tag == L_KEY)) {
-        rp = label->regexp;
-    } else if (value && (value->tag == L_STORE)) {
-        rp = value->regexp;
-    } else {
-        ly_print(ctx->out, ";\n");
-        return ret;
-    }
-
     ay_print_yang_nesting_begin(ctx);
     ret = ay_get_regex_standardized(rp, &regex);
     AY_CHECK_RET(ret);
     ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", regex);
     free(regex);
     ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+static int
+ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret = 0;
+    struct lens *label, *value, *reg;
+    char *ident;
+    char *filename = NULL;
+    size_t len = 0;
+
+    if (!node->label && !node->value) {
+        return ret;
+    }
+
+    label = AY_LABEL_LENS(node);
+    value = AY_VALUE_LENS(node);
+    if (node->type == YN_VALUE) {
+        assert(value && (value->tag == L_STORE));
+        reg = value;
+    } else if (label && (label->tag == L_KEY)) {
+        reg = label;
+    } else if (value && (value->tag == L_STORE)) {
+        reg = value;
+    } else {
+        reg = NULL;
+    }
+
+    if (reg) {
+        ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
+    }
+
+    if (!strncmp(filename, "rx", len)) {
+        ident = ay_get_lense_name_by_modname(ctx->aug, "Rx", reg);
+        if (!ident) {
+            ret = ay_print_yang_type_string(ctx, reg->regexp);
+        } else if (!strcmp("integer", ident)) {
+            ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
+        } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
+            ly_print(ctx->out, "%*stype int64_t;\n", ctx->space, "");
+        } else if (!strcmp("reldecimal", ident) || !strcmp("decimal", ident)) {
+            ly_print(ctx->out, "%*stype decimal64;\n", ctx->space, "");
+        } else {
+            ret = ay_print_yang_type_string(ctx, reg->regexp);
+        }
+    } else {
+        ret = ay_print_yang_type_string(ctx, reg->regexp);
+    }
 
     return ret;
 }
@@ -1418,7 +1471,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 static int
-ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
+ay_print_yang(struct augeas *aug, struct module *mod, struct ay_ynode *tree, char **str_out)
 {
     int ret;
     struct yprinter_ctx ctx;
@@ -1429,10 +1482,11 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
         return AYE_MEMORY;
     }
 
-    ctx.space = SPACE_INDENT;
+    ctx.aug = aug;
     ctx.mod = mod;
     ctx.tree = tree;
     ctx.out = out;
+    ctx.space = SPACE_INDENT;
 
     ly_print(out, "module ");
     ay_print_yang_module_name(ctx.mod, ctx.out);
@@ -2745,7 +2799,7 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 }
 
 int
-augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
+augyang_print_yang(struct augeas *aug, struct module *mod, uint64_t vercode, char **str)
 {
     int ret = 0;
     struct lens *lens;
@@ -2788,7 +2842,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
     AY_CHECK_GOTO(ret, end);
 
-    ret = ay_print_yang(mod, ytree, str);
+    ret = ay_print_yang(aug, mod, ytree, str);
 
 end:
     LY_ARRAY_FREE(ltree);

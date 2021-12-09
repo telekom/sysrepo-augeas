@@ -22,15 +22,11 @@ module passwd {
         augex:data-path "$$username/password";
       }
       leaf uid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "$$username/uid";
       }
       leaf gid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "$$username/gid";
       }
       leaf name {
@@ -67,15 +63,11 @@ module passwd {
         augex:data-path "@nis/password";
       }
       leaf uid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@nis/uid";
       }
       leaf gid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@nis/gid";
       }
       leaf name {
@@ -157,15 +149,11 @@ module passwd {
         augex:data-path "@+nisuser/password";
       }
       leaf uid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@+nisuser/uid";
       }
       leaf gid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@+nisuser/gid";
       }
       leaf name {
@@ -202,15 +190,11 @@ module passwd {
         augex:data-path "@-nisuser/password";
       }
       leaf uid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@-nisuser/uid";
       }
       leaf gid {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "@-nisuser/gid";
       }
       leaf name {

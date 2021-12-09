@@ -16,9 +16,7 @@ module devfsrules {
         }
       }
       leaf id {
-        type string {
-          pattern "[0-9]+";
-        }
+        type uint64;
         augex:data-path "$$_id/id";
       }
       list entry {
