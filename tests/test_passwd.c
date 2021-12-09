@@ -236,6 +236,9 @@ test_load(void **state)
             "    <_id>2</_id>\n"
             "    <shell>/sbin/nologin</shell>\n"
             "  </nisdefault>\n"
+            "  <nisdefault>\n"
+            "    <_id>3</_id>\n"
+            "  </nisdefault>\n"
             "  <nisuserplus>\n"
             "    <username>cecil</username>\n"
             "    <name>User Comment</name>\n"
@@ -272,8 +275,56 @@ test_store_add(void **state)
     /* get diff */
     assert_int_equal(0, diff_files(AUG_TEST_INPUT_FILE, AUG_TEST_INPUT_FILE ".augnew", &st->str));
     assert_string_equal(st->str,
-            "13a14\n"
+            "14a15\n"
             "> admin:x:2000:200:The Admin:/home/admin:/bin/bash");
+}
+
+static void
+test_store_modify(void **state)
+{
+    struct state *st = (struct state *)*state;
+    struct lyd_node *user;
+
+    /* load current data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
+
+    /* change shell of nobody */
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry[username='nobody']/shell", "/bin/sh",
+            LYD_NEW_PATH_UPDATE, &user));
+
+    /* store new data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+
+    /* get diff */
+    assert_int_equal(0, diff_files(AUG_TEST_INPUT_FILE, AUG_TEST_INPUT_FILE ".augnew", &st->str));
+    assert_string_equal(st->str,
+            "7c7\n"
+            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"
+            "---\n"
+            "> nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/sh");
+}
+
+static void
+test_store_remove(void **state)
+{
+    struct state *st = (struct state *)*state;
+    struct lyd_node *node;
+
+    /* load current data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
+
+    /* remove chrony user */
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[username='chrony']", 0, &node));
+    lyd_free_tree(node);
+
+    /* store new data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+
+    /* get diff */
+    assert_int_equal(0, diff_files(AUG_TEST_INPUT_FILE, AUG_TEST_INPUT_FILE ".augnew", &st->str));
+    assert_string_equal(st->str,
+            "3d2\n"
+            "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false");
 }
 
 int
@@ -282,6 +333,8 @@ main(void)
     const struct CMUnitTest tests[] = {
         cmocka_unit_test_teardown(test_load, teardown),
         cmocka_unit_test_teardown(test_store_add, teardown),
+        cmocka_unit_test_teardown(test_store_modify, teardown),
+        cmocka_unit_test_teardown(test_store_remove, teardown),
     };
 
     return cmocka_run_group_tests(tests, setup_f, teardown_f);
