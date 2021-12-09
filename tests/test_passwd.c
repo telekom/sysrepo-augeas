@@ -58,9 +58,8 @@ setup_f(void **state)
     st->mod = ly_ctx_load_module(st->ctx, "passwd", NULL, NULL);
     assert_non_null(st->mod);
 
-    /* plugin, init */
+    /* plugin */
     st->ds_plg = &srpds__;
-    assert_int_equal(SR_ERR_OK, st->ds_plg->init_cb(st->mod, SR_DS_STARTUP, "root", "root", 00644));
 
     return 0;
 }
@@ -70,9 +69,6 @@ teardown_f(void **state)
 {
     struct state *st = (struct state *)*state;
     int ret = 0;
-
-    /* destroy */
-    ret = st->ds_plg->destroy_cb(st->mod, SR_DS_STARTUP);
 
     /* free */
     lyd_free_siblings(st->data);

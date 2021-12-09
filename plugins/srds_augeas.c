@@ -36,7 +36,7 @@
 
 #define srpds_name "augeas DS"  /**< plugin name */
 
-#define AUG_FILE_BACKUP_SUFFIX ".augorig"
+#define AUG_FILE_BACKUP_SUFFIX ".augsave"
 
 #define AUG_LOG_ERRINT SRPLG_LOG_ERR(srpds_name, "Internal error (%s:%d).", __FILE__, __LINE__)
 #define AUG_LOG_ERRMEM SRPLG_LOG_ERR(srpds_name, "Memory allocation failed (%s:%d).", __FILE__, __LINE__)
@@ -574,17 +574,21 @@ augds_init_auginfo_siblings_r(const struct lys_module *mod, const struct lysc_no
     return SR_ERR_OK;
 }
 
+/**
+ * @brief Initialize augeas structure for a YANG module.
+ *
+ * @param[in] mod YANG module.
+ * @return SR error code.
+ */
 static int
-srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owner, const char *group, mode_t perm)
+augds_init(const struct lys_module *mod)
 {
     int rc = SR_ERR_OK;
     char *lens = NULL, *path = NULL;
 
-    assert(perm);
-
-    if (ds != SR_DS_STARTUP) {
-        SRPLG_LOG_ERR(srpds_name, "Only startup datastore is supported by this DS plugin.");
-        return SR_ERR_UNSUPPORTED;
+    if (auginfo.aug) {
+        /* already initialized */
+        goto cleanup;
     }
 
     /* init augeas with all modules but no loaded files */
@@ -624,15 +628,16 @@ srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owne
     }
 #endif
 
+    /* load data to populate parsed files */
+    aug_load(auginfo.aug);
+    if ((rc = augds_check_erraug(auginfo.aug))) {
+        goto cleanup;
+    }
+
     /* build auginfo structure */
     if ((rc = augds_init_auginfo_siblings_r(mod, NULL, &auginfo.toplevel, &auginfo.toplevel_count))) {
         goto cleanup;
     }
-
-    /* keep owner/group/perms as they are */
-    (void)owner;
-    (void)group;
-    (void)perm;
 
 cleanup:
     free(lens);
@@ -644,13 +649,13 @@ cleanup:
     return rc;
 }
 
-static int
-srpds_aug_destroy(const struct lys_module *mod, sr_datastore_t ds)
+/**
+ * @brief Destroy augeas structure.
+ */
+static void
+augds_destroy(void)
 {
     uint32_t i;
-
-    (void)mod;
-    (void)ds;
 
     /* free auginfo */
     for (i = 0; i < auginfo.toplevel_count; ++i) {
@@ -663,6 +668,34 @@ srpds_aug_destroy(const struct lys_module *mod, sr_datastore_t ds)
     /* destroy augeas */
     aug_close(auginfo.aug);
     auginfo.aug = NULL;
+}
+
+static int
+srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owner, const char *group, mode_t perm)
+{
+    /* keep owner/group/perms as they are */
+    (void)mod;
+    (void)owner;
+    (void)group;
+    (void)perm;
+
+    if (ds != SR_DS_STARTUP) {
+        SRPLG_LOG_ERR(srpds_name, "Only startup datastore is supported by this DS plugin.");
+        return SR_ERR_UNSUPPORTED;
+    }
+
+    /* no initialization tasks to perform, the config files must already exist */
+
+    return SR_ERR_OK;
+}
+
+static int
+srpds_aug_destroy(const struct lys_module *mod, sr_datastore_t ds)
+{
+    (void)mod;
+    (void)ds;
+
+    /* nothing to destroy, keep the config files as they are */
 
     return SR_ERR_OK;
 }
@@ -1007,6 +1040,11 @@ srpds_aug_store(const struct lys_module *mod, sr_datastore_t ds, const struct ly
     const char **files = NULL;
     uint32_t file_count;
 
+    /* init */
+    if ((rc = augds_init(mod))) {
+        goto cleanup;
+    }
+
     /* get current data */
     if ((rc = srpds_aug_load(mod, ds, NULL, 0, &cur_data))) {
         goto cleanup;
@@ -1139,6 +1177,11 @@ srpds_aug_recover(const struct lys_module *mod, sr_datastore_t ds)
     const char **files = NULL;
     char *bck_path = NULL;
     struct lyd_node *mod_data = NULL;
+
+    /* init */
+    if (augds_init(mod)) {
+        return;
+    }
 
     /* check whether the file(s) is valid */
     if (!srpds_aug_load(mod, ds, NULL, 0, &mod_data)) {
@@ -1482,7 +1525,12 @@ srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpa
 
     *mod_data = NULL;
 
-    /* load data */
+    /* init */
+    if ((rc = augds_init(mod))) {
+        goto cleanup;
+    }
+
+    /* reload data if they changed */
     aug_load(auginfo.aug);
     if ((rc = augds_check_erraug(auginfo.aug))) {
         goto cleanup;
@@ -1573,6 +1621,11 @@ srpds_aug_access_set(const struct lys_module *mod, sr_datastore_t ds, const char
     (void)ds;
     assert(mod && (owner || group || perm));
 
+    /* init */
+    if ((rc = augds_init(mod))) {
+        goto cleanup;
+    }
+
     /* get all parsed files */
     if ((rc = augds_get_config_files(auginfo.aug, mod, 1, &files, &file_count))) {
         goto cleanup;
@@ -1608,6 +1661,11 @@ srpds_aug_access_get(const struct lys_module *mod, sr_datastore_t ds, char **own
     }
     if (group) {
         *group = NULL;
+    }
+
+    /* init */
+    if ((rc = augds_init(mod))) {
+        goto cleanup;
     }
 
     /* get all parsed files */
@@ -1666,6 +1724,11 @@ srpds_aug_access_check(const struct lys_module *mod, sr_datastore_t ds, int *rea
     uint32_t file_count;
 
     (void)ds;
+
+    /* init */
+    if ((rc = augds_init(mod))) {
+        goto cleanup;
+    }
 
     /* get all parsed files */
     if ((rc = augds_get_config_files(auginfo.aug, mod, 1, &files, &file_count))) {
