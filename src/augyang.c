@@ -211,11 +211,21 @@ enum yang_type {
     YN_LEAFLIST,        /**< Yang statement "leaf-list". */
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
-    YN_KEY,             /**< Yang statement "leaf". Also indicates that node is a key in the yang "list". */
+    YN_KEY,             /**< The node is the key in the yang "list". */
+    YN_INDEX,           /**< The node is the key in the yang "list" and is implicitly generated as unsigned integer. */
     YN_VALUE,           /**< Yang statement "leaf". The node was generated to store the augeas node value. */
     YN_ROOT             /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
                              It has no printing application only makes writing algorithms easier. */
 };
+
+/**
+ * @brief Check if the ynode is of type "list" key.
+ *
+ * @param[in] YNODE Pointer to the examined ynode.
+ * @return 1 if it is key otherwise 0.
+ */
+#define AY_TYPE_LIST_KEY(YNODE) \
+    ((YNODE->type == YN_KEY) || (YNODE->type == YN_INDEX))
 
 /**
  * @brief Node for printing the yang node.
@@ -913,7 +923,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
 
-    if (node->type == YN_KEY) {
+    if (AY_TYPE_LIST_KEY(node)) {
         if (!label && !value) {
             str = (char *)"_id";
         } else if (!label && value && (value->tag == L_STORE)) {
@@ -1027,16 +1037,14 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
     struct ay_ynode *iter;
 
     for (iter = list->child; iter; iter = iter->next) {
-        if (iter->type == YN_KEY) {
+        if (AY_TYPE_LIST_KEY(iter)) {
             if ((target->type == YN_VALUE) && (iter->label == target->label)) {
                 continue;
             }
 
             ay_print_yang_data_path_delim(ctx, printed);
             // TODO: more keys?
-            if ((target == list) && !iter->label && !iter->value &&
-                    list->label && (list->label->lens->tag == L_LABEL)) {
-                /* implicitly generated list key with unsigned integer type */
+            if ((target == list) && (iter->type == YN_INDEX)) {
                 ly_print(ctx->out, "##");
                 ly_print(ctx->out, "%s", list->label->lens->string->str);
             } else if (list->label && (list->label->lens->tag == L_LABEL)) {
@@ -1082,7 +1090,7 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
 
     label = AY_LABEL_LENS(node);
 
-    if ((node->type == YN_CONTAINER) || (node->type == YN_KEY)) {
+    if ((node->type == YN_CONTAINER) || (AY_TYPE_LIST_KEY(node))) {
         return;
     }
 
@@ -1302,7 +1310,7 @@ ay_print_yang_list_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*skey \"", ctx->space, "");
     for (iter = node->child; iter; iter = iter->next) {
-        if (iter->type == YN_KEY) {
+        if (AY_TYPE_LIST_KEY(iter)) {
             ay_print_yang_ident(ctx, iter);
         }
     }
@@ -1378,6 +1386,7 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_container(ctx, node);
         break;
     case YN_KEY:
+    case YN_INDEX:
         ret = ay_print_yang_leaf_key(ctx, node);
         break;
     case YN_VALUE:
@@ -1692,6 +1701,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     case YN_KEY:
         ly_print(ctx->out, "%*s ynode_tag: YN_KEY\n", ctx->space, "");
+        break;
+    case YN_INDEX:
+        ly_print(ctx->out, "%*s ynode_tag: YN_INDEX\n", ctx->space, "");
         break;
     case YN_VALUE:
         ly_print(ctx->out, "%*s ynode_tag: YN_VALUE\n", ctx->space, "");
@@ -2587,7 +2599,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             /* delete list2 keys */
             for (uint32_t j = 0; j < list2->descendants; j++) {
                 node = &list2[j + 1];
-                if (node->type == YN_KEY) {
+                if (AY_TYPE_LIST_KEY(node)) {
                     ay_ynode_delete_node(tree, AY_INDEX(tree, node));
                     j--;
                 }
@@ -2610,7 +2622,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             /* move keys from cont1 to list1 */
             for (uint32_t j = 0; j < list1->descendants; j++) {
                 node = &list1[j + 1];
-                if (node->type == YN_KEY) {
+                if (AY_TYPE_LIST_KEY(node)) {
                     ay_ynode_move_subtree_as_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, node));
                     j--;
                     cont1++;
@@ -2624,7 +2636,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             for (uint32_t j = 0; j < cont2->descendants; j++) {
                 node = &cont2[j + 1];
                 if (node->type == YN_VALUE) {
-                    assert(list1->child->type == YN_KEY);
+                    assert(AY_TYPE_LIST_KEY(list1->child));
                     node->label = list1->child->label;
                 }
             }
@@ -2657,7 +2669,7 @@ ay_insert_list_key(struct ay_ynode *dst)
 
         if (!value && label && (label->tag == L_LABEL)) {
             ay_ynode_insert_child(dst, parent_idx);
-            dst[parent_idx + 1].type = YN_KEY;
+            dst[parent_idx + 1].type = YN_INDEX;
             i++;
             continue;
         } else if (value && (value->tag == L_STORE) && label && (label->tag == L_LABEL)) {
