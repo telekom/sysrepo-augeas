@@ -16,6 +16,7 @@ module iscsid {
         }
       }
       leaf value_re {
+        mandatory true;
         type string {
           pattern "[^ \t\n](.*[^ \t\n])?";
         }

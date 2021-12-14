@@ -14,12 +14,14 @@ module ethers {
         type uint64;
       }
       leaf mac {
+        mandatory true;
         type string {
           pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
         }
         augex:data-path "$$_id/mac";
       }
       leaf ip {
+        mandatory true;
         type string {
           pattern "[^# \n\t]+";
         }

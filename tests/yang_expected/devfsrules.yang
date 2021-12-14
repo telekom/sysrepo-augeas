@@ -16,6 +16,7 @@ module devfsrules {
         }
       }
       leaf id {
+        mandatory true;
         type uint64;
         augex:data-path "$$_id/id";
       }
@@ -26,6 +27,7 @@ module devfsrules {
           type uint64;
         }
         leaf line_re {
+          mandatory true;
           type string {
             pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
           }

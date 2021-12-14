@@ -14,6 +14,7 @@ module securetty {
         type uint64;
       }
       leaf word {
+        mandatory true;
         type string {
           pattern "[^ \t\n#]+";
         }

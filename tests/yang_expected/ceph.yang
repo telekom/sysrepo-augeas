@@ -37,6 +37,7 @@ module ceph {
           case node2 {
             container node2 {
               leaf node {
+                mandatory true;
                 type string {
                   pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
                 }

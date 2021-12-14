@@ -22,10 +22,12 @@ module passwd {
         augex:data-path "$$username/password";
       }
       leaf uid {
+        mandatory true;
         type uint64;
         augex:data-path "$$username/uid";
       }
       leaf gid {
+        mandatory true;
         type uint64;
         augex:data-path "$$username/gid";
       }
@@ -104,14 +106,16 @@ module passwd {
         augex:data-path "@nisdefault/password";
       }
       leaf uid {
-        type string {
-          pattern "([0-9]+){0,1}";
+        type union {
+          type uint64;
+          type empty;
         }
         augex:data-path "@nisdefault/uid";
       }
       leaf gid {
-        type string {
-          pattern "([0-9]+){0,1}";
+        type union {
+          type uint64;
+          type empty;
         }
         augex:data-path "@nisdefault/gid";
       }

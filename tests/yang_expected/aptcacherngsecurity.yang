@@ -16,12 +16,14 @@ module aptcacherngsecurity {
         }
       }
       leaf authpair {
+        mandatory true;
         type string {
           pattern "[^ \t:/]*";
         }
         augex:data-path "$$_id/authpair";
       }
       leaf node {
+        mandatory true;
         type string {
           pattern "[^: \t\n]*";
         }

@@ -16,6 +16,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -31,6 +32,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -46,6 +48,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -61,6 +64,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -76,6 +80,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -91,6 +96,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -106,6 +112,7 @@ module postfix_sasl_smtpd {
         }
       }
       leaf value_to_eol {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }

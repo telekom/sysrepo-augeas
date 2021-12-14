@@ -14,12 +14,14 @@ module grubenv {
         type uint64;
       }
       leaf name {
+        mandatory true;
         type string {
           pattern "[A-Za-z_][A-Za-z0-9_]*";
         }
         augex:data-path "$$_id/name";
       }
       leaf value {
+        mandatory true;
         type string {
           pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
         }

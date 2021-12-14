@@ -669,10 +669,9 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
     return ret;
 }
 
-static char *
-ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct lens *lens)
+static struct module *
+ay_get_module(struct augeas *aug, const char *modname)
 {
-    char *ret;
     struct module *mod = NULL;
 
     list_for_each(mod_iter, aug->modules) {
@@ -682,7 +681,66 @@ ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct len
         }
     }
 
+    return mod;
+}
+
+static char *
+ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct lens *lens)
+{
+    char *ret;
+    struct module *mod;
+
+    mod = ay_get_module(aug, modname);
     ret = mod ? ay_get_lense_name(mod, lens) : NULL;
+
+    return ret;
+}
+
+static char *
+ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *pattern, ly_bool ignore_maybe)
+{
+    char *ret = NULL;
+    struct module *mod;
+    size_t pattern_len, maybe_len = strlen("{0,1}");
+    char *found;
+    uint64_t cnt_found = 0;
+    char *str;
+
+    if (!pattern) {
+        return NULL;
+    }
+
+    mod = ay_get_module(aug, modname);
+    if (!mod) {
+        return ret;
+    }
+
+    pattern_len = strlen(pattern);
+    if (ignore_maybe && (pattern_len > maybe_len) && !strcmp(pattern + (pattern_len - maybe_len), "{0,1}")) {
+        pattern_len = pattern_len - maybe_len;
+        /* pattern without parentheses */
+        pattern++;
+        pattern_len -= 2;
+    }
+
+    mod = ay_get_module(aug, modname);
+    list_for_each(bind_iter, mod->bindings) {
+        if (bind_iter->value->tag != V_REGEXP) {
+            continue;
+        }
+        str = bind_iter->value->regexp->pattern->str;
+        if (strlen(str) != pattern_len) {
+            continue;
+        }
+        if (!strncmp(str, pattern, pattern_len)) {
+            found = bind_iter->ident->str;
+            cnt_found++;
+        }
+    }
+
+    if (cnt_found == 1) {
+        ret = found;
+    }
 
     return ret;
 }
@@ -1162,14 +1220,47 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
     return ret;
 }
 
+static void
+ay_print_yang_type_union(struct yprinter_ctx *ctx, const char *ident)
+{
+    ly_print(ctx->out, "%*stype union", ctx->space, "");
+    ay_print_yang_nesting_begin(ctx);
+    ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+    ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+    ay_print_yang_nesting_end(ctx);
+}
+
+static const char *
+ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
+{
+    const char *ret = NULL;
+
+    if (!ident) {
+        return ret;
+    }
+
+    if (!strcmp(modname, "Rx")) {
+        if (!strcmp("integer", ident)) {
+            ret = "uint64";
+        } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
+            ret = "int64_t";
+        } else if (!strcmp("reldecimal", ident) || !strcmp("decimal", ident)) {
+            ret = "decimal64";
+        }
+    }
+
+    return ret;
+}
+
 static int
 ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
     struct lens *label, *value, *reg;
-    char *ident;
+    const char *ident = NULL;
     char *filename = NULL;
     size_t len = 0;
+    ly_bool print_union;
 
     if (!node->label && !node->value) {
         return ret;
@@ -1185,26 +1276,25 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (value && (value->tag == L_STORE)) {
         reg = value;
     } else {
-        reg = NULL;
+        ret = ay_print_yang_type_string(ctx, NULL);
+        return ret;
     }
 
-    if (reg) {
-        ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
-    }
+    ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
 
     if (!strncmp(filename, "rx", len)) {
         ident = ay_get_lense_name_by_modname(ctx->aug, "Rx", reg);
-        if (!ident) {
-            ret = ay_print_yang_type_string(ctx, reg->regexp);
-        } else if (!strcmp("integer", ident)) {
-            ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
-        } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
-            ly_print(ctx->out, "%*stype int64_t;\n", ctx->space, "");
-        } else if (!strcmp("reldecimal", ident) || !strcmp("decimal", ident)) {
-            ly_print(ctx->out, "%*stype decimal64;\n", ctx->space, "");
-        } else {
-            ret = ay_print_yang_type_string(ctx, reg->regexp);
-        }
+        print_union = 0;
+    } else {
+        ident = ay_get_lense_name_by_regex(ctx->aug, "Rx", reg->regexp->pattern->str, 1);
+        print_union = 1;
+    }
+
+    ident = ay_get_yang_type_by_lense_name("Rx", ident);
+    if (ident && print_union) {
+        ay_print_yang_type_union(ctx, ident);
+    } else if (ident) {
+        ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
     } else {
         ret = ay_print_yang_type_string(ctx, reg->regexp);
     }
@@ -1251,6 +1341,42 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+static ly_bool
+ay_lnode_has_maybe(struct ay_lnode *node)
+{
+    struct ay_lnode *iter;
+
+    if (!node) {
+        return 0;
+    }
+
+    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+        if (iter->lens->tag == L_MAYBE) {
+            return 1;
+        }
+    }
+
+    if (iter) {
+        for (iter = iter->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+            if (iter->lens->tag == L_MAYBE) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static void
+ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    if (ay_lnode_has_maybe(node->label) || ay_lnode_has_maybe(node->value)) {
+        return;
+    } else {
+        ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
+    }
+}
+
 static int
 ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1261,6 +1387,7 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
+    ay_print_yang_mandatory(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_default_value(ctx, node);

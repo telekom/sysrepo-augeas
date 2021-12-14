@@ -16,6 +16,7 @@ module iproute2 {
         }
       }
       leaf node {
+        mandatory true;
         type string {
           pattern "[a-zA-Z0-9/-]+";
         }

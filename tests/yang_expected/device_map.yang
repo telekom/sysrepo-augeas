@@ -16,6 +16,7 @@ module device_map {
         }
       }
       leaf fspath {
+        mandatory true;
         type string {
           pattern "[^ \t\n]+";
         }

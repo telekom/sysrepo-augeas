@@ -14,18 +14,21 @@ module backuppchosts {
         type uint64;
       }
       leaf host {
+        mandatory true;
         type string {
           pattern "[^#, \n\t/]+";
         }
         augex:data-path "$$_id/host";
       }
       leaf dhcp {
+        mandatory true;
         type string {
           pattern "[^#, \n\t/]+";
         }
         augex:data-path "$$_id/dhcp";
       }
       leaf user {
+        mandatory true;
         type string {
           pattern "[^#, \n\t/]+";
         }

@@ -14,12 +14,14 @@ module hosts {
         type uint64;
       }
       leaf ipaddr {
+        mandatory true;
         type string {
           pattern "[^# \n\t]+";
         }
         augex:data-path "$$_id/ipaddr";
       }
       leaf canonical {
+        mandatory true;
         type string {
           pattern "[^# \n\t]+";
         }

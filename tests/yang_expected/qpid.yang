@@ -16,6 +16,7 @@ module qpid {
         }
       }
       leaf node {
+        mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
