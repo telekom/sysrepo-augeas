@@ -10,6 +10,33 @@
  * You may obtain a copy of the License at
  *
  *     https://opensource.org/licenses/BSD-3-Clause
+ *
+ *
+ * @section AY_OVERVIEW Overview
+ *
+ * The Augyang was created for generating YANG module (.yang) from Augeas module (.aug) which is described by the
+ * Augeas language. This language is quite complicated, so development of Augyang has been facilitated by the use of
+ * internal Augeas header files. The source code in the Augeas project did not have to be modified in any way, only the
+ * internal functions are used. By default, static libraries are created when compiling the Augeas project, which only
+ * needs to be linked with Augyang.
+ *
+ * Augyang is therefore dependent on Augeas' output which is an internal tree of basic building blocks called Lenses
+ * that Augeas uses to process some configuration file. Augyang is able to gather the necessary information from the
+ * Tree of Lenses and uses it to create its own internal tree, which it transforms in various ways until it is finally
+ * ready to print the YANG module.
+ * (So that's how augyang works. )
+ *
+ * The development of Augyang is iterative, because Augeas modules can be very different and there is no guarantee that
+ * the generated YANG file will be correct. The goal is to make Augyang ultimately usable for ordinary purposes.
+ *
+ * Another important topic is special data-paths that are written to generated YANG files. The context is that Augeas
+ * parses some configuration file and creates a data tree from it, which can be modified using the augtool tool and
+ * therefore changing the original configuration file. So these special data paths in the YANG file are used for
+ * mapping with the Augeas data tree. Thanks to this mapping, the Sysrepo plugin can manipulate data.
+ *
+ * The current situation is such that Augyang is further improved on the basis of Augeas modules. It is not known how
+ * much is left, because the tasks appear on the fly. However, in the future, reliable regular expression conversion
+ * must be added because Augeas and Yang use different formats.
  */
 
 #define _GNU_SOURCE

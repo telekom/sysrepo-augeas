@@ -669,6 +669,13 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
     return ret;
 }
 
+/**
+ * @brief Get module by the module name.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] modname Name of the required module.
+ * @return Pointer to Augeas module or NULL.
+ */
 static struct module *
 ay_get_module(struct augeas *aug, const char *modname)
 {
@@ -684,6 +691,14 @@ ay_get_module(struct augeas *aug, const char *modname)
     return mod;
 }
 
+/**
+ * @brief Get lense name from specific module.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] modname Name of the module where to look for @p lens.
+ * @param[in] lens Lense for which to find the name.
+ * @return Lense name or NULL.
+ */
 static char *
 ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct lens *lens)
 {
@@ -696,6 +711,16 @@ ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct len
     return ret;
 }
 
+/**
+ * @brief Get lense name from specific module and search using a regular expression.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] modname Name of the module where to look for @p pattern.
+ * @param[in] pattern Regular expression used to find lense.
+ * @param[in] ignore_maybe Flag set to 1 to ignore the "{0,1}" substring in @p pattern.
+ * Augeas inserts this substring into the @p pattern if it is affected by the '?' (maybe) operator.
+ * @return Lense name which has @p pattern in the @p modname module otherwise NULL.
+ */
 static char *
 ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *pattern, ly_bool ignore_maybe)
 {
@@ -874,7 +899,7 @@ struct regex_map
  *
  * @param[in] rp Regular pattern to check or possibly change.
  * @param[out] regout Regular pattern that conforms to the yang language. The caller must free memory.
- * @param 0 on success.
+ * @return 0 on success.
  */
 static int
 ay_get_regex_standardized(const struct regexp *rp, char **regout)
@@ -1080,6 +1105,12 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print data-path delimiter.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] printed Flag set to 1 if some part of the path was already printed.
+ */
 static void
 ay_print_yang_data_path_delim(struct yprinter_ctx *ctx, ly_bool *printed)
 {
@@ -1088,6 +1119,14 @@ ay_print_yang_data_path_delim(struct yprinter_ctx *ctx, ly_bool *printed)
     }
 }
 
+/**
+ * @brief Print key in the data-path.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] list Node of type YN_LIST in which to find the key.
+ * @param[in] target Node for which the data-path is printed.
+ * @param[in,out] printed Flag will be set to 1 if some key is printed.
+ */
 static void
 ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list, struct ay_ynode *target,
         ly_bool *printed)
@@ -1117,6 +1156,14 @@ ay_print_yang_data_path_item_key(struct yprinter_ctx *ctx, struct ay_ynode *list
     }
 }
 
+/**
+ * @brief Print data-path for the YN_VALUE node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type YN_VALUE.
+ * @param[in] label Label from which @p node was derived.
+ * @param[out] printed Flag will be set to 1 if some string is printed.
+ */
 static void
 ay_print_yang_data_path_item_value(struct yprinter_ctx *ctx, struct ay_ynode *node, struct ay_lnode *label,
         ly_bool *printed)
@@ -1140,6 +1187,14 @@ ay_print_yang_data_path_item_value(struct yprinter_ctx *ctx, struct ay_ynode *no
     }
 }
 
+/**
+ * @brief Print part of data-path for the @p target node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Iterator which is moved by parents and a part of data-path is printed for each of them.
+ * @param[in] target Node for which the data-path is to be printed.
+ * @param[out] printed Flag will be set to 1 if some string is printed.
+ */
 static void
 ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, struct ay_ynode *target,
         ly_bool *printed)
@@ -1172,6 +1227,14 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
     }
 }
 
+/**
+ * @brief Recursively print parts of data-path for the @p target node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Iterator which is moved by parents.
+ * @param[in] target Node for which the data-path is to be printed.
+ * @param[in,out] printed Flag will be set to 1 if some string is printed.
+ */
 static void
 ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node, struct ay_ynode *target, ly_bool *printed)
 {
@@ -1183,6 +1246,12 @@ ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node, struc
     ay_print_yang_data_path_item(ctx, node, target, printed);
 }
 
+/**
+ * @brief Print dat-path for @p node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the data-path is to be printed.
+ */
 static void
 ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1198,6 +1267,13 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "\";\n");
 }
 
+/**
+ * @brief Print type-stmt string and also pattern-stmt if necessary.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] rp Regular expression to printed. It can be NULL.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
 {
@@ -1220,6 +1296,13 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
     return ret;
 }
 
+/**
+ * @brief Print union-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] ident Main name of the type in the union.
+ * @return 0 on success.
+ */
 static void
 ay_print_yang_type_union(struct yprinter_ctx *ctx, const char *ident)
 {
@@ -1230,6 +1313,13 @@ ay_print_yang_type_union(struct yprinter_ctx *ctx, const char *ident)
     ay_print_yang_nesting_end(ctx);
 }
 
+/**
+ * @brief Assign a yang type to a specific lense in the module.
+ *
+ * @param[in] modname Name of the module to which the @p ident belongs.
+ * @param[in] ident Name of the lense.
+ * @return Yang built-In Type name or NULL.
+ */
 static const char *
 ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
 {
@@ -1252,6 +1342,13 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
     return ret;
 }
 
+/**
+ * @brief Print yang type-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the type-stmt is to be printed.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1302,6 +1399,13 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang default-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the default-stmt is to be printed.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_default_value(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1322,6 +1426,13 @@ ay_print_yang_default_value(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang leaf-list-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type YN_LEAFLIST.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1341,6 +1452,12 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Check if the 'maybe' operator (?) is bound to the @p node.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if maybe operator affects the node otherwise 0.
+ */
 static ly_bool
 ay_lnode_has_maybe(struct ay_lnode *node)
 {
@@ -1367,6 +1484,12 @@ ay_lnode_has_maybe(struct ay_lnode *node)
     return 0;
 }
 
+/**
+ * @brief Print yang mandatory-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the mandatory-stmt is to be printed.
+ */
 static void
 ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1377,6 +1500,13 @@ ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 }
 
+/**
+ * @brief Print yang leaf-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node printed as leaf-stmt.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1399,6 +1529,13 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang leaf-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node printed as list key of type leaf.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1429,6 +1566,13 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang key-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type YN_LIST.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_list_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1446,6 +1590,13 @@ ay_print_yang_list_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang list-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type YN_LIST.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1467,6 +1618,13 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang container-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type YN_CONTAINER.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1483,6 +1641,11 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Actions for node of type YN_UNKNOWN.
+ *
+ * TODO remove?
+ */
 static int
 ay_print_yang_unknown(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1491,6 +1654,13 @@ ay_print_yang_unknown(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return 0;
 }
 
+/**
+ * @brief Print node based on type.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node to print.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1527,6 +1697,13 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print yang case-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for case identifier evaluation.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1536,6 +1713,13 @@ ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return 0;
 }
 
+/**
+ * @brief Print yang choice-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for case identifier evaluation.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1549,6 +1733,13 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return 0;
 }
 
+/**
+ * @brief Recursively print subtree.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Subtree to print.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1606,6 +1797,14 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief Print ynode tree in yang format.
+ *
+ * @param[in] mod Module in which the tree is located.
+ * @param[in] tree Ynode tree to print.
+ * @param[out] str_out Printed tree in yang format. Call free() after use.
+ * @return 0 on success.
+ */
 static int
 ay_print_yang(struct augeas *aug, struct module *mod, struct ay_ynode *tree, char **str_out)
 {
@@ -1644,6 +1843,11 @@ ay_print_yang(struct augeas *aug, struct module *mod, struct ay_ynode *tree, cha
     return ret;
 }
 
+/**
+ * @brief Does nothing.
+ *
+ * @param[in] ctx Context for printing.
+ */
 static void
 ay_print_void(struct lprinter_ctx *ctx)
 {
@@ -1651,6 +1855,12 @@ ay_print_void(struct lprinter_ctx *ctx)
     return;
 }
 
+/**
+ * @brief Check if lense node is not ynode.
+ *
+ * @param[in] ctx Context for printing. The lprinter_ctx.data is type of lense.
+ * @return 1 if lense should be filtered because it is not ynode, otherwise 0.
+ */
 static ly_bool
 ay_print_lens_filter_ynode(struct lprinter_ctx *ctx)
 {
@@ -1660,6 +1870,11 @@ ay_print_lens_filter_ynode(struct lprinter_ctx *ctx)
     return !(lens->tag == L_SUBTREE);
 }
 
+/**
+ * @brief Transition from one lense node to another.
+ *
+ * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of lense.
+ */
 static void
 ay_print_lens_transition(struct lprinter_ctx *ctx)
 {
@@ -1676,6 +1891,11 @@ ay_print_lens_transition(struct lprinter_ctx *ctx)
     }
 }
 
+/**
+ * @brief Transition from one lnode to another.
+ *
+ * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of lnode.
+ */
 static void
 ay_print_lnode_transition(struct lprinter_ctx *ctx)
 {
@@ -1704,6 +1924,15 @@ ay_print_lnode_transition(struct lprinter_ctx *ctx)
  */
 #define AY_LV_TYPE_LABEL 2
 
+/**
+ * @brief Get next label/value.
+ *
+ * Next in order may be found if they are separated by the '|' operator (L_UNION).
+ *
+ * @param[in] lv Node whose lense tag is L_LABEL or L_VALUE. The point from which to look further.
+ * @param[in] lv_type Flag specifying the type to search for. See AY_LV_TYPE_* constants.
+ * @return Follower or NULL.
+ */
 static struct ay_lnode *
 ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
 {
@@ -1732,6 +1961,12 @@ ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
     return NULL;
 }
 
+/**
+ * @brief Print labels and values of @p node.
+ *
+ * @param[in] ctx Context for printing. The lprinter_ctx.data is type of ynode.
+ * @param[in] node Node whose labels and values is to be printed.
+ */
 static void
 ay_print_ynode_label_value(struct lprinter_ctx *ctx, struct ay_ynode *node)
 {
@@ -1761,6 +1996,11 @@ ay_print_ynode_label_value(struct lprinter_ctx *ctx, struct ay_ynode *node)
     ctx->func.extension = extension;
 }
 
+/**
+ * @brief Transition from one ynode node to another.
+ *
+ * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of ynode.
+ */
 static void
 ay_print_ynode_transition(struct lprinter_ctx *ctx)
 {
@@ -1779,6 +2019,11 @@ ay_print_ynode_transition(struct lprinter_ctx *ctx)
     }
 }
 
+/**
+ * @brief Print node's labels and values then make transition from one ynode to another.
+ *
+ * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of ynode.
+ */
 static void
 ay_print_ynode_transition_lv(struct lprinter_ctx *ctx)
 {
@@ -1786,6 +2031,11 @@ ay_print_ynode_transition_lv(struct lprinter_ctx *ctx)
     ay_print_ynode_transition(ctx);
 }
 
+/**
+ * @brief Starting function for printing ynode forest.
+ *
+ * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of ynode.
+ */
 static void
 ay_print_ynode_main(struct lprinter_ctx *ctx)
 {
@@ -1803,6 +2053,11 @@ ay_print_ynode_main(struct lprinter_ctx *ctx)
     }
 }
 
+/**
+ * @brief Print additional information about ynode.
+ *
+ * @param[in] ctx Context for printing. The lprinter_ctx.data is type of ynode.
+ */
 static void
 ay_print_ynode_extension(struct lprinter_ctx *ctx)
 {
@@ -1845,6 +2100,14 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     }
 }
 
+/**
+ * @brief Test if lnode tree matches lense tree.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] mod Module in which the trees are located.
+ * @param[in] tree Tree of lnodes to check by print functions.
+ * @return 0 on success.
+ */
 static int
 ay_lnode_debug_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
 {
@@ -1874,6 +2137,14 @@ ay_lnode_debug_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
     return ret;
 }
 
+/**
+ * @brief Test if ynode forest matches lense tree.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] mod Module in which the trees are located.
+ * @param[in] yforest Forest of ynodes to check by print functions.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_debug_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yforest)
 {
@@ -1907,6 +2178,14 @@ ay_ynode_debug_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yfo
     return ret;
 }
 
+/**
+ * @brief Print ynode tree.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] vermask Bitmask for vercode to decide if result should be printed to stdout.
+ * @param[in] tree Tree of ynodes to check by print functions.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_debug_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
 {
@@ -1948,6 +2227,13 @@ augyang_print_input_lenses(struct module *mod, char **str)
     return ret;
 }
 
+/**
+ * @brief Create lnode tree from lense tree.
+ *
+ * @param[in] root Root lense of the tree of lenses.
+ * @param[in] lens Iterator over lense nodes.
+ * @param[out] node Node will contain @p lens.
+ */
 static void
 ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *node)
 {
@@ -1982,6 +2268,14 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
     }
 }
 
+/**
+ * @brief Create basic ynode forest from lnode tree.
+ *
+ * Only ay_ynode.snode and ay_ynode.descendants are set.
+ *
+ * @param[out] ynode Tree of ynodes as destination.
+ * @param[in] lnode Tree of lnodes as source.
+ */
 static void
 ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
 {
@@ -2000,6 +2294,11 @@ ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
     }
 }
 
+/**
+ * @brief Connect ynode top-nodes (set ay_ynode.next).
+ *
+ * @param[in,out] forest Forest of ynodes.
+ */
 static void
 ay_ynode_forest_connect_topnodes(struct ay_ynode *forest)
 {
@@ -2018,6 +2317,11 @@ ay_ynode_forest_connect_topnodes(struct ay_ynode *forest)
     last->next = NULL;
 }
 
+/**
+ * @brief Set label and value to all ynodes in the forest.
+ *
+ * @param[in,out] forest Forest of ynodes.
+ */
 static void
 ay_ynode_add_label_value(struct ay_ynode *forest)
 {
@@ -2042,6 +2346,11 @@ ay_ynode_add_label_value(struct ay_ynode *forest)
     }
 }
 
+/**
+ * @brief Set choice to all ynodes in the forest.
+ *
+ * @param[in,out] forest Forest of ynodes.
+ */
 static void
 ay_ynode_add_choice(struct ay_ynode *forest)
 {
@@ -2057,6 +2366,11 @@ ay_ynode_add_choice(struct ay_ynode *forest)
     }
 }
 
+/**
+ * @brief Set correct parent, next and child pointers to all ynodes.
+ *
+ * @param[in,out] tree Tree of ynodes which have bad pointers. It can also take the form of a forest.
+ */
 static void
 ay_ynode_tree_correction(struct ay_ynode *tree)
 {
@@ -2079,6 +2393,12 @@ ay_ynode_tree_correction(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Create forest of ynodes from lnode tree.
+ *
+ * @param[in] ltree Tree of lnodes.
+ * @param[out] yforest Forest of ynodes.
+ */
 static void
 ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
 {
@@ -2089,6 +2409,12 @@ ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
     ay_ynode_add_choice(yforest);
 }
 
+/**
+ * @brief Copy ynodes to new location.
+ *
+ * @param[out] dst Destination where are ynode copied.
+ * @param[in] src Source where the ynodes are copied from.
+ */
 static void
 ay_ynode_copy(struct ay_ynode *dst, struct ay_ynode *src)
 {
@@ -2101,6 +2427,11 @@ ay_ynode_copy(struct ay_ynode *dst, struct ay_ynode *src)
     }
 }
 
+/**
+ * @brief Move ynodes in an array one element to the right.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_ynode_shift_right(struct ay_ynode *tree)
 {
@@ -2115,6 +2446,13 @@ ay_ynode_shift_right(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Create ynode tree from ynode forest.
+ *
+ * @param[in] forest Forest of ynodes.
+ * @param[out] tree Resulting ynode tree. Release after use.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_create_tree(struct ay_ynode *forest, struct ay_ynode **tree)
 {
@@ -2141,6 +2479,12 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_ynode **tree)
     return 0;
 }
 
+/**
+ * @brief Check if the repetition (* or +) bound to the @p node.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if repetion affects the node otherwise 0.
+ */
 static ly_bool
 ay_ynode_has_repetition(struct ay_ynode *node)
 {
@@ -2169,6 +2513,12 @@ ay_ynode_has_repetition(struct ay_ynode *node)
     return ret;
 }
 
+/**
+ * @brief YN_LIST detection rule.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode is of type YN_LIST.
+ */
 static ly_bool
 ay_ynode_rule_list(struct ay_ynode *node)
 {
@@ -2178,24 +2528,48 @@ ay_ynode_rule_list(struct ay_ynode *node)
     return (node->child || has_key) && node->label && ay_ynode_has_repetition(node);
 }
 
+/**
+ * @brief YN_CONTAINER detection rule.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode is of type YN_CONTAINER.
+ */
 static ly_bool
 ay_ynode_rule_container(struct ay_ynode *node)
 {
     return node->child && node->label;
 }
 
+/**
+ * @brief YN_LEAFLIST detection rule.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode is of type YN_LEAFLIST.
+ */
 static ly_bool
 ay_ynode_rule_leaflist(struct ay_ynode *node)
 {
     return !node->child && node->label && ay_ynode_has_repetition(node);
 }
 
+/**
+ * @brief YN_LEAF detection rule.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode is of type YN_LEAF.
+ */
 static ly_bool
 ay_ynode_rule_leaf(struct ay_ynode *node)
 {
     return !node->child && node->label;
 }
 
+/**
+ * @brief YN_KEY detection rule.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode is of type YN_KEY.
+ */
 static ly_bool
 ay_ynode_rule_list_key(struct ay_ynode *node)
 {
@@ -2209,6 +2583,12 @@ ay_ynode_rule_list_key(struct ay_ynode *node)
     return (node->type == YN_LIST) && (lab || val);
 }
 
+/**
+ * @brief Check whether the node is to be divided into two.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if ynode must be divided.
+ */
 static ly_bool
 ay_ynode_rule_node_split(struct ay_ynode *node)
 {
@@ -2219,6 +2599,13 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
     return (node->type == YN_LEAF) && label && (label->tag == L_KEY) && value;
 }
 
+/**
+ * @brief Test ay_ynode_copy().
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] forest Forest of ynodes.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
 {
@@ -2250,6 +2637,14 @@ ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
     return ret;
 }
 
+/**
+ * @brief Insert gap in the array.
+ *
+ * All pointers to ynodes are invalidated.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] index Index where there will be the gap.
+ */
 static void
 ay_ynode_insert_gap(struct ay_ynode *tree, uint32_t index)
 {
@@ -2258,6 +2653,14 @@ ay_ynode_insert_gap(struct ay_ynode *tree, uint32_t index)
     LY_ARRAY_INCREMENT(tree);
 }
 
+/**
+ * @brief Delete gap in the array.
+ *
+ * All pointers to ynodes are invalidated.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] index Index where the gap will be deleted.
+ */
 static void
 ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 {
@@ -2266,6 +2669,12 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
     LY_ARRAY_DECREMENT(tree);
 }
 
+/**
+ * @brief Delete node from the tree.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] index Index of the ynode to be deleted.
+ */
 static void
 ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
 {
@@ -2278,6 +2687,12 @@ ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Insert new parent (wrapper) for node.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] index Index of the ynode wrapped.
+ */
 static void
 ay_ynode_insert_wrapper(struct ay_ynode *tree, uint32_t index)
 {
@@ -2292,6 +2707,12 @@ ay_ynode_insert_wrapper(struct ay_ynode *tree, uint32_t index)
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Insert new parent for all children.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] child Index of one of the children to whom a new parent will be inserted.
+ */
 static void
 ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
 {
@@ -2308,6 +2729,14 @@ ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Insert new child for node.
+ *
+ * New inserted node will be the first child.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] parent Index of the parent who will have new child.
+ */
 static void
 ay_ynode_insert_child(struct ay_ynode *tree, uint32_t parent)
 {
@@ -2324,6 +2753,12 @@ ay_ynode_insert_child(struct ay_ynode *tree, uint32_t parent)
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Insert new sibling for node.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] node Index of the node who will have new sibling.
+ */
 static void
 ay_ynode_insert_sibling(struct ay_ynode *tree, uint32_t node)
 {
@@ -2340,6 +2775,13 @@ ay_ynode_insert_sibling(struct ay_ynode *tree, uint32_t node)
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Move subtree to another place.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] dst Index of the place where the subtree is moved. Gap are inserted on this index.
+ * @param[in] src Index to the root of subtree. Gap is deleted after the move.
+ */
 static void
 ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
@@ -2362,6 +2804,13 @@ ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
     }
 }
 
+/**
+ * @brief Move subtree to another place as a sibling.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] dst Index of the node whose sibling will be subtree.
+ * @param[in] src Index to the root of subtree that moves.
+ */
 static void
 ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
@@ -2384,6 +2833,13 @@ ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t s
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Move subtree to another place as a child.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] dst Index of the node whose the first child will be subtree.
+ * @param[in] src Index to the root of subtree that moves.
+ */
 static void
 ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 {
@@ -2406,6 +2862,15 @@ ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src
     ay_ynode_tree_correction(tree);
 }
 
+/**
+ * @brief Compare arrays of ynodes and print information if the nodes are different.
+ *
+ * @param[in] iter Index where to start the comparison.
+ * @param[in] arr1 First array of ynodes.
+ * @param[in] arr2 Second array of ynodes.
+ * @param[in] count Number of elements to compare.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
 {
@@ -2443,6 +2908,13 @@ ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
     return 0;
 }
 
+/**
+ * @brief Test insert and delete ynode tree operations.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] tree Tree of ynodes. It will not be changed.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
 {
@@ -2511,6 +2983,13 @@ error:
     goto end;
 }
 
+/**
+ * @brief Test move ynode subtree operations.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] tree Tree of ynodes. It will not be changed.
+ * @return 0 on successs.
+ */
 static int
 ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
 {
@@ -2560,6 +3039,11 @@ error:
     goto end;
 }
 
+/**
+ * @brief Delete nodes with unkown type.
+ *
+ * @param[in,out] dst Tree of ynodes.
+ */
 static void
 ay_delete_type_unknown(struct ay_ynode *dst)
 {
@@ -2571,6 +3055,11 @@ ay_delete_type_unknown(struct ay_ynode *dst)
     }
 }
 
+/**
+ * @brief Delete generally using nodes for comments.
+ *
+ * @param[in,out] dst Tree of ynodes.
+ */
 static void
 ay_delete_comment(struct ay_ynode *dst)
 {
@@ -2589,6 +3078,13 @@ ay_delete_comment(struct ay_ynode *dst)
     }
 }
 
+/**
+ * @brief Delete choice for top-nodes.
+ *
+ * It is typically undesirable.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_delete_top_choice(struct ay_ynode *tree)
 {
@@ -2615,6 +3111,14 @@ ay_delete_top_choice(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Delete choice for top-nodes.
+ *
+ * Delete "lns . ( sep . lns )*" pattern (TODO bilateral). This pattern is located in Build module (build.aug).
+ * The first 'lns' is useless.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_ynode_delete_build_list(struct ay_ynode *tree)
 {
@@ -2670,6 +3174,13 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Delete lonely list key which is unnecessary.
+ *
+ * Delete "[key lns1 store lns2] | [key lns1]" pattern (bilateral).
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_ynode_delete_lonely_key(struct ay_ynode *tree)
 {
@@ -2702,6 +3213,15 @@ repeat:
     }
 }
 
+/**
+ * @brief Unify the lists under the choice relationship if they have the same key.
+ *
+ * If list's are in choice relation and they have same key then there will be one list and its nodes will
+ * have that choice relation.
+ * Transform "[key lns1 {some_nodes1} ] | [key lns1 {some_nodes2}]" -> "[key lns1 {some_nodes1 | some_nodes2}]"
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_delete_list_with_same_key(struct ay_ynode *tree)
 {
@@ -2771,6 +3291,11 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Insert top-level container.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_insert_data_container(struct ay_ynode *dst)
 {
@@ -2778,6 +3303,13 @@ ay_insert_data_container(struct ay_ynode *dst)
     dst[1].type = YN_CONTAINER;
 }
 
+/**
+ * @brief insert list key.
+ *
+ * also node with 'store' pattern can be generated too.
+ *
+ * @param[in,out] tree tree of ynodes.
+ */
 static void
 ay_insert_list_key(struct ay_ynode *dst)
 {
@@ -2823,6 +3355,11 @@ ay_insert_list_key(struct ay_ynode *dst)
     }
 }
 
+/**
+ * @brief Split node if has two patterns (L_KEY and L_STORE).
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
 static void
 ay_node_split(struct ay_ynode *tree)
 {
@@ -2843,6 +3380,11 @@ ay_node_split(struct ay_ynode *tree)
     }
 }
 
+/**
+ * @brief Set ay_ynode.type for all nodes.
+ *
+ * @param[in,out] dst Tree of ynodes.
+ */
 static void
 ay_ynode_set_type(struct ay_ynode *dst)
 {
@@ -2867,6 +3409,17 @@ ay_ynode_set_type(struct ay_ynode *dst)
     }
 }
 
+/**
+ * @brief Wrapper for calling some insert function.
+ *
+ * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
+ * The insertion result will be applied.
+ * @param[in] rule Callback function for @p insert function. To insert a node, the rule returns 1.
+ * @param[in] insert Callback function which inserts some nodes.
+ * @param[in] counter_multiplier The total number of complied rules (how often @p rule returns 1)
+ * is multiplied by the number @p counter_multiplier.
+ * @return 1 on success.
+ */
 static int
 ay_ynode_trans_insert1(struct ay_ynode **tree, ly_bool (*rule)(struct ay_ynode *), void (*insert)(struct ay_ynode *),
         uint32_t counter_multiplier)
@@ -2884,6 +3437,15 @@ ay_ynode_trans_insert1(struct ay_ynode **tree, ly_bool (*rule)(struct ay_ynode *
     return 0;
 }
 
+/**
+ * @brief Wrapper for calling some insert function.
+ *
+ * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
+ * The insertion result will be applied.
+ * @param[in] items_count Number of nodes to be inserted.
+ * @param[in] insert Callback function which inserts some nodes.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, void (*insert)(struct ay_ynode *))
 {
@@ -2898,6 +3460,13 @@ ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, void (*inse
     return 0;
 }
 
+/**
+ * @brief Apply various transformations before the tree is ready to print.
+ *
+ * @param[in] vercode Verbose that decides the execution of a debug functions.
+ * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
+ * @return 0 on success.
+ */
 static int
 ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 {
