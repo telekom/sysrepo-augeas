@@ -19,6 +19,7 @@
 #include <libyang/tree_edit.h>
 
 #include "augyang.h"
+#include "errcode.h"
 #include "lens.h"
 #include "transform.h"
 
@@ -658,6 +659,32 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
 }
 
 /**
+ * @brief Get Augeas context from module.
+ *
+ * @param[in] mod Module from which the context is taken.
+ * @return Augeas context.
+ */
+static struct augeas *
+ay_get_augeas_ctx1(struct module *mod)
+{
+    assert(mod);
+    return (struct augeas *)mod->bindings->value->info->error->aug;
+}
+
+/**
+ * @brief Get Augeas context from lense.
+ *
+ * @param[in] lens Lense from which the context is taken.
+ * @return Augeas context.
+ */
+static struct augeas *
+ay_get_augeas_ctx2(struct lens *lens)
+{
+    assert(lens);
+    return (struct augeas *)lens->info->error->aug;
+}
+
+/**
  * @brief Get module by the module name.
  *
  * @param[in] aug Augeas context.
@@ -682,18 +709,17 @@ ay_get_module(struct augeas *aug, const char *modname)
 /**
  * @brief Get lense name from specific module.
  *
- * @param[in] aug Augeas context.
  * @param[in] modname Name of the module where to look for @p lens.
  * @param[in] lens Lense for which to find the name.
  * @return Lense name or NULL.
  */
 static char *
-ay_get_lense_name_by_modname(struct augeas *aug, const char *modname, struct lens *lens)
+ay_get_lense_name_by_modname(const char *modname, struct lens *lens)
 {
     char *ret;
     struct module *mod;
 
-    mod = ay_get_module(aug, modname);
+    mod = ay_get_module(ay_get_augeas_ctx2(lens), modname);
     ret = mod ? ay_get_lense_name(mod, lens) : NULL;
 
     return ret;
@@ -1368,7 +1394,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
 
     if (!strncmp(filename, "rx", len)) {
-        ident = ay_get_lense_name_by_modname(ctx->aug, "Rx", reg);
+        ident = ay_get_lense_name_by_modname("Rx", reg);
         print_union = 0;
     } else {
         ident = ay_get_lense_name_by_regex(ctx->aug, "Rx", reg->regexp->pattern->str, 1);
@@ -1794,7 +1820,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
  * @return 0 on success.
  */
 static int
-ay_print_yang(struct augeas *aug, struct module *mod, struct ay_ynode *tree, char **str_out)
+ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
 {
     int ret;
     struct yprinter_ctx ctx;
@@ -1805,7 +1831,7 @@ ay_print_yang(struct augeas *aug, struct module *mod, struct ay_ynode *tree, cha
         return AYE_MEMORY;
     }
 
-    ctx.aug = aug;
+    ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
     ctx.tree = tree;
     ctx.out = out;
@@ -3495,7 +3521,7 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 }
 
 int
-augyang_print_yang(struct augeas *aug, struct module *mod, uint64_t vercode, char **str)
+augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
 {
     int ret = 0;
     struct lens *lens;
@@ -3538,7 +3564,7 @@ augyang_print_yang(struct augeas *aug, struct module *mod, uint64_t vercode, cha
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
     AY_CHECK_GOTO(ret, end);
 
-    ret = ay_print_yang(aug, mod, ytree, str);
+    ret = ay_print_yang(mod, ytree, str);
 
 end:
     LY_ARRAY_FREE(ltree);

@@ -20,7 +20,6 @@
 #define AYV_TRANS_REMOVE        0x8
 #define AYV_TRANS_INSERT1       0x10
 
-struct augeas;
 struct module;
 
 /**
@@ -40,7 +39,7 @@ int augyang_print_input_lenses(struct module *mod, char **str);
  * @param[out] str Dynamically allocated output string containing printed yang module.
  * @return 0 on success. The augyang_get_error_message() is used for the error message.
  */
-int augyang_print_yang(struct augeas *aug, struct module *mod, uint64_t vercode, char **str);
+int augyang_print_yang(struct module *mod, uint64_t vercode, char **str);
 
 /**
  * @brief Print error message.

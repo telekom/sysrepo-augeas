@@ -417,7 +417,7 @@ main(int argc, char **argv)
         }
 
         /* generate yang module as string */
-        ret = augyang_print_yang(aug, mod, vercode, &str);
+        ret = augyang_print_yang(mod, vercode, &str);
         if (ret) {
             fprintf(stderr, "%s", augyang_get_error_message(ret));
             goto end;
