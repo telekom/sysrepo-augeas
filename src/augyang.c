@@ -517,74 +517,62 @@ ay_print_lens_node(struct lprinter_ctx *ctx, struct lens *lens)
             regex = regexp_escape(lens->regexp);
             ly_print(out, "%*s lens_del_regex: %s\n", sp, "", regex);
             free(regex);
-            ctx->func.transition(ctx);
             break;
         case L_STORE:
             ay_print_lens_node_header(out, lens, sp, "L_STORE");
             regex = regexp_escape(lens->regexp);
             ly_print(out, "%*s lens_store_regex: %s\n", sp, "", regex);
             free(regex);
-            ctx->func.transition(ctx);
             break;
         case L_VALUE:
             ay_print_lens_node_header(out, lens, sp, "L_VALUE");
             ly_print(out, "%*s lens_value_string: %s\n", sp, "", lens->string->str);
-            ctx->func.transition(ctx);
             break;
         case L_KEY:
             ay_print_lens_node_header(out, lens, sp, "L_KEY");
             regex = regexp_escape(lens->regexp);
             ly_print(out, "%*s lens_key_regex: %s\n", sp, "", regex);
             free(regex);
-            ctx->func.transition(ctx);
             break;
         case L_LABEL:
             ay_print_lens_node_header(out, lens, sp, "L_LABEL");
             ly_print(out, "%*s lens_label_string: %s\n", sp, "", lens->string->str);
-            ctx->func.transition(ctx);
             break;
         case L_SEQ:
             ay_print_lens_node_header(out, lens, sp, "L_SEQ");
             ly_print(out, "%*s lens_seq_string: %s\n", sp, "", lens->string->str);
-            ctx->func.transition(ctx);
             break;
         case L_COUNTER:
             ay_print_lens_node_header(out, lens, sp, "L_COUNTER");
             ly_print(out, "%*s lens_counter_string: %s\n", sp, "", lens->string->str);
-            ctx->func.transition(ctx);
             break;
         case L_CONCAT:
             ay_print_lens_node_header(out, lens, sp, "L_CONCAT");
-            ctx->func.transition(ctx);
             break;
         case L_UNION:
             ay_print_lens_node_header(out, lens, sp, "L_UNION");
-            ctx->func.transition(ctx);
             break;
         case L_SUBTREE:
             ay_print_lens_node_header(out, lens, sp, "L_SUBTREE");
-            ctx->func.transition(ctx);
             break;
         case L_STAR:
             ay_print_lens_node_header(out, lens, sp, "L_STAR");
-            ctx->func.transition(ctx);
             break;
         case L_MAYBE:
             ay_print_lens_node_header(out, lens, sp, "L_MAYBE");
-            ctx->func.transition(ctx);
             break;
         case L_REC:
             ay_print_lens_node_header(out, lens, sp, "L_REC");
             ly_print(out, "ay_print_lens_node error: L_REC not supported\n");
-            break;
+            return;
         case L_SQUARE:
             ay_print_lens_node_header(out, lens, sp, "L_SQUARE");
-            ctx->func.transition(ctx);
             break;
         default:
             ly_print(out, "ay_print_lens_node error\n");
-            break;
+            return;
         }
+        ctx->func.transition(ctx);
     } else {
         ctx->func.transition(ctx);
     }
