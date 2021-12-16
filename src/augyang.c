@@ -266,6 +266,7 @@ struct ay_ynode {
                                      Can be NULL. */
     struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
                                      Set if the node is under the influence of the union operator. */
+    uint8_t mandatory : 1;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 mandatory false. */
 };
 
 struct lprinter_ctx;
@@ -1467,38 +1468,6 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Check if the 'maybe' operator (?) is bound to the @p node.
- *
- * @param[in] node Node to check.
- * @return 1 if maybe operator affects the node otherwise 0.
- */
-static ly_bool
-ay_lnode_has_maybe(struct ay_lnode *node)
-{
-    struct ay_lnode *iter;
-
-    if (!node) {
-        return 0;
-    }
-
-    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-        if (iter->lens->tag == L_MAYBE) {
-            return 1;
-        }
-    }
-
-    if (iter) {
-        for (iter = iter->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-            if (iter->lens->tag == L_MAYBE) {
-                return 1;
-            }
-        }
-    }
-
-    return 0;
-}
-
-/**
  * @brief Print yang mandatory-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -1507,9 +1476,7 @@ ay_lnode_has_maybe(struct ay_lnode *node)
 static void
 ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if (ay_lnode_has_maybe(node->label) || ay_lnode_has_maybe(node->value)) {
-        return;
-    } else {
+    if (node->mandatory) {
         ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
     }
 }
@@ -2111,6 +2078,10 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
 
     if (node->choice) {
         ly_print(ctx->out, "%*s choice_id: %p\n", ctx->space, "", node->choice);
+    }
+
+    if (node->mandatory) {
+        ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
     }
 }
 
@@ -2916,6 +2887,9 @@ ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
         } else if (arr1[i].choice != arr2[i].choice) {
             printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.choice\n", iter, i);
             return 1;
+        } else if (arr1[i].mandatory != arr2[i].mandatory) {
+            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.mandatory\n", iter, i);
+            return 1;
         }
     }
 
@@ -3051,6 +3025,68 @@ end:
 error:
     ret = AYE_DEBUG_FAILED;
     goto end;
+}
+
+/**
+ * @brief Check if the 'maybe' operator (?) is bound to the @p node.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if maybe operator affects the node otherwise 0.
+ */
+static ly_bool
+ay_lnode_has_maybe(struct ay_lnode *node)
+{
+    struct ay_lnode *iter;
+
+    if (!node) {
+        return 0;
+    }
+
+    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+        if (iter->lens->tag == L_MAYBE) {
+            return 1;
+        }
+    }
+
+    if (iter) {
+        for (iter = iter->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+            if (iter->lens->tag == L_MAYBE) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Set ynode.mandatory for node.
+ *
+ * @param[in,out] node Node whose mandatory statement will be set.
+ */
+static void
+ay_ynode_set_mandatory(struct ay_ynode *node)
+{
+    if (ay_lnode_has_maybe(node->label) || ay_lnode_has_maybe(node->value)) {
+        node->mandatory = 0;
+    } else {
+        node->mandatory = 1;
+    }
+}
+
+/**
+ * @brief Set ynode.mandatory for all nodes.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
+{
+    assert(tree && ((tree[0].type == YN_UNKNOWN) || (tree[0].type == YN_ROOT)));
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        ay_ynode_set_mandatory(&tree[i]);
+    }
 }
 
 /**
@@ -3216,10 +3252,12 @@ repeat:
                 continue;
             }
             if (!node->value && (iter->value->lens->tag == L_STORE)) {
+                iter->mandatory = 0;
                 ay_ynode_delete_node(tree, AY_INDEX(tree, node));
                 i--;
                 break;
             } else if (!iter->value && (node->value->lens->tag == L_STORE)) {
+                node->mandatory = 0;
                 ay_ynode_delete_node(tree, AY_INDEX(tree, iter));
                 goto repeat;
             }
@@ -3356,6 +3394,7 @@ ay_insert_list_key(struct ay_ynode *tree)
             tree[parent_idx + 1].type = YN_VALUE;
             tree[parent_idx + 1].label = parent->label;
             tree[parent_idx + 1].value = parent->value;
+            ay_ynode_set_mandatory(&tree[parent_idx + 1]);
             i++;
         }
 
@@ -3389,6 +3428,7 @@ ay_node_split(struct ay_ynode *tree)
             valnode->type = YN_VALUE;
             valnode->label = node->label;
             valnode->value = node->value;
+            ay_ynode_set_mandatory(valnode);
             i = AY_INDEX(tree, valnode);
         }
     }
@@ -3487,6 +3527,8 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     int ret = 0;
 
     assert((*tree)->type == YN_ROOT);
+
+    ay_ynode_tree_set_mandatory(*tree);
 
     /* delete "lns . ( sep . lns )*" pattern (TODO bilateral) */
     ay_ynode_delete_build_list(*tree);
