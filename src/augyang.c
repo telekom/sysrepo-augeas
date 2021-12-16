@@ -2949,7 +2949,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_child(dupl, i);
         ay_ynode_delete_node(dupl, i + 1);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -2959,7 +2959,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_wrapper(dupl, i);
         ay_ynode_delete_node(dupl, i);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -2969,7 +2969,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
-        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -2979,7 +2979,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_sibling(dupl, i);
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i].next));
-        AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -3026,7 +3026,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
             ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
             ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
-            AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+            AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
 
@@ -3035,7 +3035,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
         if (dupl[i].next && dupl[i].next->child) {
             ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
             ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
-            AY_CHECK_GOTO(ay_ynode_debug_snap(i, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+            AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
 
