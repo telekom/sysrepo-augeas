@@ -3056,14 +3056,14 @@ error:
 /**
  * @brief Delete nodes with unkown type.
  *
- * @param[in,out] dst Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_delete_type_unknown(struct ay_ynode *dst)
+ay_delete_type_unknown(struct ay_ynode *tree)
 {
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
-        if ((dst[i].type == YN_UNKNOWN) && (!dst[i].child)) {
-            ay_ynode_delete_node(dst, i);
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        if ((tree[i].type == YN_UNKNOWN) && (!tree[i].child)) {
+            ay_ynode_delete_node(tree, i);
             i--;
         }
     }
@@ -3072,20 +3072,20 @@ ay_delete_type_unknown(struct ay_ynode *dst)
 /**
  * @brief Delete generally using nodes for comments.
  *
- * @param[in,out] dst Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_delete_comment(struct ay_ynode *dst)
+ay_delete_comment(struct ay_ynode *tree)
 {
     struct ay_ynode *iter;
     struct lens *label;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
-        iter = &dst[i];
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL)) {
             if (!strcmp("#comment", label->string->str)) {
-                ay_ynode_delete_node(dst, i);
+                ay_ynode_delete_node(tree, i);
                 i--;
             }
         }
@@ -3311,10 +3311,10 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
  * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_insert_data_container(struct ay_ynode *dst)
+ay_insert_data_container(struct ay_ynode *tree)
 {
-    ay_ynode_insert_parent(dst, 1);
-    dst[1].type = YN_CONTAINER;
+    ay_ynode_insert_parent(tree, 1);
+    tree[1].type = YN_CONTAINER;
 }
 
 /**
@@ -3325,14 +3325,14 @@ ay_insert_data_container(struct ay_ynode *dst)
  * @param[in,out] tree tree of ynodes.
  */
 static void
-ay_insert_list_key(struct ay_ynode *dst)
+ay_insert_list_key(struct ay_ynode *tree)
 {
     struct ay_ynode *parent;
     struct lens *label, *value;
     uint32_t parent_idx;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
-        parent = &dst[i];
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        parent = &tree[i];
         parent_idx = i;
         if (!ay_ynode_rule_list_key(parent)) {
             continue;
@@ -3341,29 +3341,29 @@ ay_insert_list_key(struct ay_ynode *dst)
         value = AY_VALUE_LENS(parent);
 
         if (!value && label && (label->tag == L_LABEL)) {
-            ay_ynode_insert_child(dst, parent_idx);
-            dst[parent_idx + 1].type = YN_INDEX;
+            ay_ynode_insert_child(tree, parent_idx);
+            tree[parent_idx + 1].type = YN_INDEX;
             i++;
             continue;
         } else if (value && (value->tag == L_STORE) && label && (label->tag == L_LABEL)) {
-            ay_ynode_insert_child(dst, parent_idx);
-            dst[parent_idx + 1].type = YN_KEY;
-            dst[parent_idx + 1].value = parent->value;
+            ay_ynode_insert_child(tree, parent_idx);
+            tree[parent_idx + 1].type = YN_KEY;
+            tree[parent_idx + 1].value = parent->value;
             i++;
             continue;
         } else if (value && (value->tag == L_STORE)) {
-            ay_ynode_insert_child(dst, parent_idx);
-            dst[parent_idx + 1].type = YN_VALUE;
-            dst[parent_idx + 1].label = parent->label;
-            dst[parent_idx + 1].value = parent->value;
+            ay_ynode_insert_child(tree, parent_idx);
+            tree[parent_idx + 1].type = YN_VALUE;
+            tree[parent_idx + 1].label = parent->label;
+            tree[parent_idx + 1].value = parent->value;
             i++;
         }
 
         if (label) {
-            ay_ynode_insert_child(dst, parent_idx);
-            dst[parent_idx + 1].type = YN_KEY;
-            dst[parent_idx + 1].label = parent->label;
-            dst[parent_idx + 1].value = parent->value;
+            ay_ynode_insert_child(tree, parent_idx);
+            tree[parent_idx + 1].type = YN_KEY;
+            tree[parent_idx + 1].label = parent->label;
+            tree[parent_idx + 1].value = parent->value;
             i++;
         }
     }
@@ -3397,15 +3397,15 @@ ay_node_split(struct ay_ynode *tree)
 /**
  * @brief Set ay_ynode.type for all nodes.
  *
- * @param[in,out] dst Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_ynode_set_type(struct ay_ynode *dst)
+ay_ynode_set_type(struct ay_ynode *tree)
 {
     struct ay_ynode *node;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(dst); i++) {
-        node = &dst[i];
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
         if (!node->snode) {
             assert((node->type != YN_UNKNOWN) || (node->type == YN_ROOT));
             continue;
