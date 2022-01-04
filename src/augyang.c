@@ -934,6 +934,8 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
             "#comm([^\\\\]\\n/e][^\\\\]\\n/]*|)|#com([^\\\\]\\n/m][^\\\\]\\n/]*|)|"
             "#co([^\\\\]\\n/m][^\\\\]\\n/]*|)|#c([^\\\\]\\n/o][^\\\\]\\n/]*|)|"
             "(#[^\\\\]\\n/c]|[^\\\\]\\n#/][^\\\\]\\n/])[^\\\\]\\n/]*|#|[^\\\\]\\n#/]"},
+
+        {"[^]\\r\\n]+", "[^\\\\]\\n]+"},
     };
     // TODO: if right side of the regsub rule is bigger -> danger of valgrind error
     struct regex_map regsub[] = {
