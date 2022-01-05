@@ -9,6 +9,7 @@ module postfix_sasl_smtpd {
   container postfix_sasl_smtpd {
     list list {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -25,6 +26,7 @@ module postfix_sasl_smtpd {
     }
     list list2 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -41,6 +43,7 @@ module postfix_sasl_smtpd {
     }
     list list3 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -57,6 +60,7 @@ module postfix_sasl_smtpd {
     }
     list list4 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -73,6 +77,7 @@ module postfix_sasl_smtpd {
     }
     list list5 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -89,6 +94,7 @@ module postfix_sasl_smtpd {
     }
     list list6 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {
@@ -105,6 +111,7 @@ module postfix_sasl_smtpd {
     }
     list list7 {
       key "_id";
+      min-elements 1;
       augex:data-path "$$_id";
       leaf _id {
         type string {

@@ -16,6 +16,7 @@ module csv {
       choice ch_entry {
         case field {
           leaf-list field {
+            min-elements 1;
             type string {
               pattern "([^\n\"#;])*";
             }
@@ -24,6 +25,7 @@ module csv {
         }
         case field2 {
           leaf-list field2 {
+            min-elements 1;
             type string {
               pattern "(\"[^\"#]*\")+";
             }

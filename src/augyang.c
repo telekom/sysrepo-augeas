@@ -266,7 +266,10 @@ struct ay_ynode {
                                      Can be NULL. */
     struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
                                      Set if the node is under the influence of the union operator. */
-    uint8_t mandatory : 1;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 mandatory false. */
+    union {
+        uint8_t mandatory;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 mandatory false. */
+        uint8_t min;            /**< Yang min-elements-stmt. Constraint for YN_LIST and YN_LEAFLIST. */
+    };
 };
 
 struct lprinter_ctx;
@@ -1284,6 +1287,14 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "\";\n");
 }
 
+static void
+ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    if (node->min) {
+        ly_print(ctx->out, "%*smin-elements %u;\n", ctx->space, "", node->min);
+    }
+}
+
 /**
  * @brief Print type-stmt string and also pattern-stmt if necessary.
  *
@@ -1460,6 +1471,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
+    ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_data_path(ctx, node);
@@ -1592,6 +1604,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ret = ay_print_yang_list_key(ctx, node);
     AY_CHECK_RET(ret);
+    ay_print_yang_minelements(ctx, node);
     ay_print_yang_data_path(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
@@ -2083,7 +2096,11 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     }
 
     if (node->mandatory) {
-        ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
+        if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
+            ly_print(ctx->out, "%*s min-elements: %u\n", ctx->space, "", node->min);
+        } else {
+            ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
+        }
     }
 }
 
@@ -3087,7 +3104,30 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
     assert(tree && ((tree[0].type == YN_UNKNOWN) || (tree[0].type == YN_ROOT)));
 
     for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        ay_ynode_set_mandatory(&tree[i]);
+        if ((tree[i].type != YN_LIST) && (tree[i].type != YN_LEAFLIST)) {
+            ay_ynode_set_mandatory(&tree[i]);
+        }
+    }
+}
+
+/**
+ * @brief Set ynode.min for all list and leaf-list nodes.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_tree_set_min(struct ay_ynode *tree)
+{
+    struct ay_ynode *node;
+
+    /* The value is set by ::ay_ynode_delete_build_list() and this code unset the value due to the '?' operator. */
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
+        if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
+            if (ay_lnode_has_maybe(node->snode)) {
+                node->min = 0;
+            }
+        }
     }
 }
 
@@ -3217,6 +3257,9 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             if (iter2->lens->tag != L_STAR) {
                 continue;
             }
+
+            /* set minimal-elements for node2 */
+            node2->min++;
 
             /* delete node1 because it is useless */
             ay_ynode_delete_node(tree, AY_INDEX(tree, node1));
@@ -3530,8 +3573,6 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
-    ay_ynode_tree_set_mandatory(*tree);
-
     /* delete "lns . ( sep . lns )*" pattern (TODO bilateral) */
     ay_ynode_delete_build_list(*tree);
 
@@ -3540,6 +3581,12 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     /* set type */
     ay_ynode_set_type(*tree);
+
+    /* set mandatory */
+    ay_ynode_tree_set_mandatory(*tree);
+
+    /* set minimal-elements */
+    ay_ynode_tree_set_min(*tree);
 
     /* delete unnecessary nodes */
     ay_delete_type_unknown(*tree);
