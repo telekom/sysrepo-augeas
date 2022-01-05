@@ -1,0 +1,23 @@
+/**
+ * @file plg_config.h
+ * @author Michal Vasko <mvasko@cesnet.cz>
+ * @brief plugin configuration header
+ *
+ * @copyright
+ * Copyright (c) 2022 Deutsche Telekom AG.
+ * Copyright (c) 2022 CESNET, z.s.p.o.
+ *
+ * This source code is licensed under BSD 3-Clause License (the "License").
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://opensource.org/licenses/BSD-3-Clause
+ */
+#ifndef AUG_PLG_CONFIG_H_
+#define AUG_PLG_CONFIG_H_
+
+#define AUG_EXPECTED_YANG_DIR "@PROJECT_SOURCE_DIR@/tests/yang_expected"
+
+#define AUG_MODULES_DIR "@PROJECT_SOURCE_DIR@/modules"
+
+#endif /* AUG_PLG_CONFIG_H_ */

@@ -64,6 +64,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
 set(SRDS_AUGEAS_SRC
     ${PROJECT_SOURCE_DIR}/plugins/srds_augeas.c)
 
+set(AY_STARTUP_SRC
+    ${PROJECT_SOURCE_DIR}/plugins/ay_startup.c)
+
 set(AUGYANG_SRC
     src/main.c
     src/augyang.c)
@@ -134,6 +137,10 @@ endif()
 add_library(srds_augeas MODULE ${SRDS_AUGEAS_SRC})
 set_target_properties(srds_augeas PROPERTIES PREFIX "")
 
+# augyang startup config print utility
+add_executable(ay_startup ${AY_STARTUP_SRC})
+include_directories(${PROJECT_BINARY_DIR})
+
 if(ENABLE_AUGYANG)
     # augyang executable
     add_executable(augyang ${AUGYANG_SRC})
@@ -148,11 +155,13 @@ endif()
 # augeas
 find_package(Augeas REQUIRED)
 target_link_libraries(srds_augeas ${AUGEAS_LIBRARIES})
+target_link_libraries(ay_startup ${AUGEAS_LIBRARIES})
 include_directories(${AUGEAS_INCLUDE_DIRS})
 
 # libyang
 find_package(LibYANG ${LIBYANG_DEP_SOVERSION} REQUIRED)
 target_link_libraries(srds_augeas ${LIBYANG_LIBRARIES})
+target_link_libraries(ay_startup ${LIBYANG_LIBRARIES})
 if(ENABLE_AUGYANG)
     target_link_libraries(augyang ${LIBYANG_LIBRARIES})
 endif()
@@ -161,6 +170,7 @@ include_directories(${LIBYANG_INCLUDE_DIRS})
 # sysrepo
 find_package(Sysrepo 7 REQUIRED)
 target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
+target_link_libraries(ay_startup ${SYSREPO_LIBRARIES})
 include_directories(${SYSREPO_INCLUDE_DIRS})
 
 if(ENABLE_AUGYANG)
@@ -182,6 +192,9 @@ if(ENABLE_AUGYANG)
     # selinux
     target_link_libraries(augyang selinux)
 endif()
+
+# generate files
+configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
 
 # tests
 if(ENABLE_TESTS)
