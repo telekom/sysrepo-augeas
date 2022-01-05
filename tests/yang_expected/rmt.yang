@@ -1,0 +1,73 @@
+module rmt {
+  namespace "aug:rmt";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container rmt {
+    list debug {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "DEBUG";
+        }
+      }
+      leaf node {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "^^_id";
+      }
+    }
+    list user {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "USER";
+        }
+      }
+      leaf sto_to_tab {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "^^_id";
+      }
+    }
+    list access {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "ACCESS";
+        }
+      }
+      leaf name {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "$$_id/name";
+      }
+      leaf host {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "$$_id/host";
+      }
+      leaf path {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "$$_id/path";
+      }
+    }
+  }
+}

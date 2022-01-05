@@ -3181,21 +3181,6 @@ static void
 ay_delete_top_choice(struct ay_ynode *tree)
 {
     struct ay_ynode *iter;
-    struct ay_lnode *choice;
-
-    if ((tree->child->type == YN_LIST) && tree->child->choice) {
-        /* all lists must have the same choice */
-        choice = tree->child->choice;
-    } else {
-        return;
-    }
-
-    /* check if all nodes are lists */
-    for (iter = tree->child; iter; iter = iter->next) {
-        if ((iter->type != YN_LIST) || (choice != iter->choice)) {
-            return;
-        }
-    }
 
     /* remove choice */
     for (iter = tree->child; iter; iter = iter->next) {
@@ -3294,6 +3279,9 @@ repeat:
                 continue;
             }
             if (node->choice != iter->choice) {
+                continue;
+            }
+            if (node->label->lens->regexp != iter->label->lens->regexp) {
                 continue;
             }
             if (!node->value && (iter->value->lens->tag == L_STORE)) {
