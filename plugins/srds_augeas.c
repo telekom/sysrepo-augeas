@@ -651,8 +651,10 @@ cleanup:
 
 /**
  * @brief Destroy augeas structure.
+ *
+ * UNUSED
  */
-static void
+void
 augds_destroy(void)
 {
     uint32_t i;
@@ -673,11 +675,12 @@ augds_destroy(void)
 static int
 srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds, const char *owner, const char *group, mode_t perm)
 {
-    /* keep owner/group/perms as they are */
     (void)mod;
     (void)owner;
     (void)group;
     (void)perm;
+
+    /* keep owner/group/perms as they are */
 
     if (ds != SR_DS_STARTUP) {
         SRPLG_LOG_ERR(srpds_name, "Only startup datastore is supported by this DS plugin.");
