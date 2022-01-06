@@ -9,25 +9,25 @@ module aptcacherngsecurity {
   container aptcacherngsecurity {
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "##AdminAuth";
       leaf _id {
-        type string {
-          pattern "AdminAuth";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf authpair {
         mandatory true;
         type string {
           pattern "[^ \t:/]*";
         }
-        augex:data-path "$$_id/authpair";
+        augex:data-path "AdminAuth/$$authpair";
       }
       leaf node {
         mandatory true;
         type string {
           pattern "[^: \t\n]*";
         }
-        augex:data-path "$$_id/^^authpair";
+        augex:data-path "AdminAuth/^^authpair";
       }
     }
   }

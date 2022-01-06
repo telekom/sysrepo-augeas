@@ -10,120 +10,120 @@ module postfix_sasl_smtpd {
     list list {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##pwcheck_method";
       leaf _id {
-        type string {
-          pattern "pwcheck_method";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^pwcheck_method";
       }
     }
     list list2 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##auxprop_plugin";
       leaf _id {
-        type string {
-          pattern "auxprop_plugin";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^auxprop_plugin";
       }
     }
     list list3 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##saslauthd_path";
       leaf _id {
-        type string {
-          pattern "saslauthd_path";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^saslauthd_path";
       }
     }
     list list4 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##mech_list";
       leaf _id {
-        type string {
-          pattern "mech_list";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^mech_list";
       }
     }
     list list5 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##sql_engine";
       leaf _id {
-        type string {
-          pattern "sql_engine";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^sql_engine";
       }
     }
     list list6 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##log_level";
       leaf _id {
-        type string {
-          pattern "log_level";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^log_level";
       }
     }
     list list7 {
       key "_id";
       min-elements 1;
-      augex:data-path "$$_id";
+      augex:data-path "##auto_transition";
       leaf _id {
-        type string {
-          pattern "auto_transition";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
       leaf value_to_eol {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^_id";
+        augex:data-path "^^auto_transition";
       }
     }
   }

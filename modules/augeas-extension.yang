@@ -13,7 +13,7 @@ module augeas-extension {
        or variable using the number 'seq STR'.
        The data node address therefore consists of the 'labels' sequence of the parent nodes.
 
-       The variable ones 'key STR' and 'seq STR' must be somehow marked in the data-path.
+       The variable ones 'key STR', 'store STR' and 'seq STR' must be somehow marked in the data-path.
        In the data-path, these variables are denoted by the symbol '$$' followed by the name
        of the yang node (refers to 'key STR') or it is followed by a keyword.
        The keyword '$AY_UINT' indicates a numeric value and refers to 'seq STR'.
