@@ -15,7 +15,7 @@ module vmware_config {
           pattern "[A-Za-z0-9_.-]+";
         }
       }
-      leaf node {
+      leaf value {
         mandatory true;
         type string {
           pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";

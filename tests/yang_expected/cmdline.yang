@@ -15,7 +15,7 @@ module cmdline {
           pattern "[A-Za-z0-9_.-]+";
         }
       }
-      leaf node {
+      leaf value {
         type string {
           pattern "[^ \t\n]+";
         }

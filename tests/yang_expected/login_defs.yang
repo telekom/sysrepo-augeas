@@ -15,7 +15,7 @@ module login_defs {
           pattern "[A-Za-z0-9_.-]+";
         }
       }
-      leaf node {
+      leaf value {
         mandatory true;
         type string {
           pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";

@@ -24,9 +24,9 @@ module ceph {
           }
         }
         choice ch_entry_re {
-          case node {
-            container node {
-              leaf node {
+          case value {
+            container value {
+              leaf value {
                 type string {
                   pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
                 }
@@ -34,9 +34,9 @@ module ceph {
               }
             }
           }
-          case node2 {
-            container node2 {
-              leaf node {
+          case value2 {
+            container value2 {
+              leaf value {
                 mandatory true;
                 type string {
                   pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";

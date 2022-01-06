@@ -15,7 +15,7 @@ module rmt {
         description
           "Implicitly generated list key representing the position in augeas data.";
       }
-      leaf node {
+      leaf value {
         mandatory true;
         type string {
           pattern "[^ \t\n]+";

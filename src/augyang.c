@@ -1069,7 +1069,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
 
         if (!str) {
             str = ay_get_lense_name(ctx->mod, snode);
-            str = !str ? (char *)"node" : str;
+            str = !str ? (char *)"value" : str;
         }
     }
 
