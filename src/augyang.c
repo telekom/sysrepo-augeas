@@ -3455,6 +3455,33 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Delete the containers that has only one child.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_delete_poor_container(struct ay_ynode *tree)
+{
+    struct ay_ynode *node;
+    uint32_t i;
+
+    assert((tree->descendants > 1) && (tree[0].type == YN_ROOT));
+
+    for (i = (tree[1].type == YN_CONTAINER) ? 2 : 1; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
+
+        if (node->type == YN_CONTAINER) {
+            assert(node->child);
+            if (!node->child->next) {
+                node->child->choice = node->choice;
+                ay_ynode_delete_node(tree, AY_INDEX(tree, node));
+                i--;
+            }
+        }
+    }
+}
+
+/**
  * @brief Insert top-level container.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -3676,6 +3703,7 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     AY_CHECK_RET(ret);
 
     ay_delete_list_with_same_key(*tree);
+    ay_delete_poor_container(*tree);
 
     return ret;
 }

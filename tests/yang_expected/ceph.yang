@@ -25,24 +25,20 @@ module ceph {
         }
         choice ch_entry_re {
           case value {
-            container value {
-              leaf value {
-                type string {
-                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
-                }
-                augex:data-path "$$_id/^^entry_re";
+            leaf value {
+              type string {
+                pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
               }
+              augex:data-path "$$_id/^^entry_re";
             }
           }
           case value2 {
-            container value2 {
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
-                }
-                augex:data-path "$$_id/^^entry_re";
+            leaf value2 {
+              mandatory true;
+              type string {
+                pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
               }
+              augex:data-path "$$_id/^^entry_re";
             }
           }
         }
