@@ -1,0 +1,26 @@
+module gtkbookmarks {
+  namespace "aug:gtkbookmarks";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container gtkbookmarks {
+    list entry {
+      key "value";
+      augex:data-path "bookmark";
+      leaf value {
+        type string {
+          pattern "[^ \t\n]+";
+        }
+      }
+      leaf label {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "bookmark/label";
+      }
+    }
+  }
+}

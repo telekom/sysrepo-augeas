@@ -1,0 +1,27 @@
+module smbusers {
+  namespace "aug:smbusers";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container smbusers {
+    list entry {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+      }
+      leaf-list username {
+        min-elements 1;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "$$_id/username";
+      }
+    }
+  }
+}

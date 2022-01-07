@@ -1,0 +1,38 @@
+module postfix_access {
+  namespace "aug:postfix_access";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container postfix_access {
+    list record {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type uint64;
+      }
+      leaf pattern {
+        mandatory true;
+        type string {
+          pattern "([^# \n\t])+";
+        }
+        augex:data-path "$$_id/pattern";
+      }
+      leaf action {
+        mandatory true;
+        type string {
+          pattern "([^# \n\t])+";
+        }
+        augex:data-path "$$_id/action";
+      }
+      leaf parameters {
+        type string {
+          pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
+        }
+        augex:data-path "$$_id/parameters";
+      }
+    }
+  }
+}

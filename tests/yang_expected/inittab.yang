@@ -1,0 +1,41 @@
+module inittab {
+  namespace "aug:inittab";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  container inittab {
+    list record {
+      key "id";
+      augex:data-path "$$id";
+      leaf id {
+        type string {
+          pattern "[^/#:\n]{1,4}";
+        }
+      }
+      leaf runlevels {
+        mandatory true;
+        type string {
+          pattern "[^#:\n]*";
+        }
+        augex:data-path "$$id/runlevels";
+      }
+      leaf action {
+        mandatory true;
+        type string {
+          pattern "[^#:\n]*";
+        }
+        augex:data-path "$$id/action";
+      }
+      leaf process {
+        mandatory true;
+        type string {
+          pattern "[^#\n]*";
+        }
+        augex:data-path "$$id/process";
+      }
+    }
+  }
+}
