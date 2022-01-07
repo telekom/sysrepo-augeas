@@ -87,7 +87,9 @@ else()
     option(ENABLE_TESTS "Build tests" OFF)
     option(ENABLE_VALGRIND_TESTS "Build tests with valgrind" OFF)
 endif()
-option(ENABLE_AUGYANG "Build augyang lens2yang converter" ON)
+set(SUPPORTED_LENSES "passwd" CACHE STRING "Space-separated list of Augeas lenses to be supported in sysrepo")
+option(INSTALL_MODULES "Install supported Augeas lens YANG modules into sysrepo" ON)
+set(YANG_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/yang/modules/augyang" CACHE STRING "Directory where to copy the generated YANG modules to")
 
 #
 # checks
@@ -113,16 +115,14 @@ if(ENABLE_TESTS)
     endif()
 endif()
 
-if(ENABLE_AUGYANG)
-    # local augeas lib paths
-    set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
-    set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
-    set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
-    set(AUGEAS_SRC_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build/src)
+# local augeas lib paths
+set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
+set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
+set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
+set(AUGEAS_SRC_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build/src)
 
-    # local GNU lib paths
-    set(GNULIB_DIR ${AUGEAS_DIR}/.gnulib)
-endif()
+# local GNU lib paths
+set(GNULIB_DIR ${AUGEAS_DIR}/.gnulib)
 
 if ("${BUILD_TYPE_UPPER}" STREQUAL "DEBUG")
     # enable before adding tests to let them detect that format checking is available - one of the tests is format checking
@@ -141,12 +141,10 @@ set_target_properties(srds_augeas PROPERTIES PREFIX "")
 add_executable(ay_startup ${AY_STARTUP_SRC})
 include_directories(${PROJECT_BINARY_DIR})
 
-if(ENABLE_AUGYANG)
-    # augyang executable
-    add_executable(augyang ${AUGYANG_SRC})
-    target_compile_options(augyang PRIVATE "-std=gnu11")
-    include_directories(${PROJECT_SOURCE_DIR}/src)
-endif()
+# augyang executable
+add_executable(augyang ${AUGYANG_SRC})
+target_compile_options(augyang PRIVATE "-std=gnu11")
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
 #
 # dependencies
@@ -162,9 +160,7 @@ include_directories(${AUGEAS_INCLUDE_DIRS})
 find_package(LibYANG ${LIBYANG_DEP_SOVERSION} REQUIRED)
 target_link_libraries(srds_augeas ${LIBYANG_LIBRARIES})
 target_link_libraries(ay_startup ${LIBYANG_LIBRARIES})
-if(ENABLE_AUGYANG)
-    target_link_libraries(augyang ${LIBYANG_LIBRARIES})
-endif()
+target_link_libraries(augyang ${LIBYANG_LIBRARIES})
 include_directories(${LIBYANG_INCLUDE_DIRS})
 
 # sysrepo
@@ -173,28 +169,59 @@ target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
 target_link_libraries(ay_startup ${SYSREPO_LIBRARIES})
 include_directories(${SYSREPO_INCLUDE_DIRS})
 
-if(ENABLE_AUGYANG)
-    # augeas external project
-    set(AUGEAS_DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas "${AUGEAS_DIR}" 2> /dev/null || true)
-    set(GNULIB_DOWNLOAD_COMMAND git clone https://git.savannah.gnu.org/git/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
-    ExternalProject_Add(augeas_ext
+# selinux
+find_package(SELinux REQUIRED)
+target_link_libraries(augyang ${SELINUX_LIBRARIES})
+include_directories(${SELINUX_INCLUDE_DIRS})
+
+# augeas external project
+set(AUGEAS_DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas "${AUGEAS_DIR}" 2> /dev/null || true)
+set(GNULIB_DOWNLOAD_COMMAND git clone https://git.savannah.gnu.org/git/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
+ExternalProject_Add(augeas_ext
         PREFIX ${AUGEAS_PREFIX}
         DOWNLOAD_COMMAND ${AUGEAS_DOWNLOAD_COMMAND} && ${GNULIB_DOWNLOAD_COMMAND}
         CONFIGURE_COMMAND ${AUGEAS_DIR}/autogen.sh --gnulib-srcdir=${GNULIB_DIR} --disable-gnulib-tests --enable-debug
         BUILD_COMMAND make
         INSTALL_COMMAND ""
-    )
-    add_dependencies(augyang augeas_ext)
-    target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
-    target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
-    target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
-
-    # selinux
-    target_link_libraries(augyang selinux)
-endif()
+)
+add_dependencies(augyang augeas_ext)
+target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
+target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
+target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
 
 # generate files
 configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
+
+# generate YANG modules from Augeas lenses
+set(LENS_LIST ${SUPPORTED_LENSES})
+separate_arguments(LENS_LIST)
+add_custom_command(TARGET augyang
+        POST_BUILD
+        COMMAND $<TARGET_FILE:augyang> ${LENS_LIST}
+        COMMENT "Generate YANG modules: ${SUPPORTED_LENSES}"
+        VERBATIM)
+
+#
+# installation
+#
+
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/modules/" DESTINATION ${YANG_MODULE_DIR})
+foreach(LENS IN LISTS LENS_LIST)
+    list(APPEND YANG_LENS_LIST ${CMAKE_CURRENT_BINARY_DIR}/${LENS}.yang)
+endforeach()
+install(FILES ${YANG_LENS_LIST} DESTINATION ${YANG_MODULE_DIR})
+
+if(INSTALL_MODULES)
+    install(CODE "
+        message(STATUS \"Install Augeas YANG modules: ${SUPPORTED_LENSES}\")
+        set(ENV{YANG_DIR} \"${YANG_MODULE_DIR}\")
+        set(ENV{BINARY_DIR} \"${CMAKE_CURRENT_BINARY_DIR}\")
+        execute_process(COMMAND \"${PROJECT_SOURCE_DIR}/scripts/install_modules.sh\" ${LENS_LIST} RESULT_VARIABLE EXEC_RET)
+        if(NOT EXEC_RET EQUAL \"0\")
+            message(FATAL_ERROR \" scripts/install_modules.sh failed: \${EXEC_RET}\")
+        endif()
+    ")
+endif()
 
 # tests
 if(ENABLE_TESTS)
