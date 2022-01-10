@@ -1345,7 +1345,7 @@ static int
 augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uint32_t augnode_count, const char *parent_label,
         char ***label_matches, int *label_count, struct lyd_node *parent, struct lyd_node **first)
 {
-    int rc = SR_ERR_OK, j;
+    int rc = SR_ERR_OK, j, match;
     uint32_t i, k;
     const char *value, *ext_node, *label_node;
     char *label, *pos_str = NULL;
@@ -1364,13 +1364,20 @@ augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uin
             /* handle all matching labels */
             j = 0;
             while (j < *label_count) {
+                match = 0;
                 label = (*label_matches)[j];
                 label_node = augds_get_path_node(label, 0);
+                if (!strncmp(label_node, "#comment", 8)) {
+                    /* use comments */
+                    goto label_used;
+                }
+
                 if (!augds_ext_label_node_equal(ext_node, label_node, &node_type)) {
                     /* not a match */
                     ++j;
                     continue;
                 }
+                match = 1;
 
                 switch (node_type) {
                 case AUGDS_EXT_NODE_VALUE:
@@ -1433,7 +1440,7 @@ label_used:
                 free(pos_str);
                 pos_str = NULL;
 
-                if (augnodes[i].schema->nodetype == LYS_LEAF) {
+                if (match && (augnodes[i].schema->nodetype == LYS_LEAF)) {
                     /* match was found for a leaf, there can be no more matches */
                     break;
                 }
