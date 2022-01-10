@@ -323,21 +323,24 @@ augds_chmodown(const char *path, const char *owner, const char *group, mode_t pe
  * @brief Get augeas lens name from a YANG module.
  *
  * @param[in] mod YANG module to use.
- * @return Augeas lens name.
- * @return NULL on error.
+ * @param[out] lens Augeas lens name.
+ * @return SR error code to return.
  */
-static char *
-augds_get_lens(const struct lys_module *mod)
+static int
+augds_get_lens(const struct lys_module *mod, const char **lens)
 {
-    char *lens;
+    LY_ARRAY_COUNT_TYPE u;
+    const struct lysc_ext *ext;
 
-    lens = strdup(mod->name);
-    if (!lens) {
-        return NULL;
+    LY_ARRAY_FOR(mod->compiled->exts, u) {
+        ext = mod->compiled->exts[u].def;
+        if (!strcmp(ext->module->name, "augeas-extension") && !strcmp(ext->name, "augeas-mod-name")) {
+            *lens = mod->compiled->exts[u].argument;
+            return SR_ERR_OK;
+        }
     }
 
-    lens[0] = toupper(lens[0]);
-    return lens;
+    AUG_LOG_ERRINT_RET;
 }
 
 /**
@@ -584,7 +587,8 @@ static int
 augds_init(const struct lys_module *mod)
 {
     int rc = SR_ERR_OK;
-    char *lens = NULL, *path = NULL;
+    const char *lens;
+    char *path = NULL;
 
     if (auginfo.aug) {
         /* already initialized */
@@ -598,9 +602,8 @@ augds_init(const struct lys_module *mod)
     }
 
     /* get lens name */
-    lens = augds_get_lens(mod);
-    if (!lens) {
-        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    if ((rc = augds_get_lens(mod, &lens))) {
+        goto cleanup;
     }
 
     /* remove all lenses except this one */
@@ -640,7 +643,6 @@ augds_init(const struct lys_module *mod)
     }
 
 cleanup:
-    free(lens);
     free(path);
     if (rc) {
         aug_close(auginfo.aug);
@@ -984,15 +986,15 @@ static int
 augds_get_config_files(augeas *aug, const struct lys_module *mod, int fs_path, const char ***files, uint32_t *file_count)
 {
     int rc = SR_ERR_OK, i, label_count;
-    char *lens_name = NULL, *path = NULL, **label_matches = NULL;
-    const char *value;
+    char *path = NULL, **label_matches = NULL;
+    const char *value, *lens_name;
     void *mem;
 
     *files = NULL;
     *file_count = 0;
 
     /* get all the path labels */
-    lens_name = augds_get_lens(mod);
+    augds_get_lens(mod, &lens_name);
     if (asprintf(&path, "/augeas/files//*[lens='@%s']/path", lens_name) == -1) {
         AUG_LOG_ERRMEM_GOTO(rc, cleanup);
     }
@@ -1021,7 +1023,6 @@ augds_get_config_files(augeas *aug, const struct lys_module *mod, int fs_path, c
     }
 
 cleanup:
-    free(lens_name);
     free(path);
     for (i = 0; i < label_count; ++i) {
         free(label_matches[i]);
