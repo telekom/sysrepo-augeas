@@ -6,6 +6,8 @@ module smbusers {
     prefix augex;
   }
 
+  augex:augeas-mod-name "SmbUsers";
+
   container smbusers {
     list entry {
       key "_id";

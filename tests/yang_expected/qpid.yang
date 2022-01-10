@@ -6,6 +6,8 @@ module qpid {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Qpid";
+
   container qpid {
     list entry {
       key "_id";

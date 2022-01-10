@@ -6,6 +6,8 @@ module simplelines {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Simplelines";
+
   container simplelines {
     leaf-list line {
       type string {

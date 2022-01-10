@@ -6,6 +6,8 @@ module darkice {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Darkice";
+
   container darkice {
     list record {
       key "value";

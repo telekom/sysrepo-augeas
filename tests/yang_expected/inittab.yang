@@ -6,6 +6,8 @@ module inittab {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Inittab";
+
   container inittab {
     list record {
       key "id";

@@ -6,6 +6,8 @@ module vmware_config {
     prefix augex;
   }
 
+  augex:augeas-mod-name "VMware_Config";
+
   container vmware_config {
     list entry {
       key "_id";

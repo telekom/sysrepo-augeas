@@ -6,6 +6,8 @@ module securetty {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Securetty";
+
   container securetty {
     list record {
       key "_id";

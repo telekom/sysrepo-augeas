@@ -6,6 +6,8 @@ module devfsrules {
     prefix augex;
   }
 
+  augex:augeas-mod-name "DevfsRules";
+
   container devfsrules {
     list record {
       key "_id";

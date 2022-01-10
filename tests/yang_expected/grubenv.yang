@@ -6,6 +6,8 @@ module grubenv {
     prefix augex;
   }
 
+  augex:augeas-mod-name "GrubEnv";
+
   container grubenv {
     list record {
       key "_id";

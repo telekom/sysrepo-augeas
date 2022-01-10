@@ -6,6 +6,8 @@ module simplevars {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Simplevars";
+
   container simplevars {
     list entry {
       key "_id";

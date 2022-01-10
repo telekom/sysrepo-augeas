@@ -6,6 +6,8 @@ module backuppchosts {
     prefix augex;
   }
 
+  augex:augeas-mod-name "BackupPCHosts";
+
   container backuppchosts {
     list record {
       key "_id";

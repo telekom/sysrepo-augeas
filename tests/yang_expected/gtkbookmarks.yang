@@ -6,6 +6,8 @@ module gtkbookmarks {
     prefix augex;
   }
 
+  augex:augeas-mod-name "GtkBookmarks";
+
   container gtkbookmarks {
     list entry {
       key "value";

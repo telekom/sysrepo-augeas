@@ -6,6 +6,8 @@ module star {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Star";
+
   container star {
     list size {
       key "_id";

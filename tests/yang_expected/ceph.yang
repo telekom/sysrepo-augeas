@@ -6,6 +6,8 @@ module ceph {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Ceph";
+
   container ceph {
     list record {
       key "_id";

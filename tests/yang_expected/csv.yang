@@ -6,6 +6,8 @@ module csv {
     prefix augex;
   }
 
+  augex:augeas-mod-name "CSV";
+
   container csv {
     list entry {
       key "_id";

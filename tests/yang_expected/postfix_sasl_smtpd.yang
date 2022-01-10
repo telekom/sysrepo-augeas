@@ -6,6 +6,8 @@ module postfix_sasl_smtpd {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Postfix_sasl_smtpd";
+
   container postfix_sasl_smtpd {
     list list {
       key "_id";

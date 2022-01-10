@@ -6,6 +6,8 @@ module login_defs {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Login_defs";
+
   container login_defs {
     list record {
       key "_id";

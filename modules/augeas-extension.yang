@@ -3,6 +3,12 @@ module augeas-extension {
   namespace "aug:augeas-extension";
   prefix augex;
 
+  extension augeas-mod-name {
+    argument modname;
+    description
+       "Argument 'modname' contains augeas module name.";
+  }
+
   extension data-path {
     argument path;
     description

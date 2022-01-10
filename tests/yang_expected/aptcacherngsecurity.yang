@@ -6,6 +6,8 @@ module aptcacherngsecurity {
     prefix augex;
   }
 
+  augex:augeas-mod-name "AptCacherNGSecurity";
+
   container aptcacherngsecurity {
     list record {
       key "_id";

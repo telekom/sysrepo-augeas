@@ -6,6 +6,8 @@ module hosts {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Hosts";
+
   container hosts {
     list record {
       key "_id";

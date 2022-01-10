@@ -6,6 +6,8 @@ module hostname {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Hostname";
+
   container hostname {
     leaf hostname {
       mandatory true;

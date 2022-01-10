@@ -6,6 +6,8 @@ module anaconda {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Anaconda";
+
   container anaconda {
     list record {
       key "_id";

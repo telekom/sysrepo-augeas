@@ -6,6 +6,8 @@ module rtadvd {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Rtadvd";
+
   container rtadvd {
     list record {
       key "_id";

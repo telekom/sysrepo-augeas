@@ -6,6 +6,8 @@ module postfix_access {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Postfix_Access";
+
   container postfix_access {
     list record {
       key "_id";

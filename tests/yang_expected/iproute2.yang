@@ -6,6 +6,8 @@ module iproute2 {
     prefix augex;
   }
 
+  augex:augeas-mod-name "IPRoute2";
+
   container iproute2 {
     list record {
       key "id";

@@ -6,6 +6,8 @@ module iscsid {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Iscsid";
+
   container iscsid {
     list kv {
       key "key_re";

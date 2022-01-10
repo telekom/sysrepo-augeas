@@ -6,6 +6,8 @@ module ethers {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Ethers";
+
   container ethers {
     list record {
       key "_id";

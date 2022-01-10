@@ -6,6 +6,8 @@ module passwd {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Passwd";
+
   container passwd {
     list entry {
       key "username";

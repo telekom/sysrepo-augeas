@@ -1866,6 +1866,8 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ly_print(out, "  import augeas-extension {\n");
     ly_print(out, "    prefix "AY_EXT_PREFIX ";\n");
     ly_print(out, "  }\n\n");
+    ly_print(out, "  "AY_EXT_PREFIX":augeas-mod-name \"%s\";\n", mod->name);
+    ly_print(out, "\n");
 
     ret = ay_print_yang_node(&ctx, tree);
 

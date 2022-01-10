@@ -6,6 +6,8 @@ module cpanel {
     prefix augex;
   }
 
+  augex:augeas-mod-name "CPanel";
+
   container cpanel {
     list kv {
       key "_id";

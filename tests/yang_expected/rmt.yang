@@ -6,6 +6,8 @@ module rmt {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Rmt";
+
   container rmt {
     list debug {
       key "_id";

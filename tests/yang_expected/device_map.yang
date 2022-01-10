@@ -6,6 +6,8 @@ module device_map {
     prefix augex;
   }
 
+  augex:augeas-mod-name "Device_map";
+
   container device_map {
     list map {
       key "_id";
