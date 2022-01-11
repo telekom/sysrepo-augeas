@@ -246,7 +246,7 @@ enum yang_type {
  * between the two trees clear. This path generation is handled in the ay_print_yang_data_path().
  *
  * One ynode can contain multiple labels/values because they can be separated by the union operator ('|', L_UNION).
- * So, for example, if a node has multiple labels, the ay_lnode_next_lv() returns the next one. (TODO)
+ * So, for example, if a node has multiple labels, the ay_lnode_next_lv() returns the next one.
  *
  * Note that choice-case node from yang laguage is not considered as a ynode. The ynode nodes are indirectly connected
  * via ay_ynode.choice pointer, which serves as an identifier of that choice-case relationship.
@@ -1334,6 +1334,58 @@ ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief For ay_lnode_next_lv(), find next label or value.
+ */
+#define AY_LV_TYPE_ANY   0
+
+/**
+ * @brief For ay_lnode_next_lv(), find next value.
+ */
+#define AY_LV_TYPE_VALUE 1
+
+/**
+ * @brief For ay_lnode_next_lv(), find next label.
+ */
+#define AY_LV_TYPE_LABEL 2
+
+/**
+ * @brief Get next label/value.
+ *
+ * Next in order may be found if they are separated by the '|' operator (L_UNION).
+ *
+ * @param[in] lv Node whose lense tag is L_LABEL or L_VALUE. The point from which to look further.
+ * @param[in] lv_type Flag specifying the type to search for. See AY_LV_TYPE_* constants.
+ * @return Follower or NULL.
+ */
+static struct ay_lnode *
+ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
+{
+    struct ay_lnode *iter, *stop;
+    enum lens_tag tag;
+
+    if (!lv) {
+        return NULL;
+    }
+
+    for (iter = lv->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {}
+    assert(iter->lens->tag == L_SUBTREE);
+
+    stop = iter + iter->descendants + 1;
+    for (iter = lv + 1; iter < stop; iter++) {
+        tag = iter->lens->tag;
+        if (tag == L_SUBTREE) {
+            iter += iter->descendants;
+        } else if (((lv_type == AY_LV_TYPE_LABEL) && AY_TAG_IS_LABEL(tag)) ||
+                ((lv_type == AY_LV_TYPE_VALUE) && AY_TAG_IS_VALUE(tag)) ||
+                ((lv_type == AY_LV_TYPE_ANY) && (AY_TAG_IS_VALUE(tag) || AY_TAG_IS_VALUE(tag)))) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Print type-stmt string and also pattern-stmt if necessary.
  *
  * @param[in] ctx Context for printing.
@@ -1360,23 +1412,6 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
     ay_print_yang_nesting_end(ctx);
 
     return ret;
-}
-
-/**
- * @brief Print union-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] ident Main name of the type in the union.
- * @return 0 on success.
- */
-static void
-ay_print_yang_type_union(struct yprinter_ctx *ctx, const char *ident)
-{
-    ly_print(ctx->out, "%*stype union", ctx->space, "");
-    ay_print_yang_nesting_begin(ctx);
-    ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
-    ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
-    ay_print_yang_nesting_end(ctx);
 }
 
 /**
@@ -1409,39 +1444,21 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
 }
 
 /**
- * @brief Print yang type-stmt.
+ * @brief Print type built-in yang type.
  *
  * @param[in] ctx Context for printing.
- * @param[in] node Node for which the type-stmt is to be printed.
- * @return 0 on success.
+ * @param[in] reg Lense containing regular expression to print.
+ * @param[in] type_in_union Set flag if current type is printed in union statement.
+ * @return 0 if type was printed successfully.
  */
 static int
-ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
+ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool type_in_union)
 {
     int ret = 0;
-    struct lens *label, *value, *reg;
     const char *ident = NULL;
     char *filename = NULL;
     size_t len = 0;
     ly_bool print_union;
-
-    if (!node->label && !node->value) {
-        return ret;
-    }
-
-    label = AY_LABEL_LENS(node);
-    value = AY_VALUE_LENS(node);
-    if (node->type == YN_VALUE) {
-        assert(value && (value->tag == L_STORE));
-        reg = value;
-    } else if (label && (label->tag == L_KEY)) {
-        reg = label;
-    } else if (value && (value->tag == L_STORE)) {
-        reg = value;
-    } else {
-        ret = ay_print_yang_type_string(ctx, NULL);
-        return ret;
-    }
 
     ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
 
@@ -1455,11 +1472,94 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ident = ay_get_yang_type_by_lense_name("Rx", ident);
     if (ident && print_union) {
-        ay_print_yang_type_union(ctx, ident);
+        if (type_in_union) {
+            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+            ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+        } else {
+            ly_print(ctx->out, "%*stype union", ctx->space, "");
+            ay_print_yang_nesting_begin(ctx);
+            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+            ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+            ay_print_yang_nesting_end(ctx);
+        }
     } else if (ident) {
         ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
     } else {
-        ret = ay_print_yang_type_string(ctx, reg->regexp);
+        ret = 1;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Print yang union-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] lnode Node of type lnode containing label or value.
+ * @param[in] lv_type Flag choosing if @p lnode points to label or value.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_type_union(struct yprinter_ctx *ctx, struct ay_lnode *lnode, uint8_t lv_type)
+{
+    int ret = 0;
+
+    ly_print(ctx->out, "%*stype union", ctx->space, "");
+    ay_print_yang_nesting_begin(ctx);
+    do {
+        if (ay_print_yang_type_builtin(ctx, lnode->lens, 1)) {
+            ret = ay_print_yang_type_string(ctx, lnode->lens->regexp);
+            AY_CHECK_RET(ret);
+        }
+        lnode = ay_lnode_next_lv(lnode, lv_type);
+    } while (lnode);
+    ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
+ * @brief Print yang type-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the type-stmt is to be printed.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret = 0;
+    struct lens *label, *value;
+    struct ay_lnode *lnode;
+    uint8_t lv_type;
+
+    if (!node->label && !node->value) {
+        return ret;
+    }
+
+    label = AY_LABEL_LENS(node);
+    value = AY_VALUE_LENS(node);
+    if (node->type == YN_VALUE) {
+        assert(value && (value->tag == L_STORE));
+        lnode = node->value;
+        lv_type = AY_LV_TYPE_VALUE;
+    } else if (label && (label->tag == L_KEY)) {
+        lnode = node->label;
+        lv_type = AY_LV_TYPE_LABEL;
+    } else if (value && (value->tag == L_STORE)) {
+        lnode = node->value;
+        lv_type = AY_LV_TYPE_VALUE;
+    } else {
+        ret = ay_print_yang_type_string(ctx, NULL);
+        return ret;
+    }
+
+    if (ay_lnode_next_lv(lnode, lv_type)) {
+        /* there is more labels/values: [ key lns1 (store lns2 | store lns3)) ] */
+        ret = ay_print_yang_type_union(ctx, lnode, lv_type);
+    } else if (ay_print_yang_type_builtin(ctx, lnode->lens, 0)) {
+        /* it is not builtin type, so let's print string type */
+        ret = ay_print_yang_type_string(ctx, lnode->lens->regexp);
     }
 
     return ret;
@@ -1942,58 +2042,6 @@ ay_print_lnode_transition(struct lprinter_ctx *ctx)
         ctx->data = iter;
         ay_print_lens_node(ctx, iter->lens);
     }
-}
-
-/**
- * @brief For ay_lnode_next_lv(), find next label or value.
- */
-#define AY_LV_TYPE_ANY   0
-
-/**
- * @brief For ay_lnode_next_lv(), find next value.
- */
-#define AY_LV_TYPE_VALUE 1
-
-/**
- * @brief For ay_lnode_next_lv(), find next label.
- */
-#define AY_LV_TYPE_LABEL 2
-
-/**
- * @brief Get next label/value.
- *
- * Next in order may be found if they are separated by the '|' operator (L_UNION).
- *
- * @param[in] lv Node whose lense tag is L_LABEL or L_VALUE. The point from which to look further.
- * @param[in] lv_type Flag specifying the type to search for. See AY_LV_TYPE_* constants.
- * @return Follower or NULL.
- */
-static struct ay_lnode *
-ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
-{
-    struct ay_lnode *iter, *stop;
-    enum lens_tag tag;
-
-    if (!lv) {
-        return NULL;
-    }
-
-    for (iter = lv->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {}
-    assert(iter->lens->tag == L_SUBTREE);
-
-    stop = iter + iter->descendants + 1;
-    for (iter = lv + 1; iter < stop; iter++) {
-        tag = iter->lens->tag;
-        if (tag == L_SUBTREE) {
-            iter += iter->descendants;
-        } else if (((lv_type == AY_LV_TYPE_LABEL) && AY_TAG_IS_LABEL(tag)) ||
-                ((lv_type == AY_LV_TYPE_VALUE) && AY_TAG_IS_VALUE(tag)) ||
-                ((lv_type == AY_LV_TYPE_ANY) && (AY_TAG_IS_VALUE(tag) || AY_TAG_IS_VALUE(tag)))) {
-            return iter;
-        }
-    }
-
-    return NULL;
 }
 
 /**

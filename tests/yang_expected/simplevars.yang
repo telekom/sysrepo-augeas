@@ -18,8 +18,13 @@ module simplevars {
         }
       }
       leaf to_comment_re {
-        type string {
-          pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+        type union {
+          type string {
+            pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+          }
+          type string {
+            pattern "";
+          }
         }
         augex:data-path "^^_id";
       }
