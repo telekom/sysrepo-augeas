@@ -8,19 +8,17 @@ module hostname {
 
   augex:augeas-mod-name "Hostname";
 
-  container hostname {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list hostname {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    leaf hostname {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z0-9_.-]+";
       }
-      leaf hostname {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
-        augex:data-path "hostname";
-      }
+      augex:data-path "hostname";
     }
   }
 }

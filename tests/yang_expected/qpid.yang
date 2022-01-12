@@ -8,27 +8,25 @@ module qpid {
 
   augex:augeas-mod-name "Qpid";
 
-  container qpid {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list qpid {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
       }
-      list entry {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^_id";
-        }
+        augex:data-path "^^_id";
       }
     }
   }

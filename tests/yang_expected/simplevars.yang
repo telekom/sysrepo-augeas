@@ -8,31 +8,29 @@ module simplevars {
 
   augex:augeas-mod-name "Simplevars";
 
-  container simplevars {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list simplevars {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
       }
-      list entry {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
+      leaf to_comment_re {
+        type union {
           type string {
-            pattern "[A-Za-z0-9_.-]+";
+            pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+          }
+          type string {
+            pattern "";
           }
         }
-        leaf to_comment_re {
-          type union {
-            type string {
-              pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
-            }
-            type string {
-              pattern "";
-            }
-          }
-          augex:data-path "^^_id";
-        }
+        augex:data-path "^^_id";
       }
     }
   }

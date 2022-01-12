@@ -8,26 +8,24 @@ module gtkbookmarks {
 
   augex:augeas-mod-name "GtkBookmarks";
 
-  container gtkbookmarks {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list gtkbookmarks {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "value";
+      augex:data-path "bookmark";
+      leaf value {
+        type string {
+          pattern "[^ \t\n]+";
+        }
       }
-      list entry {
-        key "value";
-        augex:data-path "bookmark";
-        leaf value {
-          type string {
-            pattern "[^ \t\n]+";
-          }
+      leaf label {
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf label {
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "bookmark/label";
-        }
+        augex:data-path "bookmark/label";
       }
     }
   }

@@ -8,45 +8,43 @@ module darkice {
 
   augex:augeas-mod-name "Darkice";
 
-  container darkice {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list darkice {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record {
+      key "value";
+      augex:data-path "target";
+      leaf value {
+        type string {
+          pattern "[^\\]\n]+";
+        }
       }
-      list record {
-        key "value";
-        augex:data-path "target";
-        leaf value {
+      list entry_re {
+        key "entry_re";
+        augex:data-path "target/$$entry_re";
+        leaf entry_re {
           type string {
-            pattern "[^\\]\n]+";
+            pattern "[A-Za-z0-9][A-Za-z0-9._-]*";
           }
         }
-        list entry_re {
-          key "entry_re";
-          augex:data-path "target/$$entry_re";
-          leaf entry_re {
-            type string {
-              pattern "[A-Za-z0-9][A-Za-z0-9._-]*";
+        choice ch_entry_re {
+          case value {
+            leaf value {
+              type string {
+                pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+              }
+              augex:data-path "target/^^entry_re";
             }
           }
-          choice ch_entry_re {
-            case value {
-              leaf value {
-                type string {
-                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
-                }
-                augex:data-path "target/^^entry_re";
+          case value2 {
+            leaf value2 {
+              mandatory true;
+              type string {
+                pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
               }
-            }
-            case value2 {
-              leaf value2 {
-                mandatory true;
-                type string {
-                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
-                }
-                augex:data-path "target/^^entry_re";
-              }
+              augex:data-path "target/^^entry_re";
             }
           }
         }

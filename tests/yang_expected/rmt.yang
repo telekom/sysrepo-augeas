@@ -8,73 +8,71 @@ module rmt {
 
   augex:augeas-mod-name "Rmt";
 
-  container rmt {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list rmt {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list debug {
+      key "_id";
+      augex:data-path "##DEBUG";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list debug {
-        key "_id";
-        augex:data-path "##DEBUG";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "^^DEBUG";
-        }
+        augex:data-path "^^DEBUG";
       }
-      list user {
-        key "_id";
-        augex:data-path "##USER";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
-        }
-        leaf sto_to_tab {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "^^USER";
-        }
+    }
+    list user {
+      key "_id";
+      augex:data-path "##USER";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list access {
-        key "_id";
-        augex:data-path "##ACCESS";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf sto_to_tab {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf name {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "ACCESS/name";
+        augex:data-path "^^USER";
+      }
+    }
+    list access {
+      key "_id";
+      augex:data-path "##ACCESS";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
+      }
+      leaf name {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf host {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "ACCESS/host";
+        augex:data-path "ACCESS/name";
+      }
+      leaf host {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf path {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "ACCESS/path";
+        augex:data-path "ACCESS/host";
+      }
+      leaf path {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
+        augex:data-path "ACCESS/path";
       }
     }
   }

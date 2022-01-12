@@ -8,36 +8,34 @@ module csv {
 
   augex:augeas-mod-name "CSV";
 
-  container csv {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list csv {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type uint64;
       }
-      list entry {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
-          type uint64;
-        }
-        choice ch_entry {
-          case field {
-            leaf-list field {
-              min-elements 1;
-              type string {
-                pattern "([^\n\"#;])*";
-              }
-              augex:data-path "$$_id/$AY_UINT";
+      choice ch_entry {
+        case field {
+          leaf-list field {
+            min-elements 1;
+            type string {
+              pattern "([^\n\"#;])*";
             }
+            augex:data-path "$$_id/$AY_UINT";
           }
-          case field2 {
-            leaf-list field2 {
-              min-elements 1;
-              type string {
-                pattern "(\"[^\"#]*\")+";
-              }
-              augex:data-path "$$_id/$AY_UINT";
+        }
+        case field2 {
+          leaf-list field2 {
+            min-elements 1;
+            type string {
+              pattern "(\"[^\"#]*\")+";
             }
+            augex:data-path "$$_id/$AY_UINT";
           }
         }
       }

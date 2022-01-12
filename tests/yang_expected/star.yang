@@ -8,79 +8,77 @@ module star {
 
   augex:augeas-mod-name "Star";
 
-  container star {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list star {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list size {
+      key "_id";
+      augex:data-path "##STAR_FIFOSIZE";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list size {
-        key "_id";
-        augex:data-path "##STAR_FIFOSIZE";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[0-9x*.a-z]+";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[0-9x*.a-z]+";
-          }
-          augex:data-path "^^STAR_FIFOSIZE";
+        augex:data-path "^^STAR_FIFOSIZE";
+      }
+    }
+    list size_max {
+      key "_id";
+      augex:data-path "##STAR_FIFOSIZE_MAX";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[0-9x*.a-z]+";
+        }
+        augex:data-path "^^STAR_FIFOSIZE_MAX";
+      }
+    }
+    list archive {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "(archive)([0-7])";
         }
       }
-      list size_max {
-        key "_id";
-        augex:data-path "##STAR_FIFOSIZE_MAX";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf device {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[0-9x*.a-z]+";
-          }
-          augex:data-path "^^STAR_FIFOSIZE_MAX";
-        }
+        augex:data-path "$$_id/device";
       }
-      list archive {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
-          type string {
-            pattern "(archive)([0-7])";
-          }
+      leaf block {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf device {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "$$_id/device";
+        augex:data-path "$$_id/block";
+      }
+      leaf size {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf block {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "$$_id/block";
+        augex:data-path "$$_id/size";
+      }
+      leaf istape {
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf size {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "$$_id/size";
-        }
-        leaf istape {
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "$$_id/istape";
-        }
+        augex:data-path "$$_id/istape";
       }
     }
   }

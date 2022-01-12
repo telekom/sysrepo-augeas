@@ -8,45 +8,43 @@ module anaconda {
 
   augex:augeas-mod-name "Anaconda";
 
-  container anaconda {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list anaconda {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|)|#comme([^\\]\n/n][^\\]\n/]*|)|#comm([^\\]\n/e][^\\]\n/]*|)|#com([^\\]\n/m][^\\]\n/]*|)|#co([^\\]\n/m][^\\]\n/]*|)|#c([^\\]\n/o][^\\]\n/]*|)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+        }
       }
-      list record {
+      list list {
         key "_id";
-        augex:data-path "$$_id";
+        augex:data-path "$$_id/$$_id";
         leaf _id {
           type string {
-            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|)|#comme([^\\]\n/n][^\\]\n/]*|)|#comm([^\\]\n/e][^\\]\n/]*|)|#com([^\\]\n/m][^\\]\n/]*|)|#co([^\\]\n/m][^\\]\n/]*|)|#c([^\\]\n/o][^\\]\n/]*|)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+            pattern "[A-Za-z][A-Za-z0-9._-]*";
           }
         }
-        list list {
-          key "_id";
-          augex:data-path "$$_id/$$_id";
-          leaf _id {
-            type string {
-              pattern "[A-Za-z][A-Za-z0-9._-]*";
+        choice ch_list {
+          case value {
+            leaf value {
+              type string {
+                pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+              }
+              augex:data-path "$$_id/^^_id";
             }
           }
-          choice ch_list {
-            case value {
-              leaf value {
-                type string {
-                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
-                }
-                augex:data-path "$$_id/^^_id";
+          case value2 {
+            leaf value2 {
+              mandatory true;
+              type string {
+                pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
               }
-            }
-            case value2 {
-              leaf value2 {
-                mandatory true;
-                type string {
-                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
-                }
-                augex:data-path "$$_id/^^_id";
-              }
+              augex:data-path "$$_id/^^_id";
             }
           }
         }

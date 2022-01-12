@@ -152,8 +152,7 @@
  */
 #define AY_MAX_IDENT_SIZE 64
 
-#define AY_YNODE_TOP_CONTAINER_INDEX 1
-#define AY_YNODE_LIST_FILES_INDEX    2
+#define AY_YNODE_LIST_FILES_INDEX    1
 
 /* error codes */
 
@@ -1098,11 +1097,6 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct ay_ynode *iter_start, *iter;
     uint32_t duplicates = 1;
 
-    if (node->parent && (node->parent->type == YN_ROOT)) {
-        ay_print_yang_module_name(ctx->mod, ctx->out);
-        return ret;
-    }
-
     ret = ay_get_yang_ident(ctx, node, ident);
     AY_CHECK_RET(ret);
 
@@ -1318,8 +1312,8 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     ly_bool printed = 0;
 
-    if (node->parent && (node->type == YN_CONTAINER) && (node->parent->type == YN_ROOT)) {
-        /* top-level data-container */
+    if (node->parent && (node->type == YN_LIST) && (node->parent->type == YN_ROOT)) {
+        /* top-level files list */
         return;
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
@@ -1739,11 +1733,12 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     assert(AY_INDEX(ctx->tree, node) == AY_YNODE_LIST_FILES_INDEX);
 
-    ly_print(ctx->out, "%*slist files", ctx->space, "");
+    ly_print(ctx->out, "%*slist ", ctx->space, "");
+    ay_print_yang_module_name(ctx->mod, ctx->out);
     ay_print_yang_nesting_begin(ctx);
 
-    ly_print(ctx->out, "%*skey \"file\";\n", ctx->space, "");
-    ly_print(ctx->out, "%*sleaf file", ctx->space, "");
+    ly_print(ctx->out, "%*skey \"config-file\";\n", ctx->space, "");
+    ly_print(ctx->out, "%*sleaf config-file", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
     ay_print_yang_nesting_end(ctx);
@@ -3571,18 +3566,6 @@ ay_delete_poor_container(struct ay_ynode *tree)
 }
 
 /**
- * @brief Insert top-level container.
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_insert_data_container(struct ay_ynode *tree)
-{
-    ay_ynode_insert_parent(tree, AY_YNODE_TOP_CONTAINER_INDEX);
-    tree[AY_YNODE_TOP_CONTAINER_INDEX].type = YN_CONTAINER;
-}
-
-/**
  * @brief Insert a sheet whose key is the path to the configuration file that Augeas parsed.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -3794,8 +3777,6 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_REMOVE, *tree);
     AY_CHECK_RET(ret);
 
-    ret = ay_ynode_trans_insert2(tree, 1, ay_insert_data_container);
-    AY_CHECK_RET(ret);
     ret = ay_ynode_trans_insert2(tree, 1, ay_insert_list_files);
     AY_CHECK_RET(ret);
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key, 2);

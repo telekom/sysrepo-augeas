@@ -8,130 +8,128 @@ module postfix_sasl_smtpd {
 
   augex:augeas-mod-name "Postfix_sasl_smtpd";
 
-  container postfix_sasl_smtpd {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list postfix_sasl_smtpd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list list {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##pwcheck_method";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list list {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##pwcheck_method";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^pwcheck_method";
-        }
+        augex:data-path "^^pwcheck_method";
       }
-      list list2 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##auxprop_plugin";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
-        }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^auxprop_plugin";
-        }
+    }
+    list list2 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##auxprop_plugin";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list list3 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##saslauthd_path";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^saslauthd_path";
-        }
+        augex:data-path "^^auxprop_plugin";
       }
-      list list4 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##mech_list";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
-        }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^mech_list";
-        }
+    }
+    list list3 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##saslauthd_path";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list list5 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##sql_engine";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^sql_engine";
-        }
+        augex:data-path "^^saslauthd_path";
       }
-      list list6 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##log_level";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
-        }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^log_level";
-        }
+    }
+    list list4 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##mech_list";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list list7 {
-        key "_id";
-        min-elements 1;
-        augex:data-path "##auto_transition";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        leaf value_to_eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-          augex:data-path "^^auto_transition";
+        augex:data-path "^^mech_list";
+      }
+    }
+    list list5 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##sql_engine";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
+      }
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
+        augex:data-path "^^sql_engine";
+      }
+    }
+    list list6 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##log_level";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
+      }
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "^^log_level";
+      }
+    }
+    list list7 {
+      key "_id";
+      min-elements 1;
+      augex:data-path "##auto_transition";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
+      }
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+        augex:data-path "^^auto_transition";
       }
     }
   }

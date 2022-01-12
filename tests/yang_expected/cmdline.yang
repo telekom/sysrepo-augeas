@@ -8,26 +8,24 @@ module cmdline {
 
   augex:augeas-mod-name "Cmdline";
 
-  container cmdline {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list cmdline {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list list {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
       }
-      list list {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
+      leaf value {
+        type string {
+          pattern "[^ \t\n]+";
         }
-        leaf value {
-          type string {
-            pattern "[^ \t\n]+";
-          }
-          augex:data-path "^^_id";
-        }
+        augex:data-path "^^_id";
       }
     }
   }

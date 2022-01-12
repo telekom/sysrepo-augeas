@@ -8,33 +8,31 @@ module rtadvd {
 
   augex:augeas-mod-name "Rtadvd";
 
-  container rtadvd {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list rtadvd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record {
+      key "_id";
+      augex:data-path "##record";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list record {
-        key "_id";
-        augex:data-path "##record";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf-list name {
+        min-elements 1;
+        type string {
+          pattern "[^#:\\\\\t\n|][^:\\\\\t\n|]*";
         }
-        leaf-list name {
-          min-elements 1;
-          type string {
-            pattern "[^#:\\\\\t\n|][^:\\\\\t\n|]*";
-          }
-          augex:data-path "record/name";
+        augex:data-path "record/name";
+      }
+      leaf-list capability {
+        type string {
+          pattern "[a-zA-Z0-9-]+(#?@|#[0-9]+|=(\"[^\"]*\"|[^:\"]*))?";
         }
-        leaf-list capability {
-          type string {
-            pattern "[a-zA-Z0-9-]+(#?@|#[0-9]+|=(\"[^\"]*\"|[^:\"]*))?";
-          }
-          augex:data-path "record/capability";
-        }
+        augex:data-path "record/capability";
       }
     }
   }

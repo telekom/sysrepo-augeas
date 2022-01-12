@@ -8,38 +8,36 @@ module devfsrules {
 
   augex:augeas-mod-name "DevfsRules";
 
-  container devfsrules {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list devfsrules {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
       }
-      list record {
+      leaf id {
+        mandatory true;
+        type uint64;
+        augex:data-path "$$_id/id";
+      }
+      list entry {
         key "_id";
-        augex:data-path "$$_id";
+        augex:data-path "$$_id/$$_id";
         leaf _id {
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
-        }
-        leaf id {
-          mandatory true;
           type uint64;
-          augex:data-path "$$_id/id";
         }
-        list entry {
-          key "_id";
-          augex:data-path "$$_id/$$_id";
-          leaf _id {
-            type uint64;
+        leaf line_re {
+          mandatory true;
+          type string {
+            pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
           }
-          leaf line_re {
-            mandatory true;
-            type string {
-              pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
-            }
-            augex:data-path "$$_id/^^_id";
-          }
+          augex:data-path "$$_id/^^_id";
         }
       }
     }

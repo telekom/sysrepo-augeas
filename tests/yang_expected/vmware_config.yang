@@ -8,27 +8,25 @@ module vmware_config {
 
   augex:augeas-mod-name "VMware_Config";
 
-  container vmware_config {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list vmware_config {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      augex:data-path "$$_id";
+      leaf _id {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
       }
-      list entry {
-        key "_id";
-        augex:data-path "$$_id";
-        leaf _id {
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
-          }
-          augex:data-path "^^_id";
-        }
+        augex:data-path "^^_id";
       }
     }
   }

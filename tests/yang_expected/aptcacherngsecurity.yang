@@ -8,34 +8,32 @@ module aptcacherngsecurity {
 
   augex:augeas-mod-name "AptCacherNGSecurity";
 
-  container aptcacherngsecurity {
-    list files {
-      key "file";
-      leaf file {
-        type string;
+  list aptcacherngsecurity {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record {
+      key "_id";
+      augex:data-path "##AdminAuth";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key representing the position in augeas data.";
       }
-      list record {
-        key "_id";
-        augex:data-path "##AdminAuth";
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key representing the position in augeas data.";
+      leaf authpair {
+        mandatory true;
+        type string {
+          pattern "[^ \t:/]*";
         }
-        leaf authpair {
-          mandatory true;
-          type string {
-            pattern "[^ \t:/]*";
-          }
-          augex:data-path "AdminAuth/$$authpair";
+        augex:data-path "AdminAuth/$$authpair";
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^: \t\n]*";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^: \t\n]*";
-          }
-          augex:data-path "AdminAuth/^^authpair";
-        }
+        augex:data-path "AdminAuth/^^authpair";
       }
     }
   }
