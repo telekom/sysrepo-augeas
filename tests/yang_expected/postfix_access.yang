@@ -9,31 +9,37 @@ module postfix_access {
   augex:augeas-mod-name "Postfix_Access";
 
   container postfix_access {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf pattern {
-        mandatory true;
-        type string {
-          pattern "([^# \n\t])+";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "$$_id/pattern";
-      }
-      leaf action {
-        mandatory true;
-        type string {
-          pattern "([^# \n\t])+";
+        leaf pattern {
+          mandatory true;
+          type string {
+            pattern "([^# \n\t])+";
+          }
+          augex:data-path "$$_id/pattern";
         }
-        augex:data-path "$$_id/action";
-      }
-      leaf parameters {
-        type string {
-          pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
+        leaf action {
+          mandatory true;
+          type string {
+            pattern "([^# \n\t])+";
+          }
+          augex:data-path "$$_id/action";
         }
-        augex:data-path "$$_id/parameters";
+        leaf parameters {
+          type string {
+            pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
+          }
+          augex:data-path "$$_id/parameters";
+        }
       }
     }
   }

@@ -9,20 +9,26 @@ module iscsid {
   augex:augeas-mod-name "Iscsid";
 
   container iscsid {
-    list kv {
-      key "key_re";
-      augex:data-path "$$key_re";
-      leaf key_re {
-        type string {
-          pattern "[][A-Za-z0-9_.-]+";
-        }
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf value_re {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n](.*[^ \t\n])?";
+      list kv {
+        key "key_re";
+        augex:data-path "$$key_re";
+        leaf key_re {
+          type string {
+            pattern "[][A-Za-z0-9_.-]+";
+          }
         }
-        augex:data-path "^^key_re";
+        leaf value_re {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n](.*[^ \t\n])?";
+          }
+          augex:data-path "^^key_re";
+        }
       }
     }
   }

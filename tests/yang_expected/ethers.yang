@@ -9,25 +9,31 @@ module ethers {
   augex:augeas-mod-name "Ethers";
 
   container ethers {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf mac {
-        mandatory true;
-        type string {
-          pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "$$_id/mac";
-      }
-      leaf ip {
-        mandatory true;
-        type string {
-          pattern "[^# \n\t]+";
+        leaf mac {
+          mandatory true;
+          type string {
+            pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
+          }
+          augex:data-path "$$_id/mac";
         }
-        augex:data-path "$$_id/ip";
+        leaf ip {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "$$_id/ip";
+        }
       }
     }
   }

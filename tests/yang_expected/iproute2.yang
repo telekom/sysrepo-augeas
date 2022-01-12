@@ -9,20 +9,26 @@ module iproute2 {
   augex:augeas-mod-name "IPRoute2";
 
   container iproute2 {
-    list record {
-      key "id";
-      augex:data-path "$$id";
-      leaf id {
-        type string {
-          pattern "(0x[0-9a-fA-F]+)|([0-9]+)";
-        }
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[a-zA-Z0-9/-]+";
+      list record {
+        key "id";
+        augex:data-path "$$id";
+        leaf id {
+          type string {
+            pattern "(0x[0-9a-fA-F]+)|([0-9]+)";
+          }
         }
-        augex:data-path "^^id";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[a-zA-Z0-9/-]+";
+          }
+          augex:data-path "^^id";
+        }
       }
     }
   }

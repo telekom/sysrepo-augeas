@@ -9,31 +9,37 @@ module hosts {
   augex:augeas-mod-name "Hosts";
 
   container hosts {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf ipaddr {
-        mandatory true;
-        type string {
-          pattern "[^# \n\t]+";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "$$_id/ipaddr";
-      }
-      leaf canonical {
-        mandatory true;
-        type string {
-          pattern "[^# \n\t]+";
+        leaf ipaddr {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "$$_id/ipaddr";
         }
-        augex:data-path "$$_id/canonical";
-      }
-      leaf-list alias {
-        type string {
-          pattern "[^# \n\t]+";
+        leaf canonical {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "$$_id/canonical";
         }
-        augex:data-path "$$_id/alias";
+        leaf-list alias {
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "$$_id/alias";
+        }
       }
     }
   }

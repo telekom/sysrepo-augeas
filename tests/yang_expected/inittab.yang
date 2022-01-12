@@ -9,34 +9,40 @@ module inittab {
   augex:augeas-mod-name "Inittab";
 
   container inittab {
-    list record {
-      key "id";
-      augex:data-path "$$id";
-      leaf id {
-        type string {
-          pattern "[^/#:\n]{1,4}";
-        }
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf runlevels {
-        mandatory true;
-        type string {
-          pattern "[^#:\n]*";
+      list record {
+        key "id";
+        augex:data-path "$$id";
+        leaf id {
+          type string {
+            pattern "[^/#:\n]{1,4}";
+          }
         }
-        augex:data-path "$$id/runlevels";
-      }
-      leaf action {
-        mandatory true;
-        type string {
-          pattern "[^#:\n]*";
+        leaf runlevels {
+          mandatory true;
+          type string {
+            pattern "[^#:\n]*";
+          }
+          augex:data-path "$$id/runlevels";
         }
-        augex:data-path "$$id/action";
-      }
-      leaf process {
-        mandatory true;
-        type string {
-          pattern "[^#\n]*";
+        leaf action {
+          mandatory true;
+          type string {
+            pattern "[^#:\n]*";
+          }
+          augex:data-path "$$id/action";
         }
-        augex:data-path "$$id/process";
+        leaf process {
+          mandatory true;
+          type string {
+            pattern "[^#\n]*";
+          }
+          augex:data-path "$$id/process";
+        }
       }
     }
   }

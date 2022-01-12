@@ -9,18 +9,24 @@ module securetty {
   augex:augeas-mod-name "Securetty";
 
   container securetty {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf word {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n#]+";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "^^_id";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#]+";
+          }
+          augex:data-path "^^_id";
+        }
       }
     }
   }

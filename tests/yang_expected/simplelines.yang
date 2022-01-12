@@ -9,11 +9,17 @@ module simplelines {
   augex:augeas-mod-name "Simplelines";
 
   container simplelines {
-    leaf-list line {
-      type string {
-        pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      augex:data-path "$AY_UINT";
+      leaf-list line {
+        type string {
+          pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+        }
+        augex:data-path "$AY_UINT";
+      }
     }
   }
 }

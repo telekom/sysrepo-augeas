@@ -9,25 +9,31 @@ module grubenv {
   augex:augeas-mod-name "GrubEnv";
 
   container grubenv {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf name {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z_][A-Za-z0-9_]*";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "$$_id/name";
-      }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+        leaf name {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z_][A-Za-z0-9_]*";
+          }
+          augex:data-path "$$_id/name";
         }
-        augex:data-path "$$_id/value";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+          }
+          augex:data-path "$$_id/value";
+        }
       }
     }
   }

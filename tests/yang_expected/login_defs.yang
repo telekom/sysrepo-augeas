@@ -9,20 +9,26 @@ module login_defs {
   augex:augeas-mod-name "Login_defs";
 
   container login_defs {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
         }
-        augex:data-path "^^_id";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n]+([ \t]+[^ \t\n]+)*";
+          }
+          augex:data-path "^^_id";
+        }
       }
     }
   }

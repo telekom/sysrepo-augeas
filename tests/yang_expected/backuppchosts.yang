@@ -9,38 +9,44 @@ module backuppchosts {
   augex:augeas-mod-name "BackupPCHosts";
 
   container backuppchosts {
-    list record {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type uint64;
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf host {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+      list record {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type uint64;
         }
-        augex:data-path "$$_id/host";
-      }
-      leaf dhcp {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf host {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "$$_id/host";
         }
-        augex:data-path "$$_id/dhcp";
-      }
-      leaf user {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf dhcp {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "$$_id/dhcp";
         }
-        augex:data-path "$$_id/user";
-      }
-      leaf-list moreusers {
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf user {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "$$_id/user";
         }
-        augex:data-path "$$_id/moreusers";
+        leaf-list moreusers {
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "$$_id/moreusers";
+        }
       }
     }
   }

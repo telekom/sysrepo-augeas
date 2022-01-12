@@ -9,19 +9,25 @@ module cpanel {
   augex:augeas-mod-name "CPanel";
 
   container cpanel {
-    list kv {
-      key "_id";
-      augex:data-path "$$_id";
-      leaf _id {
-        type string {
-          pattern "[A-Za-z0-9:_.-]+";
-        }
+    list files {
+      key "file";
+      leaf file {
+        type string;
       }
-      leaf value {
-        type string {
-          pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+      list kv {
+        key "_id";
+        augex:data-path "$$_id";
+        leaf _id {
+          type string {
+            pattern "[A-Za-z0-9:_.-]+";
+          }
         }
-        augex:data-path "^^_id";
+        leaf value {
+          type string {
+            pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+          }
+          augex:data-path "^^_id";
+        }
       }
     }
   }
