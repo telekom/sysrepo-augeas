@@ -40,7 +40,7 @@ if(ENABLE_AUGYANG)
 endif()
 
 # lists of all the DS plugin tests
-set(tests test_passwd test_simplevars)
+set(tests test_passwd test_simplevars test_postfix_sasl_smtpd)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/plugins)
 include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})

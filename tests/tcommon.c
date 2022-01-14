@@ -183,6 +183,7 @@ tdiff_files(void **state, ...)
 
         /* compare */
         if (strcmp(str, expected)) {
+            printf("[ DIFF FAIL ] PRINTED:\n%s\nEXPECTED:\n%s\n", str, expected);
             ret = 1;
             goto cleanup;
         }

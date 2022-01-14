@@ -882,7 +882,8 @@ augds_node_yang2aug(const struct lyd_node *node, const char *parent_aug_path, ch
         struct lyd_node **node2)
 {
     int rc = SR_ERR_OK, path_seg_len;
-    const char *data_path, *value_path, *parent_data_path = NULL, *parent_node, *start, *end, *node_name, *path_segment;
+    const char *data_path, *value_path;
+    const char *parent_data_path = NULL, *parent_node, *start, *end, *node_name, *path_segment, *index;
     char *result = NULL, *tmp;
     enum augds_ext_node_type node_type;
 
@@ -956,6 +957,7 @@ augds_node_yang2aug(const struct lyd_node *node, const char *parent_aug_path, ch
             }
         }
 
+        index = NULL;
         if (!result) {
             /* last node being processed (first iteration), set augeas value */
             if (value_path) {
@@ -978,10 +980,23 @@ augds_node_yang2aug(const struct lyd_node *node, const char *parent_aug_path, ch
                     break;
                 }
             }
+
+            /* also needs an index */
+            if (node_type == AUGDS_EXT_NODE_POSITION) {
+                if (node->schema->nodetype == LYS_LIST) {
+                    assert(lyd_child(node)->schema->flags & LYS_KEY);
+                    assert(!strcmp(LYD_NAME(lyd_child(node)), "_id"));
+                    index = lyd_get_value(lyd_child(node));
+                } else {
+                    assert(!strcmp(LYD_NAME(node), "_id"));
+                    index = lyd_get_value(node);
+                }
+            }
         }
 
         /* add path segment */
-        if (asprintf(&tmp, "%.*s%s%s", path_seg_len, path_segment, result ? "/" : "", result ? result : "") == -1) {
+        if (asprintf(&tmp, "%.*s%s%s%s%s%s", path_seg_len, path_segment, result ? "/" : "", result ? result : "",
+                index ? "[" : "", index ? index : "", index ? "]" : "") == -1) {
             AUG_LOG_ERRMEM_GOTO(rc, cleanup);
         }
         free(result);

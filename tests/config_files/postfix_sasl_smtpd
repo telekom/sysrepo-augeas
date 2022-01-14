@@ -1,0 +1,6 @@
+pwcheck_method: auxprop saslauthd
+auxprop_plugin: plesk
+saslauthd_path: /private/plesk_saslauthd
+mech_list: CRAM-MD5 PLAIN LOGIN
+sql_engine: intentionally disabled
+log_level: 4
