@@ -4,8 +4,8 @@
  * @brief test configuration header
  *
  * @copyright
- * Copyright (c) 2021 Deutsche Telekom AG.
- * Copyright (c) 2021 CESNET, z.s.p.o.
+ * Copyright (c) 2021 - 2022 Deutsche Telekom AG.
+ * Copyright (c) 2021 - 2022 CESNET, z.s.p.o.
  *
  * This source code is licensed under BSD 3-Clause License (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,14 @@
 #ifndef AUG_TCONFIG_H_
 #define AUG_TCONFIG_H_
 
+struct tstate {
+    struct ly_ctx *ctx;
+    const struct lys_module *mod;
+    struct lyd_node *data;
+    const struct srplg_ds_s *ds_plg;
+    const char *aug_input_files;
+};
+
 #define AUG_CONFIG_FILES_DIR "@CMAKE_CURRENT_SOURCE_DIR@/config_files"
 
 #define AUG_EXPECTED_YANG_DIR "@CMAKE_CURRENT_SOURCE_DIR@/yang_expected"
@@ -23,5 +31,45 @@
 #define AUG_MODULES_DIR "@PROJECT_SOURCE_DIR@/modules"
 
 #define AUG_DIFF_EXECUTABLE "@DIFF_EXECUTABLE@"
+
+/**
+ * @brief Global test setup.
+ *
+ * @param[out] state Test state to fill.
+ * @param[in] yang_mod Test YANG module name.
+ * @param[in] ds_plg Datastore plugin to use.
+ * @param[in] aug_input_files Augeas test input files delimited with ';'.
+ * @return 0 on success;
+ * @return non-zero on error.
+ */
+int tsetup_glob(void **state, const char *yang_mod, const struct srplg_ds_s *ds_plg, const char *aug_input_files);
+
+/**
+ * @brief Global test teardown.
+ *
+ * @param[in] state Test state to destroy.
+ * @return 0 on success;
+ * @return non-zero on error.
+ */
+int tteardown_glob(void **state);
+
+/**
+ * @brief Local test teardown.
+ *
+ * @param[in] state Test state.
+ * @return 0 on success;
+ * @return non-zero on error.
+ */
+int tteardown(void **state);
+
+/**
+ * @brief Perform diff of changed test Augeas files.
+ *
+ * @param[in] state Test state.
+ * @param[in] ... Expected diff for each test Augeas file, "" if the file was not modified.
+ * @return 0 on success;
+ * @return non-zero on error.
+ */
+int tdiff_files(void **state, ...);
 
 #endif /* AUG_TCONFIG_H_ */

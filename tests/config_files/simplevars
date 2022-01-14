@@ -1,0 +1,6 @@
+# this is a comment
+
+mykey = myvalue # eol comment
+anotherkey = another value
+UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'
+foo =
