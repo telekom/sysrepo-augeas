@@ -13,38 +13,30 @@ module darkice {
     leaf config-file {
       type string;
     }
-    list record {
-      key "value";
+    list target {
+      key "target";
       augex:data-path "target";
-      leaf value {
+      leaf target {
         type string {
           pattern "[^\\]\n]+";
         }
       }
       list entry_re {
         key "entry_re";
-        augex:data-path "target/$$entry_re";
+        augex:data-path "target/$$";
+        augex:value-yang-path "value";
         leaf entry_re {
           type string {
             pattern "[A-Za-z0-9][A-Za-z0-9._-]*";
           }
         }
-        choice ch_entry_re {
-          case value {
-            leaf value {
-              type string {
-                pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
-              }
-              augex:data-path "target/^^entry_re";
+        leaf value {
+          type union {
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
             }
-          }
-          case value2 {
-            leaf value2 {
-              mandatory true;
-              type string {
-                pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
-              }
-              augex:data-path "target/^^entry_re";
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
             }
           }
         }

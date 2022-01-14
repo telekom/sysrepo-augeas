@@ -15,7 +15,8 @@ module cmdline {
     }
     list list {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
+      augex:value-yang-path "value";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -25,7 +26,6 @@ module cmdline {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "^^_id";
       }
     }
   }

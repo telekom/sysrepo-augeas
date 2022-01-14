@@ -13,9 +13,10 @@ module star {
     leaf config-file {
       type string;
     }
-    list size {
+    list STAR_FIFOSIZE {
       key "_id";
       augex:data-path "##STAR_FIFOSIZE";
+      augex:value-yang-path "value";
       leaf _id {
         type uint64;
         description
@@ -26,12 +27,12 @@ module star {
         type string {
           pattern "[0-9x*.a-z]+";
         }
-        augex:data-path "^^STAR_FIFOSIZE";
       }
     }
-    list size_max {
+    list STAR_FIFOSIZE_MAX {
       key "_id";
       augex:data-path "##STAR_FIFOSIZE_MAX";
+      augex:value-yang-path "value";
       leaf _id {
         type uint64;
         description
@@ -42,12 +43,11 @@ module star {
         type string {
           pattern "[0-9x*.a-z]+";
         }
-        augex:data-path "^^STAR_FIFOSIZE_MAX";
       }
     }
     list archive {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type string {
           pattern "(archive)([0-7])";
@@ -58,27 +58,27 @@ module star {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$$_id/device";
+        augex:data-path "$$/device";
       }
       leaf block {
         mandatory true;
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$$_id/block";
+        augex:data-path "$$/block";
       }
       leaf size {
         mandatory true;
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$$_id/size";
+        augex:data-path "$$/size";
       }
       leaf istape {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$$_id/istape";
+        augex:data-path "$$/istape";
       }
     }
   }

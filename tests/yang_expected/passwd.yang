@@ -15,7 +15,7 @@ module passwd {
     }
     list entry {
       key "username";
-      augex:data-path "$$username";
+      augex:data-path "$$";
       leaf username {
         type string {
           pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
@@ -25,38 +25,38 @@ module passwd {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$$username/password";
+        augex:data-path "$$/password";
       }
       leaf uid {
         mandatory true;
         type uint64;
-        augex:data-path "$$username/uid";
+        augex:data-path "$$/uid";
       }
       leaf gid {
         mandatory true;
         type uint64;
-        augex:data-path "$$username/gid";
+        augex:data-path "$$/gid";
       }
       leaf name {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$$username/name";
+        augex:data-path "$$/name";
       }
       leaf home {
         type string {
           pattern "[^:\n]+";
         }
-        augex:data-path "$$username/home";
+        augex:data-path "$$/home";
       }
       leaf shell {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "$$username/shell";
+        augex:data-path "$$/shell";
       }
     }
-    list nisentry {
+    list nis {
       key "username";
       augex:data-path "@nis";
       leaf username {
@@ -144,7 +144,7 @@ module passwd {
         augex:data-path "@nisdefault/shell";
       }
     }
-    list nisuserplus {
+    list plus_nisuser {
       key "username";
       augex:data-path "@+nisuser";
       leaf username {
@@ -185,7 +185,7 @@ module passwd {
         augex:data-path "@+nisuser/shell";
       }
     }
-    list nisuserminus {
+    list minus_nisuser {
       key "username";
       augex:data-path "@-nisuser";
       leaf username {

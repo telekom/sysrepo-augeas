@@ -15,7 +15,8 @@ module cpanel {
     }
     list kv {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
+      augex:value-yang-path "value";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9:_.-]+";
@@ -25,7 +26,6 @@ module cpanel {
         type string {
           pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
         }
-        augex:data-path "^^_id";
       }
     }
   }

@@ -15,7 +15,7 @@ module grubenv {
     }
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type uint64;
       }
@@ -24,14 +24,14 @@ module grubenv {
         type string {
           pattern "[A-Za-z_][A-Za-z0-9_]*";
         }
-        augex:data-path "$$_id/name";
+        augex:data-path "$$/name";
       }
       leaf value {
         mandatory true;
         type string {
           pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
         }
-        augex:data-path "$$_id/value";
+        augex:data-path "$$/value";
       }
     }
   }

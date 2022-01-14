@@ -13,10 +13,11 @@ module postfix_sasl_smtpd {
     leaf config-file {
       type string;
     }
-    list list {
+    list pwcheck_method {
       key "_id";
       min-elements 1;
       augex:data-path "##pwcheck_method";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -27,13 +28,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^pwcheck_method";
       }
     }
-    list list2 {
+    list auxprop_plugin {
       key "_id";
       min-elements 1;
       augex:data-path "##auxprop_plugin";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -44,13 +45,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^auxprop_plugin";
       }
     }
-    list list3 {
+    list saslauthd_path {
       key "_id";
       min-elements 1;
       augex:data-path "##saslauthd_path";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -61,13 +62,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^saslauthd_path";
       }
     }
-    list list4 {
+    list mech_list {
       key "_id";
       min-elements 1;
       augex:data-path "##mech_list";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -78,13 +79,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^mech_list";
       }
     }
-    list list5 {
+    list sql_engine {
       key "_id";
       min-elements 1;
       augex:data-path "##sql_engine";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -95,13 +96,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^sql_engine";
       }
     }
-    list list6 {
+    list log_level {
       key "_id";
       min-elements 1;
       augex:data-path "##log_level";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -112,13 +113,13 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^log_level";
       }
     }
-    list list7 {
+    list auto_transition {
       key "_id";
       min-elements 1;
       augex:data-path "##auto_transition";
+      augex:value-yang-path "value_to_eol";
       leaf _id {
         type uint64;
         description
@@ -129,7 +130,6 @@ module postfix_sasl_smtpd {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
-        augex:data-path "^^auto_transition";
       }
     }
   }

@@ -15,7 +15,7 @@ module devfsrules {
     }
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -24,11 +24,12 @@ module devfsrules {
       leaf id {
         mandatory true;
         type uint64;
-        augex:data-path "$$_id/id";
+        augex:data-path "$$/id";
       }
       list entry {
         key "_id";
-        augex:data-path "$$_id/$$_id";
+        augex:data-path "$$/$$";
+        augex:value-yang-path "line_re";
         leaf _id {
           type uint64;
         }
@@ -37,7 +38,6 @@ module devfsrules {
           type string {
             pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
           }
-          augex:data-path "$$_id/^^_id";
         }
       }
     }

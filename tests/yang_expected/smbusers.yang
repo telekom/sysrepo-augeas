@@ -15,7 +15,7 @@ module smbusers {
     }
     list entry {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -26,7 +26,7 @@ module smbusers {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "$$_id/username";
+        augex:data-path "$$/username";
       }
     }
   }

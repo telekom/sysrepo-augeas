@@ -15,7 +15,8 @@ module simplevars {
     }
     list entry {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
+      augex:value-yang-path "to_comment_re";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -30,7 +31,6 @@ module simplevars {
             pattern "";
           }
         }
-        augex:data-path "^^_id";
       }
     }
   }

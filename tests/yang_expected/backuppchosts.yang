@@ -15,7 +15,7 @@ module backuppchosts {
     }
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type uint64;
       }
@@ -24,27 +24,27 @@ module backuppchosts {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$$_id/host";
+        augex:data-path "$$/host";
       }
       leaf dhcp {
         mandatory true;
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$$_id/dhcp";
+        augex:data-path "$$/dhcp";
       }
       leaf user {
         mandatory true;
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$$_id/user";
+        augex:data-path "$$/user";
       }
       leaf-list moreusers {
         type string {
           pattern "[^#, \n\t/]+";
         }
-        augex:data-path "$$_id/moreusers";
+        augex:data-path "$$/moreusers";
       }
     }
   }

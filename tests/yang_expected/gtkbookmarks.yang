@@ -13,10 +13,10 @@ module gtkbookmarks {
     leaf config-file {
       type string;
     }
-    list entry {
-      key "value";
+    list bookmark {
+      key "bookmark";
       augex:data-path "bookmark";
-      leaf value {
+      leaf bookmark {
         type string {
           pattern "[^ \t\n]+";
         }

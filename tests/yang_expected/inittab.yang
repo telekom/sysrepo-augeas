@@ -15,7 +15,7 @@ module inittab {
     }
     list record {
       key "id";
-      augex:data-path "$$id";
+      augex:data-path "$$";
       leaf id {
         type string {
           pattern "[^/#:\n]{1,4}";
@@ -26,21 +26,21 @@ module inittab {
         type string {
           pattern "[^#:\n]*";
         }
-        augex:data-path "$$id/runlevels";
+        augex:data-path "$$/runlevels";
       }
       leaf action {
         mandatory true;
         type string {
           pattern "[^#:\n]*";
         }
-        augex:data-path "$$id/action";
+        augex:data-path "$$/action";
       }
       leaf process {
         mandatory true;
         type string {
           pattern "[^#\n]*";
         }
-        augex:data-path "$$id/process";
+        augex:data-path "$$/process";
       }
     }
   }

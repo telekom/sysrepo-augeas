@@ -15,7 +15,7 @@ module csv {
     }
     list entry {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type uint64;
       }
@@ -26,7 +26,7 @@ module csv {
             type string {
               pattern "([^\n\"#;])*";
             }
-            augex:data-path "$$_id/$AY_UINT";
+            augex:data-path "$$/$AY_UINT";
           }
         }
         case field2 {
@@ -35,7 +35,7 @@ module csv {
             type string {
               pattern "(\"[^\"#]*\")+";
             }
-            augex:data-path "$$_id/$AY_UINT";
+            augex:data-path "$$/$AY_UINT";
           }
         }
       }

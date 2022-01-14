@@ -12,27 +12,60 @@ module augeas-extension {
   extension data-path {
     argument path;
     description
-      "The string contains the path to the data node in the augeas tree.
-       Each data node in the augeas tree has a 'label' indicating the node name.
+      "The string contains the path to the data node in the Augeas tree.
+       Each data node in the Augeas tree has a 'label' indicating the node name.
        The 'label' can be specified directly using the lense primitive 'label STR',
        or it can be variable using the regular expression 'key RE',
-       or variable using the number 'seq STR'.
-       The data node address therefore consists of the 'labels' sequence of the parent nodes.
-
-       The variable ones 'key STR', 'store STR' and 'seq STR' must be somehow marked in the data-path.
-       In the data-path, these variables are denoted by the symbol '$$' followed by the name
-       of the yang node (refers to 'key STR') or it is followed by a keyword.
-       The keyword '$AY_UINT' indicates a numeric value and refers to 'seq STR'.
-
-       Another special symbol is '^^' followed by the name of the list key.
-       This symbol indicates that the node was implicitly generated for the list key
-       and stores the augeas value of the node specified by 'store' lens primitive.
-
-       The special symbol '##' may occur at the yang list node and indicates
-       that the key was implicitly generated only for the indexing list's records.
-
-       NOTE: Look at the corresponding tests of a particular augeas module
+       or it can be some number which belongs to a counter specified by 'seq STR'.
+       Look at the corresponding tests of a particular Augeas module
        (located somewhere in augeas/lenses/tests/test_*) for a better understanding
-       of what the path consists of.";
+       of what the Augeas tree looks like. The Augeas tree is basically printed
+       in the this format:
+       NODE = '{' LABEL VALUE? NODE? '}' NODE* | '{}'
+       LABEL = string
+       VALUE = '=' string
+
+       The effort of the augyang tool is to generate a YANG scheme that will
+       resemble the Augeas tree. But the mapping is not straightforward.
+       In some cases, it is necessary to add new nodes to the YANG schema.
+       So the mapping between the Augeas tree and the YANG schema is
+       marked by data-path extension and the Augeas node address is written
+       to corresponding YANG node. The address consists of the Augeas node
+       names and together creates the path from the root of the Augeas tree
+       to that node.
+
+       However, it is also necessary to add some special symbols that can
+       describe the address:
+
+       The variable name ('label') of the Augeas node can be defined by
+       'key STR' and 'seq STR' and this must be somehow marked in the data-path.
+       In the data-path, these variables are denoted by the symbol '$$'.
+
+       There cannot be records in the YANG list that have the same key,
+       but there can be nodes with the same name in the Augeas tree.
+       This collision is resolved by generating a key with a numeric data type
+       that is used only for indexing records. So there is no mapping
+       to any Augeas node for such the key. This condition is marked by
+       special symbols '##' in YANG list node. These symbols are followed by
+       the problematic Augeas node name.
+       ";
+
+  }
+
+  extension value-yang-path {
+    argument path;
+    description
+      "The description of value-yang-path extension is closely related
+       to data-path.
+
+       An Augeas node can be defined by two regular expressions by
+       'key STR' and 'store STR' lense primitives. In this case,
+       two YANG nodes must be generated, with the first containing
+       the 'key STR' formula and the second the 'store STR'. 
+       Between these YANG nodes, however, a special link must be 
+       marked. Thus, the first node is marked by an value-yang-path
+       extension with an argument describing the relative YANG path to
+       the YANG node where the Augeas node value is located.
+       ";
   }
 }

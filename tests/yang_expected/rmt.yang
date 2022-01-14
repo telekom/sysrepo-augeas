@@ -13,9 +13,10 @@ module rmt {
     leaf config-file {
       type string;
     }
-    list debug {
+    list DEBUG {
       key "_id";
       augex:data-path "##DEBUG";
+      augex:value-yang-path "value";
       leaf _id {
         type uint64;
         description
@@ -26,12 +27,12 @@ module rmt {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "^^DEBUG";
       }
     }
-    list user {
+    list USER {
       key "_id";
       augex:data-path "##USER";
+      augex:value-yang-path "sto_to_tab";
       leaf _id {
         type uint64;
         description
@@ -42,10 +43,9 @@ module rmt {
         type string {
           pattern "[^ \t\n]+";
         }
-        augex:data-path "^^USER";
       }
     }
-    list access {
+    list ACCESS {
       key "_id";
       augex:data-path "##ACCESS";
       leaf _id {

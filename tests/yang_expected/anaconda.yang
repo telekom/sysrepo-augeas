@@ -15,7 +15,7 @@ module anaconda {
     }
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type string {
           pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|)|#comme([^\\]\n/n][^\\]\n/]*|)|#comm([^\\]\n/e][^\\]\n/]*|)|#com([^\\]\n/m][^\\]\n/]*|)|#co([^\\]\n/m][^\\]\n/]*|)|#c([^\\]\n/o][^\\]\n/]*|)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
@@ -23,28 +23,20 @@ module anaconda {
       }
       list list {
         key "_id";
-        augex:data-path "$$_id/$$_id";
+        augex:data-path "$$/$$";
+        augex:value-yang-path "value";
         leaf _id {
           type string {
             pattern "[A-Za-z][A-Za-z0-9._-]*";
           }
         }
-        choice ch_list {
-          case value {
-            leaf value {
-              type string {
-                pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
-              }
-              augex:data-path "$$_id/^^_id";
+        leaf value {
+          type union {
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
             }
-          }
-          case value2 {
-            leaf value2 {
-              mandatory true;
-              type string {
-                pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
-              }
-              augex:data-path "$$_id/^^_id";
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
             }
           }
         }

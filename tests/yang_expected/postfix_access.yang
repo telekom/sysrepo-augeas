@@ -15,7 +15,7 @@ module postfix_access {
     }
     list record {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
       leaf _id {
         type uint64;
       }
@@ -24,20 +24,20 @@ module postfix_access {
         type string {
           pattern "([^# \n\t])+";
         }
-        augex:data-path "$$_id/pattern";
+        augex:data-path "$$/pattern";
       }
       leaf action {
         mandatory true;
         type string {
           pattern "([^# \n\t])+";
         }
-        augex:data-path "$$_id/action";
+        augex:data-path "$$/action";
       }
       leaf parameters {
         type string {
           pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
         }
-        augex:data-path "$$_id/parameters";
+        augex:data-path "$$/parameters";
       }
     }
   }

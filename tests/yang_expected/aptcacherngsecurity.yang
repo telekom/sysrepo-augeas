@@ -13,7 +13,7 @@ module aptcacherngsecurity {
     leaf config-file {
       type string;
     }
-    list record {
+    list AdminAuth {
       key "_id";
       augex:data-path "##AdminAuth";
       leaf _id {
@@ -26,14 +26,14 @@ module aptcacherngsecurity {
         type string {
           pattern "[^ \t:/]*";
         }
-        augex:data-path "AdminAuth/$$authpair";
+        augex:data-path "AdminAuth/$$";
+        augex:value-yang-path "value";
       }
       leaf value {
         mandatory true;
         type string {
           pattern "[^: \t\n]*";
         }
-        augex:data-path "AdminAuth/^^authpair";
       }
     }
   }

@@ -15,7 +15,8 @@ module vmware_config {
     }
     list entry {
       key "_id";
-      augex:data-path "$$_id";
+      augex:data-path "$$";
+      augex:value-yang-path "value";
       leaf _id {
         type string {
           pattern "[A-Za-z0-9_.-]+";
@@ -26,7 +27,6 @@ module vmware_config {
         type string {
           pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
         }
-        augex:data-path "^^_id";
       }
     }
   }
