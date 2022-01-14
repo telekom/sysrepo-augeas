@@ -1940,22 +1940,6 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Print yang case-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] node Node for case identifier evaluation.
- * @return 0 on success.
- */
-static int
-ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    ly_print(ctx->out, "%*scase ", ctx->space, "");
-    ay_print_yang_ident(ctx, node);
-
-    return 0;
-}
-
-/**
  * @brief Print yang choice-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2021,23 +2005,12 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ay_print_yang_choice(ctx, node);
         /* start of choice nesting */
         ay_print_yang_nesting_begin(ctx);
-
-        ay_print_yang_case(ctx, node);
-        ay_print_yang_nesting_begin(ctx);
         ay_print_yang_node_(ctx, node);
-        ay_print_yang_nesting_end(ctx);
     } else if (!last) {
-        /* print case */
-        ay_print_yang_case(ctx, node);
-        ay_print_yang_nesting_begin(ctx);
         ay_print_yang_node_(ctx, node);
-        ay_print_yang_nesting_end(ctx);
     } else {
         /* print last case */
-        ay_print_yang_case(ctx, node);
-        ay_print_yang_nesting_begin(ctx);
         ay_print_yang_node_(ctx, node);
-        ay_print_yang_nesting_end(ctx);
         /* end of choice nesting */
         ay_print_yang_nesting_end(ctx);
     }
