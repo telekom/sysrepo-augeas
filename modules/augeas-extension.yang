@@ -61,8 +61,8 @@ module augeas-extension {
        An Augeas node can be defined by two regular expressions by
        'key STR' and 'store STR' lense primitives. In this case,
        two YANG nodes must be generated, with the first containing
-       the 'key STR' formula and the second the 'store STR'. 
-       Between these YANG nodes, however, a special link must be 
+       the 'key STR' formula and the second the 'store STR'.
+       Between these YANG nodes, however, a special link must be
        marked. Thus, the first node is marked by an value-yang-path
        extension with an argument describing the relative YANG path to
        the YANG node where the Augeas node value is located.

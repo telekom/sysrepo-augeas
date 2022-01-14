@@ -13,11 +13,18 @@ module simplelines {
     leaf config-file {
       type string;
     }
-    leaf-list line {
-      type string {
-        pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+    list line {
+      key "_id";
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _id {
+        type uint64;
       }
-      augex:data-path "$AY_UINT";
+      leaf value {
+        type string {
+          pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+        }
+      }
     }
   }
 }

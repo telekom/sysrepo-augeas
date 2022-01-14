@@ -1231,11 +1231,6 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
     ay_print_yang_data_path_delim(ctx, printed);
     if (node->type == YN_LIST) {
         ay_print_yang_data_path_item_list(ctx, node, target);
-    } else if ((node->type == YN_LEAFLIST) && label && (label->tag == L_LABEL)) {
-        ly_print(ctx->out, "%s", label->string->str);
-    } else if (node->type == YN_LEAFLIST) {
-        // TODO change leaf-list to list
-        ly_print(ctx->out, "$AY_UINT");
     } else if (label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
     } else {
@@ -2810,6 +2805,18 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
 }
 
 /**
+ * @brief Check whether the leaf-list node must be changed to list.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if type must be changed.
+ */
+static ly_bool
+ay_ynode_rule_leaflist_to_list(struct ay_ynode *node)
+{
+    return (node->type == YN_LEAFLIST) && node->label && (node->label->lens->tag == L_SEQ);
+}
+
+/**
  * @brief Test ay_ynode_copy().
  *
  * @param[in] vercode Verbose that decides the execution of a function.
@@ -3747,6 +3754,38 @@ ay_node_split(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Change leaflist to list, add key and optionally YN_VALUE node.
+ *
+ * The leaf-list must change to list, if numbers itself should be labels for Augeas nodes.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_leaflist_to_list(struct ay_ynode *tree)
+{
+    struct ay_ynode *list, *key, *valnode;
+
+    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        if (ay_ynode_rule_leaflist_to_list(&tree[i])) {
+            list = &tree[i];
+            list->type = YN_LIST;
+            if (list->value) {
+                ay_ynode_insert_child(tree, i);
+                valnode = list->child;
+                valnode->type = YN_VALUE;
+                valnode->label = list->label;
+                valnode->value = list->value;
+            }
+            ay_ynode_insert_child(tree, i);
+            key = list->child;
+            key->type = YN_KEY;
+            key->label = list->label;
+            key->value = list->value;
+        }
+    }
+}
+
+/**
  * @brief Set ay_ynode.type for all nodes.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -3868,6 +3907,8 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key, 2);
     AY_CHECK_RET(ret);
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_node_split, 1);
+    AY_CHECK_RET(ret);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_leaflist_to_list, ay_ynode_leaflist_to_list, 2);
     AY_CHECK_RET(ret);
 
     ay_ynode_key_pattern_to_data_path(*tree);

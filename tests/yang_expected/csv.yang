@@ -21,21 +21,35 @@ module csv {
       }
       choice ch_entry {
         case field {
-          leaf-list field {
+          list field {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "([^\n\"#;])*";
+            augex:data-path "$$/$$";
+            augex:value-yang-path "value";
+            leaf _id {
+              type uint64;
             }
-            augex:data-path "$$/$AY_UINT";
+            leaf value {
+              type string {
+                pattern "([^\n\"#;])*";
+              }
+            }
           }
         }
         case field2 {
-          leaf-list field2 {
+          list field2 {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "(\"[^\"#]*\")+";
+            augex:data-path "$$/$$";
+            augex:value-yang-path "value";
+            leaf _id {
+              type uint64;
             }
-            augex:data-path "$$/$AY_UINT";
+            leaf value {
+              type string {
+                pattern "(\"[^\"#]*\")+";
+              }
+            }
           }
         }
       }
