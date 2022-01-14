@@ -1811,6 +1811,7 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_nesting_begin(ctx);
 
     ly_print(ctx->out, "%*skey \"config-file\";\n", ctx->space, "");
+    ly_print(ctx->out, "%*smin-elements 1;\n", ctx->space, "");
     ly_print(ctx->out, "%*sleaf config-file", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype string;\n", ctx->space, "");

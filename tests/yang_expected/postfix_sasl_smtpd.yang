@@ -10,6 +10,7 @@ module postfix_sasl_smtpd {
 
   list postfix_sasl_smtpd {
     key "config-file";
+    min-elements 1;
     leaf config-file {
       type string;
     }
