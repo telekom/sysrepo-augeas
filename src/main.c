@@ -41,21 +41,18 @@
 
 #define _GNU_SOURCE
 
-#include <argz.h>
 #include <dirent.h>
 #include <getopt.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <locale.h>
 #include "augeas.h"
 #include "augyang.h"
 #include "errcode.h"
 #include "list.h"
 #include "syntax.h"
-
-/**
- * @brief Buffer for filename including the path.
- */
-#define AYM_MAX_FILENAME_LEN 256
 
 /**
  * @brief Result of strlen("/").
@@ -80,7 +77,6 @@
 /**
  * @brief Print help to stderr.
  */
-__attribute__((noreturn))
 static void
 aym_usage(void)
 {
@@ -104,72 +100,129 @@ aym_usage(void)
     fprintf(stderr, "\nExample:\n"
             AYM_PROGNAME " passwd backuppchosts\n"
             AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n");
-
-    exit(EXIT_FAILURE);
 }
 
 /**
  * @brief Convert verbose code in string format to unsigned integer.
  *
  * @param[in] optarg String from command line.
- * @return Verbose code aka vercode.
+ * @param[out] vercode Verbose code.
+ * @return 0 on success.
  */
-static uint64_t
-aym_get_vercode(char *optarg)
+static int
+aym_get_vercode(char *optarg, uint64_t *vercode)
 {
-    uint64_t ret;
+    int ret = 0;
     char *endptr;
 
     if (optarg[0] == '-') {
         fprintf(stderr, "ERROR: Verbose code cannot be negative number\n");
         aym_usage();
+        return -1;
     }
 
     errno = 0;
-    ret = strtoull(optarg, &endptr, 16);
+    *vercode = strtoull(optarg, &endptr, 16);
     if (errno || (&optarg[strlen(optarg)] != endptr)) {
         fprintf(stderr, "ERROR: Verbose code conversion error\n");
-        aym_usage();
+        ret = -1;
     }
 
     return ret;
 }
 
 /**
- * @brief Wrapper of ::argz_create_sep().
+ * @brief Add path (string item) to the loadpath variable.
  *
- * Convenient call this function after argz_stringify().
- *
- * @param[in] argz The argz vector.
- * @param[in] argz_len Length of the @p argz.
+ * @param[in,out] loadpath Storage of paths (strings) separated by PATH_SEP_CHAR.
+ * @param[in,out] loadpathlen Length of whole loadpath string, excluding the terminating null byte.
+ * @param[in] item Path that will be added to @p loadpath.
+ * @return 0 if operation success.
  */
-static void
-aym_argz_create_sep_(char **argz, size_t *argz_len)
+static int
+aym_loadpath_add(char **loadpath, uint64_t *loadpathlen, char *item)
 {
-    char *str;
+    int ret = 0;
+    uint64_t new_loadpathlen, itemlen;
 
-    assert(*argz);
-    str = strdup(*argz);
-    free(*argz);
-    argz_create_sep(str, PATH_SEP_CHAR, argz, argz_len);
-    free(str);
+    if (!*loadpath) {
+        *loadpath = strdup(item);
+        *loadpathlen = strlen(item);
+        ret = *loadpath ? 0 : 1;
+    } else if (item) {
+        /* allocate enough memory space */
+        itemlen = strlen(item);
+        /* loadpathlen + 'null byte' + 'PATH_SEP_CHAR' + itemlen + 'null byte' */
+        new_loadpathlen = *loadpathlen + itemlen + 3;
+        *loadpath = realloc(*loadpath, new_loadpathlen);
+        if (!*loadpath) {
+            return 1;
+        }
+
+        /* copy item to loadpath */
+        (*loadpath)[*loadpathlen] = PATH_SEP_CHAR;
+        strcpy(*loadpath + *loadpathlen + 1, item);
+        *loadpathlen = new_loadpathlen;
+    }
+
+    return ret;
 }
 
 /**
- * @brief Find the size of the longest string in the argz vector.
+ * @brief Get next path from the loadpath variable.
  *
- * @param[in] argz The argz vector.
- * @param[in] argz_len Length of the @p argz.
+ * @param[in] loadpath_iter Pointer to some item (path/string) in the loadpath.
+ * @return Next item or NULL.
+ */
+static char *
+aym_loadpath_next(const char *loadpath_iter)
+{
+    char *next;
+
+    if (!loadpath_iter) {
+        return NULL;
+    } else if ((next = strchr(loadpath_iter, PATH_SEP_CHAR))) {
+        return next + 1;
+    } else {
+        return NULL;
+    }
+}
+
+/**
+ * @brief Get length of @p loadpath_item (path/string).
+ *
+ * @param[in] loadpath_item Pointer to some item (path/string) in the loadpath.
+ * @return Length of item.
+ */
+static size_t
+aym_loadpath_pathlen(const char *loadpath_item)
+{
+    char *retval;
+
+    if (!loadpath_item) {
+        return 0;
+    } else if ((retval = strchr(loadpath_item, PATH_SEP_CHAR))) {
+        return retval - loadpath_item;
+    } else {
+        return strlen(loadpath_item);
+    }
+}
+
+/**
+ * @brief Find the size of the longest path (string) in the loadpath
+ *
+ * @param[in] loadpath Array of strings.
  * @return The number of characters in the longest string.
  */
 static size_t
-aym_argz_max_string_len(const char *argz, size_t argz_len)
+aym_loadpath_maxpath(char *loadpath)
 {
-    size_t ret = 0;
-    const char *iter = NULL;
+    size_t ret = 0, len;
+    char *iter;
 
-    while ((iter = argz_next(argz, argz_len, iter))) {
-        ret = strlen(iter) > ret ? strlen(iter) : ret;
+    for (iter = loadpath; iter; iter = aym_loadpath_next(iter)) {
+        len = aym_loadpath_pathlen(iter);
+        ret = len > ret ? len : ret;
     }
 
     return ret;
@@ -225,10 +278,13 @@ aym_file_exists(const char *path)
 static void
 aym_insert_dirpath(const char *dirpath, char *filename)
 {
-    filename[strlen(dirpath) + AYM_SLASH_LEN + strlen(filename)] = '\0';
-    memmove(filename + strlen(dirpath) + AYM_SLASH_LEN, filename, strlen(filename));
-    memcpy(filename, dirpath, strlen(dirpath));
-    filename[strlen(dirpath)] = '/';
+    uint64_t dirpathlen;
+
+    dirpathlen = aym_loadpath_pathlen(dirpath),
+    filename[dirpathlen + AYM_SLASH_LEN + strlen(filename)] = '\0';
+    memmove(filename + dirpathlen + AYM_SLASH_LEN, filename, strlen(filename));
+    memcpy(filename, dirpath, dirpathlen);
+    filename[dirpathlen] = '/';
 }
 
 /**
@@ -243,36 +299,36 @@ aym_insert_dirpath(const char *dirpath, char *filename)
 static void
 aym_remove_dirpath(const char *dirpath, char *filename)
 {
-    size_t new_end;
+    uint64_t new_end, dirpathlen;
 
-    assert(!strncmp(filename, dirpath, strlen(dirpath)));
-    new_end = strlen(filename) - (strlen(dirpath) + AYM_SLASH_LEN);
-    memmove(filename, filename + strlen(dirpath) + AYM_SLASH_LEN, strlen(filename));
+    dirpathlen = aym_loadpath_pathlen(dirpath),
+    assert(!strncmp(filename, dirpath, dirpathlen));
+    new_end = strlen(filename) - (dirpathlen + AYM_SLASH_LEN);
+    memmove(filename, filename + dirpathlen + AYM_SLASH_LEN, new_end);
     filename[new_end] = '\0';
 }
 
 /**
  * @brief Find out in which directory path the module @p filename is located.
  *
- * @param[in] argz The argz vector.
- * @param[in] argz_len Length of the @p argz.
+ * @param[in] loadpath Array of paths separated by PATH_SEP_CHAR.
  * @param[in] filename Buffer containing file name. It is not modified.
- * @return Directory path from @p argz.
+ * @return Directory path from @p loadpath.
  */
 static const char *
-aym_find_aug_module(const char *argz, size_t argz_len, char *filename)
+aym_find_aug_module(char *loadpath, char *filename)
 {
     bool succ = 0;
-    const char *iter = NULL, *next = NULL;
+    char *iter, *loadpath_item;
 
-    while (!succ && (iter = argz_next(argz, argz_len, next))) {
-        aym_insert_dirpath(iter, filename);
+    for (iter = loadpath; !succ && iter; iter = aym_loadpath_next(iter)) {
+        loadpath_item = iter;
+        aym_insert_dirpath(iter,  filename);
         succ = aym_file_exists(filename);
         aym_remove_dirpath(iter, filename);
-        next = iter;
     }
 
-    return iter;
+    return succ ? loadpath_item : NULL;
 }
 
 /**
@@ -290,23 +346,53 @@ aym_insert_filename(const char *name, const char *suffix, char *filename)
     strcpy(&filename[strlen(filename)], suffix);
 }
 
+/**
+ * @brief Allocate filename buffer.
+ *
+ * The function guarantees that it allocates enough space for operations with filename buffer in this source file.
+ *
+ * @param[in] argc Variable from main.
+ * @param[in] argv Variable from main.
+ * @param[in] optind Global variable from ::getopt_long().
+ * @param[in] outdir Option --outdir DIR from command line.
+ * @param[in] loadpath Storage of paths.
+ * @return Pointer to new allocated buffer or NULL.
+ */
+static char *
+aym_allocate_filename_buffer(int argc, char **argv, int optind, char *outdir, char *loadpath)
+{
+    char *buffer;
+    size_t maxpathlen, maxmodname = 0, maxyang, maxaug, buffer_size;
+    char *modname;
+
+    maxpathlen = aym_loadpath_maxpath(loadpath);
+    for (int i = 0; i < argc - optind; i++) {
+        modname = argv[optind + i];
+        maxmodname = strlen(modname) > maxmodname ? strlen(modname) : maxmodname;
+    }
+    maxyang = strlen(outdir) + AYM_SLASH_LEN + maxmodname + AYM_SUFF_YANG_LEN;
+    maxaug = maxpathlen + AYM_SLASH_LEN + maxmodname + AYM_SUFF_AUG_LEN;
+
+    buffer_size = maxyang > maxaug ? maxyang : maxaug;
+    buffer = malloc(buffer_size + 1);
+
+    return buffer;
+}
+
 int
 main(int argc, char **argv)
 {
-    int opt, ret = 0, ret2 = 0, vercode = 0, explicit = 0, show = 0;
+    int opt, ret = 0, ret2 = 0, explicit = 0, show = 0;
     struct augeas *aug = NULL;
     char *loadpath = NULL, *str = NULL, *modname, *outdir = NULL;
     const char *dirpath;
-    size_t loadpathlen = 0, maxpathlen = 0;
+    size_t loadpathlen = 0;
     struct module *mod;
-    char filename[AYM_MAX_FILENAME_LEN];
+    char *filename = NULL;
     FILE *file = NULL;
+    uint64_t vercode = 0;
+    struct module *mod_iter;
 
-    enum {
-        VAL_NO_STDINC = CHAR_MAX + 1,
-        VAL_NO_TYPECHECK = VAL_NO_STDINC + 1,
-        VAL_VERSION = VAL_NO_TYPECHECK + 1
-    };
     struct option options[] = {
         {"help",      0, 0, 'h'},
         {"explicit",  0, 0, 'e'},
@@ -319,14 +405,13 @@ main(int argc, char **argv)
     int idx;
     unsigned int flags = AUG_TYPE_CHECK | AUG_NO_MODL_AUTOLOAD;
 
-    setlocale(LC_ALL, "");
     while ((opt = getopt_long(argc, argv, "heI:O:sv:", options, &idx)) != -1) {
         switch (opt) {
         case 'e':
             explicit = 1;
             break;
         case 'I':
-            argz_add(&loadpath, &loadpathlen, optarg);
+            ret |= aym_loadpath_add(&loadpath, &loadpathlen, optarg);
             break;
         case 'O':
             outdir = optarg;
@@ -335,66 +420,71 @@ main(int argc, char **argv)
             show = 1;
             break;
         case 'v':
-            vercode = aym_get_vercode(optarg);
+            ret |= aym_get_vercode(optarg, &vercode);
             break;
         case 'h':
             aym_usage();
-            break;
+            goto cleanup;
         default:
             aym_usage();
-            break;
+            goto cleanup;
         }
+    }
+
+    if (ret) {
+        goto cleanup;
     }
 
     if (optind >= argc) {
         fprintf(stderr, "ERROR: expected .aug file\n");
         aym_usage();
+        goto cleanup;
     }
 
     if (!explicit) {
         /* add default lense directory */
-        argz_add(&loadpath, &loadpathlen, AUGEAS_LENSES_DIR);
+        ret |= aym_loadpath_add(&loadpath, &loadpathlen, AUGEAS_LENSES_DIR);
+        if (ret) {
+            goto cleanup;
+        }
     }
 
     if (show && outdir) {
         fprintf(stderr, "ERROR: options \'-O\' and \'-s\' should not be entered at the same time.");
         aym_usage();
+        goto cleanup;
     }
 
     if (outdir && !aym_dir_exists(outdir)) {
         fprintf(stderr, "ERROR: cannot open output directory %s\n", outdir);
         ret = 1;
-        goto end;
+        goto cleanup;
     } else if (!outdir) {
         /* add default output directory - CWD */
         outdir = ".";
     }
 
     /* aug_init() */
-    argz_stringify(loadpath, loadpathlen, PATH_SEP_CHAR);
     aug = aug_init(NULL, loadpath, flags);
     if (aug == NULL) {
         fprintf(stderr, "ERROR: memory exhausted\n");
         ret = 2;
-        goto end;
+        goto cleanup;
     }
-    aym_argz_create_sep_(&loadpath, &loadpathlen);
-    maxpathlen = aym_argz_max_string_len(loadpath, loadpathlen);
+
+    filename = aym_allocate_filename_buffer(argc, argv, optind, outdir, loadpath);
+    if (!filename) {
+        fprintf(stderr, "ERROR: Allocation of memory failed\n");
+        ret = 1;
+        goto cleanup;
+    }
 
     /* for every entered augeas module generate yang file */
     for (int i = 0; i < argc - optind; i++) {
         modname = argv[optind + i];
-        /* check buffer length */
-        if ((strlen(outdir) + AYM_SLASH_LEN + strlen(modname) + AYM_SUFF_YANG_LEN >= AYM_MAX_FILENAME_LEN) ||
-                (maxpathlen + AYM_SLASH_LEN + strlen(modname) + AYM_SUFF_AUG_LEN >= AYM_MAX_FILENAME_LEN)) {
-            fprintf(stderr, "ERROR: constant AYM_MAX_FILENAME_LEN exceeded\n");
-            ret = 1;
-            goto end;
-        }
-
         /* parse and compile augeas module */
         aym_insert_filename(modname, ".aug", filename);
-        dirpath = aym_find_aug_module(loadpath, loadpathlen, filename);
+        dirpath = aym_find_aug_module(loadpath, filename);
         if (!dirpath) {
             fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
             ret2 = 1;
@@ -408,11 +498,11 @@ main(int argc, char **argv)
                 fprintf(stderr, "ERROR: %s\n", s);
             }
             ret = 1;
-            goto end;
+            goto cleanup;
         }
 
         /* get last compiled (current) module */
-        list_for_each(mod_iter, aug->modules) {
+        for (mod_iter = aug->modules; mod_iter; mod_iter = mod_iter->next) {
             mod = mod_iter;
         }
 
@@ -420,7 +510,7 @@ main(int argc, char **argv)
         ret = augyang_print_yang(mod, vercode, &str);
         if (ret) {
             fprintf(stderr, "%s", augyang_get_error_message(ret));
-            goto end;
+            goto cleanup;
         }
 
         if (show) {
@@ -433,7 +523,7 @@ main(int argc, char **argv)
             file = fopen(filename, "w");
             if (!file) {
                 fprintf(stderr, "ERROR: failed to open %s\n", filename);
-                goto end;
+                goto cleanup;
             }
             fprintf(file, "%s", str);
             fclose(file);
@@ -442,10 +532,11 @@ main(int argc, char **argv)
         str = NULL;
     }
 
-end:
+cleanup:
     free(str);
     aug_close(aug);
     free(loadpath);
+    free(filename);
 
     return ret | ret2;
 }

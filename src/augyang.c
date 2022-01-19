@@ -14,8 +14,13 @@
 
 #define _GNU_SOURCE
 
-#include <libyang/out.h>
-#include <libyang/tree.h>
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <libyang/libyang.h>
 #include <libyang/tree_edit.h>
 
 #include "augyang.h"
@@ -284,8 +289,7 @@ struct lprinter_ctx;
 /**
  * @brief Callback functions for debug printer.
  */
-struct lprinter_ctx_f
-{
+struct lprinter_ctx_f {
     void (*main)(struct lprinter_ctx *);        /**< Printer can start by this function. */
     ly_bool (*filter)(struct lprinter_ctx *);   /**< To ignore a node so it doesn't print. */
     void (*transition)(struct lprinter_ctx *);  /**< Transition function to the next node. */
@@ -295,9 +299,8 @@ struct lprinter_ctx_f
 /**
  * @brief Context for the debug printer.
  */
-struct lprinter_ctx
-{
-    uint32_t space;                 /**< Current indent. */
+struct lprinter_ctx {
+    int space;                      /**< Current indent. */
     void *data;                     /**< General pointer to node. */
     struct lprinter_ctx_f func;     /**< Callbacks to customize the print. */
     struct ly_out *out;             /**< Output to which it is printed. */
@@ -306,13 +309,12 @@ struct lprinter_ctx
 /**
  * @brief Context for the yang printer.
  */
-struct yprinter_ctx
-{
+struct yprinter_ctx {
     struct augeas *aug;     /**< Augeas context. */
     struct module *mod;     /**< Current Augeas module. */
     struct ay_ynode *tree;  /**< Pointer to the Sized array. */
     struct ly_out *out;     /**< Output to which it is printed. */
-    uint32_t space;         /**< Current indent. */
+    int space;              /**< Current indent. */
 };
 
 /**
@@ -404,7 +406,7 @@ ay_lense_get_root(struct module *mod)
  * @param[out] len Length of the name.
  */
 static void
-ay_get_filename(char *path, char **name, size_t *len)
+ay_get_filename(char *path, char **name, uint64_t *len)
 {
     char *iter;
 
@@ -464,7 +466,9 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
 static void
 ay_ynode_summary(struct ay_ynode *forest, ly_bool (*rule)(struct ay_ynode *), uint32_t *cnt)
 {
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
+    LY_ARRAY_COUNT_TYPE i;
+
+    LY_ARRAY_FOR(forest, i) {
         if (rule(&forest[i])) {
             (*cnt)++;
         }
@@ -483,7 +487,7 @@ static void
 ay_print_lens_node_header(struct ly_out *out, struct lens *lens, int space, const char *lens_tag)
 {
     char *filename;
-    size_t len;
+    uint64_t len;
     uint16_t first_line, first_column;
 
     ay_get_filename(lens->info->filename->str, &filename, &len);
@@ -491,7 +495,10 @@ ay_print_lens_node_header(struct ly_out *out, struct lens *lens, int space, cons
     first_column = lens->info->first_column;
 
     ly_print(out, "%*s lens_tag: %s\n", space, "", lens_tag);
-    ly_print(out, "%*s location: %.*s, %u, %u\n", space, "", len + 4, filename, first_line, first_column);
+    ly_print(out, "%*s location: %.*s, %" PRIu16 ", %" PRIu16 "\n",
+            space, "",
+            (int)len + 4, filename,
+            first_line, first_column);
 }
 
 /**
@@ -504,7 +511,7 @@ static void
 ay_print_lens_node(struct lprinter_ctx *ctx, struct lens *lens)
 {
     char *regex = NULL;
-    uint32_t sp;
+    int sp;
     struct ly_out *out;
 
     if (ctx->func.filter && ctx->func.filter(ctx)) {
@@ -624,8 +631,8 @@ ay_print_lens(void *data, struct lprinter_ctx_f *func, struct lens *root_lense, 
     }
 
     ly_out_free(out, NULL, 0);
-
     *str_out = str;
+
     return 0;
 }
 
@@ -642,12 +649,13 @@ static char *
 ay_get_lense_name(struct module *mod, struct lens *lens)
 {
     char *ret = NULL;
+    struct binding *bind_iter;
 
     if (!lens) {
         return NULL;
     }
 
-    list_for_each(bind_iter, mod->bindings) {
+    LY_LIST_FOR(mod->bindings, bind_iter) {
         if (bind_iter->value->lens == lens) {
             ret = bind_iter->ident->str;
             break;
@@ -655,7 +663,7 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
     }
 
     if ((lens->tag == L_STORE) || (lens->tag == L_KEY)) {
-        list_for_each(bind_iter, mod->bindings) {
+        LY_LIST_FOR(mod->bindings, bind_iter) {
             if (bind_iter->value->tag != V_REGEXP) {
                 continue;
             }
@@ -705,9 +713,9 @@ ay_get_augeas_ctx2(struct lens *lens)
 static struct module *
 ay_get_module(struct augeas *aug, const char *modname)
 {
-    struct module *mod = NULL;
+    struct module *mod = NULL, *mod_iter;
 
-    list_for_each(mod_iter, aug->modules) {
+    LY_LIST_FOR(aug->modules, mod_iter) {
         if (!strcmp(mod_iter->name, modname)) {
             mod = mod_iter;
             break;
@@ -754,6 +762,7 @@ ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *
     size_t pattern_len, maybe_len = strlen("{0,1}");
     char *found;
     uint64_t cnt_found = 0;
+    struct binding *bind_iter;
     char *str;
 
     if (!pattern) {
@@ -774,7 +783,7 @@ ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *
     }
 
     mod = ay_get_module(aug, modname);
-    list_for_each(bind_iter, mod->bindings) {
+    LY_LIST_FOR(mod->bindings, bind_iter) {
         if (bind_iter->value->tag != V_REGEXP) {
             continue;
         }
@@ -872,7 +881,7 @@ ay_get_ident_standardized(char *ident, char *buffer)
 {
     int64_t i, j, len, stop;
 
-    stop = (int64_t) strlen(ident);
+    stop = strlen(ident);
     for (i = 0, j = 0; i < stop; i++, j++) {
         switch (ident[i]) {
         case '@':
@@ -911,8 +920,7 @@ ay_get_ident_standardized(char *ident, char *buffer)
  *
  * Auxiliary structure for ay_get_regex_standardized()
  */
-struct regex_map
-{
+struct regex_map {
     const char *aug;    /**< Input string to match. */
     const char *yang;   /**< Substituent satisfying yang language. */
 };
@@ -1151,7 +1159,7 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     if (duplicates > 1) {
-        ly_print(ctx->out, "%s%u", ident, duplicates);
+        ly_print(ctx->out, "%s%" PRIu32, ident, duplicates);
     } else {
         ly_print(ctx->out, "%s", ident);
     }
@@ -1362,7 +1370,7 @@ static void
 ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     if (node->min) {
-        ly_print(ctx->out, "%*smin-elements %u;\n", ctx->space, "", node->min);
+        ly_print(ctx->out, "%*smin-elements %" PRIu8 ";\n", ctx->space, "", node->min);
     }
 }
 
@@ -2063,6 +2071,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ly_out_free(out, NULL, 0);
 
     *str_out = str;
+
     return ret;
 }
 
@@ -2210,10 +2219,11 @@ ay_print_ynode_transition_lv(struct lprinter_ctx *ctx)
 static void
 ay_print_ynode_main(struct lprinter_ctx *ctx)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *forest;
 
     forest = ctx->data;
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
+    LY_ARRAY_FOR(forest, i) {
         ctx->data = &forest[i];
         if (forest[i].snode) {
             ay_print_lens_node(ctx, forest[i].snode->lens);
@@ -2272,7 +2282,7 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
 
     if (node->mandatory) {
         if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
-            ly_print(ctx->out, "%*s min-elements: %u\n", ctx->space, "", node->min);
+            ly_print(ctx->out, "%*s min-elements: %" PRIu8 "\n", ctx->space, "", node->min);
         } else {
             ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
         }
@@ -2481,13 +2491,14 @@ ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
 static void
 ay_ynode_forest_connect_topnodes(struct ay_ynode *forest)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *last;
 
     if (!LY_ARRAY_COUNT(forest)) {
         return;
     }
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
+    LY_ARRAY_FOR(forest, i) {
         if (!forest[i].parent) {
             last = &forest[i];
             forest[i].next = last->descendants ? last + last->descendants + 1 : last + 1;
@@ -2508,8 +2519,7 @@ ay_ynode_add_label_value(struct ay_ynode *forest)
     struct ay_lnode *lnode;
     enum lens_tag tag;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
-        ynode = &forest[i];
+    LY_ARRAY_FOR(forest, struct ay_ynode, ynode) {
         for (uint32_t j = 0; j < ynode->snode->descendants; j++) {
             lnode = &ynode->snode[j + 1];
             tag = lnode->lens->tag;
@@ -2533,9 +2543,10 @@ ay_ynode_add_label_value(struct ay_ynode *forest)
 static void
 ay_ynode_add_choice(struct ay_ynode *forest)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_lnode *iter;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(forest); i++) {
+    LY_ARRAY_FOR(forest, i) {
         for (iter = forest[i].snode->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
             if (iter->lens->tag == L_UNION) {
                 forest[i].choice = iter;
@@ -2556,8 +2567,7 @@ ay_ynode_tree_correction(struct ay_ynode *tree)
     struct ay_ynode *parent, *iter, *next;
     uint32_t sum;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        parent = &tree[i];
+    LY_ARRAY_FOR(tree, struct ay_ynode, parent) {
         iter = parent->descendants ? parent + 1 : NULL;
         parent->child = iter;
         sum = 0;
@@ -2597,7 +2607,9 @@ ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
 static void
 ay_ynode_copy(struct ay_ynode *dst, struct ay_ynode *src)
 {
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(src); i++) {
+    LY_ARRAY_COUNT_TYPE i;
+
+    LY_ARRAY_FOR(src, i) {
         dst[i] = src[i];
         dst[i].parent = AY_MAP_ADDRESS(dst, src, src[i].parent);
         dst[i].next = AY_MAP_ADDRESS(dst, src, src[i].next);
@@ -3063,38 +3075,38 @@ ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint32_t count)
+ay_ynode_debug_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint64_t count)
 {
-    for (uint32_t i = 0; i < count; i++) {
+    for (uint64_t i = 0; i < count; i++) {
         if (arr1[i].parent != arr2[i].parent) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.parent\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.parent\n", iter, i);
             return 1;
         } else if (arr1[i].next != arr2[i].next) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.next\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.next\n", iter, i);
             return 1;
         } else if (arr1[i].child != arr2[i].child) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.child\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.child\n", iter, i);
             return 1;
         } else if (arr1[i].descendants != arr2[i].descendants) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.descendants\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.descendants\n", iter, i);
             return 1;
         } else if (arr1[i].type != arr2[i].type) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.type\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.type\n", iter, i);
             return 1;
         } else if (arr1[i].snode != arr2[i].snode) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.snode\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.snode\n", iter, i);
             return 1;
         } else if (arr1[i].label != arr2[i].label) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.label\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.label\n", iter, i);
             return 1;
         } else if (arr1[i].value != arr2[i].value) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.value\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.value\n", iter, i);
             return 1;
         } else if (arr1[i].choice != arr2[i].choice) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.choice\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.choice\n", iter, i);
             return 1;
         } else if (arr1[i].mandatory != arr2[i].mandatory) {
-            printf(AY_NAME " DEBUG: iteration %u, diff at node %u ynode.mandatory\n", iter, i);
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.mandatory\n", iter, i);
             return 1;
         }
     }
@@ -3112,6 +3124,7 @@ ay_ynode_debug_snap(uint32_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
 static int
 ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     int ret = 0;
     const char *msg;
     struct ay_ynode *dupl = NULL, *snap = NULL;
@@ -3120,11 +3133,11 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         return ret;
     }
 
-    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree) + 1, ret, end);
-    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, end);
+    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree) + 1, ret, cleanup);
+    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, cleanup);
 
     msg = "ynode insert_child";
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_child(dupl, i);
@@ -3134,7 +3147,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     }
 
     msg = "ynode insert_wrapper";
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_wrapper(dupl, i);
@@ -3144,7 +3157,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     }
 
     msg = "ynode insert_parent";
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
@@ -3154,7 +3167,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     }
 
     msg = "ynode insert_sibling";
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_sibling(dupl, i);
@@ -3163,7 +3176,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
-end:
+cleanup:
     if (ret) {
         printf(AY_NAME " DEBUG: %s failed\n", msg);
     }
@@ -3174,7 +3187,7 @@ end:
 
 error:
     ret = AYE_DEBUG_FAILED;
-    goto end;
+    goto cleanup;
 }
 
 /**
@@ -3188,6 +3201,7 @@ static int
 ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
 {
     int ret = 0;
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *dupl = NULL, *snap = NULL, *place;
     const char *msg;
 
@@ -3195,13 +3209,13 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
         return ret;
     }
 
-    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree), ret, end);
-    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, end);
+    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree), ret, cleanup);
+    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, cleanup);
     ay_ynode_copy(dupl, tree);
     memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
 
     msg = "ynode move_subtree_as_sibling";
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
+    for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->next) {
             ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
@@ -3211,7 +3225,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     }
 
     msg = "ynode move_subtree_as_child";
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
+    for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->child) {
             ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
             ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
@@ -3219,7 +3233,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
         }
     }
 
-end:
+cleanup:
     if (ret) {
         printf(AY_NAME " DEBUG: %s failed\n", msg);
     }
@@ -3230,7 +3244,7 @@ end:
 
 error:
     ret = AYE_DEBUG_FAILED;
-    goto end;
+    goto cleanup;
 }
 
 /**
@@ -3288,9 +3302,11 @@ ay_ynode_set_mandatory(struct ay_ynode *node)
 static void
 ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
+
     assert(tree && ((tree[0].type == YN_UNKNOWN) || (tree[0].type == YN_ROOT)));
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         if ((tree[i].type != YN_LIST) && (tree[i].type != YN_LEAFLIST)) {
             ay_ynode_set_mandatory(&tree[i]);
         }
@@ -3308,8 +3324,7 @@ ay_ynode_tree_set_min(struct ay_ynode *tree)
     struct ay_ynode *node;
 
     /* The value is set by ::ay_ynode_delete_build_list() and this code unset the value due to the '?' operator. */
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        node = &tree[i];
+    LY_ARRAY_FOR(tree, struct ay_ynode, node) {
         if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
             if (ay_lnode_has_maybe(node->snode)) {
                 node->min = 0;
@@ -3334,8 +3349,7 @@ ay_ynode_key_pattern_to_data_path(struct ay_ynode *tree)
     struct lens *label;
     char *ch;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        node = &tree[i];
+    LY_ARRAY_FOR(tree, struct ay_ynode, node) {
         label = AY_LABEL_LENS(node);
 
         /* select list that has L_KEY */
@@ -3367,7 +3381,9 @@ ay_ynode_key_pattern_to_data_path(struct ay_ynode *tree)
 static void
 ay_delete_type_unknown(struct ay_ynode *tree)
 {
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_COUNT_TYPE i;
+
+    LY_ARRAY_FOR(tree, i) {
         if ((tree[i].type == YN_UNKNOWN) && (!tree[i].child)) {
             ay_ynode_delete_node(tree, i);
             i--;
@@ -3383,10 +3399,11 @@ ay_delete_type_unknown(struct ay_ynode *tree)
 static void
 ay_delete_comment(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter;
     struct lens *label;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         iter = &tree[i];
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL)) {
@@ -3427,12 +3444,13 @@ ay_delete_top_choice(struct ay_ynode *tree)
 static void
 ay_ynode_delete_build_list(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i, j;
     struct ay_ynode *node1, *node2;
     struct ay_lnode *iter1, *iter2, *concat;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         node1 = &tree[i];
-        for (uint32_t j = i + 1; j < LY_ARRAY_COUNT(tree); j++) {
+        for (j = i + 1; j < LY_ARRAY_COUNT(tree); j++) {
             node2 = &tree[j];
 
             /* node1 == node2 */
@@ -3492,9 +3510,10 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
 static void
 ay_ynode_delete_lonely_key(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter, *node;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         node = &tree[i];
         if (!node->choice || !node->label || (node->label->lens->tag != L_KEY)) {
             continue;
@@ -3538,16 +3557,16 @@ repeat:
 static void
 ay_delete_list_with_same_key(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE j;
     struct ay_ynode *iter, *list1, *list2, *cont1, *cont2, *node;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        if ((tree[i].type != YN_LIST) || (!tree[i].choice) || (!tree[i].label)) {
+    LY_ARRAY_FOR(tree, struct ay_ynode, list1) {
+        if ((list1->type != YN_LIST) || (!list1->choice) || (!list1->label)) {
             continue;
         }
-        list1 = &tree[i];
 
         for (iter = list1->next; iter && (iter->choice == list1->choice); iter = iter->next) {
-            if ((tree[i].type != YN_LIST) || (!tree[i].label)) {
+            if ((list1->type != YN_LIST) || (!list1->label)) {
                 continue;
             }
             list2 = iter;
@@ -3557,7 +3576,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             }
 
             /* delete list2 keys */
-            for (uint32_t j = 0; j < list2->descendants; j++) {
+            for (j = 0; j < list2->descendants; j++) {
                 node = &list2[j + 1];
                 if (AY_TYPE_LIST_KEY(node)) {
                     ay_ynode_delete_node(tree, AY_INDEX(tree, node));
@@ -3580,7 +3599,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             list1->choice = NULL;
 
             /* move keys from cont1 to list1 */
-            for (uint32_t j = 0; j < list1->descendants; j++) {
+            for (j = 0; j < list1->descendants; j++) {
                 node = &list1[j + 1];
                 if (AY_TYPE_LIST_KEY(node)) {
                     ay_ynode_move_subtree_as_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, node));
@@ -3593,7 +3612,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, cont1), AY_INDEX(tree, cont2));
 
             /* change label pointer for YN_VALUE */
-            for (uint32_t j = 0; j < cont2->descendants; j++) {
+            for (j = 0; j < cont2->descendants; j++) {
                 node = &cont2[j + 1];
                 if (node->type == YN_VALUE) {
                     assert(AY_TYPE_LIST_KEY(list1->child));
@@ -3656,11 +3675,12 @@ ay_insert_list_files(struct ay_ynode *tree)
 static void
 ay_insert_list_key(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *parent;
     struct lens *label, *value;
     uint32_t parent_idx;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         parent = &tree[i];
         parent_idx = i;
         if (!ay_ynode_rule_list_key(parent)) {
@@ -3709,9 +3729,10 @@ ay_insert_list_key(struct ay_ynode *tree)
 static void
 ay_node_split(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *node, *valnode;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         node = &tree[i];
         if (ay_ynode_rule_node_split(node)) {
             // TODO if node has choice -> insert container, also L_VALUE case
@@ -3737,9 +3758,10 @@ ay_node_split(struct ay_ynode *tree)
 static void
 ay_ynode_leaflist_to_list(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *list, *key, *valnode;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         if (ay_ynode_rule_leaflist_to_list(&tree[i])) {
             list = &tree[i];
             list->type = YN_LIST;
@@ -3767,9 +3789,10 @@ ay_ynode_leaflist_to_list(struct ay_ynode *tree)
 static void
 ay_ynode_set_type(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *node;
 
-    for (uint32_t i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+    LY_ARRAY_FOR(tree, i) {
         node = &tree[i];
         if (!node->snode) {
             assert((node->type != YN_UNKNOWN) || (node->type == YN_ROOT));
@@ -3913,36 +3936,36 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     AY_CHECK_COND(l_rec, AYE_L_REC);
 
     /* Create lnode tree. */
-    LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, end);
+    LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);
     ay_lnode_create_tree(ltree, lens, ltree);
     ay_lnode_debug_tree(vercode, mod, ltree);
 
     /* Create ynode forest. */
-    LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, end);
+    LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
     ay_ynode_create_forest(ltree, yforest);
     ay_ynode_debug_forest(vercode, mod, yforest);
 
     /* Convert ynode forest to tree. */
     ret = ay_ynode_debug_copy(vercode, yforest);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_create_tree(yforest, &ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE, ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
 
     /* Apply transformations. */
     ret = ay_ynode_debug_insert_delete(vercode, ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_debug_move_subtree(vercode, ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_transformations(vercode, &ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_debug_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
-    AY_CHECK_GOTO(ret, end);
+    AY_CHECK_GOTO(ret, cleanup);
 
     ret = ay_print_yang(mod, ytree, str);
 
-end:
+cleanup:
     LY_ARRAY_FREE(ltree);
     LY_ARRAY_FREE(yforest);
     LY_ARRAY_FREE(ytree);
