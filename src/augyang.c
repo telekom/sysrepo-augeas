@@ -3566,7 +3566,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
         }
 
         for (iter = list1->next; iter && (iter->choice == list1->choice); iter = iter->next) {
-            if ((list1->type != YN_LIST) || (!list1->label)) {
+            if ((iter->type != YN_LIST) || (!iter->label)) {
                 continue;
             }
             list2 = iter;
