@@ -6,9 +6,9 @@ Augyang is a framework that adds [YANG](http://tools.ietf.org/html/rfc7950) supp
 
 This framework consists of the following components:
 
-* augyang - tool for generating YANG files for Augeas lenses
-* srds_augeas - sysrepo custom datastore plugin that handles transformation of Augeas data to YANG data and vice versa
-* ay_startup - small utility using `srds_augeas` functionality to get current system configuration for a particular Augeas lens and printing it in YANG XML data
+* **augyang** - tool for generating YANG files for Augeas lenses
+* **srds_augeas** - sysrepo custom datastore plugin that handles transformation of Augeas data to YANG data and vice versa
+* **ay_startup** - small utility using `srds_augeas` functionality to get current system configuration for a particular Augeas lens and printing it in YANG XML data
 
 ## Requirements
 
