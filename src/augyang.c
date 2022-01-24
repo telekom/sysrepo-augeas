@@ -887,6 +887,9 @@ ay_get_ident_standardized(char *ident, char *buffer)
         case '@':
             j--;
             break;
+        case '#':
+            j--;
+            break;
         case '+':
             len = strlen("plus_");
             AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
@@ -1232,7 +1235,11 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
 
     label = AY_LABEL_LENS(node);
 
-    if ((node->type == YN_CONTAINER) || AY_TYPE_LIST_KEY(node)) {
+    if (AY_TYPE_LIST_KEY(node)) {
+        return;
+    } else if ((node->type == YN_CONTAINER) && !label) {
+        return;
+    } else if ((node == target) && (node->parent->type == YN_CONTAINER) && (node->label == node->parent->label)) {
         return;
     }
 
@@ -1241,6 +1248,8 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
         ay_print_yang_data_path_item_list(ctx, node, target);
     } else if (label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
+    } else if (label && ay_lense_pattern_is_ident(label)) {
+        ly_print(ctx->out, "%s", label->regexp->pattern->str);
     } else {
         ly_print(ctx->out, "$$");
     }
@@ -1281,6 +1290,8 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
         /* top-level files list */
         return;
     } else if (node->type == YN_VALUE) {
+        return;
+    } else if ((node->type == YN_CONTAINER) && (!node->label || (node->label && (node->label->lens->tag == L_KEY)))) {
         return;
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
@@ -1501,6 +1512,8 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool t
     size_t len = 0;
     ly_bool print_union;
 
+    assert(reg);
+
     ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
 
     if (!strncmp(filename, "rx", len)) {
@@ -1582,6 +1595,7 @@ ay_print_yang_type_union2(struct yprinter_ctx *ctx, struct ay_ynode *node)
         iter = node->parent + i + 1;
         if (iter->choice == choice) {
             value = AY_VALUE_LENS(iter);
+            assert(value);
             if (ay_print_yang_type_builtin(ctx, value, 1)) {
                 ret = ay_print_yang_type_string(ctx, value->regexp);
                 AY_CHECK_RET(ret);
@@ -1618,6 +1632,9 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
         assert(value && (value->tag == L_STORE));
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
+    } else if (ay_lense_pattern_is_ident(label)) {
+        lnode = node->value;
+        lv_type = AY_LV_TYPE_VALUE;
     } else if (label && (label->tag == L_KEY)) {
         lnode = node->label;
         lv_type = AY_LV_TYPE_LABEL;
@@ -1634,7 +1651,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (ay_lnode_next_lv(lnode, lv_type)) {
         /* there is more labels/values: [ key lns1 (store lns2 | store lns3)) ] */
         ret = ay_print_yang_type_union1(ctx, lnode, lv_type);
-    } else if (ay_print_yang_type_builtin(ctx, lnode->lens, 0)) {
+    } else if (lnode && ay_print_yang_type_builtin(ctx, lnode->lens, 0)) {
         /* it is not builtin type, so let's print string type */
         ret = ay_print_yang_type_string(ctx, lnode->lens->regexp);
     }
@@ -1884,6 +1901,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_ident(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_data_path(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
@@ -2680,22 +2698,25 @@ static ly_bool
 ay_ynode_has_repetition(struct ay_ynode *node)
 {
     ly_bool ret = 0;
-    struct ay_lnode *iter, *lstart, *lstop;
-    struct ay_ynode *yiter, *ystop;
+    struct ay_lnode *liter, *lstart, *lstop;
+    struct ay_ynode *yiter;
 
-    lstart = node->snode;
-
-    ystop = node;
-    for (yiter = node->parent; yiter; yiter = yiter->parent) {
-        if (!yiter->snode) {
-            break;
-        }
-        ystop = yiter;
+    if (!node) {
+        return 0;
     }
-    lstop = ystop == node ? NULL : ystop->snode;
 
-    for (iter = lstart; iter != lstop; iter = iter->parent) {
-        if (iter->lens->tag == L_STAR) {
+    for (yiter = node; yiter && !yiter->snode; yiter = yiter->parent) {}
+    lstart = yiter ? yiter->snode : NULL;
+
+    if (!lstart) {
+        return 0;
+    }
+
+    for (yiter = node->parent; yiter && !yiter->snode; yiter = yiter->parent) {}
+    lstop = yiter ? yiter->snode : NULL;
+
+    for (liter = lstart; liter != lstop; liter = liter->parent) {
+        if (liter->lens->tag == L_STAR) {
             ret = 1;
             break;
         }
@@ -2775,6 +2796,80 @@ ay_ynode_rule_list_key(struct ay_ynode *node)
 }
 
 /**
+ * @brief Check if container has node which interprets key STR lense.
+ *
+ * This container is like yang list-stmt but with only one element.
+ *
+ * @param[in] cont Node of type YN_CONTAINER.
+ * @return True if such a leaf exists.
+ */
+static ly_bool
+ay_ynode_container_has_leaf_key(struct ay_ynode *cont)
+{
+    uint32_t i;
+    struct ay_ynode *iter;
+    struct lens *label;
+
+    label = AY_LABEL_LENS(cont);
+    if (!label || (label->tag != L_KEY) || ay_lense_pattern_is_ident(label)) {
+        return 0;
+    }
+
+    for (i = 0; i < cont->descendants; i++) {
+        iter = cont + i + 1;
+        if ((iter->type == YN_LEAF) && iter->label && (iter->label->lens == label)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Rule for inserting container which must wrap some nodes due to the choice statement.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if container should be inserted. Also the function returns 1 only for the first node in the wrap.
+ */
+static ly_bool
+ay_ynode_rule_insert_container(struct ay_ynode *node)
+{
+    struct ay_ynode *iter;
+
+    if (!node->choice || !node->snode) {
+        return 0;
+    }
+
+    /* get first choice node */
+    for (iter = node->parent->child; iter; iter = iter->next) {
+        if (node->choice == iter->choice) {
+            break;
+        }
+    }
+    if (iter != node) {
+        /* @p node is not first in choice statement */
+        return 0;
+    } else if (!node->next || (node->next->choice != node->choice)) {
+        /* under choice statement must be more than one node */
+        return 0;
+    }
+
+    return (node->snode->parent->lens->tag == L_CONCAT) && (node->choice == node->snode->parent->parent);
+}
+
+/**
+ * @brief Check if leaf containing the pattern key should be inserted into the container.
+ *
+ * @param[in] node Node to check
+ * @return 1 if leaf is missing.
+ */
+static ly_bool
+ay_ynode_rule_container_key(struct ay_ynode *node)
+{
+    return (node->type == YN_CONTAINER) && !ay_ynode_container_has_leaf_key(node);
+}
+
+/**
  * @brief Check whether the node is to be divided into two.
  *
  * @param[in] node Node to check.
@@ -2787,7 +2882,8 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    return (node->type == YN_LEAF) && label && (label->tag == L_KEY) && value;
+    return ((node->type == YN_LEAF) || (node->type == YN_CONTAINER)) &&
+           label && (label->tag == L_KEY) && value && !ay_lense_pattern_is_ident(label);
 }
 
 /**
@@ -2875,6 +2971,8 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 /**
  * @brief Delete node from the tree.
  *
+ * Children of deleted node are moved up in the tree level.
+ *
  * @param[in,out] tree Tree of ynodes.
  * @param[in] index Index of the ynode to be deleted.
  */
@@ -2888,6 +2986,26 @@ ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
     }
     ay_ynode_delete_gap(tree, index);
     ay_ynode_tree_correction(tree);
+}
+
+/**
+ * @brief Delete subtree.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] index Index of the subtree to be deleted.
+ */
+static void
+ay_ynode_delete_subtree(struct ay_ynode *tree, uint32_t index)
+{
+    struct ay_ynode *node;
+    uint32_t deleted_nodes;
+
+    node = &tree[index];
+    deleted_nodes = node->descendants + 1;
+
+    for (uint32_t i = 0; i < deleted_nodes; i++) {
+        ay_ynode_delete_node(tree, index);
+    }
 }
 
 /**
@@ -3416,20 +3534,21 @@ ay_delete_comment(struct ay_ynode *tree)
 }
 
 /**
- * @brief Delete choice for top-nodes.
+ * @brief Delete all choice flags if there is repetition above them.
  *
- * It is typically undesirable.
+ * In this case, UNION lense operator is not taken literally.
  *
  * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_delete_top_choice(struct ay_ynode *tree)
+ay_delete_choice_under_repetition(struct ay_ynode *tree)
 {
     struct ay_ynode *iter;
 
-    /* remove choice */
-    for (iter = tree->child; iter; iter = iter->next) {
-        iter->choice = NULL;
+    LY_ARRAY_FOR(tree, struct ay_ynode, iter) {
+        if (iter->choice && ay_ynode_has_repetition(iter)) {
+            iter->choice = NULL;
+        }
     }
 }
 
@@ -3493,7 +3612,7 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             node2->min++;
 
             /* delete node1 because it is useless */
-            ay_ynode_delete_node(tree, AY_INDEX(tree, node1));
+            ay_ynode_delete_subtree(tree, AY_INDEX(tree, node1));
             i--;
             break;
         }
@@ -3512,36 +3631,86 @@ ay_ynode_delete_lonely_key(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter, *node;
+    struct lens *nodeval, *iterval, *nodelab, *iterlab;
 
     LY_ARRAY_FOR(tree, i) {
         node = &tree[i];
-        if (!node->choice || !node->label || (node->label->lens->tag != L_KEY)) {
+        nodelab = AY_LABEL_LENS(node);
+        nodeval = AY_VALUE_LENS(node);
+
+        if (!node->choice || !nodelab || (nodelab->tag != L_KEY)) {
             continue;
         }
 
         /* node and node2 must have the same choice_id */
 repeat:
         for (iter = node->next; iter; iter = iter->next) {
-            if (!iter->choice || !iter->label || (iter->label->lens->tag != L_KEY)) {
+            iterlab = AY_LABEL_LENS(iter);
+            iterval = AY_VALUE_LENS(iter);
+
+            if (!iter->choice || !iterlab || (iterlab->tag != L_KEY)) {
+                continue;
+            } else if (node->choice != iter->choice) {
+                continue;
+            } else if (nodelab->regexp != iterlab->regexp) {
                 continue;
             }
-            if (node->choice != iter->choice) {
-                continue;
-            }
-            if (node->label->lens->regexp != iter->label->lens->regexp) {
-                continue;
-            }
-            if (!node->value && (iter->value->lens->tag == L_STORE)) {
+
+            if (!nodeval && (iterval->tag == L_STORE) && !node->child) {
                 iter->mandatory = 0;
                 ay_ynode_delete_node(tree, AY_INDEX(tree, node));
                 i--;
                 break;
-            } else if (!iter->value && (node->value->lens->tag == L_STORE)) {
+            } else if (!iterval && (nodeval->tag == L_STORE) && !iter->child) {
                 node->mandatory = 0;
                 ay_ynode_delete_node(tree, AY_INDEX(tree, iter));
                 goto repeat;
             }
         }
+    }
+}
+
+/**
+ * @brief Merge two nodes that have the same counter and STORE lense.
+ *
+ * [seq str1 . store str2] . [seq str1 . store str2]*   -> [seq str1 . store str2]+
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_delete_seq_node(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *node, *sibling;
+    struct lens *nodelab, *siblab, *nodeval, *sibval;
+
+    LY_ARRAY_FOR(tree, i) {
+        node = &tree[i];
+        nodelab = AY_LABEL_LENS(node);
+        nodeval = AY_VALUE_LENS(node);
+        sibling = node->next;
+        siblab = sibling ? AY_LABEL_LENS(sibling) : NULL;
+        sibval = sibling ? AY_VALUE_LENS(sibling) : NULL;
+
+        if (!nodelab || (nodelab->tag != L_SEQ)) {
+            continue;
+        } else if (!siblab || (siblab->tag != L_SEQ)) {
+            continue;
+        } else if (!nodeval || (nodeval->tag != L_STORE)) {
+            continue;
+        } else if (!sibval || (sibval->tag != L_STORE)) {
+            continue;
+        } else if (nodeval->regexp != sibval->regexp) {
+            continue;
+        } else if (node->child || sibling->child) {
+            continue;
+        } else if (ay_ynode_has_repetition(node) || !ay_ynode_has_repetition(sibling)) {
+            continue;
+        }
+
+        sibling->min = 1;
+        ay_ynode_delete_node(tree, AY_INDEX(tree, node));
+        i--;
     }
 }
 
@@ -3617,6 +3786,65 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
                 if (node->type == YN_VALUE) {
                     assert(AY_TYPE_LIST_KEY(list1->child));
                     node->label = list1->child->label;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief Delete container (next to the container) which has same leaf key.
+ *
+ * The leaf key is special leaf which carries the key pattern from the container.
+ * Children are moved and a choice is added between them.
+ * [key lns1 . lns2 ] | [key lns1 . lns3 ]   -> [key lns1 (lns2 | lns3) ]
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_delete_container_with_same_key(struct ay_ynode *tree)
+{
+    struct ay_ynode *cont1, *cont2, *iter, *lastchild;
+    struct lens *contlab1, *contlab2;
+
+    LY_ARRAY_FOR(tree, struct ay_ynode, cont1) {
+        contlab1 = AY_LABEL_LENS(cont1);
+        if ((cont1->type != YN_CONTAINER) || !cont1->choice || !contlab1) {
+            continue;
+        } else if (contlab1->tag != L_KEY) {
+            continue;
+        }
+
+        for (cont2 = cont1->next; cont2 && (cont2->choice == cont1->choice); cont2 = cont2->next) {
+            contlab2 = AY_LABEL_LENS(cont2);
+            if ((cont2->type != YN_CONTAINER) || !contlab2 || (contlab2->tag != L_KEY)) {
+                continue;
+            } else if (contlab1->regexp != contlab2->regexp) {
+                continue;
+            }
+
+            /* remove cont2 leaf key because is already in cont1 */
+            if (ay_ynode_container_has_leaf_key(cont2)) {
+                assert(cont2->child->label->lens == cont2->label->lens);
+                /* TODO: YN_VALUE in cont2 */
+                assert(!cont2->child->value);
+                ay_ynode_delete_node(tree, AY_INDEX(tree, cont2->child));
+                cont2->label = NULL;
+            }
+
+            /* get last child of cont1 */
+            lastchild = cont1 + cont1->descendants;
+
+            /* move cont2 into cont1 */
+            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, lastchild), AY_INDEX(tree, cont2));
+
+            /* set choice in cont1 */
+            for (iter = cont1->child->next; iter; iter = iter->next) {
+                if (iter->type == YN_VALUE) {
+                    /* TODO: should be in choice, this is weak restriction */
+                    iter->mandatory = 0;
+                } else {
+                    iter->choice = iter->choice ? iter->choice : cont1->choice;
                 }
             }
         }
@@ -3722,6 +3950,69 @@ ay_insert_list_key(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Insert container which groups nodes under one case-stmt.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_insert_container(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *first, *cont, *iter;
+
+    LY_ARRAY_FOR(tree, i) {
+        first = &tree[i];
+        if (!ay_ynode_rule_insert_container(first)) {
+            continue;
+        }
+        assert(first->next && (first->next->choice == first->choice));
+        /* rule match only for the first node in order */
+
+        /* All nodes under choice, which have common L_CONCAT, will have a new parent of type container. */
+        /* insert container */
+        ay_ynode_insert_wrapper(tree, AY_INDEX(tree, first));
+        cont = first;
+        first = cont->child;
+        cont->type = YN_CONTAINER;
+        cont->choice = first->choice;
+
+        /* all nodes under common L_CONCAT insert into new container */
+        for (iter = cont->next; iter && iter->choice && (iter->choice->child == first->choice->child);
+                iter = iter->next) {
+            iter->choice = NULL;
+            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, first), AY_INDEX(tree, iter));
+        }
+        first->choice = NULL;
+    }
+}
+
+/**
+ * @brief Insert special leaf which carries the key pattern from the container.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_insert_container_key(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *node, *cont, *key;
+
+    LY_ARRAY_FOR(tree, i) {
+        node = &tree[i];
+        if (ay_ynode_rule_container_key(node)) {
+            cont = node;
+            ay_ynode_insert_child(tree, i);
+            key = cont->child;
+            key->type = YN_LEAF;
+            /* TODO choice for keys/values */
+            key->label = cont->label;
+            key->value = cont->value;
+            i++;
+        }
+    }
+}
+
+/**
  * @brief Split node if has two patterns (L_KEY and L_STORE).
  *
  * @param[in,out] tree Tree of ynodes.
@@ -3730,13 +4021,25 @@ static void
 ay_node_split(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *node, *valnode;
+    struct ay_ynode *node, *valnode, *container;
+    struct lens *label;
 
     LY_ARRAY_FOR(tree, i) {
         node = &tree[i];
+        label = AY_LABEL_LENS(node);
         if (ay_ynode_rule_node_split(node)) {
-            // TODO if node has choice -> insert container, also L_VALUE case
-            assert(!node->choice && (node->value->lens->tag == L_STORE));
+            // TODO L_VALUE case
+            if (node->choice) {
+                ay_ynode_insert_wrapper(tree, AY_INDEX(tree, node));
+                container = node;
+                node = container->child;
+                container->type = YN_CONTAINER;
+                container->choice = node->choice;
+                if (label && ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label))) {
+                    container->label = node->label;
+                }
+                node->choice = NULL;
+            }
             ay_ynode_insert_sibling(tree, AY_INDEX(tree, node));
             valnode = node->next;
             valnode->type = YN_VALUE;
@@ -3876,11 +4179,18 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
-    /* delete "lns . ( sep . lns )*" pattern (TODO bilateral) */
+    /* lns . (sep . lns)*   -> lns*
+     * TODO:
+     * (sep . lns)* . lns   -> lns*
+     */
     ay_ynode_delete_build_list(*tree);
 
-    /* delete "[key lns1 store lns2] | [key lns1]" pattern (bilateral) */
+    /* [key lns1 store lns2] | [key lns1]   -> [key lns1 store lns2] */
+    /* [key lns1] | [key lns1 store lns2]   -> [key lns1 store lns2] */
     ay_ynode_delete_lonely_key(*tree);
+
+    /* [seq str1 . store str2] . [seq str1 . store str2]*   -> [seq str1 . store str2]+ */
+    ay_ynode_delete_seq_node(*tree);
 
     /* set type */
     ay_ynode_set_type(*tree);
@@ -3894,27 +4204,54 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     /* delete unnecessary nodes */
     ay_delete_type_unknown(*tree);
     ay_delete_comment(*tree);
-    ay_delete_top_choice(*tree);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_REMOVE, *tree);
     AY_CHECK_RET(ret);
 
+    /* insert top-level list for storing configure file */
     ret = ay_ynode_trans_insert2(tree, 1, ay_insert_list_files);
     AY_CHECK_RET(ret);
+
+    /* container {...}   -> container {leaf {pattern 'key STR'} ... } */
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_container_key, ay_insert_container_key, 1);
+    AY_CHECK_RET(ret);
+
+    /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
+     * choice ch { container { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
+     */
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container, 1);
+    AY_CHECK_RET(ret);
+
+    /* [label str]*             -> list { YN_INDEX{} } */
+    /* [label str store lns]*   -> list { YN_KEY{} } */
+    /* [key lns1 store lns2]*   -> list { YN_KEY{} YN_VALUE{} } */
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key, 2);
     AY_CHECK_RET(ret);
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_node_split, 1);
+
+    /* [key lns1 store lns2]   -> node1 { pattern lns1; } node2 { pattern lns2; } */
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_node_split, 2);
     AY_CHECK_RET(ret);
+
+    /* YN_LEAFLIST   -> YN_LIST */
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_leaflist_to_list, ay_ynode_leaflist_to_list, 2);
     AY_CHECK_RET(ret);
 
+    /* L_LABEL   -> YN_INDEX */
     ay_ynode_key_pattern_to_data_path(*tree);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_INSERT1, *tree);
     AY_CHECK_RET(ret);
 
+    /* [key lns1 . lns2 ] | [key lns1 . lns3 ]   -> [key lns1 (lns2 | lns3) ] */
+    ay_delete_container_with_same_key(*tree);
+
+    /* [key lns1 [nodes1] ]* | [key lns1 [nodes2]]*   -> [key lns1 (nodes1 | nodes2)]* */
     ay_delete_list_with_same_key(*tree);
+
+    /* delete the containers that has only one child */
     ay_delete_poor_container(*tree);
+
+    ay_delete_choice_under_repetition(*tree);
 
     return ret;
 }

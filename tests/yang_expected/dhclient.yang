@@ -1,0 +1,378 @@
+module dhclient {
+  namespace "aug:dhclient";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Dhclient";
+
+  list dhclient {
+    key "config-file";
+    min-elements 1;
+    leaf config-file {
+      type string;
+    }
+    list stmt_simple {
+      key "stmt_simple_re";
+      augex:data-path "$$";
+      augex:value-yang-path "sto_to_spc";
+      leaf stmt_simple_re {
+        type string {
+          pattern "(((((((timeout)|(retry))|(select-timeout))|(reboot))|(backoff-cutoff))|(initial-interval))|(do-forward-updates))|(reject)";
+        }
+      }
+      leaf sto_to_spc {
+        mandatory true;
+        type string {
+          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+        }
+      }
+    }
+    list stmt_opt_mod {
+      key "stmt_opt_mod_re";
+      augex:data-path "$$";
+      leaf stmt_opt_mod_re {
+        type string {
+          pattern "(((append)|(prepend))|(default))|(supersede)";
+        }
+      }
+      container word {
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+          }
+          augex:data-path "$$/$$";
+          augex:value-yang-path "sto_to_spc_noeval";
+        }
+        leaf sto_to_spc_noeval {
+          type string {
+            pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+          }
+        }
+        container value {
+          choice ch_value {
+            container value {
+              leaf code {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+                }
+                augex:data-path "$$/$$/code";
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                }
+                augex:data-path "$$/$$/value";
+              }
+            }
+            leaf eval {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+              }
+              augex:data-path "$$/$$/#eval";
+            }
+          }
+        }
+      }
+    }
+    list stmt_array {
+      key "stmt_array_re";
+      augex:data-path "$$";
+      leaf stmt_array_re {
+        type string {
+          pattern "((media)|(request))|(require)";
+        }
+      }
+      list stmt_array {
+        key "_id";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        augex:value-yang-path "sto_to_spc";
+        leaf _id {
+          type uint64;
+        }
+        leaf sto_to_spc {
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
+        }
+      }
+    }
+    list stmt_hash {
+      key "stmt_hash_re";
+      augex:data-path "$$";
+      leaf stmt_hash_re {
+        type string {
+          pattern "(send)|(option)";
+        }
+      }
+      container word {
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+          }
+          augex:data-path "$$/$$";
+          augex:value-yang-path "sto_to_spc_noeval";
+        }
+        leaf sto_to_spc_noeval {
+          type string {
+            pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+          }
+        }
+        container value {
+          choice ch_value {
+            container value {
+              leaf code {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+                }
+                augex:data-path "$$/$$/code";
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                }
+                augex:data-path "$$/$$/value";
+              }
+            }
+            leaf eval {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+              }
+              augex:data-path "$$/$$/#eval";
+            }
+          }
+        }
+      }
+    }
+    list stmt_block {
+      key "stmt_block_re";
+      augex:data-path "$$";
+      augex:value-yang-path "sto_to_spc";
+      leaf stmt_block_re {
+        type string {
+          pattern "((interface)|(lease))|(alias)";
+        }
+      }
+      leaf sto_to_spc {
+        type string {
+          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+        }
+      }
+      list stmt_array {
+        key "stmt_array_re";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        leaf stmt_array_re {
+          type string {
+            pattern "((media)|(request))|(require)";
+          }
+        }
+        list stmt_array {
+          key "_id";
+          min-elements 1;
+          augex:data-path "$$/$$/$$";
+          augex:value-yang-path "sto_to_spc";
+          leaf _id {
+            type uint64;
+          }
+          leaf sto_to_spc {
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+      }
+      list stmt_hash {
+        key "stmt_hash_re";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        leaf stmt_hash_re {
+          type string {
+            pattern "(send)|(option)";
+          }
+        }
+        container word {
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+            }
+            augex:data-path "$$/$$/$$";
+            augex:value-yang-path "sto_to_spc_noeval";
+          }
+          leaf sto_to_spc_noeval {
+            type string {
+              pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+            }
+          }
+          container value {
+            choice ch_value {
+              container value {
+                leaf code {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+                  }
+                  augex:data-path "$$/$$/$$/code";
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                  }
+                  augex:data-path "$$/$$/$$/value";
+                }
+              }
+              leaf eval {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                }
+                augex:data-path "$$/$$/$$/#eval";
+              }
+            }
+          }
+        }
+      }
+      list stmt_opt_mod {
+        key "stmt_opt_mod_re";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        leaf stmt_opt_mod_re {
+          type string {
+            pattern "(((append)|(prepend))|(default))|(supersede)";
+          }
+        }
+        container word {
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+            }
+            augex:data-path "$$/$$/$$";
+            augex:value-yang-path "sto_to_spc_noeval";
+          }
+          leaf sto_to_spc_noeval {
+            type string {
+              pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+            }
+          }
+          container value {
+            choice ch_value {
+              container value {
+                leaf code {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+                  }
+                  augex:data-path "$$/$$/$$/code";
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                  }
+                  augex:data-path "$$/$$/$$/value";
+                }
+              }
+              leaf eval {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+                }
+                augex:data-path "$$/$$/$$/#eval";
+              }
+            }
+          }
+        }
+      }
+      list stmt_block_opt {
+        key "stmt_block_opt_re";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        augex:value-yang-path "sto_to_spc";
+        leaf stmt_block_opt_re {
+          type string {
+            pattern "(((((((interface)|(script))|(bootp))|(fixed-address))|(filename))|(server-name))|(medium))|(vendor option space)";
+          }
+        }
+        leaf sto_to_spc {
+          mandatory true;
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
+        }
+      }
+      list stmt_block_date {
+        key "stmt_block_date_re";
+        min-elements 1;
+        augex:data-path "$$/$$";
+        leaf stmt_block_date_re {
+          type string {
+            pattern "((renew)|(rebind))|(expire)";
+          }
+        }
+        leaf weekday {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/weekday";
+        }
+        leaf year {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/year";
+        }
+        leaf month {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/month";
+        }
+        leaf day {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/day";
+        }
+        leaf hour {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/hour";
+        }
+        leaf minute {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/minute";
+        }
+        leaf second {
+          mandatory true;
+          type string {
+            pattern "[0-9][0-9]*";
+          }
+          augex:data-path "$$/$$/second";
+        }
+      }
+    }
+  }
+}
