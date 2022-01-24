@@ -156,6 +156,12 @@ target_link_libraries(srds_augeas ${AUGEAS_LIBRARIES})
 target_link_libraries(ay_startup ${AUGEAS_LIBRARIES})
 include_directories(${AUGEAS_INCLUDE_DIRS})
 
+# pcre2
+find_package(PCRE2 10.21 REQUIRED)
+target_link_libraries(srds_augeas ${PCRE2_LIBRARIES})
+target_link_libraries(ay_startup ${PCRE2_LIBRARIES})
+include_directories(${PCRE2_INCLUDE_DIRS})
+
 # libyang
 find_package(LibYANG ${LIBYANG_DEP_SOVERSION} REQUIRED)
 target_link_libraries(srds_augeas ${LIBYANG_LIBRARIES})

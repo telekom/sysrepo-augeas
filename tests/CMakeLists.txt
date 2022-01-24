@@ -23,24 +23,23 @@ if(SOURCE_FORMAT_ENABLED)
     add_test(NAME format WORKING_DIRECTORY ${CMAKE_BINARY_DIR} COMMAND make format-check)
 endif()
 
-if(ENABLE_AUGYANG)
-    set(YANG_EXP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/yang_expected)
-    set(YANG_GEN_DIR ${CMAKE_BINARY_DIR}/tests/augyang)
-    file(MAKE_DIRECTORY ${YANG_GEN_DIR})
-    find_program(YANGLINT_BIN yanglint)
+# augyang tests
+set(YANG_EXP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/yang_expected)
+set(YANG_GEN_DIR ${CMAKE_BINARY_DIR}/tests/augyang)
+file(MAKE_DIRECTORY ${YANG_GEN_DIR})
+find_program(YANGLINT_BIN yanglint)
 
-    file(GLOB yang_expected_files "${YANG_EXP_DIR}/*.yang")
-    foreach(expfile ${yang_expected_files})
-        get_filename_component(mod ${expfile} NAME_WE)
-        set(genfile ${YANG_GEN_DIR}/${mod}.yang)
+file(GLOB yang_expected_files "${YANG_EXP_DIR}/*.yang")
+foreach(expfile ${yang_expected_files})
+    get_filename_component(mod ${expfile} NAME_WE)
+    set(genfile ${YANG_GEN_DIR}/${mod}.yang)
 
-        add_test(NAME "aytest_${mod}" COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/AYtest.cmake
-            ${PROJECT_SOURCE_DIR} ${YANG_EXP_DIR} ${YANG_GEN_DIR} $<TARGET_FILE:augyang> ${YANGLINT_BIN} ${mod})
-    endforeach()
-endif()
+    add_test(NAME "aytest_${mod}" COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/AYtest.cmake
+        ${PROJECT_SOURCE_DIR} ${YANG_EXP_DIR} ${YANG_GEN_DIR} $<TARGET_FILE:augyang> ${YANGLINT_BIN} ${mod})
+endforeach()
 
 # lists of all the DS plugin tests
-set(tests test_passwd test_simplevars test_postfix_sasl_smtpd)
+set(tests test_passwd test_simplevars test_postfix_sasl_smtpd test_dhclient)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/plugins)
 include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})
@@ -51,7 +50,7 @@ endforeach()
 
 # set common attributes of all tests
 foreach(test_name IN LISTS tests)
-    target_link_libraries(${test_name} ${CMOCKA_LIBRARIES} ${AUGEAS_LIBRARIES} ${SYSREPO_LIBRARIES} ${LIBYANG_LIBRARIES})
+    target_link_libraries(${test_name} ${CMOCKA_LIBRARIES} ${AUGEAS_LIBRARIES} ${PCRE2_LIBRARIES} ${SYSREPO_LIBRARIES} ${LIBYANG_LIBRARIES})
     add_test(NAME ${test_name} COMMAND $<TARGET_FILE:${test_name}>)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT
         "MALLOC_CHECK_=3"
