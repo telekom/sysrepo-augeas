@@ -1,0 +1,337 @@
+module iptables {
+  namespace "aug:iptables";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Iptables";
+
+  list iptables {
+    key "config-file";
+    min-elements 1;
+    leaf config-file {
+      type string;
+    }
+    list table {
+      key "table";
+      augex:data-path "table";
+      leaf table {
+        type string {
+          pattern "[a-z]+";
+        }
+      }
+      list chain {
+        key "chain_name";
+        augex:data-path "table/chain";
+        leaf chain_name {
+          type string {
+            pattern "[A-Za-z0-9_-]+";
+          }
+        }
+        leaf policy {
+          mandatory true;
+          type string {
+            pattern "ACCEPT|DROP|REJECT|-";
+          }
+          augex:data-path "table/chain/policy";
+        }
+      }
+      list append {
+        key "chain_name";
+        augex:data-path "table/append";
+        leaf chain_name {
+          type string {
+            pattern "[A-Za-z0-9_-]+";
+          }
+        }
+        list protocol {
+          key "protocol";
+          augex:data-path "table/append/protocol";
+          leaf protocol {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/protocol/not";
+          }
+        }
+        list source {
+          key "source";
+          augex:data-path "table/append/source";
+          leaf source {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/source/not";
+          }
+        }
+        list destination {
+          key "destination";
+          augex:data-path "table/append/destination";
+          leaf destination {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/destination/not";
+          }
+        }
+        leaf-list jump {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/append/jump";
+        }
+        leaf-list goto {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/append/goto";
+        }
+        list in-interface {
+          key "in-interface";
+          augex:data-path "table/append/in-interface";
+          leaf in-interface {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/in-interface/not";
+          }
+        }
+        list out-interface {
+          key "out-interface";
+          augex:data-path "table/append/out-interface";
+          leaf out-interface {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/out-interface/not";
+          }
+        }
+        list fragment {
+          key "fragment";
+          augex:data-path "table/append/fragment";
+          leaf fragment {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/fragment/not";
+          }
+        }
+        leaf-list match {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/append/match";
+        }
+        list tcp-flags {
+          key "_id";
+          augex:data-path "table/append/##tcp-flags";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key representing the position in augeas data.";
+          }
+          leaf-list mask {
+            min-elements 1;
+            type string {
+              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+            }
+            augex:data-path "table/append/tcp-flags/mask";
+          }
+          leaf-list set {
+            min-elements 1;
+            type string {
+              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+            }
+            augex:data-path "table/append/tcp-flags/set";
+          }
+        }
+        list list {
+          key "_id";
+          augex:data-path "table/append/$$";
+          augex:value-yang-path "value";
+          leaf _id {
+            type string {
+              pattern "destinatio((n[0-9A-Za-z-]|[0-9A-Za-mo-z-])[0-9A-Za-z-]*|)|destinati([0-9A-Za-np-z-][0-9A-Za-z-]*|)|destinat([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|destina([0-9A-Za-su-z-][0-9A-Za-z-]*|)|destin([0-9A-Zb-z-][0-9A-Za-z-]*|)|desti([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|dest([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|des([0-9A-Za-su-z-][0-9A-Za-z-]*|)|de([0-9A-Za-rt-z-][0-9A-Za-z-]*|)|fragmen((t[0-9A-Za-z-]|[0-9A-Za-su-z-])[0-9A-Za-z-]*|)|fragme([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|fragm([0-9A-Za-df-z-][0-9A-Za-z-]*|)|frag([0-9A-Za-ln-z-][0-9A-Za-z-]*|)|fra([0-9A-Za-fh-z-][0-9A-Za-z-]*|)|fr([0-9A-Zb-z-][0-9A-Za-z-]*|)|got((o[0-9A-Za-z-]|[0-9A-Za-np-z-])[0-9A-Za-z-]*|)|go([0-9A-Za-su-z-][0-9A-Za-z-]*|)|in-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|in-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|)|in-interf([0-9A-Zb-z-][0-9A-Za-z-]*|)|in-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|in-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|in-int([0-9A-Za-df-z-][0-9A-Za-z-]*|)|in-in([0-9A-Za-su-z-][0-9A-Za-z-]*|)|in-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|in-([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|in([0-9A-Za-z][0-9A-Za-z-]*|)|jum((p[0-9A-Za-z-]|[0-9A-Za-oq-z-])[0-9A-Za-z-]*|)|ju([0-9A-Za-ln-z-][0-9A-Za-z-]*|)|matc((h[0-9A-Za-z-]|[0-9A-Za-gi-z-])[0-9A-Za-z-]*|)|mat([0-9A-Zabd-z-][0-9A-Za-z-]*|)|ma([0-9A-Za-su-z-][0-9A-Za-z-]*|)|out-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|out-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|)|out-interf([0-9A-Zb-z-][0-9A-Za-z-]*|)|out-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|out-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|out-int([0-9A-Za-df-z-][0-9A-Za-z-]*|)|out-in([0-9A-Za-su-z-][0-9A-Za-z-]*|)|out-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|out-([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|out([0-9A-Za-z][0-9A-Za-z-]*|)|ou([0-9A-Za-su-z-][0-9A-Za-z-]*|)|protoco((l[0-9A-Za-z-]|[0-9A-Za-km-z-])[0-9A-Za-z-]*|)|protoc([0-9A-Za-np-z-][0-9A-Za-z-]*|)|proto([0-9A-Zabd-z-][0-9A-Za-z-]*|)|prot([0-9A-Za-np-z-][0-9A-Za-z-]*|)|pro([0-9A-Za-su-z-][0-9A-Za-z-]*|)|pr([0-9A-Za-np-z-][0-9A-Za-z-]*|)|sourc((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|sour([0-9A-Zabd-z-][0-9A-Za-z-]*|)|sou([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|so([0-9A-Za-tv-z-][0-9A-Za-z-]*|)|tcp-flag((s[0-9A-Za-z-]|[0-9A-Za-rt-z-])[0-9A-Za-z-]*|)|tcp-fla([0-9A-Za-fh-z-][0-9A-Za-z-]*|)|tcp-fl([0-9A-Zb-z-][0-9A-Za-z-]*|)|tcp-f([0-9A-Za-km-z-][0-9A-Za-z-]*|)|tcp-([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|tcp([0-9A-Za-z][0-9A-Za-z-]*|)|(tc[0-9A-Za-oq-z-]|(t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|tc|t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-]";
+            }
+          }
+          leaf value {
+            type string {
+              pattern "([^\" \t\n!-][^ \t\n]*)|\"([^\"\\\n]|\\\\.)*\"";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/append/$$/not";
+          }
+        }
+      }
+      list insert {
+        key "chain_name";
+        augex:data-path "table/insert";
+        leaf chain_name {
+          type string {
+            pattern "[A-Za-z0-9_-]+";
+          }
+        }
+        list protocol {
+          key "protocol";
+          augex:data-path "table/insert/protocol";
+          leaf protocol {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/protocol/not";
+          }
+        }
+        list source {
+          key "source";
+          augex:data-path "table/insert/source";
+          leaf source {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/source/not";
+          }
+        }
+        list destination {
+          key "destination";
+          augex:data-path "table/insert/destination";
+          leaf destination {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/destination/not";
+          }
+        }
+        leaf-list jump {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/insert/jump";
+        }
+        leaf-list goto {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/insert/goto";
+        }
+        list in-interface {
+          key "in-interface";
+          augex:data-path "table/insert/in-interface";
+          leaf in-interface {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/in-interface/not";
+          }
+        }
+        list out-interface {
+          key "out-interface";
+          augex:data-path "table/insert/out-interface";
+          leaf out-interface {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/out-interface/not";
+          }
+        }
+        list fragment {
+          key "fragment";
+          augex:data-path "table/insert/fragment";
+          leaf fragment {
+            type string {
+              pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/fragment/not";
+          }
+        }
+        leaf-list match {
+          type string {
+            pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
+          }
+          augex:data-path "table/insert/match";
+        }
+        list tcp-flags {
+          key "_id";
+          augex:data-path "table/insert/##tcp-flags";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key representing the position in augeas data.";
+          }
+          leaf-list mask {
+            min-elements 1;
+            type string {
+              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+            }
+            augex:data-path "table/insert/tcp-flags/mask";
+          }
+          leaf-list set {
+            min-elements 1;
+            type string {
+              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+            }
+            augex:data-path "table/insert/tcp-flags/set";
+          }
+        }
+        list list {
+          key "_id";
+          augex:data-path "table/insert/$$";
+          augex:value-yang-path "value";
+          leaf _id {
+            type string {
+              pattern "destinatio((n[0-9A-Za-z-]|[0-9A-Za-mo-z-])[0-9A-Za-z-]*|)|destinati([0-9A-Za-np-z-][0-9A-Za-z-]*|)|destinat([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|destina([0-9A-Za-su-z-][0-9A-Za-z-]*|)|destin([0-9A-Zb-z-][0-9A-Za-z-]*|)|desti([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|dest([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|des([0-9A-Za-su-z-][0-9A-Za-z-]*|)|de([0-9A-Za-rt-z-][0-9A-Za-z-]*|)|fragmen((t[0-9A-Za-z-]|[0-9A-Za-su-z-])[0-9A-Za-z-]*|)|fragme([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|fragm([0-9A-Za-df-z-][0-9A-Za-z-]*|)|frag([0-9A-Za-ln-z-][0-9A-Za-z-]*|)|fra([0-9A-Za-fh-z-][0-9A-Za-z-]*|)|fr([0-9A-Zb-z-][0-9A-Za-z-]*|)|got((o[0-9A-Za-z-]|[0-9A-Za-np-z-])[0-9A-Za-z-]*|)|go([0-9A-Za-su-z-][0-9A-Za-z-]*|)|in-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|in-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|)|in-interf([0-9A-Zb-z-][0-9A-Za-z-]*|)|in-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|in-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|in-int([0-9A-Za-df-z-][0-9A-Za-z-]*|)|in-in([0-9A-Za-su-z-][0-9A-Za-z-]*|)|in-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|in-([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|in([0-9A-Za-z][0-9A-Za-z-]*|)|jum((p[0-9A-Za-z-]|[0-9A-Za-oq-z-])[0-9A-Za-z-]*|)|ju([0-9A-Za-ln-z-][0-9A-Za-z-]*|)|matc((h[0-9A-Za-z-]|[0-9A-Za-gi-z-])[0-9A-Za-z-]*|)|mat([0-9A-Zabd-z-][0-9A-Za-z-]*|)|ma([0-9A-Za-su-z-][0-9A-Za-z-]*|)|out-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|out-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|)|out-interf([0-9A-Zb-z-][0-9A-Za-z-]*|)|out-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|out-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|out-int([0-9A-Za-df-z-][0-9A-Za-z-]*|)|out-in([0-9A-Za-su-z-][0-9A-Za-z-]*|)|out-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|)|out-([0-9A-Za-hj-z-][0-9A-Za-z-]*|)|out([0-9A-Za-z][0-9A-Za-z-]*|)|ou([0-9A-Za-su-z-][0-9A-Za-z-]*|)|protoco((l[0-9A-Za-z-]|[0-9A-Za-km-z-])[0-9A-Za-z-]*|)|protoc([0-9A-Za-np-z-][0-9A-Za-z-]*|)|proto([0-9A-Zabd-z-][0-9A-Za-z-]*|)|prot([0-9A-Za-np-z-][0-9A-Za-z-]*|)|pro([0-9A-Za-su-z-][0-9A-Za-z-]*|)|pr([0-9A-Za-np-z-][0-9A-Za-z-]*|)|sourc((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|)|sour([0-9A-Zabd-z-][0-9A-Za-z-]*|)|sou([0-9A-Za-qs-z-][0-9A-Za-z-]*|)|so([0-9A-Za-tv-z-][0-9A-Za-z-]*|)|tcp-flag((s[0-9A-Za-z-]|[0-9A-Za-rt-z-])[0-9A-Za-z-]*|)|tcp-fla([0-9A-Za-fh-z-][0-9A-Za-z-]*|)|tcp-fl([0-9A-Zb-z-][0-9A-Za-z-]*|)|tcp-f([0-9A-Za-km-z-][0-9A-Za-z-]*|)|tcp-([0-9A-Za-eg-z-][0-9A-Za-z-]*|)|tcp([0-9A-Za-z][0-9A-Za-z-]*|)|(tc[0-9A-Za-oq-z-]|(t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|tc|t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-]";
+            }
+          }
+          leaf value {
+            type string {
+              pattern "([^\" \t\n!-][^ \t\n]*)|\"([^\"\\\n]|\\\\.)*\"";
+            }
+          }
+          leaf not {
+            type empty;
+            augex:data-path "table/insert/$$/not";
+          }
+        }
+      }
+    }
+  }
+}

@@ -1641,6 +1641,9 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (value && (value->tag == L_STORE)) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
+    } else if (label && (label->tag == L_LABEL) && !value) {
+        ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+        return ret;
     } else {
         ret = ay_print_yang_type_string(ctx, NULL);
         return ret;
@@ -2866,7 +2869,13 @@ ay_ynode_rule_insert_container(struct ay_ynode *node)
 static ly_bool
 ay_ynode_rule_container_key(struct ay_ynode *node)
 {
-    return (node->type == YN_CONTAINER) && !ay_ynode_container_has_leaf_key(node);
+    ly_bool fake_key;
+    struct lens *label;
+
+    label = AY_LABEL_LENS(node);
+    fake_key = label && (label->tag == L_LABEL) && (!node->value);
+
+    return (node->type == YN_CONTAINER) && !ay_ynode_container_has_leaf_key(node) && !fake_key;
 }
 
 /**

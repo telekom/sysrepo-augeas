@@ -47,10 +47,6 @@ module cron {
       choice ch_entry {
         container time {
           augex:data-path "entry/time";
-          leaf time {
-            type string;
-            augex:data-path "entry/time";
-          }
           leaf minute {
             mandatory true;
             type string {
