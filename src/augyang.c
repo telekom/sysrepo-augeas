@@ -890,6 +890,9 @@ ay_get_ident_standardized(char *ident, char *buffer)
         case '#':
             j--;
             break;
+        case ' ':
+            buffer[j] = '_';
+            break;
         case '+':
             len = strlen("plus_");
             AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
@@ -964,6 +967,7 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
     };
     const char *regdel[] = {
         "\\r",
+        "\\n                  " /* Rx.hostname looks wrong */
     };
 
     regex = regexp_escape(rp);
@@ -1041,7 +1045,7 @@ ay_lense_pattern_is_ident(struct lens *lens)
     }
 
     for (ch = lens->regexp->pattern->str; *ch != '\0'; ch++) {
-        if (((*ch < 65) && (*ch != 45)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
+        if (((*ch < 65) && (*ch != 45) && (*ch != 32)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
             break;
         }
     }
