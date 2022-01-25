@@ -14,37 +14,17 @@ module star {
     leaf config-file {
       type string;
     }
-    list STAR_FIFOSIZE {
-      key "_id";
-      augex:data-path "##STAR_FIFOSIZE";
-      augex:value-yang-path "value";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
+    leaf-list STAR_FIFOSIZE {
+      type string {
+        pattern "[0-9x*.a-z]+";
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[0-9x*.a-z]+";
-        }
-      }
+      augex:data-path "STAR_FIFOSIZE";
     }
-    list STAR_FIFOSIZE_MAX {
-      key "_id";
-      augex:data-path "##STAR_FIFOSIZE_MAX";
-      augex:value-yang-path "value";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
+    leaf-list STAR_FIFOSIZE_MAX {
+      type string {
+        pattern "[0-9x*.a-z]+";
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[0-9x*.a-z]+";
-        }
-      }
+      augex:data-path "STAR_FIFOSIZE_MAX";
     }
     list archive {
       key "_id";

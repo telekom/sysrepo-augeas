@@ -1338,27 +1338,17 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
 
-    if (node->parent && (node->type == YN_LIST) && (node->parent->type == YN_ROOT)) {
-        /* top-level files list */
-        return;
-    } else if (!value) {
-        return;
-    } else if ((node->type == YN_LIST) && label && (label->tag == L_LABEL)) {
-        return;
-    } else if ((node->type == YN_LEAF) && label && ((label->tag == L_LABEL) || ay_lense_pattern_is_ident(label))) {
-        return;
-    } else if (AY_TYPE_LIST_KEY(node) || (node->type == YN_VALUE)) {
+    if (((label->tag != L_KEY) && (label->tag != L_SEQ)) || !value || (node->type == YN_VALUE) ||
+            ay_lense_pattern_is_ident(label)) {
         return;
     }
-    assert((node->type == YN_LEAF) || (node->type == YN_LIST));
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
 
     /* set starting node */
-    if (node->type == YN_LEAF) {
+    if (node->type != YN_LIST) {
         start = node->parent;
     } else {
-        assert(node->type == YN_LIST);
         start = node;
     }
 
@@ -1486,7 +1476,7 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
         if (!strcmp("integer", ident)) {
             ret = "uint64";
         } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
-            ret = "int64_t";
+            ret = "int64";
         } else if (!strcmp("reldecimal", ident) || !strcmp("decimal", ident)) {
             ret = "decimal64";
         }
@@ -1632,7 +1622,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
         assert(value && (value->tag == L_STORE));
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if (ay_lense_pattern_is_ident(label)) {
+    } else if (ay_lense_pattern_is_ident(label) && value) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
     } else if (label && (label->tag == L_KEY)) {
@@ -2739,7 +2729,7 @@ ay_ynode_rule_list(struct ay_ynode *node)
 {
     ly_bool has_key;
 
-    has_key = node->label ? node->label->lens->tag == L_KEY : 0;
+    has_key = node->label && (node->label->lens->tag == L_KEY) && !ay_lense_pattern_is_ident(node->label->lens);
     return (node->child || has_key) && node->label && ay_ynode_has_repetition(node);
 }
 
@@ -3461,46 +3451,6 @@ ay_ynode_tree_set_min(struct ay_ynode *tree)
 }
 
 /**
- * @brief If L_LABEL is more appropriate for key than L_KEY, change key to YN_INDEX.
- *
- * Sometimes the author of the Augeas module chooses the wrong lense primitive and writes 'key' instead of 'label'.
- * As a result, no more than one record can be entered in the yang list. So the key type must be changed to YN_INDEX
- * for meaningful use of the yang list.
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_ynode_key_pattern_to_data_path(struct ay_ynode *tree)
-{
-    struct ay_ynode *node, *key;
-    struct lens *label;
-    char *ch;
-
-    LY_ARRAY_FOR(tree, struct ay_ynode, node) {
-        label = AY_LABEL_LENS(node);
-
-        /* select list that has L_KEY */
-        if ((node->type != YN_LIST) || !label || (label->tag != L_KEY)) {
-            continue;
-        }
-
-        /* check if regexp pattern is simple a-z A-Z string */
-        for (ch = label->regexp->pattern->str; *ch != '\0'; ch++) {
-            if (((*ch < 65) && (*ch != 45)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
-                break;
-            }
-        }
-        if (*ch != '\0') {
-            break;
-        }
-
-        /* get key ynode and change type to YN_INDEX */
-        for (key = node->child; key->type != YN_KEY; key = key->next) {}
-        key->type = YN_INDEX;
-    }
-}
-
-/**
  * @brief Delete nodes with unkown type.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -3926,7 +3876,7 @@ ay_insert_list_key(struct ay_ynode *tree)
         label = AY_LABEL_LENS(parent);
         value = AY_VALUE_LENS(parent);
 
-        if (!value && label && (label->tag == L_LABEL)) {
+        if (!value && label && ((label->tag == L_LABEL) || ay_lense_pattern_is_ident(label))) {
             ay_ynode_insert_child(tree, parent_idx);
             tree[parent_idx + 1].type = YN_INDEX;
             tree[parent_idx + 1].label = parent->label;
@@ -3939,7 +3889,7 @@ ay_insert_list_key(struct ay_ynode *tree)
             tree[parent_idx + 1].value = parent->value;
             i++;
             continue;
-        } else if (value && (value->tag == L_STORE)) {
+        } else if (value && (value->tag == L_STORE) && !ay_lense_pattern_is_ident(label)) {
             ay_ynode_insert_child(tree, parent_idx);
             tree[parent_idx + 1].type = YN_VALUE;
             tree[parent_idx + 1].label = parent->label;
@@ -4244,9 +4194,6 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     /* YN_LEAFLIST   -> YN_LIST */
     ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_leaflist_to_list, ay_ynode_leaflist_to_list, 2);
     AY_CHECK_RET(ret);
-
-    /* L_LABEL   -> YN_INDEX */
-    ay_ynode_key_pattern_to_data_path(*tree);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_INSERT1, *tree);
     AY_CHECK_RET(ret);

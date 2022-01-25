@@ -14,37 +14,17 @@ module rmt {
     leaf config-file {
       type string;
     }
-    list DEBUG {
-      key "_id";
-      augex:data-path "##DEBUG";
-      augex:value-yang-path "value";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
+    leaf-list DEBUG {
+      type string {
+        pattern "[^ \t\n]+";
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
-        }
-      }
+      augex:data-path "DEBUG";
     }
-    list USER {
-      key "_id";
-      augex:data-path "##USER";
-      augex:value-yang-path "sto_to_tab";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
+    leaf-list USER {
+      type string {
+        pattern "[^ \t\n]+";
       }
-      leaf sto_to_tab {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
-        }
-      }
+      augex:data-path "USER";
     }
     list ACCESS {
       key "_id";
