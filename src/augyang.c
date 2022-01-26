@@ -3883,34 +3883,59 @@ ay_insert_list_key(struct ay_ynode *tree)
         label = AY_LABEL_LENS(parent);
         value = AY_VALUE_LENS(parent);
 
-        if (!value && label && ((label->tag == L_LABEL) || ay_lense_pattern_is_ident(label))) {
+        assert(label);
+        if (value && ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label)))) {
             ay_ynode_insert_child(tree, parent_idx);
-            tree[parent_idx + 1].type = YN_INDEX;
-            tree[parent_idx + 1].label = parent->label;
             i++;
-            continue;
-        } else if (value && (value->tag == L_STORE) && label && (label->tag == L_LABEL)) {
-            ay_ynode_insert_child(tree, parent_idx);
-            tree[parent_idx + 1].type = YN_KEY;
-            tree[parent_idx + 1].label = parent->label;
-            tree[parent_idx + 1].value = parent->value;
-            i++;
-            continue;
-        } else if (value && (value->tag == L_STORE) && !ay_lense_pattern_is_ident(label)) {
-            ay_ynode_insert_child(tree, parent_idx);
             tree[parent_idx + 1].type = YN_VALUE;
             tree[parent_idx + 1].label = parent->label;
             tree[parent_idx + 1].value = parent->value;
             ay_ynode_set_mandatory(&tree[parent_idx + 1]);
-            i++;
-        }
-
-        if (label) {
             ay_ynode_insert_child(tree, parent_idx);
+            i++;
             tree[parent_idx + 1].type = YN_KEY;
             tree[parent_idx + 1].label = parent->label;
             tree[parent_idx + 1].value = parent->value;
+            continue;
+        } else if ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label))) {
+            ay_ynode_insert_child(tree, parent_idx);
             i++;
+            tree[parent_idx + 1].type = YN_KEY;
+            tree[parent_idx + 1].label = parent->label;
+            tree[parent_idx + 1].value = parent->value;
+            continue;
+        }
+
+        assert((label->tag == L_LABEL) || ay_lense_pattern_is_ident(label));
+        if (value) {
+            assert(value->tag == L_STORE);
+            /* child can be YN_KEY or YN_VALUE */
+            ay_ynode_insert_child(tree, parent_idx);
+            i++;
+            tree[parent_idx + 1].value = parent->value;
+            ay_ynode_set_mandatory(&tree[parent_idx + 1]);
+
+            if (tree[parent_idx + 1].mandatory) {
+                /* child is YN_KEY */
+                tree[parent_idx + 1].type = YN_KEY;
+                tree[parent_idx + 1].label = parent->label;
+            } else {
+                /* child is YN_VALUE */
+                tree[parent_idx + 1].type = YN_VALUE;
+                tree[parent_idx + 1].label = parent->label;
+
+                /* list's data-path has ## and value-yang-path */
+                ay_ynode_insert_child(tree, parent_idx);
+                i++;
+                tree[parent_idx + 1].type = YN_INDEX;
+                tree[parent_idx + 1].label = parent->label;
+            }
+        } else {
+            /* list's data-path has ## */
+            ay_ynode_insert_child(tree, parent_idx);
+            i++;
+            tree[parent_idx + 1].type = YN_INDEX;
+            tree[parent_idx + 1].label = parent->label;
         }
     }
 }
