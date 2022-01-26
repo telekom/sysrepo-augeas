@@ -1019,7 +1019,8 @@ cleanup:
 static int
 augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_path, const char *aug_value, int *applied_r)
 {
-    int rc = SR_ERR_OK;
+    int rc = SR_ERR_OK, i, match_count = 0;
+    char **matches = NULL, *label = NULL;
 
     if (applied_r) {
         *applied_r = 0;
@@ -1032,6 +1033,30 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
 
     switch (op) {
     case AUGDS_OP_CREATE:
+        /* check that the value does not exist yet */
+        match_count = aug_match(aug, aug_path, &matches);
+        if (!match_count) {
+            /* just set the augeas data */
+            if (aug_set(aug, aug_path, aug_value) == -1) {
+                AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+            }
+        } else {
+            /* insert the label */
+            if (aug_insert(aug, matches[match_count - 1], aug_path, 0) == -1) {
+                AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+            }
+
+            /* generate label with index */
+            if (asprintf(&label, "%s[%d]", aug_path, match_count + 1) == -1) {
+                AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+            }
+
+            /* set its value */
+            if (aug_set(aug, label, aug_value) == -1) {
+                AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+            }
+        }
+        break;
     case AUGDS_OP_REPLACE:
         /* set the augeas data */
         if (aug_set(aug, aug_path, aug_value) == -1) {
@@ -1057,6 +1082,11 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
     }
 
 cleanup:
+    for (i = 0; i < match_count; ++i) {
+        free(matches[i]);
+    }
+    free(matches);
+    free(label);
     return rc;
 }
 
