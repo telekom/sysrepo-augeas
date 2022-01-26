@@ -224,7 +224,7 @@ enum yang_type {
     YN_LEAFLIST,        /**< Yang statement "leaf-list". */
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
-    YN_KEY,             /**< The node is the key in the yang "list". */
+    YN_KEY,             /**< The node is the key in the yang "list" or first node in special container. */
     YN_INDEX,           /**< The node is the key in the yang "list" and is implicitly generated as unsigned integer. */
     YN_VALUE,           /**< Yang statement "leaf". The node was generated to store the augeas node value. */
     YN_ROOT             /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
@@ -1202,8 +1202,6 @@ ay_print_yang_data_path_item_list(struct yprinter_ctx *ctx, struct ay_ynode *lis
     enum lens_tag labtag;
     char *labstr;
 
-    assert(AY_TYPE_LIST_KEY(list->child));
-
     label = AY_LABEL_LENS(list);
     if (ay_lense_pattern_is_ident(label)) {
         labtag = L_LABEL;
@@ -1243,12 +1241,10 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
         return;
     } else if ((node->type == YN_CONTAINER) && !label) {
         return;
-    } else if ((node == target) && (node->parent->type == YN_CONTAINER) && (node->label == node->parent->label)) {
-        return;
     }
 
     ay_print_yang_data_path_delim(ctx, printed);
-    if (node->type == YN_LIST) {
+    if ((node->type == YN_LIST) || (node->type == YN_CONTAINER)) {
         ay_print_yang_data_path_item_list(ctx, node, target);
     } else if (label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
@@ -1295,7 +1291,7 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
         return;
     } else if (node->type == YN_VALUE) {
         return;
-    } else if ((node->type == YN_CONTAINER) && (!node->label || (node->label && (node->label->lens->tag == L_KEY)))) {
+    } else if ((node->type == YN_CONTAINER) && !node->label) {
         return;
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
@@ -1342,7 +1338,9 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
 
-    if (((label->tag != L_KEY) && (label->tag != L_SEQ)) || !value || (node->type == YN_VALUE) ||
+    if ((node->type == YN_CONTAINER) && !label) {
+        return;
+    } else if (((label->tag != L_KEY) && (label->tag != L_SEQ)) || !value || (node->type == YN_VALUE) ||
             ay_lense_pattern_is_ident(label)) {
         return;
     }
@@ -1350,7 +1348,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
 
     /* set starting node */
-    if (node->type != YN_LIST) {
+    if ((node->type != YN_LIST) && (node->type != YN_CONTAINER)) {
         start = node->parent;
     } else {
         start = node;
@@ -1772,6 +1770,13 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_ident(ctx, node);
     ay_print_yang_nesting_begin(ctx);
     label = AY_LABEL_LENS(node);
+
+    if (node->parent->type == YN_CONTAINER) {
+        /* print mandatory-stmt for container leaf key */
+        ay_print_yang_mandatory(ctx, node);
+    }
+
+    /* print type */
     if (label && (label->tag == L_SEQ)) {
         ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
     } else if (node->type == YN_INDEX) {
@@ -1899,6 +1904,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
     ay_print_yang_data_path(ctx, node);
+    ay_print_yang_value_path(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
@@ -2803,8 +2809,7 @@ ay_ynode_rule_list_key(struct ay_ynode *node)
 static ly_bool
 ay_ynode_container_has_leaf_key(struct ay_ynode *cont)
 {
-    uint32_t i;
-    struct ay_ynode *iter;
+    struct ay_ynode *child;
     struct lens *label;
 
     label = AY_LABEL_LENS(cont);
@@ -2812,14 +2817,12 @@ ay_ynode_container_has_leaf_key(struct ay_ynode *cont)
         return 0;
     }
 
-    for (i = 0; i < cont->descendants; i++) {
-        iter = cont + i + 1;
-        if ((iter->type == YN_LEAF) && iter->label && (iter->label->lens == label)) {
-            return 1;
-        }
+    child = cont->child;
+    if (((child->type == YN_LEAF) || (child->type == YN_KEY)) && child->label && (child->label->lens == label)) {
+        return 1;
+    } else {
+        return 0;
     }
-
-    return 0;
 }
 
 /**
@@ -3966,7 +3969,7 @@ ay_insert_container_key(struct ay_ynode *tree)
             cont = node;
             ay_ynode_insert_child(tree, i);
             key = cont->child;
-            key->type = YN_LEAF;
+            key->type = YN_KEY;
             /* TODO choice for keys/values */
             key->label = cont->label;
             key->value = cont->value;
@@ -4001,7 +4004,9 @@ ay_node_split(struct ay_ynode *tree)
                 if (label && ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label))) {
                     container->label = node->label;
                 }
+                container->value = node->value;
                 node->choice = NULL;
+                node->type = YN_KEY;
             }
             ay_ynode_insert_sibling(tree, AY_INDEX(tree, node));
             valnode = node->next;

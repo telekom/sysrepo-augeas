@@ -39,13 +39,13 @@ module dhclient {
         }
       }
       container word {
+        augex:data-path "$$/$$";
+        augex:value-yang-path "sto_to_spc_noeval";
         leaf word {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
           }
-          augex:data-path "$$/$$";
-          augex:value-yang-path "sto_to_spc_noeval";
         }
         leaf sto_to_spc_noeval {
           type string {
@@ -113,13 +113,13 @@ module dhclient {
         }
       }
       container word {
+        augex:data-path "$$/$$";
+        augex:value-yang-path "sto_to_spc_noeval";
         leaf word {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
           }
-          augex:data-path "$$/$$";
-          augex:value-yang-path "sto_to_spc_noeval";
         }
         leaf sto_to_spc_noeval {
           type string {
@@ -203,13 +203,13 @@ module dhclient {
           }
         }
         container word {
+          augex:data-path "$$/$$/$$";
+          augex:value-yang-path "sto_to_spc_noeval";
           leaf word {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
             }
-            augex:data-path "$$/$$/$$";
-            augex:value-yang-path "sto_to_spc_noeval";
           }
           leaf sto_to_spc_noeval {
             type string {
@@ -255,13 +255,13 @@ module dhclient {
           }
         }
         container word {
+          augex:data-path "$$/$$/$$";
+          augex:value-yang-path "sto_to_spc_noeval";
           leaf word {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
             }
-            augex:data-path "$$/$$/$$";
-            augex:value-yang-path "sto_to_spc_noeval";
           }
           leaf sto_to_spc_noeval {
             type string {

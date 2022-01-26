@@ -54,7 +54,6 @@ module dnsmasq {
           type string {
             pattern "[^#/ \t\n]+";
           }
-          augex:data-path "server/source";
         }
         leaf port {
           type uint64;
