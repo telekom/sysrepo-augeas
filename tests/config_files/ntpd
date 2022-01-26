@@ -1,0 +1,21 @@
+# Addresses to listen on (ntpd does not listen by default)
+listen on * rtable 5
+
+# sync to a single server
+server ntp.example.org
+
+# use a random selection of NTP Pool Time Servers
+# see http://support.ntp.org/bin/view/Servers/NTPPoolServers
+servers pool.ntp.org
+
+# use a specific local timedelta sensor (radio clock, etc)
+sensor nmea0 correction 5 stratum 2
+
+# use all detected timedelta sensors
+sensor * refid GPS
+
+# Choose servers announced from Gentoo NTP Pool
+servers 0.gentoo.pool.ntp.org weight 2
+servers 1.gentoo.pool.ntp.org
+servers 2.gentoo.pool.ntp.org weight 5
+servers 3.gentoo.pool.ntp.org
