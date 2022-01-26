@@ -10,7 +10,6 @@ module inittab {
 
   list inittab {
     key "config-file";
-    min-elements 1;
     leaf config-file {
       type string;
     }

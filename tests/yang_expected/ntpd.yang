@@ -10,7 +10,6 @@ module ntpd {
 
   list ntpd {
     key "config-file";
-    min-elements 1;
     leaf config-file {
       type string;
     }

@@ -10,7 +10,6 @@ module iproute2 {
 
   list iproute2 {
     key "config-file";
-    min-elements 1;
     leaf config-file {
       type string;
     }

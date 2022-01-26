@@ -10,7 +10,6 @@ module vmware_config {
 
   list vmware_config {
     key "config-file";
-    min-elements 1;
     leaf config-file {
       type string;
     }
