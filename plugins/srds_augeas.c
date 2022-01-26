@@ -1309,8 +1309,6 @@ augds_get_config_files(augeas *aug, const struct lys_module *mod, int fs_path, c
     label_count = aug_match(aug, path, &label_matches);
     if (label_count == -1) {
         AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-    } else if (!label_count) {
-        AUG_LOG_ERRINT_GOTO(rc, cleanup);
     }
 
     /* get all the parsed files */
@@ -1924,12 +1922,9 @@ srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpa
         goto cleanup;
     }
 
-    /* get all parsed files */
+    /* get all parsed files, there may be none */
     if ((rc = augds_get_config_files(auginfo.aug, mod, 0, &files, &file_count))) {
         goto cleanup;
-    }
-    if (!file_count) {
-        AUG_LOG_ERRINT_GOTO(rc, cleanup);
     }
 
     for (i = 0; i < file_count; ++i) {
