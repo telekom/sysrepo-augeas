@@ -457,21 +457,20 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
 }
 
 /**
- * @brief Go through all the ynode nodes and increment counter based on the rule.
+ * @brief Go through all the ynode nodes and sum rule results.
  *
  * @param[in] forest Forest of ynodes.
- * @param[in] rule Callback function returns 1 to increment counter.
+ * @param[in] rule Callback function returns number of nodes that can be inserted.
  * @param[out] cnt Counter how many times the @p rule returned 1.
  */
 static void
-ay_ynode_summary(struct ay_ynode *forest, ly_bool (*rule)(struct ay_ynode *), uint32_t *cnt)
+ay_ynode_summary(struct ay_ynode *forest, uint64_t (*rule)(struct ay_ynode *), uint64_t *cnt)
 {
     LY_ARRAY_COUNT_TYPE i;
 
+    *cnt = 0;
     LY_ARRAY_FOR(forest, i) {
-        if (rule(&forest[i])) {
-            (*cnt)++;
-        }
+        *cnt = *cnt + rule(&forest[i]);
     }
 }
 
@@ -2779,12 +2778,12 @@ ay_ynode_rule_leaf(struct ay_ynode *node)
 }
 
 /**
- * @brief YN_KEY detection rule.
+ * @brief Rule to insert list-key nodes.
  *
  * @param[in] node Node to check.
- * @return 1 if ynode is of type YN_KEY.
+ * @return 2 if some key node (or two nodes) should be inserted.
  */
-static ly_bool
+static uint64_t
 ay_ynode_rule_list_key(struct ay_ynode *node)
 {
     struct lens *label, *value;
@@ -2794,7 +2793,7 @@ ay_ynode_rule_list_key(struct ay_ynode *node)
     value = AY_VALUE_LENS(node);
     lab = label && AY_TAG_IS_LABEL(label->tag);
     val = value && (value->tag == L_STORE);
-    return (node->type == YN_LIST) && (lab || val);
+    return (node->type == YN_LIST) && (lab || val) ? 2 : 0;
 }
 
 /**
@@ -2830,7 +2829,7 @@ ay_ynode_container_has_leaf_key(struct ay_ynode *cont)
  * @param[in] node Node to check.
  * @return 1 if container should be inserted. Also the function returns 1 only for the first node in the wrap.
  */
-static ly_bool
+static uint64_t
 ay_ynode_rule_insert_container(struct ay_ynode *node)
 {
     struct ay_ynode *iter;
@@ -2862,7 +2861,7 @@ ay_ynode_rule_insert_container(struct ay_ynode *node)
  * @param[in] node Node to check
  * @return 1 if leaf is missing.
  */
-static ly_bool
+static uint64_t
 ay_ynode_rule_container_key(struct ay_ynode *node)
 {
     ly_bool fake_key;
@@ -2878,29 +2877,33 @@ ay_ynode_rule_container_key(struct ay_ynode *node)
  * @brief Check whether the node is to be divided into two.
  *
  * @param[in] node Node to check.
- * @return 1 if ynode must be divided.
+ * @return 2 if ynode must be divided.
  */
-static ly_bool
+static uint64_t
 ay_ynode_rule_node_split(struct ay_ynode *node)
 {
+    ly_bool cond;
     struct lens *label, *value;
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    return ((node->type == YN_LEAF) || (node->type == YN_CONTAINER)) &&
-           label && (label->tag == L_KEY) && value && !ay_lense_pattern_is_ident(label);
+
+    cond = ((node->type == YN_LEAF) || (node->type == YN_CONTAINER)) &&
+            label && (label->tag == L_KEY) && value && !ay_lense_pattern_is_ident(label);
+
+    return cond ? 2 : 0;
 }
 
 /**
  * @brief Check whether the leaf-list node must be changed to list.
  *
  * @param[in] node Node to check.
- * @return 1 if type must be changed.
+ * @return 2 if type must be changed.
  */
-static ly_bool
+static uint64_t
 ay_ynode_rule_leaflist_to_list(struct ay_ynode *node)
 {
-    return (node->type == YN_LEAFLIST) && node->label && (node->label->lens->tag == L_SEQ);
+    return (node->type == YN_LEAFLIST) && node->label && (node->label->lens->tag == L_SEQ) ? 2 : 0;
 }
 
 /**
@@ -4111,21 +4114,20 @@ ay_ynode_set_type(struct ay_ynode *tree)
  *
  * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
  * The insertion result will be applied.
- * @param[in] rule Callback function for @p insert function. To insert a node, the rule returns 1.
+ * @param[in] rule Callback function with which to determine the total number of inserted nodes. This callback is
+ * called for each node and the number of nodes to be inserted for that node is returned. Finally, all intermediate
+ * results are summed.
  * @param[in] insert Callback function which inserts some nodes.
- * @param[in] counter_multiplier The total number of complied rules (how often @p rule returns 1)
- * is multiplied by the number @p counter_multiplier.
  * @return 1 on success.
  */
 static int
-ay_ynode_trans_insert1(struct ay_ynode **tree, ly_bool (*rule)(struct ay_ynode *), void (*insert)(struct ay_ynode *),
-        uint32_t counter_multiplier)
+ay_ynode_trans_insert1(struct ay_ynode **tree, uint64_t (*rule)(struct ay_ynode *), void (*insert)(struct ay_ynode *))
 {
-    uint32_t counter = 0;
+    uint64_t counter;
     struct ay_ynode *new = NULL;
 
     ay_ynode_summary(*tree, rule, &counter);
-    LY_ARRAY_CREATE(NULL, new, (counter_multiplier * counter) + LY_ARRAY_COUNT(*tree), return AYE_MEMORY);
+    LY_ARRAY_CREATE(NULL, new, counter + LY_ARRAY_COUNT(*tree), return AYE_MEMORY);
     ay_ynode_copy(new, *tree);
     insert(new);
     LY_ARRAY_FREE(*tree);
@@ -4205,27 +4207,27 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     AY_CHECK_RET(ret);
 
     /* container {...}   -> container {leaf {pattern 'key STR'} ... } */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_container_key, ay_insert_container_key, 1);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_container_key, ay_insert_container_key);
     AY_CHECK_RET(ret);
 
     /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
      * choice ch { container { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container, 1);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container);
     AY_CHECK_RET(ret);
 
     /* [label str]*             -> list { YN_INDEX{} } */
     /* [label str store lns]*   -> list { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> list { YN_KEY{} YN_VALUE{} } */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key, 2);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_key, ay_insert_list_key);
     AY_CHECK_RET(ret);
 
     /* [key lns1 store lns2]   -> node1 { pattern lns1; } node2 { pattern lns2; } */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_node_split, 2);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_node_split);
     AY_CHECK_RET(ret);
 
     /* YN_LEAFLIST   -> YN_LIST */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_leaflist_to_list, ay_ynode_leaflist_to_list, 2);
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_leaflist_to_list, ay_ynode_leaflist_to_list);
     AY_CHECK_RET(ret);
 
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS_INSERT1, *tree);
