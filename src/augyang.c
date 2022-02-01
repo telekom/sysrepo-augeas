@@ -157,8 +157,6 @@
  */
 #define AY_MAX_IDENT_SIZE 64
 
-#define AY_YNODE_LIST_FILES_INDEX    1
-
 /* error codes */
 
 #define AYE_MEMORY 1
@@ -227,6 +225,7 @@ enum yang_type {
     YN_KEY,             /**< The node is the key in the yang "list" or first node in special container. */
     YN_INDEX,           /**< The node is the key in the yang "list" and is implicitly generated as unsigned integer. */
     YN_VALUE,           /**< Yang statement "leaf". The node was generated to store the augeas node value. */
+    YN_GROUPING,        /**< Yang statement "grouping". */
     YN_ROOT             /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
                              It has no printing application only makes writing algorithms easier. */
 };
@@ -278,6 +277,8 @@ struct ay_ynode {
                                      Can be NULL. */
     struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
                                      Set if the node is under the influence of the union operator. */
+    struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
+                                     YN_CONTAINER and YN_LIST, for other types is always NULL. */
     union {
         uint8_t mandatory;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 mandatory false. */
         uint8_t min;            /**< Yang min-elements-stmt. Constraint for YN_LIST and YN_LEAFLIST. */
@@ -472,6 +473,105 @@ ay_ynode_summary(struct ay_ynode *forest, uint64_t (*rule)(struct ay_ynode *), u
     LY_ARRAY_FOR(forest, i) {
         *cnt = *cnt + rule(&forest[i]);
     }
+}
+
+/**
+ * @brief Copy ynode data to another ynode.
+ *
+ * @param[out] dst Destination node.
+ * @param[in] src Source for copying.
+ */
+static void
+ay_ynode_copy_data(struct ay_ynode *dst, struct ay_ynode *src)
+{
+    assert(dst && src);
+    dst->type = src->type;
+    dst->snode = src->snode;
+    dst->label = src->label;
+    dst->value = src->value;
+    dst->choice = src->choice;
+    dst->uses = src->uses;
+    dst->mandatory = src->mandatory;
+}
+
+/**
+ * @brief Get last sibling.
+ *
+ * @param[in] node Node from which it iterates to the last node.
+ * @return Last sibling node.
+ */
+static struct ay_ynode *
+ay_ynode_get_last(struct ay_ynode *node)
+{
+    struct ay_ynode *last;
+
+    for (last = node; last->next; last = last->next) {}
+    return last;
+}
+
+/**
+ * @brief Check if lenses are equal.
+ *
+ * @param[in] l1 First lense.
+ * @param[in] l2 Second lense.
+ * @return 1 for equal.
+ */
+static ly_bool
+ay_lnode_lense_equal(struct lens *l1, struct lens *l2)
+{
+    if (!l1 || !l2 || (l1->tag != l2->tag)) {
+        return 0;
+    }
+
+    switch (l1->tag) {
+    case L_STORE:
+        return l1->regexp == l2->regexp;
+    case L_VALUE:
+        return l1->string == l2->string;
+    case L_KEY:
+        return l1->regexp == l2->regexp;
+    case L_LABEL:
+        return l1->string == l2->string;
+    case L_SEQ:
+        return l1->string == l2->string;
+    default:
+        return 1;
+    }
+}
+
+/**
+ * @brief Check if ynodes are equal.
+ *
+ * @param[in] n1 First lense.
+ * @param[in] n2 Second lense.
+ * @return 1 for equal.
+ */
+static ly_bool
+ay_ynode_equal(struct ay_ynode *n1, struct ay_ynode *n2)
+{
+    if (n1->descendants != n2->descendants) {
+        return 0;
+    } else if (n1->type != n2->type) {
+        return 0;
+    } else if ((!n1->label && n2->label) || (n1->label && !n2->label)) {
+        return 0;
+    } else if (n1->label && !ay_lnode_lense_equal(n1->label->lens, n2->label->lens)) {
+        return 0;
+    } else if ((!n1->value && n2->value) || (n1->value && !n2->value)) {
+        return 0;
+    } else if (n1->value && !ay_lnode_lense_equal(n1->value->lens, n2->value->lens)) {
+        return 0;
+    } else if ((!n1->snode && n2->snode) || (n1->snode && !n2->snode)) {
+        return 0;
+    } else if ((!n1->choice && n2->choice) || (n1->choice && !n2->choice)) {
+        return 0;
+    } else if (n1->uses != n2->uses) {
+        return 0;
+    } else if (n1->mandatory != n2->mandatory) {
+        return 0;
+    }
+
+    return 1;
 }
 
 /**
@@ -867,16 +967,25 @@ ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Specification where the identifier should be placed.
+ */
+enum ay_ident_dst {
+    AY_IDENT_NODE_NAME,     /**< Identifier to be placed as name for some YANG node. */
+    AY_IDENT_DATA_PATH      /**< Identifier to be placed in the data-path. */
+};
+
+/**
  * @brief Modify the identifier to conform to the constraints of the yang identifier.
  *
  * TODO: complete for all input characters.
  *
  * @param[in] ident Identifier for standardization.
+ * @param[in] opt Where the identifier will be placed.
  * @param[out] buffer Buffer in which a valid identifier will be written.
  * @return 0 on success.
  */
 static int
-ay_get_ident_standardized(char *ident, char *buffer)
+ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, char *buffer)
 {
     int64_t i, j, len, stop;
 
@@ -890,7 +999,7 @@ ay_get_ident_standardized(char *ident, char *buffer)
             j--;
             break;
         case ' ':
-            buffer[j] = '_';
+            buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
             break;
         case '+':
             len = strlen("plus_");
@@ -1029,13 +1138,69 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
 }
 
 /**
- * @brief Check if pattern is so simple that can be interpreted as label.
+ * @brief Get identifier from lense->regexp->pattern in a suitable form for YANG.
  *
- * @param[in] lens Lense to check.
- * @return 1 if pattern is identifier.
+ * @param[in] ident Pointer to the identifier.
+ * @param[in] ident_len Number of characters in @p ident.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Buffer in which a valid identifier will be written.
+ * @return 0 on success.
+ */
+static int
+ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, enum ay_ident_dst opt, char *buffer)
+{
+    int64_t i, j, stop;
+
+    stop = ident_len;
+    for (i = 0, j = 0; i < stop; i++, j++) {
+        switch (ident[i]) {
+        case ' ':
+            buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
+            break;
+        case '(':
+            j--;
+            break;
+        case ')':
+            j--;
+            break;
+        default:
+            AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            buffer[j] = ident[i];
+        }
+    }
+
+    buffer[j] = '\0';
+
+    return 0;
+}
+
+/**
+ * @brief Check if character is valid as part of identifier.
+ *
+ * @param[in] ch Character to check.
+ * @return 1 for valid character, otherwise 0.
  */
 static ly_bool
-ay_lense_pattern_is_ident(struct lens *lens)
+ay_ident_character_is_valid(const char *ch)
+{
+    if (((*ch < 65) && (*ch != 45) && (*ch != 32)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * @brief Check if pattern is so simple that can be interpreted as label.
+ *
+ * Function check if there is exactly one identifier in the pattern.
+ * In case of detection of more identifiers, use ::ay_lense_pattern_has_idents().
+ *
+ * @param[in] lens Lense to check.
+ * @return 1 if pattern is label.
+ */
+static ly_bool
+ay_lense_pattern_is_label(struct lens *lens)
 {
     char *ch;
 
@@ -1044,7 +1209,7 @@ ay_lense_pattern_is_ident(struct lens *lens)
     }
 
     for (ch = lens->regexp->pattern->str; *ch != '\0'; ch++) {
-        if (((*ch < 65) && (*ch != 45) && (*ch != 32)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
+        if (!ay_ident_character_is_valid(ch)) {
             break;
         }
     }
@@ -1053,19 +1218,183 @@ ay_lense_pattern_is_ident(struct lens *lens)
 }
 
 /**
+ * @brief Get next part where should be identifier in the pattern.
+ *
+ * This function does not validate identifier.
+ *
+ * @param[in] patt Pointer to some part in the lense pattern.
+ * @return Pointer to next identifier.
+ */
+const char *
+ay_lense_pattern_next_ident(const char *patt)
+{
+    const char *ret;
+
+    ret = strchr(patt, '|');
+    return ret ? ret + 1 : NULL;
+}
+
+/**
+ * @brief Get length of current identifier in the pattern.
+ *
+ * @param[in] patt Pointer to identifier located in the lense pattern.
+ * @return Length of identifier.
+ */
+static uint64_t
+ay_lense_pattern_ident_length(const char *patt)
+{
+    const char *next;
+
+    if (!patt) {
+        return 0;
+    }
+
+    next = ay_lense_pattern_next_ident(patt);
+    return next ? (uint64_t)((next - 1) - patt) : strlen(patt);
+}
+
+/**
+ * @brief Check if lense pattern does not have a fairly regular expression,
+ * but rather a sequence of identifiers separated by '|'.
+ *
+ * @param[in] lens Lense to check.
+ * @return 1 if lense contains identifiers in his pattern.
+ */
+static ly_bool
+ay_lense_pattern_has_idents(struct lens *lens)
+{
+    const char *patt;
+
+    if (!lens || (lens->tag != L_KEY)) {
+        return 0;
+    }
+
+    for (patt = lens->regexp->pattern->str; *patt != '\0'; patt++) {
+        if ((*patt == '|') || (*patt == '(') || (*patt == ')')) {
+            continue;
+        } else if (!ay_ident_character_is_valid(patt)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Count number of identifiers in the lense pattern.
+ *
+ * @param[in] lens Lense to check his pattern.
+ * @return Number of identifiers.
+ */
+static uint64_t
+ay_lense_pattern_idents_count(struct lens *lens)
+{
+    uint64_t ret;
+    const char *patt;
+
+    if (!lens || (lens->tag != L_KEY) || !ay_lense_pattern_has_idents(lens)) {
+        return 0;
+    }
+
+    ret = 1;
+    patt = ay_lense_pattern_next_ident(lens->regexp->pattern->str);
+    if (!patt) {
+        return ret;
+    }
+
+    ret = 2;
+    for (patt = ay_lense_pattern_next_ident(patt); patt; patt = ay_lense_pattern_next_ident(patt)) {
+        ++ret;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Find the order number of the divided node whose pattern consists of identifiers.
+ *
+ * It counts how many nodes with the same label precede. From this, it can then be deduced
+ * which identifier in the pattern belongs to @p node.
+ *
+ * @param[in] node One of the node which was created due to pattern with sequence of identifiers.
+ * @return Index of splitted node in the sequence of splitted nodes.
+ */
+static uint64_t
+ay_ynode_splitted_seq_index(struct ay_ynode *node)
+{
+    struct ay_ynode *iter;
+    struct lens *nodelab, *iterlab;
+    uint64_t node_idx = 0;
+
+    nodelab = AY_LABEL_LENS(node);
+    for (iter = node->parent->child; iter; iter = iter->next) {
+        iterlab = AY_LABEL_LENS(iter);
+        if (iter == node) {
+            break;
+        } else if (iterlab && (iterlab->regexp == nodelab->regexp)) {
+            ++node_idx;
+        }
+    }
+    assert(iter);
+
+    return node_idx;
+}
+
+/**
+ * @brief For given ynode find his identifier somewhere in the lense pattern (containing sequence of identifiers).
+ *
+ * @param[in] node Node for which the identifier is being searched.
+ * @return Pointer to part in the pattern where identifier starts.
+ */
+static const char *
+ay_ynode_find_ident_in_pattern(struct ay_ynode *node)
+{
+    uint64_t item_idx, node_idx;
+    struct lens *label;
+    const char *patt;
+
+    label = AY_LABEL_LENS(node);
+    if (!label || (label->tag != L_KEY) || ay_lense_pattern_is_label(label)) {
+        return NULL;
+    } else if (*label->regexp->pattern->str == '\0') {
+        return NULL;
+    } else if (!node->parent) {
+        return NULL;
+    }
+
+    /* find out which identifier index to look for in the pattern */
+    node_idx = ay_ynode_splitted_seq_index(node);
+
+    /* find position of identifier index */
+    item_idx = 0;
+    for (patt = label->regexp->pattern->str; patt; patt = ay_lense_pattern_next_ident(patt)) {
+        if (item_idx != node_idx) {
+            ++item_idx;
+        } else {
+            break;
+        }
+    }
+    assert(item_idx == node_idx);
+
+    return patt;
+}
+
+/**
  * @brief Evaluate the identifier for the node.
  *
  * @param[in] ctx Current printing context.
  * @param[in] node Node for which the identifier is to be derived.
+ * @param[in] opt Where the identifier will be placed.
  * @param[out] buffer Buffer in which the obtained identifier is written.
  * @return 0 on success.
  */
 static int
-ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
+ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
 {
     int ret = 0;
     char *str = NULL, *tmp;
     struct lens *label, *value, *snode;
+    uint64_t len = 0;
 
     snode = AY_SNODE_LENS(node);
     label = AY_LABEL_LENS(node);
@@ -1074,7 +1403,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
     if (AY_TYPE_LIST_KEY(node)) {
         if (node->type == YN_INDEX) {
             str = (char *)"_id";
-        } else if (ay_lense_pattern_is_ident(label)) {
+        } else if (ay_lense_pattern_is_label(label)) {
             str = label->regexp->pattern->str;
         } else if (label->tag == L_KEY) {
             str = ay_get_lense_name(ctx->mod, label);
@@ -1094,8 +1423,11 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
     } else if (node->type == YN_LIST) {
         if (label->tag == L_LABEL) {
             str = label->string->str;
-        } else if (ay_lense_pattern_is_ident(label)) {
+        } else if (ay_lense_pattern_is_label(label)) {
             str = label->regexp->pattern->str;
+        } else if (node->uses || ay_lense_pattern_has_idents(label)) {
+            str = (char *)ay_ynode_find_ident_in_pattern(node);
+            len = ay_lense_pattern_ident_length(str);
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
             str = tmp;
         } else if (label->tag == L_KEY) {
@@ -1105,12 +1437,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
             str = label->string->str;
         }
         str = !str ? (char *)"list" : str;
+    } else if (node->type == YN_GROUPING) {
+        str = ay_get_lense_name(ctx->mod, snode);
+        str = !str ? (char *)"gr" : str;
     } else {
         if (node->type == YN_VALUE) {
             str = ay_get_lense_name(ctx->mod, value);
         } else if (!label && value && (value->tag == L_STORE)) {
             str = ay_get_lense_name(ctx->mod, value);
-        } else if (ay_lense_pattern_is_ident(label)) {
+        } else if (ay_lense_pattern_is_label(label)) {
             str = label->regexp->pattern->str;
         } else if (label && (label->tag == L_KEY)) {
             str = ay_get_lense_name(ctx->mod, label);
@@ -1127,7 +1462,11 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
     }
 
     AY_CHECK_COND(!str, ret);
-    ay_get_ident_standardized(str, buffer);
+    if (len) {
+        ay_get_ident_from_pattern_standardized(str, len, opt, buffer);
+    } else {
+        ay_get_ident_standardized(str, opt, buffer);
+    }
 
     return ret;
 }
@@ -1137,10 +1476,11 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, char *buffer)
  *
  * @param[in] ctx Context for printing.
  * @param[in] node Node for which the identifier will be printed.
+ * @param[in] opt Where the identifier will be placed.
  * @return 0 on success.
  */
 static int
-ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
+ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt)
 {
     int ret = 0;
     char ident[AY_MAX_IDENT_SIZE];
@@ -1148,7 +1488,7 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct ay_ynode *iter_start, *iter;
     uint32_t duplicates = 1;
 
-    ret = ay_get_yang_ident(ctx, node, ident);
+    ret = ay_get_yang_ident(ctx, node, opt, ident);
     AY_CHECK_RET(ret);
 
     /* Make duplicate identifiers unique. */
@@ -1157,7 +1497,7 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node)
         if (iter == node) {
             break;
         }
-        ret = ay_get_yang_ident(ctx, iter, siblings_ident);
+        ret = ay_get_yang_ident(ctx, iter, opt, siblings_ident);
         AY_CHECK_RET(ret);
         if (!strcmp(ident, siblings_ident)) {
             duplicates++;
@@ -1193,18 +1533,25 @@ ay_print_yang_data_path_delim(struct yprinter_ctx *ctx, ly_bool *printed)
  * @param[in] ctx Context for printing.
  * @param[in] list Node of type list.
  * @param[in] target Node for which the entire data-path is to be printed.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_data_path_item_list(struct yprinter_ctx *ctx, struct ay_ynode *list, struct ay_ynode *target)
 {
+    int ret = 0;
     struct lens *label;
     enum lens_tag labtag;
-    char *labstr;
+    const char *labstr;
 
     label = AY_LABEL_LENS(list);
-    if (ay_lense_pattern_is_ident(label)) {
+
+    if (ay_lense_pattern_is_label(label)) {
         labtag = L_LABEL;
         labstr = label->regexp->pattern->str;
+    } else if (ay_lense_pattern_has_idents(label)) {
+        ly_print(ctx->out, "##");
+        ret = ay_print_yang_ident(ctx, list, AY_IDENT_DATA_PATH);
+        return ret;
     } else {
         labtag = label->tag;
         labstr = labtag == L_LABEL ? label->string->str : NULL;
@@ -1218,6 +1565,8 @@ ay_print_yang_data_path_item_list(struct yprinter_ctx *ctx, struct ay_ynode *lis
     } else {
         ly_print(ctx->out, "$$");
     }
+
+    return ret;
 }
 
 /**
@@ -1227,32 +1576,36 @@ ay_print_yang_data_path_item_list(struct yprinter_ctx *ctx, struct ay_ynode *lis
  * @param[in] node Iterator which is moved by parents and a part of data-path is printed for each of them.
  * @param[in] target Node for which the data-path is to be printed.
  * @param[out] printed Flag will be set to 1 if some string is printed.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, struct ay_ynode *target,
         ly_bool *printed)
 {
+    int ret = 0;
     struct lens *label;
 
     label = AY_LABEL_LENS(node);
 
     if (AY_TYPE_LIST_KEY(node)) {
-        return;
+        return ret;
     } else if ((node->type == YN_CONTAINER) && !label) {
-        return;
+        return ret;
     }
 
     ay_print_yang_data_path_delim(ctx, printed);
     if ((node->type == YN_LIST) || (node->type == YN_CONTAINER)) {
-        ay_print_yang_data_path_item_list(ctx, node, target);
+        ret = ay_print_yang_data_path_item_list(ctx, node, target);
     } else if (label && (label->tag == L_LABEL)) {
         ly_print(ctx->out, "%s", label->string->str);
-    } else if (label && ay_lense_pattern_is_ident(label)) {
+    } else if (label && ay_lense_pattern_is_label(label)) {
         ly_print(ctx->out, "%s", label->regexp->pattern->str);
     } else {
         ly_print(ctx->out, "$$");
     }
     *printed = 1;
+
+    return ret;
 }
 
 /**
@@ -1262,16 +1615,22 @@ ay_print_yang_data_path_item(struct yprinter_ctx *ctx, struct ay_ynode *node, st
  * @param[in] node Iterator which is moved by parents.
  * @param[in] target Node for which the data-path is to be printed.
  * @param[in,out] printed Flag will be set to 1 if some string is printed.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node, struct ay_ynode *target, ly_bool *printed)
 {
-    if (AY_INDEX(ctx->tree, node) == AY_YNODE_LIST_FILES_INDEX) {
-        return;
+    int ret = 0;
+
+    if (node->parent->type == YN_ROOT) {
+        return ret;
     }
 
-    ay_print_yang_data_path_r(ctx, node->parent, target, printed);
-    ay_print_yang_data_path_item(ctx, node, target, printed);
+    ret = ay_print_yang_data_path_r(ctx, node->parent, target, printed);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_data_path_item(ctx, node, target, printed);
+
+    return ret;
 }
 
 /**
@@ -1279,24 +1638,30 @@ ay_print_yang_data_path_r(struct yprinter_ctx *ctx, struct ay_ynode *node, struc
  *
  * @param[in] ctx Context for printing.
  * @param[in] node Node for which the data-path is to be printed.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
+    int ret = 0;
     ly_bool printed = 0;
 
-    if (node->parent && (node->type == YN_LIST) && (node->parent->type == YN_ROOT)) {
+    if (node->parent && (node->parent->type == YN_ROOT)) {
         /* top-level files list */
-        return;
+        return ret;
     } else if (node->type == YN_VALUE) {
-        return;
+        return ret;
     } else if ((node->type == YN_CONTAINER) && !node->label) {
-        return;
+        return ret;
     }
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
-    ay_print_yang_data_path_r(ctx, node->parent, node, &printed);
-    ay_print_yang_data_path_item(ctx, node, node, &printed);
+    ret = ay_print_yang_data_path_r(ctx, node->parent, node, &printed);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_data_path_item(ctx, node, node, &printed);
+    AY_CHECK_RET(ret);
     ly_print(ctx->out, "\";\n");
+
+    return ret;
 }
 
 /**
@@ -1305,12 +1670,15 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
  * @param[in] ctx Context for printing.
  * @param[in] stop Node where to stop iterating.
  * @param[in] iter Iterator traveling through parents.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_value_path_r(struct yprinter_ctx *ctx, struct ay_ynode *stop, struct ay_ynode *iter)
 {
+    int ret = 0;
+
     if (iter == stop) {
-        return;
+        return ret;
     } else {
         ay_print_yang_value_path_r(ctx, stop, iter->parent);
     }
@@ -1318,7 +1686,9 @@ ay_print_yang_value_path_r(struct yprinter_ctx *ctx, struct ay_ynode *stop, stru
     if (iter->parent != stop) {
         ly_print(ctx->out, "/");
     }
-    ay_print_yang_ident(ctx, iter);
+    ret = ay_print_yang_ident(ctx, iter, AY_IDENT_DATA_PATH);
+
+    return ret;
 }
 
 /**
@@ -1326,10 +1696,12 @@ ay_print_yang_value_path_r(struct yprinter_ctx *ctx, struct ay_ynode *stop, stru
  *
  * @param[in] ctx Context for printing.
  * @param[in] node Node for which the value-yang-path is to be printed.
+ * @return 0 on success.
  */
-static void
+static int
 ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
+    int ret = 0;
     uint32_t i;
     struct ay_ynode *start, *iter, *valnode = NULL;
     struct lens *label, *value;
@@ -1338,10 +1710,10 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     value = AY_VALUE_LENS(node);
 
     if ((node->type == YN_CONTAINER) && !label) {
-        return;
+        return ret;
     } else if (((label->tag != L_KEY) && (label->tag != L_SEQ)) || !value || (node->type == YN_VALUE) ||
-            ay_lense_pattern_is_ident(label)) {
-        return;
+            ay_lense_pattern_is_label(label)) {
+        return ret;
     }
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
@@ -1364,8 +1736,10 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     assert(valnode);
 
     /* print */
-    ay_print_yang_value_path_r(ctx, start, valnode);
+    ret = ay_print_yang_value_path_r(ctx, start, valnode);
     ly_print(ctx->out, "\";\n");
+
+    return ret;
 }
 
 static void
@@ -1623,7 +1997,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
         assert(value && (value->tag == L_STORE));
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if (ay_lense_pattern_is_ident(label) && value) {
+    } else if (ay_lense_pattern_is_label(label) && value) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
     } else if (label && (label->tag == L_KEY)) {
@@ -1693,14 +2067,15 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
 
     ly_print(ctx->out, "%*sleaf-list ", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
     ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
-    ay_print_yang_data_path(ctx, node);
+    ret = ay_print_yang_data_path(ctx, node);
+    AY_CHECK_RET(ret);
 
     ay_print_yang_nesting_end(ctx);
 
@@ -1722,6 +2097,27 @@ ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang uses-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node for which the uses-stmt is to be printed.
+ */
+static int
+ay_print_yang_uses(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret = 0;
+
+    if (node->uses) {
+        ly_print(ctx->out, "%*suses ", ctx->space, "");
+        assert(node->uses->type == YN_GROUPING);
+        ret = ay_print_yang_ident(ctx, node->uses, AY_IDENT_NODE_NAME);
+        ly_print(ctx->out, ";\n");
+    }
+
+    return ret;
+}
+
+/**
  * @brief Print yang leaf-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -1734,7 +2130,7 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
 
     ly_print(ctx->out, "%*sleaf ", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
@@ -1743,8 +2139,33 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ret = ay_print_yang_default_value(ctx, node);
     AY_CHECK_RET(ret);
-    ay_print_yang_data_path(ctx, node);
-    ay_print_yang_value_path(ctx, node);
+    ret = ay_print_yang_data_path(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_value_path(ctx, node);
+
+    ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
+ * @brief Print yang grouping-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node printed as grouping node.
+ */
+static int
+ay_print_yang_grouping(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret = 0;
+
+    ly_print(ctx->out, "%*sgrouping ", ctx->space, "");
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
+    ay_print_yang_nesting_begin(ctx);
+
+    ret = ay_print_yang_children(ctx, node);
+    AY_CHECK_RET(ret);
 
     ay_print_yang_nesting_end(ctx);
 
@@ -1766,7 +2187,8 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*sleaf ", ctx->space, "");
 
-    ay_print_yang_ident(ctx, node);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
     label = AY_LABEL_LENS(node);
 
@@ -1810,7 +2232,8 @@ ay_print_yang_list_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*skey \"", ctx->space, "");
     for (iter = node->child; iter; iter = iter->next) {
         if (AY_TYPE_LIST_KEY(iter)) {
-            ay_print_yang_ident(ctx, iter);
+            ret = ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
+            AY_CHECK_RET(ret);
         }
     }
     ly_print(ctx->out, "\";\n");
@@ -1822,15 +2245,13 @@ ay_print_yang_list_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
  * @brief Print yang list of files.
  *
  * @param[in] ctx Context for printing.
- * @param[in] node Node of type list which is located on index AY_YNODE_LIST_FILES_INDEX.
+ * @param[in] node Node of type list containing config-file as a key.
  * @return 0 on success.
  */
 static int
 ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
-
-    assert(AY_INDEX(ctx->tree, node) == AY_YNODE_LIST_FILES_INDEX);
 
     ly_print(ctx->out, "%*slist ", ctx->space, "");
     ay_print_yang_module_name(ctx->mod, ctx->out);
@@ -1862,22 +2283,26 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
 
-    if (AY_INDEX(ctx->tree, node) == AY_YNODE_LIST_FILES_INDEX) {
+    if (node->parent->type == YN_ROOT) {
         ay_print_yang_list_files(ctx, node);
         return ret;
     }
 
     ly_print(ctx->out, "%*slist ", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
     ret = ay_print_yang_list_key(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_minelements(ctx, node);
-    ay_print_yang_data_path(ctx, node);
-    ay_print_yang_value_path(ctx, node);
+    ret = ay_print_yang_data_path(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_value_path(ctx, node);
+    AY_CHECK_RET(ret);
     ret = ay_print_yang_children(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_uses(ctx, node);
     AY_CHECK_RET(ret);
 
     ay_print_yang_nesting_end(ctx);
@@ -1898,12 +2323,16 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
 
     ly_print(ctx->out, "%*scontainer ", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
-    ay_print_yang_data_path(ctx, node);
-    ay_print_yang_value_path(ctx, node);
+    ret = ay_print_yang_data_path(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_value_path(ctx, node);
+    AY_CHECK_RET(ret);
     ret = ay_print_yang_children(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_uses(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
 
@@ -1958,6 +2387,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
     case YN_VALUE:
         ret = ay_print_yang_leaf(ctx, node);
         break;
+    case YN_GROUPING:
+        ret = ay_print_yang_grouping(ctx, node);
+        break;
     case YN_ROOT:
         ret = ay_print_yang_children(ctx, node);
         break;
@@ -1976,14 +2408,16 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static int
 ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
+    int ret = 0;
+
     if (node->parent) {
         ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
-        ay_print_yang_ident(ctx, node->parent);
+        ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
     } else {
         ly_print(ctx->out, "%*schoice %s", ctx->space, "", ctx->mod->name);
     }
 
-    return 0;
+    return ret;
 }
 
 /**
@@ -2289,6 +2723,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     case YN_VALUE:
         ly_print(ctx->out, "%*s ynode_tag: YN_VALUE\n", ctx->space, "");
+        break;
+    case YN_GROUPING:
+        ly_print(ctx->out, "%*s ynode_tag: YN_GROUPING\n", ctx->space, "");
         break;
     case YN_ROOT:
         ly_print(ctx->out, "%*s ynode_tag: YN_ROOT\n", ctx->space, "");
@@ -2737,7 +3174,7 @@ ay_ynode_rule_list(struct ay_ynode *node)
 {
     ly_bool has_key;
 
-    has_key = node->label && (node->label->lens->tag == L_KEY) && !ay_lense_pattern_is_ident(node->label->lens);
+    has_key = node->label && (node->label->lens->tag == L_KEY) && !ay_lense_pattern_is_label(node->label->lens);
     return (node->child || has_key) && node->label && ay_ynode_has_repetition(node);
 }
 
@@ -2811,7 +3248,7 @@ ay_ynode_container_has_leaf_key(struct ay_ynode *cont)
     struct lens *label;
 
     label = AY_LABEL_LENS(cont);
-    if (!label || (label->tag != L_KEY) || ay_lense_pattern_is_ident(label)) {
+    if (!label || (label->tag != L_KEY) || ay_lense_pattern_is_label(label)) {
         return 0;
     }
 
@@ -2889,7 +3326,7 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
     value = AY_VALUE_LENS(node);
 
     cond = ((node->type == YN_LEAF) || (node->type == YN_CONTAINER)) &&
-            label && (label->tag == L_KEY) && value && !ay_lense_pattern_is_ident(label);
+            label && (label->tag == L_KEY) && value && !ay_lense_pattern_is_label(label);
 
     return cond ? 2 : 0;
 }
@@ -2904,6 +3341,40 @@ static uint64_t
 ay_ynode_rule_leaflist_to_list(struct ay_ynode *node)
 {
     return (node->type == YN_LEAFLIST) && node->label && (node->label->lens->tag == L_SEQ) ? 2 : 0;
+}
+
+/**
+ * @brief Check whether list should be splitted based on pattern which consists of sequence of identifiers.
+ *
+ * @param[in] node to check.
+ * @return 0 or unsigned integer greater than 1 if node must be splitted.
+ */
+static uint64_t
+ay_ynode_rule_list_split(struct ay_ynode *node)
+{
+    struct lens *label;
+    uint64_t count;
+    uint8_t key_has_value, grouping_present;
+
+    label = AY_LABEL_LENS(node);
+
+    if ((node->type != YN_LIST) || !label || (label->tag != L_KEY)) {
+        return 0;
+    }
+
+    if ((count = ay_lense_pattern_idents_count(label)) && (count > 1)) {
+        key_has_value = node->child->next && (node->child->next->type == YN_VALUE);
+        grouping_present = !!(key_has_value ? node->child->next->next : node->child->next);
+        /* What should happens: grouping will be inserted and for every identifier there will be one list and key.
+         * But one list with key is already there (@p node is that list).
+         * So for grouping node (+1), first identifier in pattern (0), for every other identifiers in pattern (+2n).
+         * Also for every key there can be YN_VALUE node (+n).
+         * And therefore:
+         */
+        count = grouping_present + ((count - 1) * (2 + key_has_value));
+    }
+
+    return count > 1 ? count : 0;
 }
 
 /**
@@ -3059,6 +3530,30 @@ ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
 }
 
 /**
+ * @brief Insert new parent for @p child and his siblings behing him.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] child Index of first child to which the new parent will apply.
+ */
+static void
+ay_ynode_insert_parent_for_rest(struct ay_ynode *tree, uint32_t child)
+{
+    struct ay_ynode *iter, *parent;
+    uint32_t descendants = 0;
+
+    for (iter = &tree[child]; iter; iter = iter->next) {
+        descendants += iter->descendants + 1;
+    }
+    for (iter = tree[child].parent; iter; iter = iter->parent) {
+        iter->descendants++;
+    }
+    ay_ynode_insert_gap(tree, child);
+    parent = &tree[child];
+    parent->descendants = descendants;
+    ay_ynode_tree_correction(tree);
+}
+
+/**
  * @brief Insert new child for node.
  *
  * New inserted node will be the first child.
@@ -3151,13 +3646,13 @@ ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t s
     }
 
     subtree_size = tree[src].descendants + 1;
+    index = dst + tree[dst].descendants + 1;
     for (iter = tree[src].parent; iter; iter = iter->parent) {
         iter->descendants -= subtree_size;
     }
     for (iter = tree[dst].parent; iter; iter = iter->parent) {
         iter->descendants += subtree_size;
     }
-    index = dst + tree[dst].descendants + 1;
     ay_ynode_move_subtree(tree, index, src);
     ay_ynode_tree_correction(tree);
 }
@@ -3231,6 +3726,9 @@ ay_ynode_debug_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
         } else if (arr1[i].choice != arr2[i].choice) {
             printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.choice\n", iter, i);
             return 1;
+        } else if (arr1[i].uses != arr2[i].uses) {
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.uses\n", iter, i);
+            return 1;
         } else if (arr1[i].mandatory != arr2[i].mandatory) {
             printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.mandatory\n", iter, i);
             return 1;
@@ -3287,6 +3785,16 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, i);
+        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
+        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_SET_LY_ARRAY_SIZE(dupl, 0);
+    }
+
+    msg = "ynode insert_parent_for_rest";
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        ay_ynode_copy(dupl, tree);
+        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
+        ay_ynode_insert_parent_for_rest(dupl, i);
         ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
@@ -3856,8 +4364,8 @@ ay_insert_list_files(struct ay_ynode *tree)
 {
     struct ay_ynode *list;
 
-    ay_ynode_insert_parent(tree, AY_YNODE_LIST_FILES_INDEX);
-    list = &tree[AY_YNODE_LIST_FILES_INDEX];
+    ay_ynode_insert_parent(tree, 1);
+    list = &tree[1];
     list->type = YN_LIST;
 }
 
@@ -3886,7 +4394,7 @@ ay_insert_list_key(struct ay_ynode *tree)
         value = AY_VALUE_LENS(parent);
 
         assert(label);
-        if (value && ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label)))) {
+        if (value && ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_label(label)))) {
             ay_ynode_insert_child(tree, parent_idx);
             i++;
             tree[parent_idx + 1].type = YN_VALUE;
@@ -3899,7 +4407,7 @@ ay_insert_list_key(struct ay_ynode *tree)
             tree[parent_idx + 1].label = parent->label;
             tree[parent_idx + 1].value = parent->value;
             continue;
-        } else if ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label))) {
+        } else if ((label->tag == L_SEQ) || ((label->tag == L_KEY) && !ay_lense_pattern_is_label(label))) {
             ay_ynode_insert_child(tree, parent_idx);
             i++;
             tree[parent_idx + 1].type = YN_KEY;
@@ -3908,7 +4416,7 @@ ay_insert_list_key(struct ay_ynode *tree)
             continue;
         }
 
-        assert((label->tag == L_LABEL) || ay_lense_pattern_is_ident(label));
+        assert((label->tag == L_LABEL) || ay_lense_pattern_is_label(label));
         if (value) {
             assert(value->tag == L_STORE);
             /* child can be YN_KEY or YN_VALUE */
@@ -4028,7 +4536,7 @@ ay_node_split(struct ay_ynode *tree)
                 node = container->child;
                 container->type = YN_CONTAINER;
                 container->choice = node->choice;
-                if (label && ((label->tag == L_KEY) && !ay_lense_pattern_is_ident(label))) {
+                if (label && ((label->tag == L_KEY) && !ay_lense_pattern_is_label(label))) {
                     container->label = node->label;
                 }
                 container->value = node->value;
@@ -4077,6 +4585,226 @@ ay_ynode_leaflist_to_list(struct ay_ynode *tree)
             key->value = list->value;
         }
     }
+}
+
+/**
+ * @brief Find grouping which has the same nodes as @p listdata.
+ *
+ * @param[in] groupings_start First node of type YN_GROUPING. There may be other groupings behind it,
+ * which will also be searched.
+ * @param[in] listdata First data node behind list key (YN_VALUE to list key belongs to the key part).
+ * @param[in] listdata_count Number of nodes in @p listdata.
+ * @return Pointer to grouping or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_grouping(struct ay_ynode *groupings_start, struct ay_ynode *listdata, uint64_t listdata_count)
+{
+    uint64_t i, j;
+    struct ay_ynode *node1, *node2, *grouping;
+
+    if (!groupings_start || (groupings_start->type != YN_GROUPING) || !listdata) {
+        return NULL;
+    }
+
+    for (grouping = groupings_start; grouping && (grouping->type != YN_LIST); grouping = grouping->next) {
+        if (grouping->descendants != listdata_count) {
+            continue;
+        }
+        for (i = 0, j = 0; i < listdata_count; i++, j++) {
+            node1 = listdata + i;
+            node2 = grouping + j + 1;
+            if (!ay_ynode_equal(node1, node2)) {
+                break;
+            }
+        }
+        if (i != listdata_count) {
+            continue;
+        }
+
+        return grouping;
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief From the list node get the listdata part (nodes behind the list key).
+ *
+ * @param[in] list Node of type YN_LIST to process.
+ * @param[out] listdata_count Number of nodes in listdata.
+ * @param[out] Flag if list key consists of two nodes - one is key and one is YN_VALUE node.
+ * @return Pointer to first node in listdata part.
+ */
+static struct ay_ynode *
+ay_ynode_get_listdata(struct ay_ynode *list, uint64_t *listdata_count, ly_bool *key_has_value)
+{
+    ly_bool has_value;
+    struct ay_ynode *listdata;
+
+    has_value = list->child->next && (list->child->next->type == YN_VALUE);
+    if (has_value) {
+        listdata = list->child->next->next;
+        *listdata_count = list->descendants - 2;
+    } else {
+        listdata = list->child->next;
+        *listdata_count = list->descendants - 1;
+    }
+
+    if (key_has_value) {
+        *key_has_value = has_value;
+    }
+
+    return listdata;
+}
+
+/**
+ * @brief Split list if his pattern consists of identifiers in sequence.
+ * Also groupings may be inserted behind the config-file list.
+ *
+ * [key "a" | "b"] -> list a {} list b {}
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_list_split(struct ay_ynode *tree)
+{
+    ly_bool key_has_value;
+    uint64_t idents_count, listdata_count, i, j;
+    struct ay_ynode *last, *grouping, *list, *list_new, *listdata;
+
+    for (i = 1; i < tree->descendants; i++) {
+        list = &tree[i];
+
+        if (!ay_ynode_rule_list_split(list)) {
+            continue;
+        } else if (ay_ynode_splitted_seq_index(list) != 0) {
+            continue;
+        }
+
+        assert(list->label);
+        idents_count = ay_lense_pattern_idents_count(list->label->lens);
+        assert(idents_count > 1);
+        listdata = ay_ynode_get_listdata(list, &listdata_count, &key_has_value);
+        grouping = ay_ynode_get_grouping(tree->child->next, listdata, listdata_count);
+
+        if (listdata && !grouping) {
+            /* wrap listdata */
+            ay_ynode_insert_parent_for_rest(tree, AY_INDEX(tree, listdata));
+            grouping = listdata;
+            grouping->type = YN_GROUPING;
+            grouping->snode = grouping->parent->snode;
+            grouping->label = list->label;
+            grouping->choice = NULL;
+
+            /* temporary insert grouping behind config-file list (also behind groupings) */
+            last = ay_ynode_get_last(tree->child);
+            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, last), AY_INDEX(tree, grouping));
+        }
+
+        list->child->type = YN_INDEX;
+        /* insert new lists */
+        for (j = 0; j < (idents_count - 1); j++) {
+            /* insert new list node */
+            ay_ynode_insert_sibling(tree, AY_INDEX(tree, list));
+            list_new = list->next;
+            ay_ynode_copy_data(list_new, list);
+
+            /* insert key */
+            ay_ynode_insert_child(tree, AY_INDEX(tree, list_new));
+            ay_ynode_copy_data(list_new->child, list->child);
+
+            if (key_has_value) {
+                /* insert YN_VALUE */
+                ay_ynode_insert_sibling(tree, AY_INDEX(tree, list_new->child));
+                ay_ynode_copy_data(list_new->child->next, list->child->next);
+            }
+        }
+    }
+}
+
+/**
+ * @brief Set ynode.uses to the corresponding grouping.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_set_uses(struct ay_ynode *tree)
+{
+    struct ay_ynode *iter, *grouping;
+    struct lens *grlab, *listlab;
+
+    for (grouping = tree->child; grouping->type == YN_GROUPING; grouping = grouping->next) {
+        grlab = AY_LABEL_LENS(grouping);
+        assert(grouping->type == YN_GROUPING);
+        LY_ARRAY_FOR(tree, struct ay_ynode, iter) {
+            listlab = AY_LABEL_LENS(iter);
+            if ((iter->type == YN_LIST) && (ay_lnode_lense_equal(grlab, listlab))) {
+                iter->uses = grouping;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Set ynode.uses if listdata are equal to some grouping. If so, then listdata are deleted.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_delete_listdata_set_uses(struct ay_ynode *tree)
+{
+    uint64_t i, listdata_count;
+    struct ay_ynode *list, *listdata, *grouping, *iter;
+
+    if (tree->child->type != YN_GROUPING) {
+        return;
+    }
+
+    LY_ARRAY_FOR(tree, struct ay_ynode, list) {
+        /* get list */
+        if ((list->type != YN_LIST) || (list->uses)) {
+            continue;
+        }
+
+        listdata = ay_ynode_get_listdata(list, &listdata_count, NULL);
+        grouping = ay_ynode_get_grouping(tree->child, listdata, listdata_count);
+        if (!grouping) {
+            continue;
+        }
+
+        /* delete listdata */
+        for (i = 0; i < listdata_count; i++) {
+            ay_ynode_delete_node(tree, AY_INDEX(tree, listdata));
+        }
+        if (grouping > list) {
+            /* pointer correction */
+            grouping -= listdata_count;
+        }
+        assert(grouping->type == YN_GROUPING);
+
+        /* also set up for splitted lists siblings */
+        for (iter = list; iter && (iter->label == list->label); iter = iter->next) {
+            iter->uses = grouping;
+        }
+    }
+}
+
+/**
+ * @brief Move groupings in front of the config-file list.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_groupings_ahead(struct ay_ynode *tree)
+{
+    struct ay_ynode *last;
+
+    assert(tree->child->type == YN_LIST);
+    last = ay_ynode_get_last(tree->child);
+    if (last->type == YN_LIST) {
+        return;
+    }
+    ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, last), AY_INDEX(tree, tree->child));
 }
 
 /**
@@ -4243,6 +4971,17 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ay_delete_poor_container(*tree);
 
     ay_delete_choice_under_repetition(*tree);
+
+    /* [key "a" | "b"] -> list a {} list b {} */
+    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_split, ay_ynode_list_split);
+    AY_CHECK_RET(ret);
+
+    /* No other groupings will not be added, so move groupings in front of config-file list. */
+    ay_ynode_groupings_ahead(*tree);
+
+    /* The set_uses transformations must be the last because the ynode pointer is set. */
+    ay_ynode_delete_listdata_set_uses(*tree);
+    ay_ynode_set_uses(*tree);
 
     return ret;
 }
