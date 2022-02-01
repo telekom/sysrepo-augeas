@@ -14,49 +14,42 @@ module postfix_sasl_smtpd {
       type string;
     }
     leaf-list pwcheck_method {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "pwcheck_method";
     }
     leaf-list auxprop_plugin {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "auxprop_plugin";
     }
     leaf-list saslauthd_path {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "saslauthd_path";
     }
     leaf-list mech_list {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "mech_list";
     }
     leaf-list sql_engine {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "sql_engine";
     }
     leaf-list log_level {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }
       augex:data-path "log_level";
     }
     leaf-list auto_transition {
-      min-elements 1;
       type string {
         pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
       }

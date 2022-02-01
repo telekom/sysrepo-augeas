@@ -21,7 +21,6 @@ module csv {
       }
       list field {
         key "_id";
-        min-elements 1;
         augex:data-path "$$/$$";
         augex:value-yang-path "value";
         leaf _id {
@@ -35,7 +34,6 @@ module csv {
       }
       list field2 {
         key "_id";
-        min-elements 1;
         augex:data-path "$$/$$";
         augex:value-yang-path "value";
         leaf _id {

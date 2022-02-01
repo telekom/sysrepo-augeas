@@ -71,7 +71,6 @@ module dhclient {
   grouping stmt_block {
     list media {
       key "_id";
-      min-elements 1;
       augex:data-path "##media";
       leaf _id {
         type uint64;
@@ -82,7 +81,6 @@ module dhclient {
     }
     list request {
       key "_id";
-      min-elements 1;
       augex:data-path "##request";
       leaf _id {
         type uint64;
@@ -93,7 +91,6 @@ module dhclient {
     }
     list require {
       key "_id";
-      min-elements 1;
       augex:data-path "##require";
       leaf _id {
         type uint64;
@@ -104,7 +101,6 @@ module dhclient {
     }
     list send {
       key "_id";
-      min-elements 1;
       augex:data-path "##send";
       leaf _id {
         type uint64;
@@ -115,7 +111,6 @@ module dhclient {
     }
     list option {
       key "_id";
-      min-elements 1;
       augex:data-path "##option";
       leaf _id {
         type uint64;
@@ -126,7 +121,6 @@ module dhclient {
     }
     list append {
       key "_id";
-      min-elements 1;
       augex:data-path "##append";
       leaf _id {
         type uint64;
@@ -137,7 +131,6 @@ module dhclient {
     }
     list prepend {
       key "_id";
-      min-elements 1;
       augex:data-path "##prepend";
       leaf _id {
         type uint64;
@@ -148,7 +141,6 @@ module dhclient {
     }
     list default {
       key "_id";
-      min-elements 1;
       augex:data-path "##default";
       leaf _id {
         type uint64;
@@ -159,7 +151,6 @@ module dhclient {
     }
     list supersede {
       key "_id";
-      min-elements 1;
       augex:data-path "##supersede";
       leaf _id {
         type uint64;
@@ -170,7 +161,6 @@ module dhclient {
     }
     list interface {
       key "_id";
-      min-elements 1;
       augex:data-path "##interface";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -187,7 +177,6 @@ module dhclient {
     }
     list script {
       key "_id";
-      min-elements 1;
       augex:data-path "##script";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -204,7 +193,6 @@ module dhclient {
     }
     list bootp {
       key "_id";
-      min-elements 1;
       augex:data-path "##bootp";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -221,7 +209,6 @@ module dhclient {
     }
     list fixed-address {
       key "_id";
-      min-elements 1;
       augex:data-path "##fixed-address";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -238,7 +225,6 @@ module dhclient {
     }
     list filename {
       key "_id";
-      min-elements 1;
       augex:data-path "##filename";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -255,7 +241,6 @@ module dhclient {
     }
     list server-name {
       key "_id";
-      min-elements 1;
       augex:data-path "##server-name";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -272,7 +257,6 @@ module dhclient {
     }
     list medium {
       key "_id";
-      min-elements 1;
       augex:data-path "##medium";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -289,7 +273,6 @@ module dhclient {
     }
     list vendor_option_space {
       key "_id";
-      min-elements 1;
       augex:data-path "##vendor option space";
       augex:value-yang-path "sto_to_spc";
       leaf _id {
@@ -306,7 +289,6 @@ module dhclient {
     }
     list renew {
       key "_id";
-      min-elements 1;
       augex:data-path "##renew";
       leaf _id {
         type uint64;
@@ -317,7 +299,6 @@ module dhclient {
     }
     list rebind {
       key "_id";
-      min-elements 1;
       augex:data-path "##rebind";
       leaf _id {
         type uint64;
@@ -328,7 +309,6 @@ module dhclient {
     }
     list expire {
       key "_id";
-      min-elements 1;
       augex:data-path "##expire";
       leaf _id {
         type uint64;

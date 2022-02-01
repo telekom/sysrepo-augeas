@@ -4024,6 +4024,7 @@ ay_delete_choice_under_repetition(struct ay_ynode *tree)
     LY_ARRAY_FOR(tree, struct ay_ynode, iter) {
         if (iter->choice && ay_ynode_has_repetition(iter)) {
             iter->choice = NULL;
+            iter->min = 0;
         }
     }
 }
@@ -4702,6 +4703,7 @@ ay_ynode_list_split(struct ay_ynode *tree)
         }
 
         list->child->type = YN_INDEX;
+        list->min = 0;
         /* insert new lists */
         for (j = 0; j < (idents_count - 1); j++) {
             /* insert new list node */
