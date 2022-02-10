@@ -13,70 +13,78 @@ module dnsmasq {
     leaf config-file {
       type string;
     }
-    list address {
-      key "address";
-      augex:data-path "address";
-      leaf address {
-        type string {
-          pattern "[^/ \t\n]+";
-        }
-      }
-      leaf-list domain {
-        min-elements 1;
-        type string {
-          pattern "[^/ \t\n]+";
-        }
-        augex:data-path "address/domain";
-      }
-    }
-    list server {
+    list config-entries {
       key "_id";
-      augex:data-path "##server";
       leaf _id {
         type uint64;
         description
-          "Implicitly generated list key representing the position in augeas data.";
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value {
-        type string {
-          pattern "#|([^#@/ \t\n]+)";
-        }
-      }
-      leaf-list domain {
-        type string {
-          pattern "[^/ \t\n]+";
-        }
-        augex:data-path "server/domain";
-      }
-      leaf port {
-        type uint64;
-        augex:data-path "server/port";
-      }
-      container source {
-        augex:data-path "server/source";
-        leaf source {
-          type string {
-            pattern "[^#/ \t\n]+";
+      choice ch_config-entries {
+        container address {
+          augex:data-path "address";
+          augex:value-yang-path "sto_no_slash";
+          leaf sto_no_slash {
+            mandatory true;
+            type string {
+              pattern "[^/ \t\n]+";
+            }
+          }
+          leaf-list domain {
+            min-elements 1;
+            type string {
+              pattern "[^/ \t\n]+";
+            }
+            augex:data-path "domain";
           }
         }
-        leaf port {
-          type uint64;
-          augex:data-path "server/source/port";
+        container server {
+          augex:data-path "server";
+          augex:value-yang-path "server";
+          leaf server {
+            mandatory true;
+            type string {
+              pattern "#|([^#@/ \t\n]+)";
+            }
+          }
+          leaf-list domain {
+            type string {
+              pattern "[^/ \t\n]+";
+            }
+            augex:data-path "domain";
+          }
+          leaf port {
+            type uint64;
+            augex:data-path "port";
+          }
+          container source {
+            augex:data-path "source";
+            augex:value-yang-path "source";
+            leaf source {
+              type string {
+                pattern "[^#/ \t\n]+";
+              }
+            }
+            leaf port {
+              type uint64;
+              augex:data-path "port";
+            }
+          }
         }
-      }
-    }
-    list entry {
-      key "entry_re";
-      augex:data-path "$$";
-      augex:value-yang-path "sto_to_eol";
-      leaf entry_re {
-        type string {
-          pattern "addres((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|)|addre([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|)|addr([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|)|add([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|)|ad([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|)|serve((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|)|serv([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|)|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|)|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|)|(s[.0-9A-Z_a-df-z-]|a[.0-9A-Z_a-ce-z-]|[.0-9A-Z_b-rt-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|s|a|[.0-9A-Z_b-rt-z-]";
-        }
-      }
-      leaf sto_to_eol {
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        container entry {
+          augex:data-path "$$";
+          augex:value-yang-path "sto_to_eol";
+          leaf entry_re {
+            mandatory true;
+            type string {
+              pattern "addres((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|)|addre([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|)|addr([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|)|add([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|)|ad([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|)|serve((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|)|serv([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|)|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|)|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|)|(s[.0-9A-Z_a-df-z-]|a[.0-9A-Z_a-ce-z-]|[.0-9A-Z_b-rt-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|s|a|[.0-9A-Z_b-rt-z-]";
+            }
+          }
+          leaf sto_to_eol {
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+          }
         }
       }
     }

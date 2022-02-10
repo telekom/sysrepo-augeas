@@ -13,47 +13,57 @@ module postfix_sasl_smtpd {
     leaf config-file {
       type string;
     }
-    leaf-list pwcheck_method {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+    list config-entries {
+      key "_id";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      augex:data-path "pwcheck_method";
-    }
-    leaf-list auxprop_plugin {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+      choice ch_config-entries {
+        leaf pwcheck_method {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "pwcheck_method";
+        }
+        leaf auxprop_plugin {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "auxprop_plugin";
+        }
+        leaf saslauthd_path {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "saslauthd_path";
+        }
+        leaf mech_list {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "mech_list";
+        }
+        leaf sql_engine {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sql_engine";
+        }
+        leaf log_level {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "log_level";
+        }
+        leaf auto_transition {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "auto_transition";
+        }
       }
-      augex:data-path "auxprop_plugin";
-    }
-    leaf-list saslauthd_path {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-      }
-      augex:data-path "saslauthd_path";
-    }
-    leaf-list mech_list {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-      }
-      augex:data-path "mech_list";
-    }
-    leaf-list sql_engine {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-      }
-      augex:data-path "sql_engine";
-    }
-    leaf-list log_level {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-      }
-      augex:data-path "log_level";
-    }
-    leaf-list auto_transition {
-      type string {
-        pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-      }
-      augex:data-path "auto_transition";
     }
   }
 }

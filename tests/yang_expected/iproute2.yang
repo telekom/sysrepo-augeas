@@ -13,19 +13,27 @@ module iproute2 {
     leaf config-file {
       type string;
     }
-    list record {
-      key "id";
-      augex:data-path "$$";
-      augex:value-yang-path "value";
-      leaf id {
-        type string {
-          pattern "(0x[0-9a-fA-F]+)|([0-9]+)";
-        }
+    list config-entries {
+      key "_id";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[a-zA-Z0-9/-]+";
+      container record {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        leaf id {
+          mandatory true;
+          type string {
+            pattern "(0x[0-9a-fA-F]+)|([0-9]+)";
+          }
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[a-zA-Z0-9/-]+";
+          }
         }
       }
     }

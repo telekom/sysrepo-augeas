@@ -13,35 +13,55 @@ module csv {
     leaf config-file {
       type string;
     }
-    list entry {
+    list lns_semicol {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      list field {
-        key "_id";
-        augex:data-path "$$/$$";
-        augex:value-yang-path "value";
-        leaf _id {
+      container entry {
+        augex:data-path "$$";
+        leaf entry {
+          mandatory true;
           type uint64;
         }
-        leaf value {
-          type string {
-            pattern "([^\n\"#;])*";
+        list config-entries {
+          key "_id";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
           }
-        }
-      }
-      list field2 {
-        key "_id";
-        augex:data-path "$$/$$";
-        augex:value-yang-path "value";
-        leaf _id {
-          type uint64;
-        }
-        leaf value {
-          type string {
-            pattern "(\"[^\"#]*\")+";
+          choice ch_config-entries {
+            container field {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              leaf field {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "([^\n\"#;])*";
+                }
+              }
+            }
+            container field2 {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              leaf field {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "(\"[^\"#]*\")+";
+                }
+              }
+            }
           }
         }
       }

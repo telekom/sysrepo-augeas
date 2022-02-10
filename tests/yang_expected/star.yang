@@ -13,52 +13,62 @@ module star {
     leaf config-file {
       type string;
     }
-    leaf-list STAR_FIFOSIZE {
-      type string {
-        pattern "[0-9x*.a-z]+";
-      }
-      augex:data-path "STAR_FIFOSIZE";
-    }
-    leaf-list STAR_FIFOSIZE_MAX {
-      type string {
-        pattern "[0-9x*.a-z]+";
-      }
-      augex:data-path "STAR_FIFOSIZE_MAX";
-    }
-    list archive {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
-        type string {
-          pattern "(archive)([0-7])";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf device {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+      choice ch_config-entries {
+        leaf STAR_FIFOSIZE {
+          type string {
+            pattern "[0-9x*.a-z]+";
+          }
+          augex:data-path "STAR_FIFOSIZE";
         }
-        augex:data-path "$$/device";
-      }
-      leaf block {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+        leaf STAR_FIFOSIZE_MAX {
+          type string {
+            pattern "[0-9x*.a-z]+";
+          }
+          augex:data-path "STAR_FIFOSIZE_MAX";
         }
-        augex:data-path "$$/block";
-      }
-      leaf size {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+        container archive {
+          augex:data-path "$$";
+          leaf _id {
+            mandatory true;
+            type string {
+              pattern "(archive)([0-7])";
+            }
+          }
+          leaf device {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "device";
+          }
+          leaf block {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "block";
+          }
+          leaf size {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "size";
+          }
+          leaf istape {
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "istape";
+          }
         }
-        augex:data-path "$$/size";
-      }
-      leaf istape {
-        type string {
-          pattern "[^ \t\n]+";
-        }
-        augex:data-path "$$/istape";
       }
     }
   }

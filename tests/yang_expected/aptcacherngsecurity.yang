@@ -13,26 +13,30 @@ module aptcacherngsecurity {
     leaf config-file {
       type string;
     }
-    list AdminAuth {
+    list config-entries {
       key "_id";
-      augex:data-path "##AdminAuth";
       leaf _id {
         type uint64;
         description
-          "Implicitly generated list key representing the position in augeas data.";
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf authpair {
-        mandatory true;
-        type string {
-          pattern "[^ \t:/]*";
-        }
-        augex:data-path "AdminAuth/$$";
-        augex:value-yang-path "value";
-      }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^: \t\n]*";
+      container record {
+        augex:data-path "AdminAuth";
+        container authpair {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          leaf _id {
+            mandatory true;
+            type string {
+              pattern "[^ \t:/]*";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^: \t\n]*";
+            }
+          }
         }
       }
     }

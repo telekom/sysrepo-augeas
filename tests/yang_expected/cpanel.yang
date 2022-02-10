@@ -13,18 +13,25 @@ module cpanel {
     leaf config-file {
       type string;
     }
-    list kv {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
-      augex:value-yang-path "value";
       leaf _id {
-        type string {
-          pattern "[A-Za-z0-9:_.-]+";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value {
-        type string {
-          pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+      container kv {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        leaf _id {
+          type string {
+            pattern "[A-Za-z0-9:_.-]+";
+          }
+        }
+        leaf value {
+          type string {
+            pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+          }
         }
       }
     }

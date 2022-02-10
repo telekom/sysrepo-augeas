@@ -13,31 +13,39 @@ module hosts {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf ipaddr {
-        mandatory true;
-        type string {
-          pattern "[^# \n\t]+";
+      container record {
+        augex:data-path "$$";
+        leaf host {
+          mandatory true;
+          type uint64;
         }
-        augex:data-path "$$/ipaddr";
-      }
-      leaf canonical {
-        mandatory true;
-        type string {
-          pattern "[^# \n\t]+";
+        leaf ipaddr {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "ipaddr";
         }
-        augex:data-path "$$/canonical";
-      }
-      leaf-list alias {
-        type string {
-          pattern "[^# \n\t]+";
+        leaf canonical {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "canonical";
         }
-        augex:data-path "$$/alias";
+        leaf-list alias {
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "alias";
+        }
       }
     }
   }

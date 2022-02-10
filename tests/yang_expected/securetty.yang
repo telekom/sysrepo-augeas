@@ -13,17 +13,25 @@ module securetty {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
-      augex:value-yang-path "word";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf word {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n#]+";
+      container record {
+        augex:data-path "$$";
+        augex:value-yang-path "word";
+        leaf securetty {
+          mandatory true;
+          type uint64;
+        }
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#]+";
+          }
         }
       }
     }

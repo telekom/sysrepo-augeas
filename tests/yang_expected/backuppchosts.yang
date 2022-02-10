@@ -13,38 +13,46 @@ module backuppchosts {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf host {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+      container record {
+        augex:data-path "$$";
+        leaf _id {
+          mandatory true;
+          type uint64;
         }
-        augex:data-path "$$/host";
-      }
-      leaf dhcp {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf host {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "host";
         }
-        augex:data-path "$$/dhcp";
-      }
-      leaf user {
-        mandatory true;
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf dhcp {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "dhcp";
         }
-        augex:data-path "$$/user";
-      }
-      leaf-list moreusers {
-        type string {
-          pattern "[^#, \n\t/]+";
+        leaf user {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "user";
         }
-        augex:data-path "$$/moreusers";
+        leaf-list moreusers {
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "moreusers";
+        }
       }
     }
   }

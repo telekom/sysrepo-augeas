@@ -13,19 +13,28 @@ module gtkbookmarks {
     leaf config-file {
       type string;
     }
-    list bookmark {
-      key "bookmark";
-      augex:data-path "bookmark";
-      leaf bookmark {
-        type string {
-          pattern "[^ \t\n]+";
-        }
+    list config-entries {
+      key "_id";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf label {
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+      container entry {
+        augex:data-path "bookmark";
+        augex:value-yang-path "bookmark";
+        leaf bookmark {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n]+";
+          }
         }
-        augex:data-path "bookmark/label";
+        leaf label {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "label";
+        }
       }
     }
   }

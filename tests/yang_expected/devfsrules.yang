@@ -13,30 +13,46 @@ module devfsrules {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
-      }
-      leaf id {
-        mandatory true;
         type uint64;
-        augex:data-path "$$/id";
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      list entry {
-        key "_id";
-        augex:data-path "$$/$$";
-        augex:value-yang-path "line_re";
+      container record {
+        augex:data-path "$$";
         leaf _id {
-          type uint64;
-        }
-        leaf line_re {
           mandatory true;
           type string {
-            pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf id {
+          mandatory true;
+          type uint64;
+          augex:data-path "id";
+        }
+        list config-entries {
+          key "_id";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry {
+            augex:data-path "$$";
+            augex:value-yang-path "line_re";
+            leaf entry {
+              mandatory true;
+              type uint64;
+            }
+            leaf line_re {
+              mandatory true;
+              type string {
+                pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
+              }
+            }
           }
         }
       }

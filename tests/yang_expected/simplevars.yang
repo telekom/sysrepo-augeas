@@ -13,22 +13,29 @@ module simplevars {
     leaf config-file {
       type string;
     }
-    list entry {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
-      augex:value-yang-path "to_comment_re";
       leaf _id {
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf to_comment_re {
-        type union {
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "to_comment_re";
+        leaf _id {
           type string {
-            pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+            pattern "[A-Za-z0-9_.-]+";
           }
-          type string {
-            pattern "";
+        }
+        leaf to_comment_re {
+          type union {
+            type string {
+              pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";
+            }
+            type string {
+              pattern "";
+            }
           }
         }
       }

@@ -13,46 +13,50 @@ module rmt {
     leaf config-file {
       type string;
     }
-    leaf-list DEBUG {
-      type string {
-        pattern "[^ \t\n]+";
-      }
-      augex:data-path "DEBUG";
-    }
-    leaf-list USER {
-      type string {
-        pattern "[^ \t\n]+";
-      }
-      augex:data-path "USER";
-    }
-    list ACCESS {
+    list config-entries {
       key "_id";
-      augex:data-path "##ACCESS";
       leaf _id {
         type uint64;
         description
-          "Implicitly generated list key representing the position in augeas data.";
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf name {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+      choice ch_config-entries {
+        leaf DEBUG {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "DEBUG";
         }
-        augex:data-path "ACCESS/name";
-      }
-      leaf host {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+        leaf USER {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "USER";
         }
-        augex:data-path "ACCESS/host";
-      }
-      leaf path {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n]+";
+        container access {
+          augex:data-path "ACCESS";
+          leaf name {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "name";
+          }
+          leaf host {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "host";
+          }
+          leaf path {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "path";
+          }
         }
-        augex:data-path "ACCESS/path";
       }
     }
   }

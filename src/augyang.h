@@ -17,8 +17,9 @@
 #define AYV_LTREE               0x1
 #define AYV_YTREE               0x2
 #define AYV_YTREE_AFTER_TRANS   0x4
-#define AYV_TRANS_REMOVE        0x8
-#define AYV_TRANS_INSERT1       0x10
+#define AYV_TRANS1              0x8
+#define AYV_TRANS2              0x10
+#define AYV_TRANS3              0x20
 
 struct module;
 

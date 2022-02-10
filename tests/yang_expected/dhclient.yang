@@ -23,299 +23,194 @@ module dhclient {
           pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
         }
       }
-      container value {
-        choice ch_value {
-          container value {
-            leaf code {
-              mandatory true;
-              type string {
-                pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
-              }
-              augex:data-path "$$/code";
+      choice ch_word {
+        container node {
+          leaf code {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
             }
-            leaf value {
-              mandatory true;
-              type string {
-                pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
-              }
-              augex:data-path "$$/value";
-            }
+            augex:data-path "code";
           }
-          leaf eval {
+          leaf value {
             mandatory true;
             type string {
               pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
             }
-            augex:data-path "$$/#eval";
+            augex:data-path "value";
           }
+        }
+        leaf eval {
+          type string {
+            pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+          }
+          augex:data-path "#eval";
         }
       }
     }
   }
   grouping stmt_array {
-    list stmt_array {
+    list config-entries {
       key "_id";
-      min-elements 1;
-      augex:data-path "$$";
-      augex:value-yang-path "sto_to_spc";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf sto_to_spc {
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+      container stmt_array {
+        augex:data-path "$$";
+        augex:value-yang-path "sto_to_spc";
+        leaf stmt_array {
+          mandatory true;
+          type uint64;
+        }
+        leaf sto_to_spc {
+          mandatory true;
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
         }
       }
     }
   }
   grouping stmt_block {
-    list media {
+    list config-entries {
       key "_id";
-      augex:data-path "##media";
       leaf _id {
         type uint64;
         description
-          "Implicitly generated list key representing the position in augeas data.";
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      uses stmt_array;
-    }
-    list request {
-      key "_id";
-      augex:data-path "##request";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_array;
-    }
-    list require {
-      key "_id";
-      augex:data-path "##require";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_array;
-    }
-    list send {
-      key "_id";
-      augex:data-path "##send";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list option {
-      key "_id";
-      augex:data-path "##option";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list append {
-      key "_id";
-      augex:data-path "##append";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list prepend {
-      key "_id";
-      augex:data-path "##prepend";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list default {
-      key "_id";
-      augex:data-path "##default";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list supersede {
-      key "_id";
-      augex:data-path "##supersede";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list interface {
-      key "_id";
-      augex:data-path "##interface";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+      choice ch_config-entries {
+        container media {
+          augex:data-path "media";
+          uses stmt_array;
+        }
+        container request {
+          augex:data-path "request";
+          uses stmt_array;
+        }
+        container require {
+          augex:data-path "require";
+          uses stmt_array;
+        }
+        container send {
+          augex:data-path "send";
+          uses stmt_opt_mod;
+        }
+        container option {
+          augex:data-path "option";
+          uses stmt_opt_mod;
+        }
+        container append {
+          augex:data-path "append";
+          uses stmt_opt_mod;
+        }
+        container prepend {
+          augex:data-path "prepend";
+          uses stmt_opt_mod;
+        }
+        container default {
+          augex:data-path "default";
+          uses stmt_opt_mod;
+        }
+        container supersede {
+          augex:data-path "supersede";
+          uses stmt_opt_mod;
+        }
+        container interface {
+          augex:data-path "interface";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container script {
+          augex:data-path "script";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container bootp {
+          augex:data-path "bootp";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container fixed-address {
+          augex:data-path "fixed-address";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container filename {
+          augex:data-path "filename";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container server-name {
+          augex:data-path "server-name";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container medium {
+          augex:data-path "medium";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container vendor_option_space {
+          augex:data-path "vendor option space";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container renew {
+          augex:data-path "renew";
+          uses stmt_block_date;
+        }
+        container rebind {
+          augex:data-path "rebind";
+          uses stmt_block_date;
+        }
+        container expire {
+          augex:data-path "expire";
+          uses stmt_block_date;
         }
       }
-    }
-    list script {
-      key "_id";
-      augex:data-path "##script";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list bootp {
-      key "_id";
-      augex:data-path "##bootp";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list fixed-address {
-      key "_id";
-      augex:data-path "##fixed-address";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list filename {
-      key "_id";
-      augex:data-path "##filename";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list server-name {
-      key "_id";
-      augex:data-path "##server-name";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list medium {
-      key "_id";
-      augex:data-path "##medium";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list vendor_option_space {
-      key "_id";
-      augex:data-path "##vendor option space";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list renew {
-      key "_id";
-      augex:data-path "##renew";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_block_date;
-    }
-    list rebind {
-      key "_id";
-      augex:data-path "##rebind";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_block_date;
-    }
-    list expire {
-      key "_id";
-      augex:data-path "##expire";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_block_date;
     }
   }
   grouping stmt_block_date {
@@ -374,271 +269,161 @@ module dhclient {
     leaf config-file {
       type string;
     }
-    list timeout {
+    list config-entries {
       key "_id";
-      augex:data-path "##timeout";
-      augex:value-yang-path "sto_to_spc";
       leaf _id {
         type uint64;
         description
-          "Implicitly generated list key representing the position in augeas data.";
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+      choice ch_config-entries {
+        container timeout {
+          augex:data-path "timeout";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container retry {
+          augex:data-path "retry";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container select-timeout {
+          augex:data-path "select-timeout";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container reboot {
+          augex:data-path "reboot";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container backoff-cutoff {
+          augex:data-path "backoff-cutoff";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container initial-interval {
+          augex:data-path "initial-interval";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container do-forward-updates {
+          augex:data-path "do-forward-updates";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container reject {
+          augex:data-path "reject";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            mandatory true;
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
+        container append {
+          augex:data-path "append";
+          uses stmt_opt_mod;
+        }
+        container prepend {
+          augex:data-path "prepend";
+          uses stmt_opt_mod;
+        }
+        container default {
+          augex:data-path "default";
+          uses stmt_opt_mod;
+        }
+        container supersede {
+          augex:data-path "supersede";
+          uses stmt_opt_mod;
+        }
+        container media {
+          augex:data-path "media";
+          uses stmt_array;
+        }
+        container request {
+          augex:data-path "request";
+          uses stmt_array;
+        }
+        container require {
+          augex:data-path "require";
+          uses stmt_array;
+        }
+        container send {
+          augex:data-path "send";
+          uses stmt_opt_mod;
+        }
+        container option {
+          augex:data-path "option";
+          uses stmt_opt_mod;
+        }
+        container interface {
+          augex:data-path "interface";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+          uses stmt_block;
+        }
+        container lease {
+          augex:data-path "lease";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+          uses stmt_block;
+        }
+        container alias {
+          augex:data-path "alias";
+          augex:value-yang-path "sto_to_spc";
+          leaf sto_to_spc {
+            type string {
+              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            }
+          }
+          uses stmt_block;
         }
       }
-    }
-    list retry {
-      key "_id";
-      augex:data-path "##retry";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list select-timeout {
-      key "_id";
-      augex:data-path "##select-timeout";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list reboot {
-      key "_id";
-      augex:data-path "##reboot";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list backoff-cutoff {
-      key "_id";
-      augex:data-path "##backoff-cutoff";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list initial-interval {
-      key "_id";
-      augex:data-path "##initial-interval";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list do-forward-updates {
-      key "_id";
-      augex:data-path "##do-forward-updates";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list reject {
-      key "_id";
-      augex:data-path "##reject";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        mandatory true;
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-    }
-    list append {
-      key "_id";
-      augex:data-path "##append";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list prepend {
-      key "_id";
-      augex:data-path "##prepend";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list default {
-      key "_id";
-      augex:data-path "##default";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list supersede {
-      key "_id";
-      augex:data-path "##supersede";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list media {
-      key "_id";
-      augex:data-path "##media";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_array;
-    }
-    list request {
-      key "_id";
-      augex:data-path "##request";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_array;
-    }
-    list require {
-      key "_id";
-      augex:data-path "##require";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_array;
-    }
-    list send {
-      key "_id";
-      augex:data-path "##send";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list option {
-      key "_id";
-      augex:data-path "##option";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      uses stmt_opt_mod;
-    }
-    list interface {
-      key "_id";
-      augex:data-path "##interface";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-      uses stmt_block;
-    }
-    list lease {
-      key "_id";
-      augex:data-path "##lease";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-      uses stmt_block;
-    }
-    list alias {
-      key "_id";
-      augex:data-path "##alias";
-      augex:value-yang-path "sto_to_spc";
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key representing the position in augeas data.";
-      }
-      leaf sto_to_spc {
-        type string {
-          pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-        }
-      }
-      uses stmt_block;
     }
   }
 }

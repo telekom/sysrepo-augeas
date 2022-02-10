@@ -13,25 +13,33 @@ module grubenv {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf name {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z_][A-Za-z0-9_]*";
+      container record {
+        augex:data-path "$$";
+        leaf target {
+          mandatory true;
+          type uint64;
         }
-        augex:data-path "$$/name";
-      }
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+        leaf name {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z_][A-Za-z0-9_]*";
+          }
+          augex:data-path "name";
         }
-        augex:data-path "$$/value";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+          }
+          augex:data-path "value";
+        }
       }
     }
   }

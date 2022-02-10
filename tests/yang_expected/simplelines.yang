@@ -13,16 +13,25 @@ module simplelines {
     leaf config-file {
       type string;
     }
-    list line {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
-      augex:value-yang-path "value";
       leaf _id {
         type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value {
-        type string {
-          pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+      container line {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        leaf line {
+          mandatory true;
+          type uint64;
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
+          }
         }
       }
     }

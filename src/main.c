@@ -515,7 +515,7 @@ main(int argc, char **argv)
 
         if (show) {
             /* write result to stdout */
-            printf("%s\n", str);
+            printf("%s", str);
         } else {
             /* write result to the yang file */
             aym_insert_filename(modname, ".yang", filename);

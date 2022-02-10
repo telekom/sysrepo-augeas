@@ -13,20 +13,28 @@ module smbusers {
     leaf config-file {
       type string;
     }
-    list entry {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf-list username {
-        min-elements 1;
-        type string {
-          pattern "[^ \t\n]+";
+      container entry {
+        augex:data-path "$$";
+        leaf _id {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
         }
-        augex:data-path "$$/username";
+        leaf-list username {
+          min-elements 1;
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "username";
+        }
       }
     }
   }

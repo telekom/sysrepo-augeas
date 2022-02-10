@@ -29,10 +29,9 @@ module augeas-extension {
        resemble the Augeas tree. But the mapping is not straightforward.
        In some cases, it is necessary to add new nodes to the YANG schema.
        So the mapping between the Augeas tree and the YANG schema is
-       marked by data-path extension and the Augeas node address is written
-       to corresponding YANG node. The address consists of the Augeas node
-       names and together creates the path from the root of the Augeas tree
-       to that node.
+       marked by data-path extension. If you join the identifiers from
+       the data-path extensions from the root of the YANG tree to the some
+       YANG node, you get a path in the Augeas tree.
 
        However, it is also necessary to add some special symbols that can
        describe the address:
@@ -40,14 +39,6 @@ module augeas-extension {
        The variable name ('label') of the Augeas node can be defined by
        'key STR' and 'seq STR' and this must be somehow marked in the data-path.
        In the data-path, these variables are denoted by the symbol '$$'.
-
-       There cannot be records in the YANG list that have the same key,
-       but there can be nodes with the same name in the Augeas tree.
-       This collision is resolved by generating a key with a numeric data type
-       that is used only for indexing records. So there is no mapping
-       to any Augeas node for such the key. This condition is marked by
-       special symbols '##' in YANG list node. These symbols are followed by
-       the problematic Augeas node name.
        ";
 
   }

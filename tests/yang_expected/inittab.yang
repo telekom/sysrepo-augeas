@@ -13,34 +13,42 @@ module inittab {
     leaf config-file {
       type string;
     }
-    list record {
-      key "id";
-      augex:data-path "$$";
-      leaf id {
-        type string {
-          pattern "[^/#:\n]{1,4}";
-        }
+    list config-entries {
+      key "_id";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf runlevels {
-        mandatory true;
-        type string {
-          pattern "[^#:\n]*";
+      container record {
+        augex:data-path "$$";
+        leaf id {
+          mandatory true;
+          type string {
+            pattern "[^/#:\n]{1,4}";
+          }
         }
-        augex:data-path "$$/runlevels";
-      }
-      leaf action {
-        mandatory true;
-        type string {
-          pattern "[^#:\n]*";
+        leaf runlevels {
+          mandatory true;
+          type string {
+            pattern "[^#:\n]*";
+          }
+          augex:data-path "runlevels";
         }
-        augex:data-path "$$/action";
-      }
-      leaf process {
-        mandatory true;
-        type string {
-          pattern "[^#\n]*";
+        leaf action {
+          mandatory true;
+          type string {
+            pattern "[^#:\n]*";
+          }
+          augex:data-path "action";
         }
-        augex:data-path "$$/process";
+        leaf process {
+          mandatory true;
+          type string {
+            pattern "[^#\n]*";
+          }
+          augex:data-path "process";
+        }
       }
     }
   }

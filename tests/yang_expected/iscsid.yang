@@ -13,19 +13,27 @@ module iscsid {
     leaf config-file {
       type string;
     }
-    list kv {
-      key "key_re";
-      augex:data-path "$$";
-      augex:value-yang-path "value_re";
-      leaf key_re {
-        type string {
-          pattern "[][A-Za-z0-9_.-]+";
-        }
+    list config-entries {
+      key "_id";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value_re {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n](.*[^ \t\n])?";
+      container kv {
+        augex:data-path "$$";
+        augex:value-yang-path "value_re";
+        leaf key_re {
+          mandatory true;
+          type string {
+            pattern "[][A-Za-z0-9_.-]+";
+          }
+        }
+        leaf value_re {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n](.*[^ \t\n])?";
+          }
         }
       }
     }

@@ -13,30 +13,46 @@ module ceph {
     leaf config-file {
       type string;
     }
-    list record {
+    list config-entries {
       key "_id";
-      augex:data-path "$$";
       leaf _id {
-        type string {
-          pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|)|#comme([^\\]\n/n][^\\]\n/]*|)|#comm([^\\]\n/e][^\\]\n/]*|)|#com([^\\]\n/m][^\\]\n/]*|)|#co([^\\]\n/m][^\\]\n/]*|)|#c([^\\]\n/o][^\\]\n/]*|)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
-        }
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      list entry_re {
-        key "entry_re";
-        augex:data-path "$$/$$";
-        augex:value-yang-path "value";
-        leaf entry_re {
+      container record {
+        augex:data-path "$$";
+        leaf _id {
+          mandatory true;
           type string {
-            pattern "[A-Za-z0-9_.-][A-Za-z0-9 _.-]*[A-Za-z0-9_.-]";
+            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|)|#comme([^\\]\n/n][^\\]\n/]*|)|#comm([^\\]\n/e][^\\]\n/]*|)|#com([^\\]\n/m][^\\]\n/]*|)|#co([^\\]\n/m][^\\]\n/]*|)|#c([^\\]\n/o][^\\]\n/]*|)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
           }
         }
-        leaf value {
-          type union {
-            type string {
-              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+        list config-entries {
+          key "_id";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry_re {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf entry_re {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-][A-Za-z0-9 _.-]*[A-Za-z0-9_.-]";
+              }
             }
-            type string {
-              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            leaf value {
+              type union {
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
             }
           }
         }
