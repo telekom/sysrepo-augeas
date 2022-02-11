@@ -3558,13 +3558,15 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
  * Children of deleted node are moved up in the tree level.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] index Index of the ynode to be deleted.
+ * @param[in] node The ynode to be deleted.
  */
 static void
-ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
+ay_ynode_delete_node(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter;
+    uint32_t index;
 
+    index = AY_INDEX(tree, node);
     for (iter = tree[index].parent; iter; iter = iter->parent) {
         iter->descendants--;
     }
@@ -3576,19 +3578,17 @@ ay_ynode_delete_node(struct ay_ynode *tree, uint32_t index)
  * @brief Delete subtree.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] index Index of the subtree to be deleted.
+ * @param[in] subtree Root node of subtree to be deleted.
  */
 static void
-ay_ynode_delete_subtree(struct ay_ynode *tree, uint32_t index)
+ay_ynode_delete_subtree(struct ay_ynode *tree, struct ay_ynode *subtree)
 {
-    struct ay_ynode *node;
     uint32_t deleted_nodes;
 
-    node = &tree[index];
-    deleted_nodes = node->descendants + 1;
+    deleted_nodes = subtree->descendants + 1;
 
     for (uint32_t i = 0; i < deleted_nodes; i++) {
-        ay_ynode_delete_node(tree, index);
+        ay_ynode_delete_node(tree, subtree);
     }
 }
 
@@ -3596,18 +3596,18 @@ ay_ynode_delete_subtree(struct ay_ynode *tree, uint32_t index)
  * @brief Insert new parent (wrapper) for node.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] index Index of the ynode wrapped.
+ * @param[in] node Node that will be wrapped.
  */
 static void
-ay_ynode_insert_wrapper(struct ay_ynode *tree, uint32_t index)
+ay_ynode_insert_wrapper(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter, *wrapper;
 
-    for (iter = tree[index].parent; iter; iter = iter->parent) {
+    for (iter = node->parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
-    ay_ynode_insert_gap(tree, index);
-    wrapper = &tree[index];
+    ay_ynode_insert_gap(tree, AY_INDEX(tree, node));
+    wrapper = node;
     wrapper->descendants = (wrapper + 1)->descendants + 1;
     ay_ynode_tree_correction(tree);
 }
@@ -3616,18 +3616,18 @@ ay_ynode_insert_wrapper(struct ay_ynode *tree, uint32_t index)
  * @brief Insert new parent for all children.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] child Index of one of the children to whom a new parent will be inserted.
+ * @param[in] child Pointer to the one of children to whom a new parent will be inserted.
  */
 static void
-ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
+ay_ynode_insert_parent(struct ay_ynode *tree, struct ay_ynode *child)
 {
     struct ay_ynode *iter, *parent;
     uint32_t index;
 
-    for (iter = tree[child].parent; iter; iter = iter->parent) {
+    for (iter = child->parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
-    index = AY_INDEX(tree, tree[child].parent->child);
+    index = AY_INDEX(tree, child->parent->child);
     ay_ynode_insert_gap(tree, index);
     parent = &tree[index];
     parent->descendants = (parent - 1)->descendants - 1;
@@ -3635,25 +3635,25 @@ ay_ynode_insert_parent(struct ay_ynode *tree, uint32_t child)
 }
 
 /**
- * @brief Insert new parent for @p child and his siblings behing him.
+ * @brief Insert new parent for @p child and his siblings behind him.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] child Index of first child to which the new parent will apply.
+ * @param[in] child First child to which the new parent will apply.
  */
 static void
-ay_ynode_insert_parent_for_rest(struct ay_ynode *tree, uint32_t child)
+ay_ynode_insert_parent_for_rest(struct ay_ynode *tree, struct ay_ynode *child)
 {
     struct ay_ynode *iter, *parent;
     uint32_t descendants = 0;
 
-    for (iter = &tree[child]; iter; iter = iter->next) {
+    for (iter = child; iter; iter = iter->next) {
         descendants += iter->descendants + 1;
     }
-    for (iter = tree[child].parent; iter; iter = iter->parent) {
+    for (iter = child->parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
-    ay_ynode_insert_gap(tree, child);
-    parent = &tree[child];
+    ay_ynode_insert_gap(tree, AY_INDEX(tree, child));
+    parent = child;
     parent->descendants = descendants;
     ay_ynode_tree_correction(tree);
 }
@@ -3664,19 +3664,17 @@ ay_ynode_insert_parent_for_rest(struct ay_ynode *tree, uint32_t child)
  * New inserted node will be the first child.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] parent Index of the parent who will have new child.
+ * @param[in] parent Pointer to parent who will have new child.
  */
 static void
-ay_ynode_insert_child(struct ay_ynode *tree, uint32_t parent)
+ay_ynode_insert_child(struct ay_ynode *tree, struct ay_ynode *parent)
 {
     struct ay_ynode *iter;
-    uint32_t index;
 
-    for (iter = &tree[parent]; iter; iter = iter->parent) {
+    for (iter = parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
-    index = parent + 1;
-    ay_ynode_insert_gap(tree, index);
+    ay_ynode_insert_gap(tree, AY_INDEX(tree, parent + 1));
     ay_ynode_tree_correction(tree);
 }
 
@@ -3684,18 +3682,18 @@ ay_ynode_insert_child(struct ay_ynode *tree, uint32_t parent)
  * @brief Insert new sibling for node.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] node Index of the node who will have new sibling.
+ * @param[in] node Node who will have new sibling.
  */
 static void
-ay_ynode_insert_sibling(struct ay_ynode *tree, uint32_t node)
+ay_ynode_insert_sibling(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter, *sibling;
     uint32_t index;
 
-    for (iter = tree[node].parent; iter; iter = iter->parent) {
+    for (iter = node->parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
-    index = node + tree[node].descendants + 1;
+    index = AY_INDEX(tree, node) + node->descendants + 1;
     ay_ynode_insert_gap(tree, index);
     sibling = &tree[index];
     sibling->descendants = 0;
@@ -3735,28 +3733,28 @@ ay_ynode_move_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
  * @brief Move subtree to another place as a sibling.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] dst Index of the node whose sibling will be subtree.
- * @param[in] src Index to the root of subtree that moves.
+ * @param[in] dst Node whose sibling will be subtree.
+ * @param[in] src Root of subtree that moves.
  */
 static void
-ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
     struct ay_ynode *iter;
     uint32_t subtree_size, index;
 
-    if (tree[dst].next == &tree[src]) {
+    if (dst->next == src) {
         return;
     }
 
-    subtree_size = tree[src].descendants + 1;
-    index = dst + tree[dst].descendants + 1;
-    for (iter = tree[src].parent; iter; iter = iter->parent) {
+    subtree_size = src->descendants + 1;
+    index = AY_INDEX(tree, dst) + dst->descendants + 1;
+    for (iter = src->parent; iter; iter = iter->parent) {
         iter->descendants -= subtree_size;
     }
-    for (iter = tree[dst].parent; iter; iter = iter->parent) {
+    for (iter = dst->parent; iter; iter = iter->parent) {
         iter->descendants += subtree_size;
     }
-    ay_ynode_move_subtree(tree, index, src);
+    ay_ynode_move_subtree(tree, index, AY_INDEX(tree, src));
     ay_ynode_tree_correction(tree);
 }
 
@@ -3764,28 +3762,27 @@ ay_ynode_move_subtree_as_sibling(struct ay_ynode *tree, uint32_t dst, uint32_t s
  * @brief Move subtree to another place as a child.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] dst Index of the node whose the first child will be moved subtree.
- * @param[in] src Index to the root of subtree that moves.
+ * @param[in] dst Node whose the first child will be moved subtree.
+ * @param[in] src Root of subtree that moves.
  */
 static void
-ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+ay_ynode_move_subtree_as_child(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
     struct ay_ynode *iter;
-    uint32_t subtree_size, index;
+    uint32_t subtree_size;
 
-    if (tree[dst].child == &tree[src]) {
+    if (dst->child == src) {
         return;
     }
 
-    subtree_size = tree[src].descendants + 1;
-    for (iter = tree[src].parent; iter; iter = iter->parent) {
+    subtree_size = src->descendants + 1;
+    for (iter = src->parent; iter; iter = iter->parent) {
         iter->descendants -= subtree_size;
     }
-    for (iter = &tree[dst]; iter; iter = iter->parent) {
+    for (iter = dst; iter; iter = iter->parent) {
         iter->descendants += subtree_size;
     }
-    index = dst + 1;
-    ay_ynode_move_subtree(tree, index, src);
+    ay_ynode_move_subtree(tree, AY_INDEX(tree, dst + 1), AY_INDEX(tree, src));
     ay_ynode_tree_correction(tree);
 }
 
@@ -3793,17 +3790,17 @@ ay_ynode_move_subtree_as_child(struct ay_ynode *tree, uint32_t dst, uint32_t src
  * @brief Move subtree to another place as a last child.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] dst Index of the node whose the last child will be moved subtree.
- * @param[in] src Index to the root of subtree that moves.
+ * @param[in] dst Node whose the last child will be moved subtree.
+ * @param[in] src Root of subtree that moves.
  */
 static void
-ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
     struct ay_ynode *last;
 
-    for (last = tree[dst].child; last && last->next; last = last->next) {}
+    for (last = dst->child; last && last->next; last = last->next) {}
     if (last) {
-        ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, last), src);
+        ay_ynode_move_subtree_as_sibling(tree, last, src);
     } else {
         ay_ynode_move_subtree_as_child(tree, dst, src);
     }
@@ -3887,8 +3884,8 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     LY_ARRAY_FOR(tree, i) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_child(dupl, i);
-        ay_ynode_delete_node(dupl, i + 1);
+        ay_ynode_insert_child(dupl, &dupl[i]);
+        ay_ynode_delete_node(dupl, &dupl[i + 1]);
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -3897,8 +3894,8 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_wrapper(dupl, i);
-        ay_ynode_delete_node(dupl, i);
+        ay_ynode_insert_wrapper(dupl, &dupl[i]);
+        ay_ynode_delete_node(dupl, &dupl[i]);
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -3907,8 +3904,8 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_parent(dupl, i);
-        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
+        ay_ynode_insert_parent(dupl, &dupl[i]);
+        ay_ynode_delete_node(dupl, dupl[i + 1].parent);
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -3917,8 +3914,8 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_parent_for_rest(dupl, i);
-        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i + 1].parent));
+        ay_ynode_insert_parent_for_rest(dupl, &dupl[i]);
+        ay_ynode_delete_node(dupl, dupl[i + 1].parent);
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -3927,8 +3924,8 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         ay_ynode_copy(dupl, tree);
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_sibling(dupl, i);
-        ay_ynode_delete_node(dupl, AY_INDEX(dupl, dupl[i].next));
+        ay_ynode_insert_sibling(dupl, &dupl[i]);
+        ay_ynode_delete_node(dupl, dupl[i].next);
         AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
@@ -3974,9 +3971,9 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     msg = "ynode move_subtree_as_sibling";
     for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->next) {
-            ay_ynode_move_subtree_as_sibling(dupl, i, AY_INDEX(dupl, dupl[i].next->next));
+            ay_ynode_move_subtree_as_sibling(dupl, &dupl[i], dupl[i].next->next);
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
-            ay_ynode_move_subtree_as_sibling(dupl, AY_INDEX(dupl, place), AY_INDEX(dupl, dupl[i].next));
+            ay_ynode_move_subtree_as_sibling(dupl, place, dupl[i].next);
             AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
@@ -3984,8 +3981,8 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
     msg = "ynode move_subtree_as_child";
     for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
         if (dupl[i].next && dupl[i].next->child) {
-            ay_ynode_move_subtree_as_child(dupl, i, AY_INDEX(dupl, dupl[i].next->child));
-            ay_ynode_move_subtree_as_child(dupl, AY_INDEX(dupl, dupl[i].next), AY_INDEX(dupl, dupl[i].child));
+            ay_ynode_move_subtree_as_child(dupl, &dupl[i], dupl[i].next->child);
+            ay_ynode_move_subtree_as_child(dupl, dupl[i].next, dupl[i].child);
             AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
@@ -4127,7 +4124,7 @@ ay_delete_type_unknown(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         if ((tree[i].type == YN_UNKNOWN) && (!tree[i].child)) {
             parent = tree[i].parent;
-            ay_ynode_delete_node(tree, i);
+            ay_ynode_delete_node(tree, &tree[i]);
             i--;
             /* If the Unknown node has a single sibling, then set choice to NULL. */
             if (parent->child && !parent->child->next) {
@@ -4154,7 +4151,7 @@ ay_delete_comment(struct ay_ynode *tree)
         parent = iter->parent;
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL) && !strcmp("#comment", label->string->str)) {
-            ay_ynode_delete_node(tree, i);
+            ay_ynode_delete_node(tree, &tree[i]);
             i--;
             /* if the Comment node has a single sibling, then set choice to NULL */
             if (parent->child && !parent->child->next) {
@@ -4224,7 +4221,7 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             node2->min++;
 
             /* delete node1 because it is useless */
-            ay_ynode_delete_subtree(tree, AY_INDEX(tree, node1));
+            ay_ynode_delete_subtree(tree, node1);
             i--;
             break;
         }
@@ -4270,12 +4267,12 @@ repeat:
 
             if (!nodeval && (iterval->tag == L_STORE) && !node->child) {
                 iter->mandatory = 0;
-                ay_ynode_delete_node(tree, AY_INDEX(tree, node));
+                ay_ynode_delete_node(tree, node);
                 i--;
                 break;
             } else if (!iterval && (nodeval->tag == L_STORE) && !iter->child) {
                 node->mandatory = 0;
-                ay_ynode_delete_node(tree, AY_INDEX(tree, iter));
+                ay_ynode_delete_node(tree, iter);
                 goto repeat;
             }
         }
@@ -4321,7 +4318,7 @@ ay_ynode_delete_seq_node(struct ay_ynode *tree)
         }
 
         sibling->min = 1;
-        ay_ynode_delete_node(tree, AY_INDEX(tree, node));
+        ay_ynode_delete_node(tree, node);
         i--;
     }
 }
@@ -4349,7 +4346,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
         while (ay_ynode_rule_list_with_same_key(list1)) {
             if (!cont1_inserted && list1->child) {
                 /* in first iteration create cont1 */
-                ay_ynode_insert_parent(tree, AY_INDEX(tree, list1->child));
+                ay_ynode_insert_parent(tree, list1->child);
                 cont1 = list1->child;
                 cont1->type = YN_CONTAINER;
                 /* set cont1 the same choice */
@@ -4375,7 +4372,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             cont2->value = NULL;
 
             if (cont2->child) {
-                ay_ynode_move_subtree_as_last_child(tree, AY_INDEX(tree, list1), AY_INDEX(tree, cont2));
+                ay_ynode_move_subtree_as_last_child(tree, list1, cont2);
             }
 
             /* All containers (cont1 and cont2) without children should be deleted in ::ay_delete_poor_container(). */
@@ -4421,7 +4418,7 @@ ay_delete_container_with_same_key(struct ay_ynode *tree)
             cont2->label = NULL;
 
             /* move cont2 into cont1 */
-            ay_ynode_move_subtree_as_last_child(tree, AY_INDEX(tree, cont1), AY_INDEX(tree, cont2));
+            ay_ynode_move_subtree_as_last_child(tree, cont1, cont2);
         }
         /* TODO: Should be applied only for YN_VALUE. The value has inverse logic. It's an ugly hack. */
         cont1->mandatory = 1;
@@ -4456,7 +4453,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
             if (ay_lense_pattern_has_idents(label)) {
                 cont->type = YN_LEAF;
             } else {
-                ay_ynode_delete_node(tree, AY_INDEX(tree, cont));
+                ay_ynode_delete_node(tree, cont);
                 i--;
             }
         } else if (cont->descendants == 1) {
@@ -4464,7 +4461,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
             if (cont->child->type == YN_KEY) {
                 cont->child->type = YN_LEAF;
             }
-            ay_ynode_delete_node(tree, AY_INDEX(tree, cont));
+            ay_ynode_delete_node(tree, cont);
             i--;
         } else if (cont->child->choice) {
             for (iter = cont->child; iter; iter = iter->next) {
@@ -4473,7 +4470,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
                 }
             }
             if (!iter) {
-                ay_ynode_delete_node(tree, AY_INDEX(tree, cont));
+                ay_ynode_delete_node(tree, cont);
                 i--;
             }
         }
@@ -4518,7 +4515,7 @@ ay_insert_list_files(struct ay_ynode *tree)
 {
     struct ay_ynode *list;
 
-    ay_ynode_insert_parent(tree, 1);
+    ay_ynode_insert_parent(tree, &tree[1]);
     list = &tree[1];
     list->type = YN_LIST;
 
@@ -4548,7 +4545,7 @@ ay_insert_cont_key(struct ay_ynode *tree)
         parent = &tree[i];
         label = AY_LABEL_LENS(parent);
         if (ay_lense_pattern_has_idents(label) && !ay_lense_pattern_is_label(label)) {
-            ay_ynode_insert_child(tree, AY_INDEX(tree, parent));
+            ay_ynode_insert_child(tree, parent);
             parent->child->type = YN_VALUE;
             parent->child->label = parent->label;
             parent->child->value = parent->value;
@@ -4558,14 +4555,14 @@ ay_insert_cont_key(struct ay_ynode *tree)
         }
 
         assert((count == 1) || (count == 2));
-        ay_ynode_insert_child(tree, AY_INDEX(tree, parent));
+        ay_ynode_insert_child(tree, parent);
         key = parent->child;
         key->type = YN_KEY;
         key->label = parent->label;
         key->value = parent->value;
         ay_ynode_set_mandatory(key);
         if (count == 2) {
-            ay_ynode_insert_sibling(tree, AY_INDEX(tree, key));
+            ay_ynode_insert_sibling(tree, key);
             key->next->type = YN_VALUE;
             key->next->label = parent->label;
             key->next->value = parent->value;
@@ -4602,7 +4599,7 @@ ay_ynode_insert_container(struct ay_ynode *tree)
 
         /* All nodes under choice, which have common L_CONCAT, will have a new parent of type container. */
         /* insert container */
-        ay_ynode_insert_wrapper(tree, AY_INDEX(tree, first));
+        ay_ynode_insert_wrapper(tree, first);
         cont = first;
         first = cont->child;
         cont->type = YN_CONTAINER;
@@ -4612,7 +4609,7 @@ ay_ynode_insert_container(struct ay_ynode *tree)
         for (iter = cont->next; iter && iter->choice && (iter->choice->child == first->choice->child);
                 iter = iter->next) {
             iter->choice = NULL;
-            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, first), AY_INDEX(tree, iter));
+            ay_ynode_move_subtree_as_sibling(tree, first, iter);
         }
         first->choice = NULL;
     }
@@ -4716,7 +4713,7 @@ ay_ynode_list_split(struct ay_ynode *tree)
 
         if (listdata && !grouping) {
             /* wrap listdata */
-            ay_ynode_insert_parent_for_rest(tree, AY_INDEX(tree, listdata));
+            ay_ynode_insert_parent_for_rest(tree, listdata);
             grouping = listdata;
             grouping->type = YN_GROUPING;
             grouping->snode = grouping->parent->snode;
@@ -4725,7 +4722,7 @@ ay_ynode_list_split(struct ay_ynode *tree)
 
             /* temporary insert grouping behind config-file list (also behind groupings) */
             last = ay_ynode_get_last(tree->child);
-            ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, last), AY_INDEX(tree, grouping));
+            ay_ynode_move_subtree_as_sibling(tree, last, grouping);
         }
 
         list->min = 0;
@@ -4734,7 +4731,7 @@ ay_ynode_list_split(struct ay_ynode *tree)
         /* insert new lists */
         for (j = 0; j < (idents_count - 1); j++) {
             /* insert new list node */
-            ay_ynode_insert_sibling(tree, AY_INDEX(tree, list));
+            ay_ynode_insert_sibling(tree, list);
             list_new = list->next;
             ay_ynode_copy_data(list_new, list);
         }
@@ -4770,7 +4767,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             choice = child->choice;
 
             /* wrapper is list to maintain the order of the augeas data */
-            ay_ynode_insert_wrapper(tree, AY_INDEX(tree, child));
+            ay_ynode_insert_wrapper(tree, child);
             list = child;
             list->type = YN_LIST;
 
@@ -4778,7 +4775,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             while (list->next &&
                     ((list->next->type == YN_LIST) ||
                     ((list->next->type == YN_LEAFLIST) && (choice == list->next->choice)))) {
-                ay_ynode_move_subtree_as_last_child(tree, AY_INDEX(tree, list), AY_INDEX(tree, list->next));
+                ay_ynode_move_subtree_as_last_child(tree, list, list->next);
             }
 
             /* for every child in wrapper set type to container */
@@ -4851,7 +4848,7 @@ ay_ynode_delete_contdata_set_uses(struct ay_ynode *tree)
 
         /* delete contdata */
         for (j = 0; j < contdata_count; j++) {
-            ay_ynode_delete_node(tree, AY_INDEX(tree, contdata));
+            ay_ynode_delete_node(tree, contdata);
         }
         if (grouping > cont) {
             /* pointer correction */
@@ -4884,7 +4881,7 @@ ay_ynode_groupings_ahead(struct ay_ynode *tree)
     if (last->type == YN_LIST) {
         return;
     }
-    ay_ynode_move_subtree_as_sibling(tree, AY_INDEX(tree, last), AY_INDEX(tree, tree->child));
+    ay_ynode_move_subtree_as_sibling(tree, last, tree->child);
 }
 
 /**
