@@ -261,35 +261,70 @@ struct ay_ynode {
     uint32_t descendants;       /**< Number of descendants in the subtree where current node is the root. */
 
     enum yang_type type;        /**< Type of the ynode. */
-    union {
-        /* Applies to every yang_type except YN_ROOT */
-        struct {
-            struct ay_lnode *snode;     /**< Pointer to the corresponding lnode with lense tag L_SUBTREE.
-                                             Can be NULL if the ynode was inserted by some transformation. */
-            struct ay_lnode *label;     /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
-                                             or L_SEQ. Can be NULL. */
-            struct ay_lnode *value;     /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
-                                             Can be NULL. */
-            struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
-                                             Set if the node is under the influence of the union operator. */
-            struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
-                                             YN_CONTAINER and YN_LIST, for other types is always NULL. */
-            union {
-                uint8_t mandatory;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 is false. */
-                uint8_t min;            /**< Yang min-elements-stmt. Constraint for YN_LIST and YN_LEAFLIST. */
-            };
-        };
 
-        /* For YN_ROOT type */
-        struct {
-            const struct ay_lnode *ltree;   /**< Pointer to the root of the tree of lnodes. */
-            struct ay_dnode *labels;        /**< Dictionary for labels of type lnode for grouping labels to be printed
-                                                 in union-stmt. The key in the dictionary is the first label in the
-                                                 union and values in the dictionary are the remaining labels. */
-            struct ay_dnode *values;        /**< Dictionary for labels of type lnode. See ynode.labels. */
-        };
+    /* Applies to every yang_type except YN_ROOT. For YN_ROOT type node use conversion to struct ay_ynode_root. */
+
+    struct ay_lnode *snode;     /**< Pointer to the corresponding lnode with lense tag L_SUBTREE.
+                                     Can be NULL if the ynode was inserted by some transformation. */
+    struct ay_lnode *label;     /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
+                                     or L_SEQ. Can be NULL. */
+    struct ay_lnode *value;     /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
+                                     Can be NULL. */
+    struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
+                                     Set if the node is under the influence of the union operator. */
+    struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
+                                     YN_CONTAINER, for other types is always NULL. */
+    union {
+        uint8_t mandatory;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 is false. */
+        uint8_t min;            /**< Yang min-elements-stmt. Constraint for YN_LIST and YN_LEAFLIST. */
     };
 };
+
+/**
+ * @brief Specific structure for ynode of type YN_ROOT.
+ *
+ * The ynode of type YN_ROOT is always the first node in the ynode tree (in the Sized Array) and nowhere else.
+ */
+struct ay_ynode_root {
+    struct ay_ynode *parent;        /**< Always NULL. */
+    struct ay_ynode *next;          /**< Always NULL. */
+    struct ay_ynode *child;         /**< Pointer to the first child node. */
+    uint32_t descendants;           /**< Number of descendants in the ynode tree. */
+
+    enum yang_type type;            /**< Always YN_ROOT. */
+    const struct ay_lnode *ltree;   /**< Pointer to the root of the tree of lnodes. */
+    struct ay_dnode *labels;        /**< Dictionary for labels of type lnode for grouping labels to be printed
+                                         in union-stmt. The key in the dictionary is the first label in the
+                                         union and values in the dictionary are the remaining labels. */
+    struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
+    struct ay_lnode *choice;        /**< Not used. */
+    struct ay_ynode *uses;          /**< Not used. */
+    uint8_t mandatory;              /**< Not used. */
+};
+
+/**
+ * @brief Get ay_ynode_root.ltree from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_LTREE(TREE) \
+    ((struct ay_ynode_root *)TREE)->ltree
+
+/**
+ * @brief Get ay_ynode_root.labels from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_LABELS(TREE) \
+    ((struct ay_ynode_root *)TREE)->labels
+
+/**
+ * @brief Get ay_ynode_root.values from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_VALUES(TREE) \
+    ((struct ay_ynode_root *)TREE)->values
 
 /**
  * @brief Node (item) in the dictionary.
@@ -581,14 +616,17 @@ ay_dnode_insert(struct ay_dnode *dict, void *key, void *value)
 static void
 ay_ynode_tree_free(struct ay_ynode *tree)
 {
+    struct ay_ynode_root *root;
+
     assert(tree->type == YN_ROOT);
 
-    LY_ARRAY_FREE(tree->ltree);
-    tree->ltree = NULL;
-    LY_ARRAY_FREE(tree->labels);
-    tree->labels = NULL;
-    LY_ARRAY_FREE(tree->values);
-    tree->values = NULL;
+    root = (struct ay_ynode_root *)tree;
+    LY_ARRAY_FREE(root->ltree);
+    root->ltree = NULL;
+    LY_ARRAY_FREE(root->labels);
+    root->labels = NULL;
+    LY_ARRAY_FREE(root->values);
+    root->values = NULL;
 
     LY_ARRAY_FREE(tree);
 }
@@ -2094,9 +2132,9 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
     assert(lnode);
 
-    if ((lv_type == AY_LV_TYPE_LABEL) && (key = ay_dnode_find(ctx->tree->labels, lnode))) {
+    if ((lv_type == AY_LV_TYPE_LABEL) && (key = ay_dnode_find(AY_YNODE_ROOT_LABELS(ctx->tree), lnode))) {
         ay_print_yang_type_union(ctx, key);
-    } else if ((lv_type == AY_LV_TYPE_VALUE) && (key = ay_dnode_find(ctx->tree->values, lnode))) {
+    } else if ((lv_type == AY_LV_TYPE_VALUE) && (key = ay_dnode_find(AY_YNODE_ROOT_VALUES(ctx->tree), lnode))) {
         ay_print_yang_type_union(ctx, key);
     } else {
         ret = ay_print_yang_type_item(ctx, lnode->lens, 0);
@@ -3193,14 +3231,14 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
     }
     /* Set labels. */
     if (labcount) {
-        LY_ARRAY_CREATE(NULL, (*tree)->labels, labcount, return AYE_MEMORY);
+        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_LABELS(*tree), labcount, return AYE_MEMORY);
     }
     /* Set values. */
     if (valcount) {
-        LY_ARRAY_CREATE(NULL, (*tree)->values, valcount, return AYE_MEMORY);
+        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_VALUES(*tree), valcount, return AYE_MEMORY);
     }
     /* Set ltree. Note that this set must be the last operation before return. */
-    (*tree)->ltree = ltree;
+    AY_YNODE_ROOT_LTREE(*tree) = ltree;
 
     return 0;
 }
@@ -4329,7 +4367,7 @@ ay_delete_list_with_same_key(struct ay_ynode *tree)
             /* YN_VALUES nodes are united in yang union-stmt */
             if (cont2->value && list1->value) {
                 /* union will be created */
-                ay_dnode_insert(tree->values, list1->value, cont2->value);
+                ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), list1->value, cont2->value);
             } else if (cont2->value && !list1->value) {
                 /* [key lns1 ] | [key lns1 store lns2]   -> [key lns1 store lns2] */
                 list1->value = cont2->value;
@@ -4460,11 +4498,11 @@ ay_ynode_set_lv(struct ay_ynode *tree)
         value = tree[i].value;
         next = label;
         while ((next = ay_lnode_next_lv(next, AY_LV_TYPE_LABEL))) {
-            ay_dnode_insert(tree->labels, label, next);
+            ay_dnode_insert(AY_YNODE_ROOT_LABELS(tree), label, next);
         }
         next = value;
         while ((next = ay_lnode_next_lv(next, AY_LV_TYPE_VALUE))) {
-            ay_dnode_insert(tree->values, value, next);
+            ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), value, next);
         }
     }
 }
@@ -5004,7 +5042,8 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     /* Make a tree that reflects the order of records.
      * list A {} list B{} -> list C { container A{} container B{}}
      */
-    ret = ay_ynode_trans_insert2(tree, ay_ynode_rule_ordered_entries((*tree)->ltree), ay_ynode_ordered_entries);
+    ret = ay_ynode_trans_insert2(tree,
+            ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_ordered_entries);
     AY_CHECK_RET(ret);
 
     /* [label str store lns]*   -> container { YN_KEY{} } */
