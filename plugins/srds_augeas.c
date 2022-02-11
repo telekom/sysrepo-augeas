@@ -51,11 +51,11 @@
 #define AUG_LOG_ERRMEM_RET AUG_LOG_ERRMEM;return SR_ERR_NO_MEMORY
 #define AUG_LOG_ERRMEM_GOTO(rc, label) AUG_LOG_ERRMEM;rc = SR_ERR_NO_MEMORY; goto label
 #define AUG_LOG_ERRAUG_GOTO(augeas, rc, label) rc = augds_check_erraug(augeas);assert(rc);goto label
+#define AUG_LOG_ERRLY_RET(ctx) augds_log_errly(ctx);return SR_ERR_LY
 #define AUG_LOG_ERRLY_GOTO(ctx, rc, label) augds_log_errly(ctx);rc = SR_ERR_LY;goto label
 
 enum augds_ext_node_type {
     AUGDS_EXT_NODE_VALUE,           /**< matches specific augeas node value */
-    AUGDS_EXT_NODE_POSITION,        /**< matches specific augeas node position, starts with '##' */
     AUGDS_EXT_NODE_LABEL            /**< matches any augeas node with value being the label, is string '$$' */
 };
 
@@ -579,37 +579,6 @@ augds_get_ext_path(const struct lysc_node *node, const char **data_path, const c
 }
 
 /**
- * @brief Get last label segment (node) position.
- *
- * @param[in] label Augeas label.
- * @return Last node position.
- */
-static char *
-augds_get_label_node_position(const char *label)
-{
-    size_t len;
-    const char *ptr;
-    char *str;
-
-    len = strlen(label);
-    if (label[len - 1] != ']') {
-        /* single instance */
-        return strdup("1");
-    }
-
-    /* find predicate beginning */
-    for (ptr = (label + len) - 2; *ptr != '['; --ptr) {
-        assert(isdigit(*ptr));
-    }
-
-    /* print position to string */
-    if (asprintf(&str, "%d", atoi(ptr + 1)) == -1) {
-        return NULL;
-    }
-    return str;
-}
-
-/**
  * @brief Get pattern to match Augeas labels for this node.
  *
  * @param[in] node YANG node with the pattern.
@@ -975,26 +944,165 @@ augds_diff_get_op(const struct lyd_node *diff_node)
 }
 
 /**
- * @brief Look for a character in a string, searching backwards.
+ * @brief Get Augeas value from a diff node.
  *
- * @param[in] start Start of the whole string.
- * @param[in] s Pointer to @p start where to start the search.
- * @param[in] c Character to search for.
- * @return Pointer to the first character occurence;
- * @return NULL of the character was not found.
+ * @param[in] diff_node Node from diff to use.
+ * @param[in] new_data New data tree.
+ * @param[out] value Value associated with @p diff_node.
+ * @return SR error code.
  */
-static const char *
-augds_strchr_back(const char *start, const char *s, int c)
+static int
+augds_node_yang2aug_value(const struct lyd_node *diff_node, const struct lyd_node *new_data, const char **value)
 {
-    const char *ptr;
+    int rc = SR_ERR_OK;
+    char *path = NULL;
+    void *mem;
+    const struct lysc_node *cont_schild;
+    struct lyd_node *cont_child;
+    size_t len;
 
-    for (ptr = s; ptr[0] != c; --ptr) {
-        if (ptr == start) {
-            return NULL;
+    if (diff_node->schema->nodetype == LYS_CONTAINER) {
+        cont_schild = lysc_node_child(diff_node->schema);
+        if (cont_schild->flags & LYS_MAND_TRUE) {
+            /* first child is mandatory so there must be value in data, maybe even in the diff */
+            if (lyd_child(diff_node)->schema == cont_schild) {
+                cont_child = lyd_child(diff_node);
+            } else {
+                /* get container path */
+                path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
+                if (!path) {
+                    AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+                }
+
+                /* append first child name */
+                len = strlen(path);
+                mem = realloc(path, len + 1 + strlen(cont_schild->name) + 1);
+                if (!mem) {
+                    AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+                }
+                path = mem;
+                sprintf(path + len, "/%s", cont_schild->name);
+
+                /* get it from the new data */
+                if (lyd_find_path(new_data, path, 0, &cont_child)) {
+                    AUG_LOG_ERRLY_GOTO(LYD_CTX(new_data), rc, cleanup);
+                }
+            }
+            *value = lyd_get_value(cont_child);
+        } else {
+            /* no mandatory child meaning no value */
+            *value = NULL;
         }
+    } else {
+        /* just get the value of the term node */
+        assert(diff_node->schema->nodetype & LYD_NODE_TERM);
+        *value = lyd_get_value(diff_node);
     }
 
-    return ptr;
+cleanup:
+    free(path);
+    return rc;
+}
+
+/**
+ * @brief Check equality of a diff node and data node from which the diff was generated.
+ *
+ * @param[in] diff_node Diff node.
+ * @param[in] data_node Data node.
+ * @param[out] equal Whether the nodes are equal or not.
+ * @return SR error value.
+ */
+static int
+augds_node_diff_data_equal(const struct lyd_node *diff_node, const struct lyd_node *data_node, int *equal)
+{
+    const struct lyd_node *par1, *par2;
+    LY_ERR r;
+
+    par1 = diff_node;
+    par2 = data_node;
+    while (par1 && par2) {
+        /* compare */
+        r = lyd_compare_single(par1, par2, 0);
+        if (r == LY_ENOT) {
+            /* differs */
+            break;
+        } else if (r) {
+            /* error */
+            AUG_LOG_ERRLY_RET(LYD_CTX(par1));
+        }
+
+        /* next iter */
+        par1 = lyd_parent(par1);
+        par2 = lyd_parent(par2);
+    }
+
+    if (par1 || par2) {
+        *equal = 0;
+    } else {
+        *equal = 1;
+    }
+    return SR_ERR_OK;
+}
+
+/**
+ * @brief Get Augeas label index from a diff node.
+ *
+ * @param[in] diff_node Node from diff to use.
+ * @param[in] new_data New data tree.
+ * @param[out] index Label index associated with @p diff_node, none if 0.
+ * @return SR error code.
+ */
+static int
+augds_node_yang2aug_label_index(const struct lyd_node *diff_node, const struct lyd_node *new_data, uint32_t *index)
+{
+    int rc = SR_ERR_OK, equal;
+    struct ly_set *set = NULL;
+    uint32_t i;
+    char *path = NULL;
+
+    *index = 0;
+
+    if (diff_node->schema->nodetype & LYD_NODE_TERM) {
+        /* no index */
+        goto cleanup;
+    }
+
+    assert(diff_node->schema->nodetype == LYS_CONTAINER);
+
+    /* get path to all the instances */
+    path = lysc_path(diff_node->schema, LYSC_PATH_DATA, NULL, 0);
+    if (!path) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+
+    /* find all instances of this schema node */
+    if (lyd_find_xpath(new_data, path, &set)) {
+        AUG_LOG_ERRLY_GOTO(LYD_CTX(new_data), rc, cleanup);
+    }
+
+    *index = 1;
+    for (i = 0; i < set->count; ++i) {
+        /* check whether we have not reached our instance */
+        if ((rc = augds_node_diff_data_equal(diff_node, set->dnodes[i], &equal))) {
+            goto cleanup;
+        }
+        if (equal) {
+            /* we have found all preceding instances */
+            break;
+        }
+
+        ++(*index);
+    }
+
+    if (i == set->count) {
+        /* our instance not found */
+        AUG_LOG_ERRINT_GOTO(rc, cleanup);
+    }
+
+cleanup:
+    free(path);
+    ly_set_free(set, NULL);
+    return rc;
 }
 
 /**
@@ -1002,147 +1110,106 @@ augds_strchr_back(const char *start, const char *s, int c)
  *
  * @param[in] node YANG data node.
  * @param[in] parent_aug_path Augeas path of the YANG data parent of @p node.
+ * @param[in] new_data New data tree.
  * @param[out] aug_path Augeas path to store.
  * @param[out] aug_value Augeas value to store.
  * @param[out] node2 Second YANG data node if both reference single Augeas node.
  * @return SR error code.
  */
 static int
-augds_node_yang2aug(const struct lyd_node *node, const char *parent_aug_path, char **aug_path, const char **aug_value,
-        struct lyd_node **node2)
+augds_node_yang2aug(const struct lyd_node *node, const char *parent_aug_path, const struct lyd_node *new_data,
+        char **aug_path, const char **aug_value, struct lyd_node **node2)
 {
-    int rc = SR_ERR_OK, path_seg_len;
-    const char *data_path, *value_path;
-    const char *parent_data_path = NULL, *parent_node, *start, *end, *node_name, *path_segment, *index;
-    char *result = NULL, *tmp;
+    int rc = SR_ERR_OK;
+    const char *data_path, *value_path, *node_name, *label;
+    char index_str[24];
     enum augds_ext_node_type node_type;
+    uint32_t index;
 
+    *aug_path = NULL;
+    *aug_value = NULL;
     *node2 = NULL;
 
     /* node extension data-path */
     augds_get_ext_path(node->schema, &data_path, &value_path);
     if (!data_path) {
         /* nothing to set in augeas data */
-        *aug_path = NULL;
-        *aug_value = NULL;
         goto cleanup;
     }
 
-    /* parent last node */
-    if (node->parent) {
-        augds_get_ext_path(node->parent->schema, &parent_data_path, NULL);
+    /* handle special ext path node characters */
+    if (!strncmp(data_path, "$$", 2)) {
+        node_type = AUGDS_EXT_NODE_LABEL;
+        node_name = data_path + 2;
+    } else {
+        node_type = AUGDS_EXT_NODE_VALUE;
+        node_name = data_path;
     }
-    parent_node = parent_data_path ? augds_get_path_node(parent_data_path, 1) : NULL;
 
-    end = data_path + strlen(data_path);
-    do {
-        start = augds_strchr_back(data_path, end - 1, '/');
-        if (start) {
-            /* skip slash */
-            ++start;
+    /* get augeas label */
+    switch (node_type) {
+    case AUGDS_EXT_NODE_LABEL:
+        /* YANG data value as augeas label */
+        if ((rc = augds_node_yang2aug_value(node, new_data, &label))) {
+            goto cleanup;
+        }
+        index = 0;
+        break;
+    case AUGDS_EXT_NODE_VALUE:
+        /* ext path node (YANG schema node name) as augeas label */
+        label = node_name;
+        if ((rc = augds_node_yang2aug_label_index(node, new_data, &index))) {
+            goto cleanup;
+        }
+        break;
+    }
+
+    /* get augeas value */
+    switch (node_type) {
+    case AUGDS_EXT_NODE_LABEL:
+        if (value_path) {
+            /* value is stored in a different YANG node (it may not exist if no value was set) */
+            assert(node->schema->nodetype != LYS_CONTAINER);
+            lyd_find_path(lyd_parent(node), value_path, 0, node2);
+            *aug_value = lyd_get_value(*node2);
         } else {
-            /* first node, last processed */
-            start = data_path;
+            /* no value at this Augeas path */
+            *aug_value = NULL;
         }
-
-        /* handle special ext path node characters */
-        if (!strncmp(start, "$$", 2)) {
-            node_type = AUGDS_EXT_NODE_LABEL;
-            node_name = start + 2;
-        } else if (!strncmp(start, "##", 2)) {
-            node_type = AUGDS_EXT_NODE_POSITION;
-            node_name = start + 2;
-        } else {
-            node_type = AUGDS_EXT_NODE_VALUE;
-            node_name = start;
+        break;
+    case AUGDS_EXT_NODE_VALUE:
+        /* get value from the YANG node (or first child) */
+        if ((rc = augds_node_yang2aug_value(node, new_data, aug_value))) {
+            goto cleanup;
         }
+        break;
+    }
 
-        if (parent_node && ((signed)strlen(parent_node) == end - node_name) &&
-                !strncmp(parent_node, node_name, strlen(parent_node))) {
-            /* remaining ext path prefix is the ext path of the parent */
-            assert(parent_aug_path);
-            path_segment = parent_aug_path;
-            path_seg_len = strlen(path_segment);
-
-            /* full path processed, exit loop */
-            start = data_path;
-        } else {
-            switch (node_type) {
-            case AUGDS_EXT_NODE_LABEL:
-                /* YANG data value as augeas label */
-                if (node->schema->nodetype & LYD_NODE_INNER) {
-                    path_segment = lyd_get_value(lyd_child(node));
-                } else {
-                    path_segment = lyd_get_value(node);
-                }
-                path_seg_len = strlen(path_segment);
-                break;
-            case AUGDS_EXT_NODE_POSITION:
-            case AUGDS_EXT_NODE_VALUE:
-                /* ext path node (YANG schema node name) as augeas label */
-                path_segment = node_name;
-                path_seg_len = end - node_name;
-                break;
-            }
-        }
-
-        index = NULL;
-        if (!result) {
-            /* last node being processed (first iteration), set augeas value */
-            if (value_path) {
-                /* value is stored in a different YANG node (it may not exist is no value was set) */
-                lyd_find_path((node->schema->nodetype & LYD_NODE_INNER) ? node : lyd_parent(node), value_path, 0, node2);
-                *aug_value = lyd_get_value(*node2);
-            } else {
-                switch (node_type) {
-                case AUGDS_EXT_NODE_LABEL:
-                case AUGDS_EXT_NODE_POSITION:
-                    *aug_value = NULL;
-                    break;
-                case AUGDS_EXT_NODE_VALUE:
-                    if (node->schema->nodetype & LYD_NODE_INNER) {
-                        *aug_value = lyd_get_value(lyd_child(node));
-                    } else {
-                        *aug_value = lyd_get_value(node);
-                    }
-                    break;
-                }
-            }
-
-            /* also needs an index */
-            if (node_type == AUGDS_EXT_NODE_POSITION) {
-                if (node->schema->nodetype & LYD_NODE_INNER) {
-                    assert(!strcmp(LYD_NAME(lyd_child(node)), "_id"));
-                    index = lyd_get_value(lyd_child(node));
-                } else {
-                    assert(!strcmp(LYD_NAME(node), "_id"));
-                    index = lyd_get_value(node);
-                }
-            }
-        }
-
-        /* add path segment */
-        if (asprintf(&tmp, "%.*s%s%s%s%s%s", path_seg_len, path_segment, result ? "/" : "", result ? result : "",
-                index ? "[" : "", index ? index : "", index ? "]" : "") == -1) {
-            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
-        }
-        free(result);
-        result = tmp;
-
-        /* next iter */
-        end = start - 1;
-    } while (start != data_path);
+    /* generate augeas label */
+    if (index) {
+        sprintf(index_str, "[%" PRIu32 "]", index);
+    } else {
+        strcpy(index_str, "");
+    }
+    if (asprintf(aug_path, "%s%s%s%s", parent_aug_path ? parent_aug_path : "", parent_aug_path ? "/" : "", label,
+            index_str) == -1) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
 
 cleanup:
-    if (rc) {
-        free(result);
-        *aug_path = NULL;
-    } else {
-        *aug_path = result;
-    }
     return rc;
 }
 
+/**
+ * @brief Apply single diff node on Augeas data.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] op Operation to apply.
+ * @param[in] aug_path Augeas path in the data.
+ * @param[in] aug_value Augeas value in the data for the path.
+ * @param[out] applied_r Set if all the descendants were applied recursively, too.
+ * @return SR error code.
+ */
 static int
 augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_path, const char *aug_value, int *applied_r)
 {
@@ -1224,10 +1291,12 @@ cleanup:
  * @param[in] diff YANG data diff subtree to apply.
  * @param[in] parent_path Augeas path of the YANG data diff parent of @p diff.
  * @param[in] parent_op YANG data diff parent operation, 0 if none.
+ * @param[in] new_data New data tree.
  * @return SR error code.
  */
 static int
-augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff, const char *parent_path, enum augds_diff_op parent_op)
+augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff, const char *parent_path, enum augds_diff_op parent_op,
+        const struct lyd_node *new_data)
 {
     int rc = SR_ERR_OK, applied_r;
     enum augds_diff_op cur_op, cur_op2;
@@ -1236,7 +1305,7 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff, const char *pare
     struct lyd_node *diff2;
 
     /* generate augeas path */
-    if ((rc = augds_node_yang2aug(diff, parent_path, &aug_path, &aug_value, &diff2))) {
+    if ((rc = augds_node_yang2aug(diff, parent_path, new_data, &aug_path, &aug_value, &diff2))) {
         goto cleanup;
     }
 
@@ -1266,7 +1335,7 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff, const char *pare
     if (!applied_r) {
         /* process children recursively */
         LY_LIST_FOR(lyd_child_no_keys(diff), diff) {
-            if ((rc = augds_yang2aug_diff_r(aug, diff, aug_path, cur_op))) {
+            if ((rc = augds_yang2aug_diff_r(aug, diff, aug_path, cur_op, new_data))) {
                 goto cleanup;
             }
         }
@@ -1388,7 +1457,7 @@ srpds_aug_store(const struct lys_module *mod, sr_datastore_t ds, const struct ly
 
         /* apply diff to augeas data */
         root = lyd_parent(set->dnodes[i]);
-        if ((rc = augds_yang2aug_diff_r(auginfo.aug, root, NULL, augds_diff_get_op(root)))) {
+        if ((rc = augds_yang2aug_diff_r(auginfo.aug, root, NULL, augds_diff_get_op(root), mod_data))) {
             goto cleanup;
         }
 
@@ -1628,17 +1697,11 @@ augds_ext_label_node_equal(const char *ext_node, const char *label_node, enum au
             *node_type = AUGDS_EXT_NODE_LABEL;
         }
         return 1;
-    } else if (!strncmp(ext_node, "##", 2)) {
-        if (node_type) {
-            *node_type = AUGDS_EXT_NODE_POSITION;
-        }
-        ext_node += 2;
-    } else {
-        if (node_type) {
-            *node_type = AUGDS_EXT_NODE_VALUE;
-        }
     }
 
+    if (node_type) {
+        *node_type = AUGDS_EXT_NODE_VALUE;
+    }
     return !strcmp(ext_node, label_node);
 }
 
@@ -1697,20 +1760,20 @@ static int augds_aug2yang_augnode_r(augeas *aug, const struct augnode *augnodes,
  * @param[in] augnodes Array of augnodes to transform.
  * @param[in] augnode_count Count of @p augnodes.
  * @param[in] parent_label Augeas data parent label (absolute path).
- * @param[in,out] label_matches Labels matched for @p parent_label, used ones are freed.
- * @param[in,out] label_count Count of @p label_matches, is updated.
+ * @param[in,out] label_matches Labels matched for @p parent_label, used ones are freed and set to NULL.
+ * @param[in] label_count Count of @p label_matches.
  * @param[in] parent YANG data current parent to append to, may be NULL.
  * @param[in,out] first YANG data first top-level sibling.
  * @return SR error code.
  */
 static int
 augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uint32_t augnode_count, const char *parent_label,
-        char ***label_matches, int *label_count, struct lyd_node *parent, struct lyd_node **first)
+        char **label_matches, int label_count, struct lyd_node *parent, struct lyd_node **first)
 {
     int rc = SR_ERR_OK, j, m;
     uint32_t i;
     const char *value, *value2, *ext_node, *label_node;
-    char *label, *label_node_d = NULL, *pos_str = NULL;
+    char *label, *label_node_d = NULL, *pos_str = NULL, idx_str[22];
     enum augds_ext_node_type node_type;
     struct lyd_node *new_node, *parent2;
 
@@ -1719,13 +1782,15 @@ augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uin
             ext_node = augds_get_path_node(augnodes[i].data_path, 0);
 
             /* handle all matching labels */
-            j = 0;
-            while (j < *label_count) {
-                label = (*label_matches)[j];
+            for (j = 0; j < label_count; ++j) {
+                label = label_matches[j];
+                if (!label) {
+                    continue;
+                }
+
                 label_node = augds_get_label_node(label, &label_node_d);
                 if (!augds_ext_label_node_equal(ext_node, label_node, &node_type)) {
                     /* not a match */
-                    ++j;
                     goto next_iter;
                 }
 
@@ -1733,15 +1798,12 @@ augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uin
                 value2 = NULL;
                 switch (node_type) {
                 case AUGDS_EXT_NODE_VALUE:
-                    /* get value */
-                    if (aug_get(aug, label, &value) != 1) {
-                        AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+                    if (augnodes[i].schema->nodetype & LYD_NODE_TERM) {
+                        /* get value for a term node */
+                        if (aug_get(aug, label, &value) != 1) {
+                            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+                        }
                     }
-                    break;
-                case AUGDS_EXT_NODE_POSITION:
-                    /* get position */
-                    pos_str = augds_get_label_node_position(label);
-                    value = pos_str;
                     break;
                 case AUGDS_EXT_NODE_LABEL:
                     /* make sure it matches the label */
@@ -1749,7 +1811,6 @@ augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uin
                         goto cleanup;
                     }
                     if (!m) {
-                        ++j;
                         goto next_iter;
                     }
 
@@ -1764,37 +1825,28 @@ augds_aug2yang_augnode_labels_r(augeas *aug, const struct augnode *augnodes, uin
                     }
                 }
 
-                if (value) {
-                    /* create and append the term node */
-                    if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, value, parent, first, &new_node))) {
+                /* create and append the primary node */
+                if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, value, parent, first, &new_node))) {
+                    goto cleanup;
+                }
+
+                if (augnodes[i].value_path) {
+                    /* also create and append the second node */
+                    parent2 = (augnodes[i].schema->nodetype & LYD_NODE_TERM) ? parent : new_node;
+                    if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema2, value2, parent2, first, NULL))) {
                         goto cleanup;
                     }
+                }
 
-                    if (value2) {
-                        /* also create and append the second node */
-                        parent2 = (augnodes[i].schema->nodetype & LYD_NODE_INNER) ? new_node : parent;
-                        if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema2, value2, parent2, first,
-                                NULL))) {
-                            goto cleanup;
-                        }
-                    }
-
-                    /* recursively handle all children of this data node */
-                    if ((rc = augds_aug2yang_augnode_r(aug, augnodes[i].child, augnodes[i].child_count, label, new_node,
-                            first))) {
-                        goto cleanup;
-                    }
+                /* recursively handle all children of this data node */
+                if ((rc = augds_aug2yang_augnode_r(aug, augnodes[i].child, augnodes[i].child_count, label, new_node,
+                        first))) {
+                    goto cleanup;
                 }
 
                 /* label match used, forget it */
                 free(label);
-                --(*label_count);
-                if (j < *label_count) {
-                    memmove((*label_matches) + j, (*label_matches) + j + 1, ((*label_count) - j) * sizeof **label_matches);
-                } else if (!*label_count) {
-                    free(*label_matches);
-                    *label_matches = NULL;
-                }
+                label_matches[j] = NULL;
 
                 if (augnodes[i].schema->nodetype == LYS_LEAF) {
                     /* match was found for a leaf, there can be no more matches */
@@ -1807,21 +1859,44 @@ next_iter:
                 free(pos_str);
                 pos_str = NULL;
             }
+        } else if ((augnodes[i].schema->nodetype == LYS_LIST) && !augnodes[i].schema->parent) {
+            /* top-level list node with value being the file path */
+            assert(!strcmp(lysc_node_child(augnodes[i].schema)->name, "config-file"));
+            assert(!strncmp(parent_label, "/files", 6));
+            if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, parent_label + 6, parent, first,
+                    &new_node))) {
+                goto cleanup;
+            }
+
+            /* recursively handle all children of this data node */
+            if ((rc = augds_aug2yang_augnode_labels_r(aug, augnodes[i].child, augnodes[i].child_count, parent_label,
+                    label_matches, label_count, new_node, first))) {
+                goto cleanup;
+            }
+        } else if ((augnodes[i].schema->nodetype == LYS_LIST) && augnodes[i].schema->parent) {
+            /* implicit list with generated key index */
+            assert(!strcmp(lysc_node_child(augnodes[i].schema)->name, "_id"));
+            for (j = 0; j < label_count; ++j) {
+                if (!label_matches[j]) {
+                    continue;
+                }
+
+                sprintf(idx_str, "%d", j + 1);
+                if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, idx_str, parent, first, &new_node))) {
+                    goto cleanup;
+                }
+
+                /* recursively handle all children of this data node */
+                if ((rc = augds_aug2yang_augnode_labels_r(aug, augnodes[i].child, augnodes[i].child_count, parent_label,
+                        &label_matches[j], 1, new_node, first))) {
+                    goto cleanup;
+                }
+            }
         } else {
-            if (augnodes[i].schema->nodetype == LYS_LIST) {
-                /* create and append the top-level list node with value being the file path */
-                assert(!strcmp(lysc_node_child(augnodes[i].schema)->name, "config-file"));
-                assert(!strncmp(parent_label, "/files", 6));
-                if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, parent_label + 6, parent, first,
-                        &new_node))) {
-                    goto cleanup;
-                }
-            } else {
-                /* create a container */
-                assert(augnodes[i].schema->nodetype == LYS_CONTAINER);
-                if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, NULL, parent, first, &new_node))) {
-                    goto cleanup;
-                }
+            /* create a container */
+            assert(augnodes[i].schema->nodetype == LYS_CONTAINER);
+            if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, NULL, parent, first, &new_node))) {
+                goto cleanup;
             }
 
             /* recursively handle all children of this data node */
@@ -1872,15 +1947,17 @@ augds_aug2yang_augnode_r(augeas *aug, const struct augnode *augnodes, uint32_t a
     }
 
     /* transform augeas context data to YANG data */
-    if ((rc = augds_aug2yang_augnode_labels_r(aug, augnodes, augnode_count, parent_label, &label_matches, &label_count,
+    if ((rc = augds_aug2yang_augnode_labels_r(aug, augnodes, augnode_count, parent_label, label_matches, label_count,
             parent, first))) {
         goto cleanup;
     }
 
     /* check for non-processed augeas data */
     for (i = 0; i < label_count; ++i) {
-        SRPLG_LOG_WRN(srpds_name, "Non-processed augeas data \"%s\".", label_matches[i]);
-        free(label_matches[i]);
+        if (label_matches[i]) {
+            SRPLG_LOG_WRN(srpds_name, "Non-processed augeas data \"%s\".", label_matches[i]);
+            free(label_matches[i]);
+        }
     }
     free(label_matches);
     label_matches = NULL;
