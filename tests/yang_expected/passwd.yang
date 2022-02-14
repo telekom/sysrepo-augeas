@@ -30,8 +30,12 @@ module passwd {
             }
           }
           leaf password {
-            type string {
-              pattern "[^:\n]+";
+            mandatory true;
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
             }
             augex:data-path "password";
           }
@@ -46,20 +50,32 @@ module passwd {
             augex:data-path "gid";
           }
           leaf name {
-            type string {
-              pattern "[^:\n]+";
+            mandatory true;
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
             }
             augex:data-path "name";
           }
           leaf home {
-            type string {
-              pattern "[^:\n]+";
+            mandatory true;
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
             }
             augex:data-path "home";
           }
           leaf shell {
-            type string {
-              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            mandatory true;
+            type union {
+              type empty;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
             }
             augex:data-path "shell";
           }
@@ -116,33 +132,46 @@ module passwd {
           }
           leaf uid {
             type union {
+              type string {
+                length 0;
+              }
               type uint64;
-              type empty;
             }
             augex:data-path "uid";
           }
           leaf gid {
             type union {
+              type string {
+                length 0;
+              }
               type uint64;
-              type empty;
             }
             augex:data-path "gid";
           }
           leaf name {
-            type string {
-              pattern "[^:\n]+";
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
             }
             augex:data-path "name";
           }
           leaf home {
-            type string {
-              pattern "[^:\n]+";
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
             }
             augex:data-path "home";
           }
           leaf shell {
-            type string {
-              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            type union {
+              type empty;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
             }
             augex:data-path "shell";
           }

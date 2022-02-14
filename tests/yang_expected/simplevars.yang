@@ -24,6 +24,7 @@ module simplevars {
         augex:data-path "$$";
         augex:value-yang-path "to_comment_re";
         leaf _id {
+          mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }

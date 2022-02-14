@@ -42,9 +42,11 @@ module dnsmasq {
           augex:data-path "server";
           augex:value-yang-path "server";
           leaf server {
-            mandatory true;
-            type string {
-              pattern "#|([^#@/ \t\n]+)";
+            type union {
+              type empty;
+              type string {
+                pattern "#|([^#@/ \t\n]+)";
+              }
             }
           }
           leaf-list domain {
@@ -62,6 +64,7 @@ module dnsmasq {
             augex:data-path "source";
             augex:value-yang-path "source";
             leaf source {
+              mandatory true;
               type string {
                 pattern "[^#/ \t\n]+";
               }

@@ -351,6 +351,7 @@ struct ay_dnode {
                                      contains 0, it is a dnode of type VALUE. */
     union {
         void *kvd;              /**< Generic KEY or VALUE Data. */
+        struct ay_lnode *lnode; /**< Generic KEY or VALUE of type lnode. */
         struct ay_lnode *lkey;  /**< KEY of the dictionary. */
         struct ay_lnode *lval;  /**< VALUE of the KEY. */
     };
@@ -373,6 +374,15 @@ struct ay_dnode {
  */
 #define AY_DNODE_VAL_FOR(KEY, INDEX) \
     for (INDEX = 1; INDEX <= KEY->values_count; INDEX++)
+
+/**
+ * @brief Iterate over given KEY and its VALUES.
+ *
+ * @param[in] KEY Pointer to dnode of type KEY.
+ * @param[in] INDEX Index value for iterating.
+ */
+#define AY_DNODE_KEYVAL_FOR(KEY, INDEX) \
+    for (INDEX = 0; INDEX <= KEY->values_count; INDEX++)
 
 /**
  * @brief Check if @p DNODE is dictionary KEY.
@@ -1937,6 +1947,50 @@ ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
 }
 
 /**
+ * @brief Check if "type empty;" should be printed.
+ *
+ * @param[in] lnode Node to check.
+ * @return 1 if type empty is in the @p lnode.
+ */
+static ly_bool
+ay_yang_type_is_empty(struct ay_lnode *lnode)
+{
+    struct ay_lnode *iter;
+
+    for (iter = lnode->parent; iter; iter = iter->parent) {
+        if (iter->lens->tag == L_MAYBE) {
+            return 1;
+        } else if (iter->lens->tag == L_SUBTREE) {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Check if empty string should be printed.
+ *
+ * @param[in] rp Regular expression to check.
+ * @return 1 if empty string is in @p rp.
+ */
+static ly_bool
+ay_yang_type_is_empty_string(const struct regexp *rp)
+{
+    const char *rpstr;
+    size_t rplen;
+    const char *patstr = "{0,1}";
+    const size_t patlen = 5; /* strlen("{0,1}") */
+
+    rpstr = rp->pattern->str;
+    rplen = strlen(rpstr);
+    if (rplen < patlen) {
+        return 0;
+    }
+    return strncmp(rpstr + rplen - patlen, patstr, patlen) == 0;
+}
+
+/**
  * @brief Print type-stmt string and also pattern-stmt if necessary.
  *
  * @param[in] ctx Context for printing.
@@ -1999,17 +2053,15 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
  *
  * @param[in] ctx Context for printing.
  * @param[in] reg Lense containing regular expression to print.
- * @param[in] type_in_union Set flag if current type is printed in union statement.
  * @return 0 if type was printed successfully.
  */
 static int
-ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool type_in_union)
+ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
 {
     int ret = 0;
     const char *ident = NULL, *type;
     char *filename = NULL;
     size_t len = 0;
-    ly_bool print_union;
 
     assert(reg);
 
@@ -2017,25 +2069,12 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool t
 
     if (!strncmp(filename, "rx", len)) {
         ident = ay_get_lense_name_by_modname("Rx", reg);
-        print_union = 0;
     } else {
         ident = ay_get_lense_name_by_regex(ctx->aug, "Rx", reg->regexp->pattern->str, 1);
-        print_union = 1;
     }
 
     type = ay_get_yang_type_by_lense_name("Rx", ident);
-    if (type && print_union) {
-        if (type_in_union) {
-            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
-            ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
-        } else {
-            ly_print(ctx->out, "%*stype union", ctx->space, "");
-            ay_print_yang_nesting_begin(ctx);
-            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
-            ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
-            ay_print_yang_nesting_end(ctx);
-        }
-    } else if (type) {
+    if (type) {
         ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
     } else {
         ret = 1;
@@ -2049,15 +2088,14 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool t
  *
  * @param[in] ctx Context for printing.
  * @param[in] item Lense containing the type.
- * @param[in] type_in_union Set flag to 1 if this type is printed in the union statement.
  * @return 0 if print was successful otherwise nothing is printed.
  */
 static int
-ay_print_yang_type_item(struct yprinter_ctx *ctx, struct lens *item, ly_bool type_in_union)
+ay_print_yang_type_item(struct yprinter_ctx *ctx, struct lens *item)
 {
     int ret;
 
-    ret = ay_print_yang_type_builtin(ctx, item, type_in_union);
+    ret = ay_print_yang_type_builtin(ctx, item);
     if (ret) {
         /* The builtin print failed, so print just string pattern. */
         ret = ay_print_yang_type_string(ctx, item->regexp);
@@ -2067,14 +2105,14 @@ ay_print_yang_type_item(struct yprinter_ctx *ctx, struct lens *item, ly_bool typ
 }
 
 /**
- * @brief Print yang union-stmt.
+ * @brief Print yang union-stmt types.
  *
  * @param[in] ctx Context for printing.
  * @param[in] key Key fo type lnode from the dnode dictionary. The key and its values as union types will be printed.
  * @return 0 on success.
  */
 static int
-ay_print_yang_type_union(struct yprinter_ctx *ctx, struct ay_dnode *key)
+ay_print_yang_type_union_items(struct yprinter_ctx *ctx, struct ay_dnode *key)
 {
     int ret = 0;
     uint64_t i;
@@ -2082,21 +2120,16 @@ ay_print_yang_type_union(struct yprinter_ctx *ctx, struct ay_dnode *key)
 
     assert(AY_DNODE_IS_KEY(key));
 
-    ly_print(ctx->out, "%*stype union", ctx->space, "");
-    ay_print_yang_nesting_begin(ctx);
-
     /* Print dnode KEY. */
-    ret = ay_print_yang_type_item(ctx, key->lkey->lens, 1);
+    ret = ay_print_yang_type_item(ctx, key->lkey->lens);
 
     /* Print dnode KEY'S VALUES. */
     AY_DNODE_VAL_FOR(key, i) {
         item = key[i].lval->lens;
         assert((item->tag == L_STORE) || (item->tag == L_KEY));
-        ret = ay_print_yang_type_item(ctx, item, 1);
+        ret = ay_print_yang_type_item(ctx, item);
         AY_CHECK_RET(ret);
     }
-
-    ay_print_yang_nesting_end(ctx);
 
     return ret;
 }
@@ -2116,6 +2149,8 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct ay_lnode *lnode;
     struct ay_dnode *key;
     uint8_t lv_type;
+    ly_bool empty_string = 0, empty_type = 0;
+    uint64_t i;
 
     if (!node->label && !node->value) {
         return ret;
@@ -2145,12 +2180,67 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
     assert(lnode);
 
-    if ((lv_type == AY_LV_TYPE_LABEL) && (key = ay_dnode_find(AY_YNODE_ROOT_LABELS(ctx->tree), lnode))) {
-        ay_print_yang_type_union(ctx, key);
-    } else if ((lv_type == AY_LV_TYPE_VALUE) && (key = ay_dnode_find(AY_YNODE_ROOT_VALUES(ctx->tree), lnode))) {
-        ay_print_yang_type_union(ctx, key);
+    /* Set dnode key if exists. */
+    if (lv_type == AY_LV_TYPE_LABEL) {
+        key = ay_dnode_find(AY_YNODE_ROOT_LABELS(ctx->tree), lnode);
     } else {
-        ret = ay_print_yang_type_item(ctx, lnode->lens, 0);
+        assert(lv_type == AY_LV_TYPE_VALUE);
+        key = ay_dnode_find(AY_YNODE_ROOT_VALUES(ctx->tree), lnode);
+    }
+
+    /* Set empty_string and empty_type. */
+    if (key) {
+        /* Iterate over key and its values .*/
+        AY_DNODE_KEYVAL_FOR(key, i) {
+            if (empty_string && empty_type) {
+                /* Both are set. */
+                break;
+            }
+            if (!empty_string) {
+                empty_string = ay_yang_type_is_empty_string(key[i].lnode->lens->regexp);
+            }
+            if (!empty_type) {
+                empty_type = ay_yang_type_is_empty(key[i].lnode);
+            }
+        }
+    } else {
+        empty_string = ay_yang_type_is_empty_string(lnode->lens->regexp);
+        empty_type = ay_yang_type_is_empty(lnode);
+    }
+
+    if (empty_type && (node->type == YN_VALUE)) {
+        empty_type = 0;
+    }
+
+    /* Print union */
+    if (empty_string || empty_type || key) {
+        ly_print(ctx->out, "%*stype union", ctx->space, "");
+        ay_print_yang_nesting_begin(ctx);
+    }
+
+    if (empty_string) {
+        /* print empty string */
+        ly_print(ctx->out, "%*stype string", ctx->space, "");
+        ay_print_yang_nesting_begin(ctx);
+        ly_print(ctx->out, "%*slength 0;\n", ctx->space, "");
+        ay_print_yang_nesting_end(ctx);
+    }
+    if (empty_type) {
+        /* print empty type */
+        ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+    }
+
+    if (key) {
+        /* Print other types in union. */
+        ay_print_yang_type_union_items(ctx, key);
+    } else {
+        /* Print lnode type. */
+        ret = ay_print_yang_type_item(ctx, lnode->lens);
+    }
+
+    /* End of union. */
+    if (empty_string || empty_type || key) {
+        ay_print_yang_nesting_end(ctx);
     }
 
     return ret;
@@ -4035,14 +4125,6 @@ ay_lnode_has_maybe(struct ay_lnode *node)
         }
     }
 
-    if (iter) {
-        for (iter = iter->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-            if (iter->lens->tag == L_MAYBE) {
-                return 1;
-            }
-        }
-    }
-
     return 0;
 }
 
@@ -4054,7 +4136,7 @@ ay_lnode_has_maybe(struct ay_lnode *node)
 static void
 ay_ynode_set_mandatory(struct ay_ynode *node)
 {
-    if (ay_lnode_has_maybe(node->label) || ay_lnode_has_maybe(node->value)) {
+    if (ay_lnode_has_maybe(node->snode)) {
         node->flags &= ~AY_YNODE_MAND_MASK;
         node->flags |= AY_YNODE_MAND_FALSE;
     } else {
@@ -4072,13 +4154,12 @@ static void
 ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *node, *parent;
+    struct ay_ynode *node;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
-        parent = node->parent;
         if (!(node->flags & AY_YNODE_MAND_MASK)) {
-            if ((node->type == YN_KEY) || (node->type == YN_VALUE) || (node->type == YN_LEAF)) {
+            if ((node->type == YN_KEY) || (node->type == YN_LEAF)) {
                 ay_ynode_set_mandatory(&tree[i]);
             } else if ((node->type == YN_LEAFLIST) && ay_lnode_has_maybe(node->snode)) {
                 node->flags &= ~AY_YNODE_MAND_MASK;
@@ -4089,9 +4170,9 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         if ((node->type == YN_LEAF) && (node->flags & AY_YNODE_MAND_TRUE) && node->choice) {
             node->flags &= ~AY_YNODE_MAND_MASK;
             node->flags |= AY_YNODE_MAND_FALSE;
-        } else if ((node->type == YN_KEY) && parent->choice) {
+        } else if ((node->type == YN_VALUE) && ay_yang_type_is_empty(node->value)) {
             node->flags &= ~AY_YNODE_MAND_MASK;
-            node->flags = AY_YNODE_MAND_TRUE;
+            node->flags |= AY_YNODE_MAND_FALSE;
         }
     }
 }
@@ -4411,9 +4492,8 @@ ay_delete_container_with_same_key(struct ay_ynode *tree)
             /* move cont2 into cont1 */
             ay_ynode_move_subtree_as_last_child(tree, cont1, cont2);
         }
-        /* TODO: Should be applied only for YN_VALUE. The value has inverse logic. It's an ugly hack. */
         cont1->flags &= ~AY_YNODE_MAND_MASK;
-        cont1->flags = AY_YNODE_MAND_TRUE;
+        cont1->flags = AY_YNODE_MAND_FALSE;
     }
 }
 
@@ -4444,6 +4524,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
         if (cont->descendants == 0) {
             if (ay_lense_pattern_has_idents(label)) {
                 cont->type = YN_LEAF;
+                cont->flags &= ~AY_YNODE_MAND_MASK;
             } else {
                 ay_ynode_delete_node(tree, cont);
                 i--;
@@ -4452,6 +4533,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
             cont->child->choice = cont->choice;
             if (cont->child->type == YN_KEY) {
                 cont->child->type = YN_LEAF;
+                cont->child->flags &= ~AY_YNODE_MAND_MASK;
             }
             ay_ynode_delete_node(tree, cont);
             i--;
@@ -4541,7 +4623,7 @@ ay_insert_cont_key(struct ay_ynode *tree)
             parent->child->type = YN_VALUE;
             parent->child->label = parent->label;
             parent->child->value = parent->value;
-            ay_ynode_set_mandatory(parent->child);
+            parent->child->flags |= ay_yang_type_is_empty(parent->value) ? AY_YNODE_MAND_FALSE : AY_YNODE_MAND_TRUE;
             i++;
             continue;
         }
@@ -4552,17 +4634,21 @@ ay_insert_cont_key(struct ay_ynode *tree)
         key->type = YN_KEY;
         key->label = parent->label;
         key->value = parent->value;
-        ay_ynode_set_mandatory(key);
+        key->snode = parent->snode;
+        if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label)) {
+            key->flags |= ay_yang_type_is_empty(parent->value) ? AY_YNODE_MAND_FALSE : AY_YNODE_MAND_TRUE;
+        } else {
+            ay_ynode_set_mandatory(key);
+        }
         if (count == 2) {
             ay_ynode_insert_sibling(tree, key);
             key->next->type = YN_VALUE;
             key->next->label = parent->label;
             key->next->value = parent->value;
-            if (parent->flags & AY_YNODE_MAND_TRUE) {
-                key->next->flags &= ~AY_YNODE_MAND_MASK;
+            if (parent->flags & AY_YNODE_MAND_FALSE) {
                 key->next->flags |= AY_YNODE_MAND_FALSE;
             } else {
-                ay_ynode_set_mandatory(key->next);
+                key->next->flags |= AY_YNODE_MAND_TRUE;
             }
         }
     }
@@ -4775,8 +4861,6 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             /* for every child in wrapper set type to container */
             for (iter = list->child; iter; iter = iter->next) {
                 iter->type = YN_CONTAINER;
-                iter->flags &= ~AY_YNODE_MAND_MASK;
-                iter->flags |= AY_YNODE_MAND_FALSE;
             }
 
             /* set list label to repetition because an identifier may be available */

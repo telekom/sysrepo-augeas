@@ -24,13 +24,19 @@ module cpanel {
         augex:data-path "$$";
         augex:value-yang-path "value";
         leaf _id {
+          mandatory true;
           type string {
             pattern "[A-Za-z0-9:_.-]+";
           }
         }
         leaf value {
-          type string {
-            pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+          type union {
+            type string {
+              length 0;
+            }
+            type string {
+              pattern "([^ \t\n].*[^ \t\n]|[^ \t\n]){0,1}";
+            }
           }
         }
       }

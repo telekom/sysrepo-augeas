@@ -24,7 +24,6 @@ module cmdline {
         augex:data-path "$$";
         augex:value-yang-path "value";
         leaf _id {
-          mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
