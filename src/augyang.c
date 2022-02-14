@@ -232,6 +232,20 @@ enum yang_type {
 };
 
 /**
+ * @defgroup ynodeflags Ynode flags
+ *
+ * Various flags for ynode nodes (used as ::ay_ynode.flags).
+ *
+ * @{
+ */
+#define AY_YNODE_MAND_TRUE      0x01    /**< Yang mandatory-stmt. The ynode has "mandatory true;". In the case of
+                                             type YN_LEAFLIST, the set bit means "min-elements 1;". */
+
+#define AY_YNODE_MAND_FALSE     0x02    /**< No mandatory-stmt is printed. */
+#define AY_YNODE_MAND_MASK      0x03    /**< Mask for mandatory-stmt. */
+/** @} ynodeflags */
+
+/**
  * @brief Node for printing the yang node.
  *
  * The ynode node represents the yang data node. It is generally created from a lense with tag L_SUBTREE, but can also
@@ -249,7 +263,9 @@ enum yang_type {
  * between the two trees clear. This path generation is handled in the ay_print_yang_data_path().
  *
  * One ynode can contain multiple labels/values because they can be separated by the union operator ('|', L_UNION).
- * So, for example, if a node has multiple labels, the ay_lnode_next_lv() returns the next one.
+ * So, for example, if a node has multiple labels, the ay_lnode_next_lv() returns the next one. These groups labels and
+ * values are stored in YN_ROOT node, specifically in ay_ynode_root.labels and ay_ynode_root.values. In the YANG, such
+ * a group is then printed as a union stmt.
  *
  * Note that choice-case node from yang laguage is not considered as a ynode. The ynode nodes are indirectly connected
  * via ay_ynode.choice pointer, which serves as an identifier of that choice-case relationship.
@@ -274,10 +290,7 @@ struct ay_ynode {
                                      Set if the node is under the influence of the union operator. */
     struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
                                      YN_CONTAINER, for other types is always NULL. */
-    union {
-        uint8_t mandatory;      /**< Yang mandatory-stmt. Value 1 indicates mandatory true, 0 is false. */
-        uint8_t min;            /**< Yang min-elements-stmt. Constraint for YN_LIST and YN_LEAFLIST. */
-    };
+    uint16_t flags;             /**< [ynode flags](@ref ynodeflags) */
 };
 
 /**
@@ -299,7 +312,7 @@ struct ay_ynode_root {
     struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
     struct ay_lnode *choice;        /**< Not used. */
     struct ay_ynode *uses;          /**< Not used. */
-    uint8_t mandatory;              /**< Not used. */
+    uint16_t flags;                 /**< Not used. */
 };
 
 /**
@@ -665,7 +678,7 @@ ay_ynode_copy_data(struct ay_ynode *dst, struct ay_ynode *src)
     dst->value = src->value;
     dst->choice = src->choice;
     dst->uses = src->uses;
-    dst->mandatory = src->mandatory;
+    dst->flags = src->flags;
 }
 
 /**
@@ -743,7 +756,7 @@ ay_ynode_equal(struct ay_ynode *n1, struct ay_ynode *n2)
         return 0;
     } else if (n1->uses != n2->uses) {
         return 0;
-    } else if (n1->mandatory != n2->mandatory) {
+    } else if (n1->flags != n2->flags) {
         return 0;
     }
 
@@ -1863,8 +1876,8 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if (node->min) {
-        ly_print(ctx->out, "%*smin-elements %" PRIu8 ";\n", ctx->space, "", node->min);
+    if (node->flags & AY_YNODE_MAND_TRUE) {
+        ly_print(ctx->out, "%*smin-elements 1;\n", ctx->space, "");
     }
 }
 
@@ -1993,7 +2006,7 @@ static int
 ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool type_in_union)
 {
     int ret = 0;
-    const char *ident = NULL;
+    const char *ident = NULL, *type;
     char *filename = NULL;
     size_t len = 0;
     ly_bool print_union;
@@ -2010,20 +2023,20 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg, ly_bool t
         print_union = 1;
     }
 
-    ident = ay_get_yang_type_by_lense_name("Rx", ident);
-    if (ident && print_union) {
+    type = ay_get_yang_type_by_lense_name("Rx", ident);
+    if (type && print_union) {
         if (type_in_union) {
-            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
             ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         } else {
             ly_print(ctx->out, "%*stype union", ctx->space, "");
             ay_print_yang_nesting_begin(ctx);
-            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+            ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
             ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
             ay_print_yang_nesting_end(ctx);
         }
-    } else if (ident) {
-        ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", ident);
+    } else if (type) {
+        ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
     } else {
         ret = 1;
     }
@@ -2207,7 +2220,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if (node->mandatory) {
+    if (node->flags & AY_YNODE_MAND_TRUE) {
         ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
     }
 }
@@ -2826,9 +2839,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         ly_print(ctx->out, "%*s uses_id: %p\n", ctx->space, "", node->uses);
     }
 
-    if (node->mandatory) {
+    if (node->flags & AY_YNODE_MAND_TRUE) {
         if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
-            ly_print(ctx->out, "%*s min-elements: %" PRIu8 "\n", ctx->space, "", node->min);
+            ly_print(ctx->out, "%*s min-elements: 1\n", ctx->space, "");
         } else {
             ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
         }
@@ -3849,8 +3862,8 @@ ay_ynode_debug_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
         } else if (arr1[i].uses != arr2[i].uses) {
             printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.uses\n", iter, i);
             return 1;
-        } else if (arr1[i].mandatory != arr2[i].mandatory) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.mandatory\n", iter, i);
+        } else if (arr1[i].flags != arr2[i].flags) {
+            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.flags\n", iter, i);
             return 1;
         }
     }
@@ -4042,9 +4055,11 @@ static void
 ay_ynode_set_mandatory(struct ay_ynode *node)
 {
     if (ay_lnode_has_maybe(node->label) || ay_lnode_has_maybe(node->value)) {
-        node->mandatory = 0;
+        node->flags &= ~AY_YNODE_MAND_MASK;
+        node->flags |= AY_YNODE_MAND_FALSE;
     } else {
-        node->mandatory = 1;
+        node->flags &= ~AY_YNODE_MAND_MASK;
+        node->flags = AY_YNODE_MAND_TRUE;
     }
 }
 
@@ -4057,55 +4072,26 @@ static void
 ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-
-    assert(tree && ((tree[0].type == YN_UNKNOWN) || (tree[0].type == YN_ROOT)));
-
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        if ((tree[i].type != YN_LIST) && (tree[i].type != YN_LEAFLIST) && (tree[i].type != YN_CONTAINER)) {
-            ay_ynode_set_mandatory(&tree[i]);
-        }
-    }
-}
-
-/**
- * @brief Set ynode.mandatory for all nodes.
- *
- * TODO It is possible to set mandatory only with one function?
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_ynode_tree_set_mandatory2(struct ay_ynode *tree)
-{
-    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *node, *parent;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
         parent = node->parent;
-        if ((node->type == YN_LEAF) && node->mandatory && node->choice) {
-            node->mandatory = 0;
-        } else if ((node->type == YN_KEY) && parent->choice) {
-            node->mandatory = 1;
-        }
-    }
-}
-
-/**
- * @brief Set ynode.min for all list and leaf-list nodes.
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_ynode_tree_set_min(struct ay_ynode *tree)
-{
-    struct ay_ynode *node;
-
-    /* The value is set by ::ay_ynode_delete_build_list() and this code unset the value due to the '?' operator. */
-    LY_ARRAY_FOR(tree, struct ay_ynode, node) {
-        if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
-            if (ay_lnode_has_maybe(node->snode)) {
-                node->min = 0;
+        if (!(node->flags & AY_YNODE_MAND_MASK)) {
+            if ((node->type == YN_KEY) || (node->type == YN_VALUE) || (node->type == YN_LEAF)) {
+                ay_ynode_set_mandatory(&tree[i]);
+            } else if ((node->type == YN_LEAFLIST) && ay_lnode_has_maybe(node->snode)) {
+                node->flags &= ~AY_YNODE_MAND_MASK;
+                node->flags |= AY_YNODE_MAND_FALSE;
             }
+        }
+
+        if ((node->type == YN_LEAF) && (node->flags & AY_YNODE_MAND_TRUE) && node->choice) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags |= AY_YNODE_MAND_FALSE;
+        } else if ((node->type == YN_KEY) && parent->choice) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags = AY_YNODE_MAND_TRUE;
         }
     }
 }
@@ -4218,7 +4204,9 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             }
 
             /* set minimal-elements for node2 */
-            node2->min++;
+            assert(!(node2->flags & AY_YNODE_MAND_MASK));
+            node2->flags &= ~AY_YNODE_MAND_MASK;
+            node2->flags = AY_YNODE_MAND_TRUE;
 
             /* delete node1 because it is useless */
             ay_ynode_delete_subtree(tree, node1);
@@ -4266,12 +4254,14 @@ repeat:
             }
 
             if (!nodeval && (iterval->tag == L_STORE) && !node->child) {
-                iter->mandatory = 0;
+                iter->flags &= ~AY_YNODE_MAND_MASK;
+                iter->flags |= AY_YNODE_MAND_FALSE;
                 ay_ynode_delete_node(tree, node);
                 i--;
                 break;
             } else if (!iterval && (nodeval->tag == L_STORE) && !iter->child) {
-                node->mandatory = 0;
+                node->flags &= ~AY_YNODE_MAND_MASK;
+                node->flags |= AY_YNODE_MAND_FALSE;
                 ay_ynode_delete_node(tree, iter);
                 goto repeat;
             }
@@ -4317,7 +4307,8 @@ ay_ynode_delete_seq_node(struct ay_ynode *tree)
             continue;
         }
 
-        sibling->min = 1;
+        sibling->flags &= ~AY_YNODE_MAND_MASK;
+        sibling->flags = AY_YNODE_MAND_TRUE;
         ay_ynode_delete_node(tree, node);
         i--;
     }
@@ -4421,7 +4412,8 @@ ay_delete_container_with_same_key(struct ay_ynode *tree)
             ay_ynode_move_subtree_as_last_child(tree, cont1, cont2);
         }
         /* TODO: Should be applied only for YN_VALUE. The value has inverse logic. It's an ugly hack. */
-        cont1->mandatory = 1;
+        cont1->flags &= ~AY_YNODE_MAND_MASK;
+        cont1->flags = AY_YNODE_MAND_TRUE;
     }
 }
 
@@ -4566,8 +4558,9 @@ ay_insert_cont_key(struct ay_ynode *tree)
             key->next->type = YN_VALUE;
             key->next->label = parent->label;
             key->next->value = parent->value;
-            if (parent->mandatory) {
-                key->next->mandatory = 0;
+            if (parent->flags & AY_YNODE_MAND_TRUE) {
+                key->next->flags &= ~AY_YNODE_MAND_MASK;
+                key->next->flags |= AY_YNODE_MAND_FALSE;
             } else {
                 ay_ynode_set_mandatory(key->next);
             }
@@ -4725,7 +4718,8 @@ ay_ynode_list_split(struct ay_ynode *tree)
             ay_ynode_move_subtree_as_sibling(tree, last, grouping);
         }
 
-        list->min = 0;
+        list->flags &= ~AY_YNODE_MAND_MASK;
+        list->flags |= AY_YNODE_MAND_FALSE;
         /* Note: ynode.uses will not be valid, it is used as boolean until the ay_ynode_.*_set_uses transformations. */
         list->uses = grouping;
         /* insert new lists */
@@ -4781,7 +4775,8 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             /* for every child in wrapper set type to container */
             for (iter = list->child; iter; iter = iter->next) {
                 iter->type = YN_CONTAINER;
-                iter->mandatory = 0;
+                iter->flags &= ~AY_YNODE_MAND_MASK;
+                iter->flags |= AY_YNODE_MAND_FALSE;
             }
 
             /* set list label to repetition because an identifier may be available */
@@ -5006,12 +5001,6 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ret = ay_ynode_trans_insert2(tree, 1, ay_insert_list_files);
     AY_CHECK_RET(ret);
 
-    /* set mandatory */
-    ay_ynode_tree_set_mandatory(*tree);
-
-    /* set minimal-elements */
-    ay_ynode_tree_set_min(*tree);
-
     ret = ay_ynode_debug_tree(vercode, AYV_TRANS1, *tree);
     AY_CHECK_RET(ret);
 
@@ -5054,7 +5043,7 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     /* delete the containers that has only one child */
     ay_delete_poor_container(*tree);
 
-    ay_ynode_tree_set_mandatory2(*tree);
+    ay_ynode_tree_set_mandatory(*tree);
 
     /* No other groupings will not be added, so move groupings in front of config-file list. */
     ay_ynode_groupings_ahead(*tree);
@@ -5075,6 +5064,8 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct ay_ynode *yforest = NULL, *ytree = NULL;
     uint32_t ltree_size = 0, yforest_size = 0;
     ly_bool l_rec = 0;
+
+    assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
 
     lens = ay_lense_get_root(mod);
     AY_CHECK_COND(!lens, AYE_LENSE_NOT_FOUND);

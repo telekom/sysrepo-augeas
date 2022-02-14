@@ -48,6 +48,7 @@ module backuppchosts {
           augex:data-path "user";
         }
         leaf-list moreusers {
+          min-elements 1;
           type string {
             pattern "[^#, \n\t/]+";
           }
