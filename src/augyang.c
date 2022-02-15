@@ -2483,6 +2483,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_nesting_begin(ctx);
 
     ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
+    ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ly_print(ctx->out, "%*sleaf _id", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");

@@ -15,6 +15,7 @@ module devfsrules {
     }
     list config-entries {
       key "_id";
+      ordered-by user;
       leaf _id {
         type uint64;
         description
@@ -36,6 +37,7 @@ module devfsrules {
         }
         list config-entries {
           key "_id";
+          ordered-by user;
           leaf _id {
             type uint64;
             description

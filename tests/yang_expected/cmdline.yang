@@ -15,6 +15,7 @@ module cmdline {
     }
     list config-entries {
       key "_id";
+      ordered-by user;
       leaf _id {
         type uint64;
         description

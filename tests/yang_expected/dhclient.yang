@@ -53,6 +53,7 @@ module dhclient {
   grouping stmt_array {
     list config-entries {
       key "_id";
+      ordered-by user;
       leaf _id {
         type uint64;
         description
@@ -78,6 +79,7 @@ module dhclient {
   grouping stmt_block {
     list config-entries {
       key "_id";
+      ordered-by user;
       leaf _id {
         type uint64;
         description
@@ -293,6 +295,7 @@ module dhclient {
     }
     list config-entries {
       key "_id";
+      ordered-by user;
       leaf _id {
         type uint64;
         description
