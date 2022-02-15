@@ -22,6 +22,7 @@ module rtadvd {
       }
       container record {
         augex:data-path "record";
+        presence "Config entry.";
         leaf-list name {
           min-elements 1;
           type string {

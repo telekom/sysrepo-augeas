@@ -24,6 +24,7 @@ module dnsmasq {
         container address {
           augex:data-path "address";
           augex:value-yang-path "sto_no_slash";
+          presence "Type of config entry.";
           leaf sto_no_slash {
             mandatory true;
             type string {
@@ -41,6 +42,7 @@ module dnsmasq {
         container server {
           augex:data-path "server";
           augex:value-yang-path "server";
+          presence "Type of config entry.";
           leaf server {
             type union {
               type empty;
@@ -63,6 +65,7 @@ module dnsmasq {
           container source {
             augex:data-path "source";
             augex:value-yang-path "source";
+            presence "Config entry.";
             leaf source {
               mandatory true;
               type string {
@@ -78,6 +81,7 @@ module dnsmasq {
         container entry {
           augex:data-path "$$";
           augex:value-yang-path "sto_to_eol";
+          presence "Type of config entry.";
           leaf entry_re {
             mandatory true;
             type string {

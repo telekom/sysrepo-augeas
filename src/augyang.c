@@ -2507,6 +2507,24 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang presence-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] cont Node of type YN_CONTAINER.
+ */
+static void
+ay_print_yang_presence(struct yprinter_ctx *ctx, struct ay_ynode *cont)
+{
+    if (cont->label) {
+        if (cont->choice) {
+            ly_print(ctx->out, "%*spresence \"Type of config entry.\";\n", ctx->space, "");
+        } else {
+            ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
+        }
+    }
+}
+
+/**
  * @brief Print yang container-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2526,6 +2544,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
     AY_CHECK_RET(ret);
+    ay_print_yang_presence(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_uses(ctx, node);

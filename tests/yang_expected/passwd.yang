@@ -23,6 +23,7 @@ module passwd {
       choice ch_config-entries {
         container entry {
           augex:data-path "$$";
+          presence "Type of config entry.";
           leaf username {
             mandatory true;
             type string {
@@ -83,6 +84,7 @@ module passwd {
         container nisentry {
           augex:data-path "@nis";
           augex:value-yang-path "username";
+          presence "Type of config entry.";
           leaf username {
             mandatory true;
             type string {
@@ -124,6 +126,7 @@ module passwd {
         }
         container nisdefault {
           augex:data-path "@nisdefault";
+          presence "Type of config entry.";
           leaf password {
             type string {
               pattern "[^:\n]*";
@@ -179,6 +182,7 @@ module passwd {
         container nisuserplus {
           augex:data-path "@+nisuser";
           augex:value-yang-path "username";
+          presence "Type of config entry.";
           leaf username {
             mandatory true;
             type string {
@@ -221,6 +225,7 @@ module passwd {
         container nisuserminus {
           augex:data-path "@-nisuser";
           augex:value-yang-path "username";
+          presence "Type of config entry.";
           leaf username {
             mandatory true;
             type string {

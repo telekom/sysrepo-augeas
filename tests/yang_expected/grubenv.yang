@@ -22,6 +22,7 @@ module grubenv {
       }
       container record {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf target {
           mandatory true;
           type uint64;

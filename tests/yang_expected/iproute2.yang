@@ -23,6 +23,7 @@ module iproute2 {
       container record {
         augex:data-path "$$";
         augex:value-yang-path "value";
+        presence "Config entry.";
         leaf id {
           mandatory true;
           type string {

@@ -23,6 +23,7 @@ module securetty {
       container record {
         augex:data-path "$$";
         augex:value-yang-path "word";
+        presence "Config entry.";
         leaf securetty {
           mandatory true;
           type uint64;

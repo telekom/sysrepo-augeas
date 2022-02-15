@@ -23,6 +23,7 @@ module login_defs {
       container record {
         augex:data-path "$$";
         augex:value-yang-path "value";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {

@@ -23,6 +23,7 @@ module iptables {
       container table {
         augex:data-path "table";
         augex:value-yang-path "table";
+        presence "Config entry.";
         leaf table {
           mandatory true;
           type string {
@@ -40,6 +41,7 @@ module iptables {
             container chain {
               augex:data-path "chain";
               augex:value-yang-path "chain_name";
+              presence "Type of config entry.";
               leaf chain_name {
                 mandatory true;
                 type string {
@@ -57,6 +59,7 @@ module iptables {
             container append {
               augex:data-path "append";
               augex:value-yang-path "chain_name";
+              presence "Type of config entry.";
               leaf chain_name {
                 mandatory true;
                 type string {
@@ -74,6 +77,7 @@ module iptables {
                   container protocol {
                     augex:data-path "protocol";
                     augex:value-yang-path "protocol";
+                    presence "Type of config entry.";
                     leaf protocol {
                       mandatory true;
                       type string {
@@ -88,6 +92,7 @@ module iptables {
                   container source {
                     augex:data-path "source";
                     augex:value-yang-path "source";
+                    presence "Type of config entry.";
                     leaf source {
                       mandatory true;
                       type string {
@@ -102,6 +107,7 @@ module iptables {
                   container destination {
                     augex:data-path "destination";
                     augex:value-yang-path "destination";
+                    presence "Type of config entry.";
                     leaf destination {
                       mandatory true;
                       type string {
@@ -128,6 +134,7 @@ module iptables {
                   container in-interface {
                     augex:data-path "in-interface";
                     augex:value-yang-path "in-interface";
+                    presence "Type of config entry.";
                     leaf in-interface {
                       mandatory true;
                       type string {
@@ -142,6 +149,7 @@ module iptables {
                   container out-interface {
                     augex:data-path "out-interface";
                     augex:value-yang-path "out-interface";
+                    presence "Type of config entry.";
                     leaf out-interface {
                       mandatory true;
                       type string {
@@ -156,6 +164,7 @@ module iptables {
                   container fragment {
                     augex:data-path "fragment";
                     augex:value-yang-path "fragment";
+                    presence "Type of config entry.";
                     leaf fragment {
                       mandatory true;
                       type string {
@@ -175,6 +184,7 @@ module iptables {
                   }
                   container tcp_flags {
                     augex:data-path "tcp-flags";
+                    presence "Type of config entry.";
                     leaf-list mask {
                       min-elements 1;
                       type string {
@@ -193,6 +203,7 @@ module iptables {
                   container node {
                     augex:data-path "$$";
                     augex:value-yang-path "value";
+                    presence "Type of config entry.";
                     leaf _id {
                       mandatory true;
                       type string {
@@ -215,6 +226,7 @@ module iptables {
             container insert {
               augex:data-path "insert";
               augex:value-yang-path "chain_name";
+              presence "Type of config entry.";
               leaf chain_name {
                 mandatory true;
                 type string {
@@ -232,6 +244,7 @@ module iptables {
                   container protocol {
                     augex:data-path "protocol";
                     augex:value-yang-path "protocol";
+                    presence "Type of config entry.";
                     leaf protocol {
                       mandatory true;
                       type string {
@@ -246,6 +259,7 @@ module iptables {
                   container source {
                     augex:data-path "source";
                     augex:value-yang-path "source";
+                    presence "Type of config entry.";
                     leaf source {
                       mandatory true;
                       type string {
@@ -260,6 +274,7 @@ module iptables {
                   container destination {
                     augex:data-path "destination";
                     augex:value-yang-path "destination";
+                    presence "Type of config entry.";
                     leaf destination {
                       mandatory true;
                       type string {
@@ -286,6 +301,7 @@ module iptables {
                   container in-interface {
                     augex:data-path "in-interface";
                     augex:value-yang-path "in-interface";
+                    presence "Type of config entry.";
                     leaf in-interface {
                       mandatory true;
                       type string {
@@ -300,6 +316,7 @@ module iptables {
                   container out-interface {
                     augex:data-path "out-interface";
                     augex:value-yang-path "out-interface";
+                    presence "Type of config entry.";
                     leaf out-interface {
                       mandatory true;
                       type string {
@@ -314,6 +331,7 @@ module iptables {
                   container fragment {
                     augex:data-path "fragment";
                     augex:value-yang-path "fragment";
+                    presence "Type of config entry.";
                     leaf fragment {
                       mandatory true;
                       type string {
@@ -333,6 +351,7 @@ module iptables {
                   }
                   container tcp_flags {
                     augex:data-path "tcp-flags";
+                    presence "Type of config entry.";
                     leaf-list mask {
                       min-elements 1;
                       type string {
@@ -351,6 +370,7 @@ module iptables {
                   container node {
                     augex:data-path "$$";
                     augex:value-yang-path "value";
+                    presence "Type of config entry.";
                     leaf _id {
                       mandatory true;
                       type string {

@@ -23,6 +23,7 @@ module cmdline {
       container node {
         augex:data-path "$$";
         augex:value-yang-path "value";
+        presence "Type of config entry.";
         leaf _id {
           type string {
             pattern "[A-Za-z0-9_.-]+";

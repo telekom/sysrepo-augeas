@@ -22,6 +22,7 @@ module smbusers {
       }
       container entry {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {

@@ -23,6 +23,7 @@ module iscsid {
       container kv {
         augex:data-path "$$";
         augex:value-yang-path "value_re";
+        presence "Config entry.";
         leaf key_re {
           mandatory true;
           type string {

@@ -23,6 +23,7 @@ module simplelines {
       container line {
         augex:data-path "$$";
         augex:value-yang-path "value";
+        presence "Config entry.";
         leaf line {
           mandatory true;
           type uint64;

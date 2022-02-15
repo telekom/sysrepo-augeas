@@ -23,6 +23,7 @@ module simplevars {
       container entry {
         augex:data-path "$$";
         augex:value-yang-path "to_comment_re";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {

@@ -23,6 +23,7 @@ module gtkbookmarks {
       container entry {
         augex:data-path "bookmark";
         augex:value-yang-path "bookmark";
+        presence "Config entry.";
         leaf bookmark {
           mandatory true;
           type string {

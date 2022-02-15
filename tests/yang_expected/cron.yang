@@ -24,6 +24,7 @@ module cron {
         container shellvar {
           augex:data-path "$$";
           augex:value-yang-path "value";
+          presence "Type of config entry.";
           leaf _id {
             mandatory true;
             type string {
@@ -40,6 +41,7 @@ module cron {
         container entry {
           augex:data-path "entry";
           augex:value-yang-path "entry";
+          presence "Type of config entry.";
           leaf entry {
             mandatory true;
             type string {
@@ -55,6 +57,7 @@ module cron {
           choice ch_entry {
             container time {
               augex:data-path "time";
+              presence "Type of config entry.";
               leaf minute {
                 mandatory true;
                 type string {

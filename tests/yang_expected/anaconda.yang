@@ -22,6 +22,7 @@ module anaconda {
       }
       container record {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {
@@ -38,6 +39,7 @@ module anaconda {
           container node {
             augex:data-path "$$";
             augex:value-yang-path "value";
+            presence "Type of config entry.";
             leaf _id {
               mandatory true;
               type string {

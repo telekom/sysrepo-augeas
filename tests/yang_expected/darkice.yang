@@ -23,6 +23,7 @@ module darkice {
       container record {
         augex:data-path "target";
         augex:value-yang-path "target";
+        presence "Config entry.";
         leaf target {
           mandatory true;
           type string {
@@ -39,6 +40,7 @@ module darkice {
           container entry_re {
             augex:data-path "$$";
             augex:value-yang-path "value";
+            presence "Type of config entry.";
             leaf entry_re {
               mandatory true;
               type string {

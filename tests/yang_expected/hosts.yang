@@ -22,6 +22,7 @@ module hosts {
       }
       container record {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf host {
           mandatory true;
           type uint64;

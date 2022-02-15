@@ -22,6 +22,7 @@ module devfsrules {
       }
       container record {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {
@@ -43,6 +44,7 @@ module devfsrules {
           container entry {
             augex:data-path "$$";
             augex:value-yang-path "line_re";
+            presence "Type of config entry.";
             leaf entry {
               mandatory true;
               type uint64;

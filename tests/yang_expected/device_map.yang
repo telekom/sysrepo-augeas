@@ -23,6 +23,7 @@ module device_map {
       container map {
         augex:data-path "$$";
         augex:value-yang-path "fspath";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {

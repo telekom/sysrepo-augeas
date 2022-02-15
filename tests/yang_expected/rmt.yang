@@ -35,6 +35,7 @@ module rmt {
         }
         container access {
           augex:data-path "ACCESS";
+          presence "Type of config entry.";
           leaf name {
             mandatory true;
             type string {

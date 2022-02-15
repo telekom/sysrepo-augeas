@@ -23,6 +23,7 @@ module qpid {
       container entry {
         augex:data-path "$$";
         augex:value-yang-path "value";
+        presence "Config entry.";
         leaf _id {
           mandatory true;
           type string {

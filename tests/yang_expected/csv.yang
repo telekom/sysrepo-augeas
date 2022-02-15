@@ -22,6 +22,7 @@ module csv {
       }
       container entry {
         augex:data-path "$$";
+        presence "Config entry.";
         leaf entry {
           mandatory true;
           type uint64;
@@ -37,6 +38,7 @@ module csv {
             container field {
               augex:data-path "$$";
               augex:value-yang-path "value";
+              presence "Type of config entry.";
               leaf field {
                 mandatory true;
                 type uint64;
@@ -51,6 +53,7 @@ module csv {
             container field2 {
               augex:data-path "$$";
               augex:value-yang-path "value";
+              presence "Type of config entry.";
               leaf field {
                 mandatory true;
                 type uint64;

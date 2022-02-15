@@ -23,6 +23,7 @@ module ntpd {
       choice ch_config-entries {
         container listen {
           augex:data-path "listen on";
+          presence "Type of config entry.";
           leaf address {
             mandatory true;
             type string {
@@ -39,6 +40,7 @@ module ntpd {
         }
         container server {
           augex:data-path "server";
+          presence "Type of config entry.";
           leaf address {
             mandatory true;
             type string {
@@ -61,6 +63,7 @@ module ntpd {
         }
         container servers {
           augex:data-path "servers";
+          presence "Type of config entry.";
           leaf address {
             mandatory true;
             type string {
@@ -83,6 +86,7 @@ module ntpd {
         }
         container sensor {
           augex:data-path "sensor";
+          presence "Type of config entry.";
           leaf device {
             mandatory true;
             type string {
