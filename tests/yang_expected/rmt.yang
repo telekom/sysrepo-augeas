@@ -22,6 +22,7 @@ module rmt {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         leaf DEBUG {
           type string {
             pattern "[^ \t\n]+";

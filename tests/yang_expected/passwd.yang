@@ -22,6 +22,7 @@ module passwd {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         container entry {
           augex:data-path "$$";
           presence "Type of config entry.";

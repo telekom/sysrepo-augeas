@@ -22,6 +22,7 @@ module cron {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         container shellvar {
           augex:data-path "$$";
           augex:value-yang-path "value";
@@ -56,6 +57,7 @@ module cron {
             augex:data-path "prefix";
           }
           choice ch_entry {
+            mandatory true;
             container time {
               augex:data-path "time";
               presence "Type of config entry.";

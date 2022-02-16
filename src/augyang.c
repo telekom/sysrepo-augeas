@@ -774,6 +774,30 @@ ay_ynode_equal(struct ay_ynode *n1, struct ay_ynode *n2)
 }
 
 /**
+ * @brief Check if the 'maybe' operator (?) is bound to the @p node.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if maybe operator affects the node otherwise 0.
+ */
+static ly_bool
+ay_lnode_has_maybe(struct ay_lnode *node)
+{
+    struct ay_lnode *iter;
+
+    if (!node) {
+        return 0;
+    }
+
+    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+        if (iter->lens->tag == L_MAYBE) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Print basic debug information about lense.
  *
  * @param[in] out Output where the data are printed.
@@ -2614,6 +2638,32 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print mandatory-stmt for choice-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node First ynode in choice-stmt.
+ */
+static void
+ay_print_yang_mandatory_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    struct ay_lnode *snode = NULL;
+    struct ay_ynode *iter;
+
+    /* Take some snode under choice. */
+    for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
+        if (iter->snode) {
+            snode = iter->snode;
+        }
+    }
+    assert(snode);
+
+    /* match pattern: (lns1 | lns2 ...)? */
+    if (!ay_lnode_has_maybe(snode)) {
+        ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
+    }
+}
+
+/**
  * @brief Print yang choice-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2628,8 +2678,6 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (node->parent) {
         ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
         ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
-    } else {
-        ly_print(ctx->out, "%*schoice %s", ctx->space, "", ctx->mod->name);
     }
 
     return ret;
@@ -2675,6 +2723,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ay_print_yang_choice(ctx, node);
         /* start of choice nesting */
         ay_print_yang_nesting_begin(ctx);
+        ay_print_yang_mandatory_choice(ctx, node);
         ay_print_yang_node_(ctx, node);
     } else if (!last) {
         ay_print_yang_node_(ctx, node);
@@ -3050,8 +3099,6 @@ ay_ynode_debug_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
     int ret = 0;
     char *str1;
     struct lprinter_ctx_f print_func = {0};
-
-    assert(tree->type == YN_ROOT);
 
     if (!vercode) {
         return 0;
@@ -4122,30 +4169,6 @@ cleanup:
 error:
     ret = AYE_DEBUG_FAILED;
     goto cleanup;
-}
-
-/**
- * @brief Check if the 'maybe' operator (?) is bound to the @p node.
- *
- * @param[in] node Node to check.
- * @return 1 if maybe operator affects the node otherwise 0.
- */
-static ly_bool
-ay_lnode_has_maybe(struct ay_lnode *node)
-{
-    struct ay_lnode *iter;
-
-    if (!node) {
-        return 0;
-    }
-
-    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-        if (iter->lens->tag == L_MAYBE) {
-            return 1;
-        }
-    }
-
-    return 0;
 }
 
 /**

@@ -22,6 +22,7 @@ module dnsmasq {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         container address {
           augex:data-path "address";
           augex:value-yang-path "sto_no_slash";

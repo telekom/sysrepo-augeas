@@ -40,6 +40,7 @@ module iptables {
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
           choice ch_config-entries {
+            mandatory true;
             container chain {
               augex:data-path "chain";
               augex:value-yang-path "chain_name";
@@ -77,6 +78,7 @@ module iptables {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch_ipt_match {
+                  mandatory true;
                   container protocol {
                     augex:data-path "protocol";
                     augex:value-yang-path "protocol";
@@ -245,6 +247,7 @@ module iptables {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch_ipt_match {
+                  mandatory true;
                   container protocol {
                     augex:data-path "protocol";
                     augex:value-yang-path "protocol";

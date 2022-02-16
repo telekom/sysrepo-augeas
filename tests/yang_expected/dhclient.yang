@@ -25,6 +25,7 @@ module dhclient {
         }
       }
       choice ch_word {
+        mandatory true;
         container node {
           leaf code {
             mandatory true;
@@ -86,6 +87,7 @@ module dhclient {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         container media {
           augex:data-path "media";
           presence "Type of config entry.";
@@ -302,6 +304,7 @@ module dhclient {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         container timeout {
           augex:data-path "timeout";
           augex:value-yang-path "sto_to_spc";

@@ -22,6 +22,7 @@ module star {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch_config-entries {
+        mandatory true;
         leaf STAR_FIFOSIZE {
           type string {
             pattern "[0-9x*.a-z]+";

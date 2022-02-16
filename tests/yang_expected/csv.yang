@@ -37,6 +37,7 @@ module csv {
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
           choice ch_config-entries {
+            mandatory true;
             container field {
               augex:data-path "$$";
               augex:value-yang-path "value";
