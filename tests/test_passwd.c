@@ -195,28 +195,37 @@ static void
 test_store_add(void **state)
 {
     struct tstate *st = (struct tstate *)*state;
-    struct lyd_node *entry;
+    struct lyd_node *entries, *entry, *node;
 
     /* load current data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
-    /* add a user */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='15']/entry/username", "admin", 0, &entry));
-    entry = lyd_child_no_keys(entry);
+    /* add a user on a specific position */
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='15']/entry/username", "man", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='7']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
+
+    entry = lyd_child_no_keys(entries);
     assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "password", "x", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "uid", "2000", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "gid", "200", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "name", "The Admin", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "home", "/home/admin", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "name", "duplicate man", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "home", "/home/man", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(entry, NULL, "shell", "/bin/bash", 0, NULL));
+
+    /* add a NIS default user on a specific position */
+    node = entries;
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='16']/nisdefault", NULL, 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
 
     /* diff */
     assert_int_equal(0, tdiff_files(state,
-            "14a15\n"
-            "> admin:x:2000:200:The Admin:/home/admin:/bin/bash"));
+            "7a8,9\n"
+            "> man:x:2000:200:duplicate man:/home/man:/bin/bash\n"
+            "> +"));
 }
 
 static void
