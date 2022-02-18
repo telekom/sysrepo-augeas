@@ -41,6 +41,13 @@
 #define AY_CHECK_RET(RETVAL) if (RETVAL != 0) {return RETVAL;}
 
 /**
+ * @brief Check return value of function @p FUNC (expected 0).
+ *
+ * @param[in] FUNC Called function.
+ */
+#define AY_CHECK_RV(FUNC) {int ret__ = FUNC; if (ret__ != 0) {return ret__;}}
+
+/**
  * @brief Check by @p COND and call return with @p RETVAL.
  *
  * @param[in] COND Boolean expression.
@@ -290,7 +297,8 @@ struct ay_ynode {
                                      Set if the node is under the influence of the union operator. */
     struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
                                      YN_CONTAINER, for other types is always NULL. */
-    uint16_t flags;             /**< [ynode flags](@ref ynodeflags) */
+    uint32_t flags;             /**< [ynode flags](@ref ynodeflags) */
+    uint32_t id;                /**< Numeric identifier for clearer debugging. */
 };
 
 /**
@@ -312,7 +320,8 @@ struct ay_ynode_root {
     struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
     struct ay_lnode *choice;        /**< Not used. */
     struct ay_ynode *uses;          /**< Not used. */
-    uint16_t flags;                 /**< Not used. */
+    uint32_t flags;                 /**< Not used. */
+    uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
 };
 
 /**
@@ -338,6 +347,22 @@ struct ay_ynode_root {
  */
 #define AY_YNODE_ROOT_VALUES(TREE) \
     ((struct ay_ynode_root *)TREE)->values
+
+/**
+ * @brief Get ay_ynode_root.idcnt from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_IDCNT(TREE) \
+    ((struct ay_ynode_root *)TREE)->idcnt
+
+/**
+ * @brief Increment ay_ynode_root.idcnt in the ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_IDCNT_INC(TREE) \
+    ((struct ay_ynode_root *)TREE)->idcnt++
 
 /**
  * @brief Node (item) in the dictionary.
@@ -427,6 +452,7 @@ struct yprinter_ctx {
     struct augeas *aug;     /**< Augeas context. */
     struct module *mod;     /**< Current Augeas module. */
     struct ay_ynode *tree;  /**< Pointer to the Sized array. */
+    uint64_t vercode;       /**< Verbose options from API to debugging. */
     struct ly_out *out;     /**< Output to which it is printed. */
     int space;              /**< Current indent. */
 };
@@ -467,7 +493,7 @@ augyang_get_error_message(int err_code)
  * @return 0 on success, otherwise 1.
  */
 static int
-ay_print_debug_compare(const char *subject, const char *str1, const char *str2)
+ay_test_compare(const char *subject, const char *str1, const char *str2)
 {
     if (strcmp(str1, str2)) {
         printf(AY_NAME " DEBUG: %s difference\n", subject);
@@ -1153,6 +1179,24 @@ static void
 ay_print_yang_nesting_begin(struct yprinter_ctx *ctx)
 {
     ly_print(ctx->out, " {\n");
+    ctx->space += SPACE_INDENT;
+}
+
+/**
+ * @brief Print opening curly brace and set new indent.
+ *
+ * Conditionaly print debugging ID as comment.
+ *
+ * @param[in,out] ctx Context for printing.
+ */
+static void
+ay_print_yang_nesting_begin2(struct yprinter_ctx *ctx, uint32_t id)
+{
+    if (ctx->vercode & AYV_YNODE_ID_IN_YANG) {
+        ly_print(ctx->out, " { // %" PRIu64 "\n", id);
+    } else {
+        ly_print(ctx->out, " {\n");
+    }
     ctx->space += SPACE_INDENT;
 }
 
@@ -2312,7 +2356,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sleaf-list ", ctx->space, "");
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
 
     ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_type(ctx, node);
@@ -2375,7 +2419,7 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sleaf ", ctx->space, "");
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
 
     ay_print_yang_mandatory(ctx, node);
     ret = ay_print_yang_type(ctx, node);
@@ -2405,7 +2449,7 @@ ay_print_yang_grouping(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sgrouping ", ctx->space, "");
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
 
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
@@ -2432,7 +2476,7 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
     label = AY_LABEL_LENS(node);
 
     if (node->parent->type == YN_CONTAINER) {
@@ -2504,7 +2548,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*slist ", ctx->space, "");
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
 
     ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
@@ -2564,7 +2608,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*scontainer ", ctx->space, "");
     ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin(ctx);
+    ay_print_yang_nesting_begin2(ctx, node->id);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
@@ -2580,19 +2624,6 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Actions for node of type YN_UNKNOWN.
- *
- * TODO remove?
- */
-static int
-ay_print_yang_unknown(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    (void)ctx;
-    (void)node;
-    return 0;
-}
-
-/**
  * @brief Print node based on type.
  *
  * @param[in] ctx Context for printing.
@@ -2604,10 +2635,11 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret;
 
+    assert(node->type != YN_UNKNOWN);
+
     switch (node->type) {
     case YN_UNKNOWN:
-        ret = ay_print_yang_unknown(ctx, node);
-        break;
+        return 1;
     case YN_LEAF:
         ret = ay_print_yang_leaf(ctx, node);
         break;
@@ -2742,11 +2774,12 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
  *
  * @param[in] mod Module in which the tree is located.
  * @param[in] tree Ynode tree to print.
+ * @param[in] vercode Decide if debugging information should be printed.
  * @param[out] str_out Printed tree in yang format. Call free() after use.
  * @return 0 on success.
  */
 static int
-ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
+ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char **str_out)
 {
     int ret;
     struct yprinter_ctx ctx;
@@ -2760,6 +2793,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, char **str_out)
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
     ctx.tree = tree;
+    ctx.vercode = vercode;
     ctx.out = out;
     ctx.space = SPACE_INDENT;
 
@@ -2962,33 +2996,35 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
 
     switch (node->type) {
     case YN_UNKNOWN:
-        ly_print(ctx->out, "%*s ynode_tag: YN_UNKNOWN\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_UNKNOWN", ctx->space, "");
         break;
     case YN_LEAF:
-        ly_print(ctx->out, "%*s ynode_tag: YN_LEAF\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_LEAF", ctx->space, "");
         break;
     case YN_LEAFLIST:
-        ly_print(ctx->out, "%*s ynode_tag: YN_LEAFLIST\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_LEAFLIST", ctx->space, "");
         break;
     case YN_LIST:
-        ly_print(ctx->out, "%*s ynode_tag: YN_LIST\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_LIST", ctx->space, "");
         break;
     case YN_CONTAINER:
-        ly_print(ctx->out, "%*s ynode_tag: YN_CONTAINER\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_CONTAINER", ctx->space, "");
         break;
     case YN_KEY:
-        ly_print(ctx->out, "%*s ynode_tag: YN_KEY\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_KEY", ctx->space, "");
         break;
     case YN_VALUE:
-        ly_print(ctx->out, "%*s ynode_tag: YN_VALUE\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_VALUE", ctx->space, "");
         break;
     case YN_GROUPING:
-        ly_print(ctx->out, "%*s ynode_tag: YN_GROUPING\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_GROUPING", ctx->space, "");
         break;
     case YN_ROOT:
-        ly_print(ctx->out, "%*s ynode_tag: YN_ROOT\n", ctx->space, "");
+        ly_print(ctx->out, "%*s ynode_type: YN_ROOT", ctx->space, "");
         break;
     }
+
+    ly_print(ctx->out, " (id: %" PRIu32 ")\n", node->id);
 
     if (node->choice) {
         ly_print(ctx->out, "%*s choice_id: %p\n", ctx->space, "", node->choice);
@@ -3016,7 +3052,7 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
  * @return 0 on success.
  */
 static int
-ay_lnode_debug_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
+ay_test_lnode_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
 {
     int ret = 0;
     char *str1, *str2;
@@ -3033,7 +3069,7 @@ ay_lnode_debug_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
     ret = ay_print_lens(tree, &print_func, tree->lens, &str2);
     AY_CHECK_RET(ret);
 
-    ret = ay_print_debug_compare("lnode tree", str1, str2);
+    ret = ay_test_compare("lnode tree", str1, str2);
     if (!ret && (vercode & AYV_LTREE)) {
         printf("%s\n", str2);
     }
@@ -3053,7 +3089,7 @@ ay_lnode_debug_tree(uint64_t vercode, struct module *mod, struct ay_lnode *tree)
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yforest)
+ay_test_ynode_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yforest)
 {
     int ret = 0;
     char *str1, *str2;
@@ -3077,12 +3113,34 @@ ay_ynode_debug_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yfo
     ret = ay_print_lens(yforest, &print_func, yforest->snode->lens, &str2);
     AY_CHECK_RET(ret);
 
-    ret = ay_print_debug_compare("ynode forest", str1, str2);
+    ret = ay_test_compare("ynode forest", str1, str2);
 
     free(str1);
     free(str2);
 
     return ret;
+}
+
+/**
+ * @brief Print ynode tree in gdb.
+ *
+ * This function is useful for storing the ynode tree to the GDB Value history.
+ *
+ * @param[in] tree Tree of ynodes to print.
+ * @return Printed ynode tree.
+ */
+__attribute__((unused))
+static char *
+ay_gdb_lptree(struct ay_ynode *tree)
+{
+    char *str1;
+    struct lprinter_ctx_f print_func = {0};
+
+    print_func.transition = ay_print_ynode_transition_lv;
+    print_func.extension = ay_print_ynode_extension;
+    ay_print_lens(tree, &print_func, NULL, &str1);
+
+    return str1;
 }
 
 /**
@@ -3094,7 +3152,7 @@ ay_ynode_debug_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yfo
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
+ay_debug_ynode_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
 {
     int ret = 0;
     char *str1;
@@ -3184,11 +3242,14 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
 static void
 ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
 {
+    uint32_t id = 1;
+
     for (uint32_t i = 0, j = 0; i < lnode->descendants; i++) {
         if (lnode[i].lens->tag == L_SUBTREE) {
             LY_ARRAY_INCREMENT(ynode);
             ynode[j].snode = &lnode[i];
             ynode[j].descendants = 0;
+            ynode[j].id = id++;
             for (uint32_t k = 0; k < lnode[i].descendants; k++) {
                 if (lnode[i + 1 + k].lens->tag == L_SUBTREE) {
                     ynode[j].descendants++;
@@ -3407,6 +3468,8 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
     if (valcount) {
         LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_VALUES(*tree), valcount, return AYE_MEMORY);
     }
+    /* Set idcnt. */
+    AY_YNODE_ROOT_IDCNT(*tree) = ((*tree) + (*tree)->descendants)->id + 1;
     /* Set ltree. Note that this set must be the last operation before return. */
     AY_YNODE_ROOT_LTREE(*tree) = ltree;
 
@@ -3660,7 +3723,7 @@ ay_ynode_rule_ordered_entries(const struct ay_lnode *tree)
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
+ay_test_ynode_copy(uint64_t vercode, struct ay_ynode *forest)
 {
     int ret = 0;
     char *str1, *str2;
@@ -3682,7 +3745,7 @@ ay_ynode_debug_copy(uint64_t vercode, struct ay_ynode *forest)
     ret = ay_print_lens(dupl, &print_func, dupl->snode->lens, &str2);
     AY_CHECK_RET(ret);
 
-    ret = ay_print_debug_compare("ynode copy", str1, str2);
+    ret = ay_test_compare("ynode copy", str1, str2);
     free(str1);
     free(str2);
     LY_ARRAY_FREE(dupl);
@@ -3704,6 +3767,8 @@ ay_ynode_insert_gap(struct ay_ynode *tree, uint32_t index)
     memmove(&tree[index + 1], &tree[index], (LY_ARRAY_COUNT(tree) - index) * sizeof *tree);
     memset(&tree[index], 0, sizeof *tree);
     LY_ARRAY_INCREMENT(tree);
+    tree[index].id = AY_YNODE_ROOT_IDCNT(tree);
+    AY_YNODE_ROOT_IDCNT_INC(tree);
 }
 
 /**
@@ -3986,7 +4051,7 @@ ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint64_t count)
+ay_test_ynode_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint64_t count)
 {
     for (uint64_t i = 0; i < count; i++) {
         if (arr1[i].parent != arr2[i].parent) {
@@ -4036,7 +4101,7 @@ ay_ynode_debug_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2,
  * @return 0 on success.
  */
 static int
-ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
+ay_test_ynode_insert_delete(uint64_t vercode, struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     int ret = 0;
@@ -4056,7 +4121,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_child(dupl, &dupl[i]);
         ay_ynode_delete_node(dupl, &dupl[i + 1]);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -4066,7 +4131,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_wrapper(dupl, &dupl[i]);
         ay_ynode_delete_node(dupl, &dupl[i]);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -4076,7 +4141,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent(dupl, &dupl[i]);
         ay_ynode_delete_node(dupl, dupl[i + 1].parent);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -4086,7 +4151,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_parent_for_rest(dupl, &dupl[i]);
         ay_ynode_delete_node(dupl, dupl[i + 1].parent);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -4096,7 +4161,7 @@ ay_ynode_debug_insert_delete(uint64_t vercode, struct ay_ynode *tree)
         memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
         ay_ynode_insert_sibling(dupl, &dupl[i]);
         ay_ynode_delete_node(dupl, dupl[i].next);
-        AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         AY_SET_LY_ARRAY_SIZE(dupl, 0);
     }
 
@@ -4122,7 +4187,7 @@ error:
  * @return 0 on successs.
  */
 static int
-ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
+ay_test_ynode_move_subtree(uint64_t vercode, struct ay_ynode *tree)
 {
     int ret = 0;
     LY_ARRAY_COUNT_TYPE i;
@@ -4144,7 +4209,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
             ay_ynode_move_subtree_as_sibling(dupl, &dupl[i], dupl[i].next->next);
             place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
             ay_ynode_move_subtree_as_sibling(dupl, place, dupl[i].next);
-            AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+            AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
 
@@ -4153,7 +4218,7 @@ ay_ynode_debug_move_subtree(uint64_t vercode, struct ay_ynode *tree)
         if (dupl[i].next && dupl[i].next->child) {
             ay_ynode_move_subtree_as_child(dupl, &dupl[i], dupl[i].next->child);
             ay_ynode_move_subtree_as_child(dupl, dupl[i].next, dupl[i].child);
-            AY_CHECK_GOTO(ay_ynode_debug_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
+            AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
         }
     }
 
@@ -5085,12 +5150,11 @@ ay_ynode_trans_insert1(struct ay_ynode **tree, uint64_t (*rule)(struct ay_ynode 
 /**
  * @brief Apply various transformations before the tree is ready to print.
  *
- * @param[in] vercode Verbose that decides the execution of a debug functions.
  * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
  * @return 0 on success.
  */
 static int
-ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
+ay_ynode_transformations(struct ay_ynode **tree)
 {
     int ret = 0;
 
@@ -5125,47 +5189,32 @@ ay_ynode_transformations(uint64_t vercode, struct ay_ynode **tree)
     ay_ynode_set_lv(*tree);
 
     /* insert top-level list for storing configure file */
-    ret = ay_ynode_trans_insert2(tree, 1, ay_insert_list_files);
-    AY_CHECK_RET(ret);
-
-    ret = ay_ynode_debug_tree(vercode, AYV_TRANS1, *tree);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert2(tree, 1, ay_insert_list_files));
 
     /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
      * choice ch { container { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container));
 
     /* [key lns1 . lns2 ] | [key lns1 . lns3 ]   -> [key lns1 (lns2 | lns3) ] */
     ay_delete_container_with_same_key(*tree);
 
     /* [key lns1 [nodes1] ]* | [key lns1 [nodes2]]*   -> [key lns1 (nodes1 | nodes2)]* */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_with_same_key, ay_delete_list_with_same_key);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_list_with_same_key, ay_delete_list_with_same_key));
 
     /* [key "a" | "b"] -> list a {} list b {} */
     /* TODO: generally nodes, not just a list nodes? */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_list_split, ay_ynode_list_split);
-    AY_CHECK_RET(ret);
-
-    ret = ay_ynode_debug_tree(vercode, AYV_TRANS2, *tree);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_list_split, ay_ynode_list_split));
 
     /* Make a tree that reflects the order of records.
      * list A {} list B{} -> list C { container A{} container B{}}
      */
-    ret = ay_ynode_trans_insert2(tree,
-            ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_ordered_entries);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert2(tree,
+            ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_ordered_entries));
 
     /* [label str store lns]*   -> container { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> container { YN_KEY{} YN_VALUE{} } */
-    ret = ay_ynode_trans_insert1(tree, ay_ynode_rule_cont_key, ay_insert_cont_key);
-    AY_CHECK_RET(ret);
-
-    ret = ay_ynode_debug_tree(vercode, AYV_TRANS3, *tree);
-    AY_CHECK_RET(ret);
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_cont_key, ay_insert_cont_key));
 
     /* delete the containers that has only one child */
     ay_delete_poor_container(*tree);
@@ -5203,15 +5252,15 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);
     ay_lnode_create_tree(ltree, lens, ltree);
-    ay_lnode_debug_tree(vercode, mod, ltree);
+    ay_test_lnode_tree(vercode, mod, ltree);
 
     /* Create ynode forest. */
     LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
     ay_ynode_create_forest(ltree, yforest);
-    ay_ynode_debug_forest(vercode, mod, yforest);
+    ay_test_ynode_forest(vercode, mod, yforest);
 
     /* Convert ynode forest to tree. */
-    ret = ay_ynode_debug_copy(vercode, yforest);
+    ret = ay_test_ynode_copy(vercode, yforest);
     AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_create_tree(yforest, ltree, &ytree);
     AY_CHECK_GOTO(ret, cleanup);
@@ -5221,20 +5270,20 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     LY_ARRAY_FREE(yforest);
     yforest = NULL;
     /* Print ytree if debugged. */
-    ret = ay_ynode_debug_tree(vercode, AYV_YTREE, ytree);
+    ret = ay_debug_ynode_tree(vercode, AYV_YTREE, ytree);
     AY_CHECK_GOTO(ret, cleanup);
 
     /* Apply transformations. */
-    ret = ay_ynode_debug_insert_delete(vercode, ytree);
+    ret = ay_test_ynode_insert_delete(vercode, ytree);
     AY_CHECK_GOTO(ret, cleanup);
-    ret = ay_ynode_debug_move_subtree(vercode, ytree);
+    ret = ay_test_ynode_move_subtree(vercode, ytree);
     AY_CHECK_GOTO(ret, cleanup);
-    ret = ay_ynode_transformations(vercode, &ytree);
+    ret = ay_ynode_transformations(&ytree);
     AY_CHECK_GOTO(ret, cleanup);
-    ret = ay_ynode_debug_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
+    ret = ay_debug_ynode_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
     AY_CHECK_GOTO(ret, cleanup);
 
-    ret = ay_print_yang(mod, ytree, str);
+    ret = ay_print_yang(mod, ytree, vercode, str);
 
 cleanup:
     LY_ARRAY_FREE(ltree);
