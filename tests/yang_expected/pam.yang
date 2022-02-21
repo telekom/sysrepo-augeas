@@ -1,0 +1,74 @@
+module pam {
+  namespace "aug:pam";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Pam";
+
+  list pam {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch_config-entries {
+        mandatory true;
+        leaf include {
+          type string {
+            pattern "([^# \t\n\\\\]|\\\\.)+";
+          }
+          augex:data-path "include";
+        }
+        container record_svc {
+          augex:data-path "$$";
+          presence "Type of config entry.";
+          leaf record {
+            mandatory true;
+            type uint64;
+          }
+          leaf optional {
+            type empty;
+            augex:data-path "optional";
+          }
+          leaf type {
+            mandatory true;
+            type string {
+              pattern "auth|session|account|password";
+            }
+            augex:data-path "type";
+          }
+          leaf control {
+            mandatory true;
+            type string {
+              pattern "\\[[^\\]#\n]*\\\\]|[a-zA-Z]+";
+            }
+            augex:data-path "control";
+          }
+          leaf module {
+            mandatory true;
+            type string {
+              pattern "([^# \t\n\\\\]|\\\\.)+";
+            }
+            augex:data-path "module";
+          }
+          leaf-list argument {
+            type string {
+              pattern "\\[[^\\]#\n]+\\]|[^\\[#\n \t\\\\][^#\n \t\\\\]*";
+            }
+            augex:data-path "argument";
+          }
+        }
+      }
+    }
+  }
+}
