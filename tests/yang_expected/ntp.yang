@@ -1,0 +1,595 @@
+module ntp {
+  namespace "aug:ntp";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Ntp";
+
+  grouping command_record {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch_config-entries {
+        mandatory true;
+        leaf minpoll {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "minpoll";
+        }
+        leaf maxpoll {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "maxpoll";
+        }
+        leaf ttl {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "ttl";
+        }
+        leaf version {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "version";
+        }
+        leaf key {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "key";
+        }
+        leaf autokey {
+          type empty;
+          augex:data-path "autokey";
+        }
+        leaf burst {
+          type empty;
+          augex:data-path "burst";
+        }
+        leaf iburst {
+          type empty;
+          augex:data-path "iburst";
+        }
+        leaf noselect {
+          type empty;
+          augex:data-path "noselect";
+        }
+        leaf preempt {
+          type empty;
+          augex:data-path "preempt";
+        }
+        leaf prefer {
+          type empty;
+          augex:data-path "prefer";
+        }
+        leaf true {
+          type empty;
+          augex:data-path "true";
+        }
+        leaf dynamic {
+          type empty;
+          augex:data-path "dynamic";
+        }
+      }
+    }
+  }
+  grouping flags {
+    leaf-list flag {
+      type string {
+        pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
+      }
+      augex:data-path "flag";
+    }
+  }
+  list ntp {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch_config-entries {
+        mandatory true;
+        container pool {
+          augex:data-path "pool";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container server {
+          augex:data-path "server";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container peer {
+          augex:data-path "peer";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container broadcast {
+          augex:data-path "broadcast";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container manycastclient {
+          augex:data-path "manycastclient";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container multicastclient {
+          augex:data-path "multicastclient";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container manycastserver {
+          augex:data-path "manycastserver";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          uses command_record;
+        }
+        container fudge_record {
+          augex:data-path "fudge";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          choice ch_fudge_record {
+            leaf refid {
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              augex:data-path "refid";
+            }
+            leaf stratum {
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              augex:data-path "stratum";
+            }
+          }
+        }
+        container restrict_record {
+          augex:data-path "restrict";
+          augex:value-yang-path "restrict";
+          presence "Type of config entry.";
+          leaf restrict {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t-][^,# \n\t]*";
+            }
+          }
+          choice ch_restrict_record {
+            leaf ipv6 {
+              type empty;
+              augex:data-path "ipv6";
+            }
+            leaf ipv4 {
+              type empty;
+              augex:data-path "ipv4";
+            }
+          }
+          leaf-list action {
+            type string {
+              pattern "[^,# \n\t-][^,# \n\t]*";
+            }
+            augex:data-path "action";
+          }
+        }
+        leaf broadcastdelay {
+          type string {
+            pattern "[0-9]+([.,][0-9]+)?";
+          }
+          augex:data-path "broadcastdelay";
+        }
+        container enable {
+          augex:data-path "enable";
+          presence "Type of config entry.";
+          uses flags;
+        }
+        container disable {
+          augex:data-path "disable";
+          presence "Type of config entry.";
+          uses flags;
+        }
+        leaf driftfile {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "driftfile";
+        }
+        leaf leapfile {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "leapfile";
+        }
+        leaf logfile {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "logfile";
+        }
+        leaf includefile {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "includefile";
+        }
+        leaf statsdir {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "statsdir";
+        }
+        leaf ntpsigndsocket {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "ntpsigndsocket";
+        }
+        container statistics_record {
+          augex:data-path "statistics";
+          presence "Type of config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch_config-entries {
+              mandatory true;
+              leaf loopstats {
+                type empty;
+                augex:data-path "loopstats";
+              }
+              leaf peerstats {
+                type empty;
+                augex:data-path "peerstats";
+              }
+              leaf clockstats {
+                type empty;
+                augex:data-path "clockstats";
+              }
+              leaf rawstats {
+                type empty;
+                augex:data-path "rawstats";
+              }
+            }
+          }
+        }
+        container filegen_record {
+          augex:data-path "filegen";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch_config-entries {
+              mandatory true;
+              leaf file {
+                type string {
+                  pattern "[^,# \n\t]+";
+                }
+                augex:data-path "file";
+              }
+              leaf type {
+                type string {
+                  pattern "[^,# \n\t]+";
+                }
+                augex:data-path "type";
+              }
+              leaf enable {
+                type string {
+                  pattern "(en|dis)able";
+                }
+                augex:data-path "enable";
+              }
+              leaf link {
+                type string {
+                  pattern "(no)?link";
+                }
+                augex:data-path "link";
+              }
+            }
+          }
+        }
+        container broadcastclient {
+          augex:data-path "broadcastclient";
+          presence "Type of config entry.";
+          leaf novolley {
+            type empty;
+            augex:data-path "novolley";
+          }
+        }
+        leaf controlkey {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "controlkey";
+        }
+        leaf keys {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "keys";
+        }
+        leaf keysdir {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "keysdir";
+        }
+        leaf requestkey {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "requestkey";
+        }
+        leaf authenticate {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "authenticate";
+        }
+        leaf autokey {
+          type empty;
+          augex:data-path "autokey";
+        }
+        leaf revoke {
+          type empty;
+          augex:data-path "revoke";
+        }
+        container trustedkey {
+          augex:data-path "trustedkey";
+          presence "Type of config entry.";
+          leaf-list key {
+            min-elements 1;
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+            augex:data-path "key";
+          }
+        }
+        container tinker {
+          augex:data-path "tinker";
+          presence "Type of config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch_config-entries {
+              mandatory true;
+              leaf step {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "step";
+              }
+              leaf panic {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "panic";
+              }
+              leaf dispersion {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "dispersion";
+              }
+              leaf stepout {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "stepout";
+              }
+              leaf minpoll {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "minpoll";
+              }
+              leaf allan {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "allan";
+              }
+              leaf huffpuff {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "huffpuff";
+              }
+            }
+          }
+        }
+        container tos {
+          augex:data-path "tos";
+          presence "Type of config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch_config-entries {
+              mandatory true;
+              leaf beacon {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "beacon";
+              }
+              leaf ceiling {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "ceiling";
+              }
+              leaf cohort {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "cohort";
+              }
+              leaf floor {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "floor";
+              }
+              leaf maxclock {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "maxclock";
+              }
+              leaf maxdist {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "maxdist";
+              }
+              leaf minclock {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "minclock";
+              }
+              leaf mindist {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "mindist";
+              }
+              leaf minsane {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "minsane";
+              }
+              leaf orphan {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "orphan";
+              }
+              leaf orphanwait {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "orphanwait";
+              }
+            }
+          }
+        }
+        container interface {
+          augex:data-path "interface";
+          presence "Type of config entry.";
+          leaf action {
+            mandatory true;
+            type string {
+              pattern "listen|ignore|drop";
+            }
+            augex:data-path "action";
+          }
+          leaf addresses {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "addresses";
+          }
+        }
+      }
+    }
+  }
+}

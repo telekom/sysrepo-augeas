@@ -287,18 +287,18 @@ struct ay_ynode {
 
     /* Applies to every yang_type except YN_ROOT. For YN_ROOT type node use conversion to struct ay_ynode_root. */
 
-    struct ay_lnode *snode;     /**< Pointer to the corresponding lnode with lense tag L_SUBTREE.
-                                     Can be NULL if the ynode was inserted by some transformation. */
-    struct ay_lnode *label;     /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
-                                     or L_SEQ. Can be NULL. */
-    struct ay_lnode *value;     /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
-                                     Can be NULL. */
-    struct ay_lnode *choice;    /**< Pointer to the lnode with lense tag L_UNION.
-                                     Set if the node is under the influence of the union operator. */
-    struct ay_ynode *uses;      /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
-                                     YN_CONTAINER, for other types is always NULL. */
-    uint32_t flags;             /**< [ynode flags](@ref ynodeflags) */
-    uint32_t id;                /**< Numeric identifier for clearer debugging. */
+    const struct ay_lnode *snode;   /**< Pointer to the corresponding lnode with lense tag L_SUBTREE.
+                                         Can be NULL if the ynode was inserted by some transformation. */
+    const struct ay_lnode *label;   /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
+                                         or L_SEQ. Can be NULL. */
+    const struct ay_lnode *value;   /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
+                                         Can be NULL. */
+    const struct ay_lnode *choice;  /**< Pointer to the lnode with lense tag L_UNION.
+                                         Set if the node is under the influence of the union operator. */
+    struct ay_ynode *uses;          /**< Pointer to ynode of type YN_GROUPING. Pointer can be set for types
+                                         YN_CONTAINER, for other types is always NULL. */
+    uint32_t flags;                 /**< [ynode flags](@ref ynodeflags) */
+    uint32_t id;                    /**< Numeric identifier for clearer debugging. */
 };
 
 /**
@@ -318,7 +318,7 @@ struct ay_ynode_root {
                                          in union-stmt. The key in the dictionary is the first label in the
                                          union and values in the dictionary are the remaining labels. */
     struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
-    struct ay_lnode *choice;        /**< Not used. */
+    const struct ay_lnode *choice;  /**< Not used. */
     struct ay_ynode *uses;          /**< Not used. */
     uint32_t flags;                 /**< Not used. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
@@ -375,10 +375,10 @@ struct ay_dnode {
     uint32_t values_count;      /**< Number of VALUES stored for the KEY and it cannot be 0. This means that if it
                                      contains 0, it is a dnode of type VALUE. */
     union {
-        void *kvd;              /**< Generic KEY or VALUE Data. */
-        struct ay_lnode *lnode; /**< Generic KEY or VALUE of type lnode. */
-        struct ay_lnode *lkey;  /**< KEY of the dictionary. */
-        struct ay_lnode *lval;  /**< VALUE of the KEY. */
+        const void *kvd;                /**< Generic KEY or VALUE Data. */
+        const struct ay_lnode *lnode;   /**< Generic KEY or VALUE of type lnode. */
+        const struct ay_lnode *lkey;    /**< KEY of the dictionary. */
+        const struct ay_lnode *lval;    /**< VALUE of the KEY. */
     };
 };
 
@@ -604,7 +604,7 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
  * @return The dnode with the same kvd or NULL.
  */
 static struct ay_dnode *
-ay_dnode_find(struct ay_dnode *dict, void *kvd)
+ay_dnode_find(struct ay_dnode *dict, const void *kvd)
 {
     LY_ARRAY_COUNT_TYPE i;
 
@@ -625,7 +625,7 @@ ay_dnode_find(struct ay_dnode *dict, void *kvd)
  * @param[in] value The VALUE to be added under @p key. If it is not unique, then another will NOT be added.
  */
 static void
-ay_dnode_insert(struct ay_dnode *dict, void *key, void *value)
+ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value)
 {
     struct ay_dnode *dkey, *dval, *gap;
 
@@ -806,7 +806,7 @@ ay_ynode_equal(struct ay_ynode *n1, struct ay_ynode *n2)
  * @return 1 if maybe operator affects the node otherwise 0.
  */
 static ly_bool
-ay_lnode_has_maybe(struct ay_lnode *node)
+ay_lnode_has_maybe(const struct ay_lnode *node)
 {
     struct ay_lnode *iter;
 
@@ -1339,7 +1339,8 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
     };
     // TODO: if right side of the regsub rule is bigger -> danger of valgrind error
     struct regex_map regsub[] = {
-        {"\\/", "/"}
+        {"\\/", "/"},
+        {"    minclock", "minclock"}   /* ntp.aug looks wrong */
     };
     const char *regdel[] = {
         "\\r",
@@ -1423,12 +1424,21 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
     for (i = 0, j = 0; i < stop; i++, j++) {
         switch (ident[i]) {
         case ' ':
-            buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
+            if (j && (buffer[j - 1] == '_')) {
+                j--;
+            } else if (j == 0) {
+                j--;
+            } else {
+                buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
+            }
             break;
         case '(':
             j--;
             break;
         case ')':
+            j--;
+            break;
+        case '\n':
             j--;
             break;
         default:
@@ -1539,6 +1549,9 @@ ay_lense_pattern_has_idents(struct lens *lens)
 
     for (patt = lens->regexp->pattern->str; *patt != '\0'; patt++) {
         if ((*patt == '|') || (*patt == '(') || (*patt == ')')) {
+            continue;
+        } else if (*patt == '\n') {
+            /* TODO pattern is probably written wrong -> bugfix lense? */
             continue;
         } else if (!ay_ident_character_is_valid(patt)) {
             return 0;
@@ -1722,9 +1735,9 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
      * empty
      *
      * YN_LEAF yang-ident:
-     * LABEL, SEQ, is_label, has_idents?, lense_name(snode), lense_name(label), "node"
+     * LABEL, SEQ, is_label, has_idents, lense_name(snode), lense_name(label), "node"
      * data-path:
-     * LABEL, SEQ, is_label, has_idents?, "$$"
+     * LABEL, SEQ, is_label, has_idents, "$$"
      * value-yang-path:
      * get_yang_ident(YN_VALUE)
      */
@@ -1984,10 +1997,10 @@ ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
  * @param[in] lv_type Flag specifying the type to search for. See AY_LV_TYPE_* constants.
  * @return Follower or NULL.
  */
-static struct ay_lnode *
-ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
+static const struct ay_lnode *
+ay_lnode_next_lv(const struct ay_lnode *lv, uint8_t lv_type)
 {
-    struct ay_lnode *iter, *stop;
+    const struct ay_lnode *iter, *stop;
     enum lens_tag tag;
 
     if (!lv) {
@@ -2021,7 +2034,7 @@ ay_lnode_next_lv(struct ay_lnode *lv, uint8_t lv_type)
  * @return 1 if type empty is in the @p lnode.
  */
 static ly_bool
-ay_yang_type_is_empty(struct ay_lnode *lnode)
+ay_yang_type_is_empty(const struct ay_lnode *lnode)
 {
     struct ay_lnode *iter;
 
@@ -2108,9 +2121,8 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
             ret = "uint64";
         } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
             ret = "int64";
-        } else if (!strcmp("reldecimal", ident) || !strcmp("decimal", ident)) {
-            ret = "decimal64";
         }
+        /* !strcmp("reldecimal", ident) || !strcmp("decimal", ident) -> decimal64 but what fraction-digits stmt? */
     }
 
     return ret;
@@ -2214,7 +2226,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
     struct lens *label, *value;
-    struct ay_lnode *lnode;
+    const struct ay_lnode *lnode;
     struct ay_dnode *key;
     uint8_t lv_type;
     ly_bool empty_string = 0, empty_type = 0;
@@ -2233,6 +2245,9 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (ay_lense_pattern_has_idents(label) && value) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
+    } else if ((node->type == YN_LEAF) && ay_lense_pattern_has_idents(label) && !value) {
+        ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
+        return ret;
     } else if (label && (label->tag == L_KEY)) {
         lnode = node->label;
         lv_type = AY_LV_TYPE_LABEL;
@@ -2678,7 +2693,7 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_mandatory_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    struct ay_lnode *snode = NULL;
+    const struct ay_lnode *snode = NULL;
     struct ay_ynode *iter;
 
     /* Take some snode under choice. */
@@ -2728,7 +2743,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
     ly_bool first = 0, alone, last, next_has_same_choice;
     struct ay_ynode *iter;
-    struct ay_lnode *choice;
+    const struct ay_lnode *choice;
 
     if (!node->choice || (node->type == YN_VALUE)) {
         return ay_print_yang_node_(ctx, node);
@@ -2895,7 +2910,7 @@ ay_print_lnode_transition(struct lprinter_ctx *ctx)
 static void
 ay_print_ynode_label_value(struct lprinter_ctx *ctx, struct ay_ynode *node)
 {
-    struct ay_lnode *iter;
+    const struct ay_lnode *iter;
 
     void (*transition)(struct lprinter_ctx *);
     void (*extension)(struct lprinter_ctx *);
@@ -3293,7 +3308,7 @@ static void
 ay_ynode_add_label_value(struct ay_ynode *forest)
 {
     struct ay_ynode *ynode;
-    struct ay_lnode *lnode;
+    const struct ay_lnode *lnode;
     enum lens_tag tag;
 
     LY_ARRAY_FOR(forest, struct ay_ynode, ynode) {
@@ -3482,10 +3497,10 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
  * @param[in] node Node to search.
  * @return Pointer to lnode or NULL.
  */
-static struct ay_lnode *
+static const struct ay_lnode *
 ay_ynode_get_repetition(struct ay_ynode *node)
 {
-    struct ay_lnode *ret = NULL, *liter, *lstart, *lstop;
+    const struct ay_lnode *ret = NULL, *liter, *lstart, *lstop;
     struct ay_ynode *yiter;
 
     if (!node) {
@@ -3677,7 +3692,9 @@ ay_ynode_rule_list_split(struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
 
-    if ((node->type != YN_LIST) || !label || (label->tag != L_KEY)) {
+    if (!label || (label->tag != L_KEY)) {
+        return 0;
+    } else if ((node->type != YN_LIST) && (node->type != YN_LEAFLIST) && (node->type != YN_CONTAINER)) {
         return 0;
     }
 
@@ -3688,10 +3705,10 @@ ay_ynode_rule_list_split(struct ay_ynode *node)
          * So for grouping node (+1), first identifier in pattern (0), for every other identifiers in pattern (+n).
          * And therefore:
          */
-        count = grouping_present + (count - 1);
+        return grouping_present + (count - 1);
+    } else {
+        return 0;
     }
-
-    return count > 1 ? count : 0;
 }
 
 /**
@@ -4625,19 +4642,28 @@ ay_delete_poor_container(struct ay_ynode *tree)
 
         if (cont->uses || (cont->type != YN_CONTAINER)) {
             continue;
-        } else if (ay_lense_pattern_has_idents(label) && !ay_lense_pattern_is_label(label)) {
+        }
+
+        if (ay_lense_pattern_has_idents(label) && !ay_lense_pattern_is_label(label) && !cont->uses) {
+            if (cont->descendants == 0) {
+                cont->type = YN_LEAF;
+                cont->flags &= ~AY_YNODE_MAND_MASK;
+            } else if ((cont->descendants == 1) && cont->value && (cont->child->type == YN_VALUE)) {
+                cont->type = YN_LEAF;
+                cont->flags &= ~AY_YNODE_MAND_MASK;
+            }
             continue;
         }
 
         if (cont->descendants == 0) {
-            if (ay_lense_pattern_has_idents(label)) {
+            if (ay_lense_pattern_is_label(label)) {
                 cont->type = YN_LEAF;
                 cont->flags &= ~AY_YNODE_MAND_MASK;
             } else {
                 ay_ynode_delete_node(tree, cont);
                 i--;
             }
-        } else if (cont->descendants == 1) {
+        } else if ((cont->descendants == 1) && (cont->label == cont->child->label)) {
             cont->child->choice = cont->choice;
             if (cont->child->type == YN_KEY) {
                 cont->child->type = YN_LEAF;
@@ -4645,7 +4671,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
             }
             ay_ynode_delete_node(tree, cont);
             i--;
-        } else if (cont->child->choice) {
+        } else if (cont->child->choice && (cont->label == cont->child->label)) {
             for (iter = cont->child; iter; iter = iter->next) {
                 if (iter->next && (iter->next->choice != iter->choice)) {
                     break;
@@ -4670,7 +4696,7 @@ static void
 ay_ynode_set_lv(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_lnode *label, *value, *next;
+    const struct ay_lnode *label, *value, *next;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         label = tree[i].label;
@@ -4916,6 +4942,8 @@ ay_ynode_list_split(struct ay_ynode *tree)
         list->flags |= AY_YNODE_MAND_FALSE;
         /* Note: ynode.uses will not be valid, it is used as boolean until the ay_ynode_.*_set_uses transformations. */
         list->uses = grouping;
+        /* Just set choice to some value if not already set. */
+        list->choice = !list->choice ? AY_YNODE_ROOT_LTREE(tree) : list->choice;
         /* insert new lists */
         for (j = 0; j < (idents_count - 1); j++) {
             /* insert new list node */
@@ -4941,7 +4969,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
 {
     uint64_t i;
     struct ay_ynode *parent, *child, *list, *iter;
-    struct ay_lnode *choice;
+    const struct ay_lnode *choice;
 
     for (i = 0; i < tree->descendants; i++) {
         parent = &tree[i + 1];
