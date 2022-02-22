@@ -281,6 +281,30 @@ test_store_remove(void **state)
             "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false"));
 }
 
+static void
+test_store_move(void **state)
+{
+    struct tstate *st = (struct tstate *)*state;
+    struct lyd_node *node;
+
+    /* load current data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
+
+    /* move nobody at the beginning */
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='7']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_insert_before(lyd_child_no_keys(st->data), node));
+
+    /* store new data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+
+    /* diff */
+    assert_int_equal(0, tdiff_files(state,
+            "0a1\n"
+            "> nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"
+            "7d7\n"
+            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash"));
+}
+
 int
 main(void)
 {
@@ -289,6 +313,7 @@ main(void)
         cmocka_unit_test_teardown(test_store_add, tteardown),
         cmocka_unit_test_teardown(test_store_modify, tteardown),
         cmocka_unit_test_teardown(test_store_remove, tteardown),
+        cmocka_unit_test_teardown(test_store_move, tteardown),
     };
 
     return cmocka_run_group_tests(tests, setup_f, tteardown_glob);
