@@ -48,37 +48,58 @@ test_load(void **state)
     assert_string_equal(str,
             "<simplevars xmlns=\"aug:simplevars\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/simplevars</config-file>\n"
-            "  <entry>\n"
-            "    <_id>mykey</_id>\n"
-            "    <to_comment_re>myvalue</to_comment_re>\n"
-            "  </entry>\n"
-            "  <entry>\n"
-            "    <_id>anotherkey</_id>\n"
-            "    <to_comment_re>another value</to_comment_re>\n"
-            "  </entry>\n"
-            "  <entry>\n"
-            "    <_id>UserParameter</_id>\n"
-            "    <to_comment_re>custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'</to_comment_re>\n"
-            "  </entry>\n"
-            "  <entry>\n"
-            "    <_id>foo</_id>\n"
-            "    <to_comment_re/>\n"
-            "  </entry>\n"
+            "  <config-entries>\n"
+            "    <_id>1</_id>\n"
+            "    <entry>\n"
+            "      <_id>mykey</_id>\n"
+            "      <to_comment_re>myvalue</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>2</_id>\n"
+            "    <entry>\n"
+            "      <_id>anotherkey</_id>\n"
+            "      <to_comment_re>another value</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>3</_id>\n"
+            "    <entry>\n"
+            "      <_id>UserParameter</_id>\n"
+            "      <to_comment_re>custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>4</_id>\n"
+            "    <entry>\n"
+            "      <_id>foo</_id>\n"
+            "      <to_comment_re/>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
             "</simplevars>\n"
             "<simplevars xmlns=\"aug:simplevars\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/simplevars2</config-file>\n"
-            "  <entry>\n"
-            "    <_id>key1</_id>\n"
-            "    <to_comment_re>value1</to_comment_re>\n"
-            "  </entry>\n"
-            "  <entry>\n"
-            "    <_id>key2</_id>\n"
-            "    <to_comment_re>value2</to_comment_re>\n"
-            "  </entry>\n"
-            "  <entry>\n"
-            "    <_id>key3</_id>\n"
-            "    <to_comment_re>value3</to_comment_re>\n"
-            "  </entry>\n"
+            "  <config-entries>\n"
+            "    <_id>1</_id>\n"
+            "    <entry>\n"
+            "      <_id>key1</_id>\n"
+            "      <to_comment_re>value1</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>2</_id>\n"
+            "    <entry>\n"
+            "      <_id>key2</_id>\n"
+            "      <to_comment_re>value2</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>3</_id>\n"
+            "    <entry>\n"
+            "      <_id>key3</_id>\n"
+            "      <to_comment_re>value3</to_comment_re>\n"
+            "    </entry>\n"
+            "  </config-entries>\n"
             "</simplevars>\n");
     free(str);
 }
@@ -92,8 +113,11 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some variable to both files */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry[_id='newvar']/to_comment_re", "value", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry[_id='newvar2']/to_comment_re", "value", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/entry/_id", "newvar", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/entry/to_comment_re", "value", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='4']/entry/_id", "newvar2", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='4']/entry/to_comment_re",
+            "value", 0, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -115,8 +139,8 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify a variable in the second file */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry[_id='mykey']/to_comment_re", "changed value",
-            LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='2']/entry/to_comment_re",
+            "changed value", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -124,8 +148,10 @@ test_store_modify(void **state)
     /* diff */
     assert_int_equal(0, tdiff_files(state,
             "",
-            "7a8\n"
-            "> mykey = changed value"));
+            "4c4\n"
+            "< key2 = value2\n"
+            "---\n"
+            "> key2 = changed value"));
 }
 
 static void
@@ -138,9 +164,9 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove 2 variables from the first file */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='UserParameter']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='3']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='anotherkey']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

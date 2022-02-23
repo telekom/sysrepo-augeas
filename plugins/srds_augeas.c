@@ -1200,8 +1200,11 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
         case AUGDS_EXT_NODE_LABEL:
             if (value_path) {
                 /* value is stored in a different YANG node (it may not exist if no value was set) */
-                assert(diff_node->schema->nodetype != LYS_CONTAINER);
-                lyd_find_path(lyd_parent(diff_node), value_path, 0, diff_node2);
+                if (diff_node->schema->nodetype & LYD_NODE_INNER) {
+                    lyd_find_path(diff_node, value_path, 0, diff_node2);
+                } else {
+                    lyd_find_path(lyd_parent(diff_node), value_path, 0, diff_node2);
+                }
                 *aug_value = lyd_get_value(*diff_node2);
             } else {
                 /* no value at this Augeas path */
