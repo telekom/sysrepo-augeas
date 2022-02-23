@@ -48,48 +48,66 @@ test_load(void **state)
     assert_string_equal(str,
             "<ntpd xmlns=\"aug:ntpd\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/ntpd</config-file>\n"
-            "  <listen_on>\n"
+            "  <config-entries>\n"
             "    <_id>1</_id>\n"
-            "    <address>*</address>\n"
-            "    <rtable>5</rtable>\n"
-            "  </listen_on>\n"
-            "  <server>\n"
-            "    <_id>1</_id>\n"
-            "    <address>ntp.example.org</address>\n"
-            "  </server>\n"
-            "  <servers>\n"
-            "    <_id>1</_id>\n"
-            "    <address>pool.ntp.org</address>\n"
-            "  </servers>\n"
-            "  <servers>\n"
+            "    <listen>\n"
+            "      <address>*</address>\n"
+            "      <rtable>5</rtable>\n"
+            "    </listen>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
             "    <_id>2</_id>\n"
-            "    <address>0.gentoo.pool.ntp.org</address>\n"
-            "    <weight>2</weight>\n"
-            "  </servers>\n"
-            "  <servers>\n"
+            "    <server>\n"
+            "      <address>ntp.example.org</address>\n"
+            "    </server>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
             "    <_id>3</_id>\n"
-            "    <address>1.gentoo.pool.ntp.org</address>\n"
-            "  </servers>\n"
-            "  <servers>\n"
+            "    <servers>\n"
+            "      <address>pool.ntp.org</address>\n"
+            "    </servers>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
             "    <_id>4</_id>\n"
-            "    <address>2.gentoo.pool.ntp.org</address>\n"
-            "    <weight>5</weight>\n"
-            "  </servers>\n"
-            "  <servers>\n"
+            "    <sensor>\n"
+            "      <device>nmea0</device>\n"
+            "      <correction>5</correction>\n"
+            "      <stratum>2</stratum>\n"
+            "    </sensor>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
             "    <_id>5</_id>\n"
-            "    <address>3.gentoo.pool.ntp.org</address>\n"
-            "  </servers>\n"
-            "  <sensor>\n"
-            "    <_id>1</_id>\n"
-            "    <device>nmea0</device>\n"
-            "    <correction>5</correction>\n"
-            "    <stratum>2</stratum>\n"
-            "  </sensor>\n"
-            "  <sensor>\n"
-            "    <_id>2</_id>\n"
-            "    <device>*</device>\n"
-            "    <refid>GPS</refid>\n"
-            "  </sensor>\n"
+            "    <sensor>\n"
+            "      <device>*</device>\n"
+            "      <refid>GPS</refid>\n"
+            "    </sensor>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>6</_id>\n"
+            "    <servers>\n"
+            "      <address>0.gentoo.pool.ntp.org</address>\n"
+            "      <weight>2</weight>\n"
+            "    </servers>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>7</_id>\n"
+            "    <servers>\n"
+            "      <address>1.gentoo.pool.ntp.org</address>\n"
+            "    </servers>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>8</_id>\n"
+            "    <servers>\n"
+            "      <address>2.gentoo.pool.ntp.org</address>\n"
+            "      <weight>5</weight>\n"
+            "    </servers>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>9</_id>\n"
+            "    <servers>\n"
+            "      <address>3.gentoo.pool.ntp.org</address>\n"
+            "    </servers>\n"
+            "  </config-entries>\n"
             "</ntpd>\n");
     free(str);
 }
@@ -98,21 +116,29 @@ static void
 test_store_add(void **state)
 {
     struct tstate *st = (struct tstate *)*state;
+    struct lyd_node *node, *new;
 
     /* load current data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some lists */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "listen_on[_id='2']/address", "2001::fe25:1", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "sensor[_id='3']/device", "nmea1", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/listen/address",
+            "2001::fe25:1", 0, &new));
+    assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
+
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='5']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/sensor/device", "nmea1", 0, &new));
+    assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
 
     /* diff */
     assert_int_equal(0, tdiff_files(state,
-            "21a22,23\n"
+            "2a3\n"
             "> listen on 2001::fe25:1\n"
+            "15a17\n"
             "> sensor nmea1"));
 }
 
@@ -125,9 +151,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some data */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "servers[_id='2']/address", "0.local.localhost.com",
-            LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "sensor[_id='1']/correction", "5000",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='6']/servers/address",
+            "0.local.localhost.com", LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/sensor/correction", "5000",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -155,9 +181,9 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove data */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "servers[_id='3']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "sensor[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='7']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

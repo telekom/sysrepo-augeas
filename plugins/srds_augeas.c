@@ -1190,15 +1190,18 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
 
     if (aug_value) {
         /* get Augeas value */
-        switch (node_type) {
-        case AUGDS_EXT_NODE_VALUE:
-            /* get value from the YANG node (or first child) */
-            if ((rc = augds_yang2aug_value(diff_node, diff_data, aug_value))) {
-                goto cleanup;
-            }
-            break;
-        case AUGDS_EXT_NODE_LABEL:
-            if (value_path) {
+        if ((diff_node->schema->nodetype & LYD_NODE_INNER) && !value_path) {
+            /* no value at this Augeas path */
+            *aug_value = NULL;
+        } else {
+            switch (node_type) {
+            case AUGDS_EXT_NODE_VALUE:
+                /* get value from the YANG node (or first child) */
+                if ((rc = augds_yang2aug_value(diff_node, diff_data, aug_value))) {
+                    goto cleanup;
+                }
+                break;
+            case AUGDS_EXT_NODE_LABEL:
                 /* value is stored in a different YANG node (it may not exist if no value was set) */
                 if (diff_node->schema->nodetype & LYD_NODE_INNER) {
                     lyd_find_path(diff_node, value_path, 0, diff_node2);
@@ -1206,11 +1209,8 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
                     lyd_find_path(lyd_parent(diff_node), value_path, 0, diff_node2);
                 }
                 *aug_value = lyd_get_value(*diff_node2);
-            } else {
-                /* no value at this Augeas path */
-                *aug_value = NULL;
+                break;
             }
-            break;
         }
     }
 
