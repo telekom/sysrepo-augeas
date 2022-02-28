@@ -25,7 +25,7 @@ module login_defs {
         augex:data-path "$$";
         augex:value-yang-path "value";
         presence "Config entry.";
-        leaf _id {
+        leaf word {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";

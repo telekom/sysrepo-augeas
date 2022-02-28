@@ -987,16 +987,15 @@ ay_print_lens(void *data, struct lprinter_ctx_f *func, struct lens *root_lense, 
 static int ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node);
 
 /**
- * @brief Get a name of the lense.
+ * @brief Get a name of the lense from @p mod.
  *
  * @param[in] mod Module where to find lense name.
  * @param[in] lens Lense for which the name is to be found.
  * @return Name of the lense or NULL.
  */
 static char *
-ay_get_lense_name(struct module *mod, struct lens *lens)
+ay_get_lense_name_by_mod(struct module *mod, struct lens *lens)
 {
-    char *ret = NULL;
     struct binding *bind_iter;
 
     if (!lens) {
@@ -1005,8 +1004,7 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
 
     LY_LIST_FOR(mod->bindings, bind_iter) {
         if (bind_iter->value->lens == lens) {
-            ret = bind_iter->ident->str;
-            break;
+            return bind_iter->ident->str;
         }
     }
 
@@ -1016,13 +1014,12 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
                 continue;
             }
             if (bind_iter->value->regexp == lens->regexp) {
-                ret = bind_iter->ident->str;
-                break;
+                return bind_iter->ident->str;
             }
         }
     }
 
-    return ret;
+    return NULL;
 }
 
 /**
@@ -1087,7 +1084,30 @@ ay_get_lense_name_by_modname(const char *modname, struct lens *lens)
     struct module *mod;
 
     mod = ay_get_module(ay_get_augeas_ctx2(lens), modname);
-    ret = mod ? ay_get_lense_name(mod, lens) : NULL;
+    ret = mod ? ay_get_lense_name_by_mod(mod, lens) : NULL;
+
+    return ret;
+}
+
+/**
+ * @brief Get lense name.
+ *
+ * It is probably not possible to find a lense name base on @p lens alone because there is no direct mapping between
+ * the module path (lens->regexp->info->filename) and module name (mod->name).
+ *
+ * @param[in] mod Module in which search the @p lens. If it fails then it is then searched in other predefined modules.
+ * @param[in] lens Lense for which to find the name.
+ * @return Lense name or NULL.
+ */
+static char *
+ay_get_lense_name(struct module *mod, struct lens *lens)
+{
+    static char *ret;
+
+    ret = ay_get_lense_name_by_mod(mod, lens);
+    if (!ret) {
+        ret = ay_get_lense_name_by_modname("Rx", lens);
+    }
 
     return ret;
 }
@@ -1784,7 +1804,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
             str = tmp;
         } else {
-            str = "_id";
+            str = "label";
         }
     } else if (node->type == YN_VALUE) {
         if ((tmp = ay_get_lense_name(ctx->mod, value))) {

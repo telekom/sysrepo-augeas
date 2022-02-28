@@ -23,15 +23,15 @@ module qpid {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "value";
+        augex:value-yang-path "space_in";
         presence "Config entry.";
-        leaf _id {
+        leaf word {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf value {
+        leaf space_in {
           mandatory true;
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";

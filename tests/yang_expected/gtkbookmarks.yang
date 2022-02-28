@@ -23,9 +23,9 @@ module gtkbookmarks {
       }
       container entry {
         augex:data-path "bookmark";
-        augex:value-yang-path "bookmark";
+        augex:value-yang-path "no_spaces";
         presence "Config entry.";
-        leaf bookmark {
+        leaf no_spaces {
           mandatory true;
           type string {
             pattern "[^ \t\n]+";

@@ -27,7 +27,7 @@ module cron {
           augex:data-path "$$";
           augex:value-yang-path "value";
           presence "Type of config entry.";
-          leaf _id {
+          leaf label {
             mandatory true;
             type string {
               pattern "(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])[0-9][0-9]*\\]|(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])\\]|entry[1-9A-Z_a-z-][1-9A-Z_a-z-]*|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*|)|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*|)|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*|)|(e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*|e|[1-9A-Z_a-df-z-]";
@@ -42,9 +42,9 @@ module cron {
         }
         container entry {
           augex:data-path "entry";
-          augex:value-yang-path "entry";
+          augex:value-yang-path "space_in";
           presence "Type of config entry.";
-          leaf entry {
+          leaf space_in {
             mandatory true;
             type string {
               pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";

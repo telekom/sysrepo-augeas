@@ -21,16 +21,16 @@ module cmdline {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container node {
+      container word {
         augex:data-path "$$";
-        augex:value-yang-path "value";
+        augex:value-yang-path "no_spaces";
         presence "Type of config entry.";
-        leaf _id {
+        leaf word {
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf value {
+        leaf no_spaces {
           type string {
             pattern "[^ \t\n]+";
           }
