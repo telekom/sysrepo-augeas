@@ -51,28 +51,28 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <entry>\n"
-            "      <_id>mykey</_id>\n"
+            "      <word>mykey</word>\n"
             "      <to_comment_re>myvalue</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>2</_id>\n"
             "    <entry>\n"
-            "      <_id>anotherkey</_id>\n"
+            "      <word>anotherkey</word>\n"
             "      <to_comment_re>another value</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>3</_id>\n"
             "    <entry>\n"
-            "      <_id>UserParameter</_id>\n"
+            "      <word>UserParameter</word>\n"
             "      <to_comment_re>custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
             "    <entry>\n"
-            "      <_id>foo</_id>\n"
+            "      <word>foo</word>\n"
             "      <to_comment_re/>\n"
             "    </entry>\n"
             "  </config-entries>\n"
@@ -82,21 +82,21 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <entry>\n"
-            "      <_id>key1</_id>\n"
+            "      <word>key1</word>\n"
             "      <to_comment_re>value1</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>2</_id>\n"
             "    <entry>\n"
-            "      <_id>key2</_id>\n"
+            "      <word>key2</word>\n"
             "      <to_comment_re>value2</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>3</_id>\n"
             "    <entry>\n"
-            "      <_id>key3</_id>\n"
+            "      <word>key3</word>\n"
             "      <to_comment_re>value3</to_comment_re>\n"
             "    </entry>\n"
             "  </config-entries>\n"
@@ -113,9 +113,9 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some variable to both files */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/entry/_id", "newvar", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/entry/word", "newvar", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/entry/to_comment_re", "value", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='4']/entry/_id", "newvar2", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='4']/entry/word", "newvar2", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "config-entries[_id='4']/entry/to_comment_re",
             "value", 0, NULL));
 

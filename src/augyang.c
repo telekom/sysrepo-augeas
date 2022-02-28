@@ -1104,6 +1104,10 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
 {
     static char *ret;
 
+    if (!lens) {
+        return NULL;
+    }
+
     ret = ay_get_lense_name_by_mod(mod, lens);
     if (!ret) {
         ret = ay_get_lense_name_by_modname("Rx", lens);
