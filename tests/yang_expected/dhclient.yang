@@ -27,6 +27,7 @@ module dhclient {
       choice ch_word {
         mandatory true;
         container node {
+          presence "Type of config entry.";
           leaf code {
             mandatory true;
             type string {

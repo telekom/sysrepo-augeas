@@ -2602,12 +2602,10 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_presence(struct yprinter_ctx *ctx, struct ay_ynode *cont)
 {
-    if (cont->label) {
-        if (cont->choice) {
-            ly_print(ctx->out, "%*spresence \"Type of config entry.\";\n", ctx->space, "");
-        } else {
-            ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
-        }
+    if (cont->choice) {
+        ly_print(ctx->out, "%*spresence \"Type of config entry.\";\n", ctx->space, "");
+    } else {
+        ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
     }
 }
 
