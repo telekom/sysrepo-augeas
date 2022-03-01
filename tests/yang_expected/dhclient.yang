@@ -25,9 +25,7 @@ module dhclient {
         }
       }
       choice ch_word {
-        mandatory true;
-        container node {
-          presence "Type of config entry.";
+        case c_node {
           leaf code {
             mandatory true;
             type string {
@@ -43,11 +41,13 @@ module dhclient {
             augex:data-path "value";
           }
         }
-        leaf eval {
-          type string {
-            pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+        case c_eval {
+          leaf eval {
+            type string {
+              pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
+            }
+            augex:data-path "#eval";
           }
-          augex:data-path "#eval";
         }
       }
     }
@@ -55,6 +55,7 @@ module dhclient {
   grouping stmt_array {
     list config-entries {
       key "_id";
+      min-elements 1;
       ordered-by user;
       leaf _id {
         type uint64;

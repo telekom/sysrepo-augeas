@@ -250,6 +250,7 @@ enum yang_type {
 
 #define AY_YNODE_MAND_FALSE     0x02    /**< No mandatory-stmt is printed. */
 #define AY_YNODE_MAND_MASK      0x03    /**< Mask for mandatory-stmt. */
+#define AY_CHOICE_MAND_FALSE    0x04    /**< Choice statement must be false. */
 /** @} ynodeflags */
 
 /**
@@ -2828,6 +2829,10 @@ ay_print_yang_mandatory_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     const struct ay_lnode *snode = NULL;
     struct ay_ynode *iter;
 
+    if (node->flags & AY_CHOICE_MAND_FALSE) {
+        return;
+    }
+
     /* Take some snode under choice. */
     for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
         if (iter->snode) {
@@ -2881,6 +2886,67 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang case-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node under case-stmt.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret;
+
+    ly_print(ctx->out, "%*scase c_", ctx->space, "");
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+
+    return ret;
+}
+
+/**
+ * @brief Print some node in the choice-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node under choice-stmt.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_node_in_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret;
+    struct ay_ynode *iter;
+    ly_bool case_stmt;
+
+    /* Find out if case-stmt needs to be printed. */
+    case_stmt = 0;
+    for (iter = node->parent->child; iter; iter = iter->next) {
+        if ((iter->choice == node->choice) && (iter->type == YN_CONTAINER) && !iter->label) {
+            case_stmt = 1;
+            break;
+        }
+    }
+
+    if (case_stmt) {
+        ret = ay_print_yang_case(ctx, node);
+        ay_print_yang_nesting_begin2(ctx, node->id);
+        AY_CHECK_RET(ret);
+        if ((node->type == YN_CONTAINER) && !node->label) {
+            /* Ignore container, print only children of container. */
+            ret = ay_print_yang_children(ctx, node);
+        } else {
+            /* Print the node under case-stmt. */
+            ret = ay_print_yang_node_(ctx, node);
+        }
+        ay_print_yang_nesting_end(ctx);
+    } else {
+        /* Just print the node. */
+        ret = ay_print_yang_node_(ctx, node);
+    }
+
+    return ret;
+}
+
+/**
  * @brief Recursively print subtree and decide about printing choice-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2899,6 +2965,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
         return ay_print_yang_node_(ctx, node);
     }
 
+    /* Find out if node is the first in choice-stmt. */
     choice = node->choice;
     assert(node->parent);
     for (iter = node->parent->child; iter; iter = iter->next) {
@@ -2914,19 +2981,19 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     if (alone) {
         /* choice with one 'case' is not printed */
-        ay_print_yang_node_(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node);
     } else if (first && !last) {
         /* print choice */
         ay_print_yang_choice(ctx, node);
         /* start of choice nesting */
         ay_print_yang_nesting_begin(ctx);
         ay_print_yang_mandatory_choice(ctx, node);
-        ay_print_yang_node_(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node);
     } else if (!last) {
-        ay_print_yang_node_(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node);
     } else {
         /* print last case */
-        ay_print_yang_node_(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node);
         /* end of choice nesting */
         ay_print_yang_nesting_end(ctx);
     }
@@ -3205,6 +3272,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         } else {
             ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
         }
+    }
+    if (node->flags & AY_CHOICE_MAND_FALSE) {
+        ly_print(ctx->out, "%*s flag: choice_mand_false\n", ctx->space, "");
     }
 }
 
@@ -3795,18 +3865,18 @@ ay_ynode_rule_insert_container(struct ay_ynode *node)
 }
 
 /**
- * @brief Rule for unification of lists which have the same key.
+ * @brief Rule for unification of containers or lists which have the same key.
  *
  * @param[in] node Node to check.
- * @return 1 unification should take place and container should be inserted.
+ * @return 1 unification should take place and container can be inserted.
  */
 static uint64_t
-ay_ynode_rule_list_with_same_key(struct ay_ynode *node)
+ay_ynode_rule_conlist_with_same_key(struct ay_ynode *node)
 {
     struct ay_ynode *iter;
     struct lens *lab1, *lab2;
 
-    if (!node->parent || (node->type != YN_LIST) || (!node->choice) || !node->next) {
+    if (!node->parent || ((node->type != YN_LIST) && (node->type != YN_CONTAINER)) || (!node->choice) || !node->next) {
         return 0;
     }
 
@@ -3818,12 +3888,12 @@ ay_ynode_rule_list_with_same_key(struct ay_ynode *node)
     if (iter != node) {
         return 0;
     }
-    /* The node is first list in choice statement. */
+    /* The node is first list/container in choice statement. */
 
     lab1 = AY_LABEL_LENS(node);
     lab2 = AY_LABEL_LENS(node->next);
-    if ((node->next->type == YN_LIST) && (node->choice == node->next->choice) && lab1 && lab2 &&
-            (lab1->tag == lab2->tag)) {
+    if (((node->next->type == YN_LIST) || (node->next->type == YN_CONTAINER)) &&
+            (node->choice == node->next->choice) && lab1 && lab2 && (lab1->tag == lab2->tag)) {
         if ((lab1->tag == L_LABEL) && (!strcmp(lab1->string->str, lab2->string->str))) {
             return 1;
         } else if ((lab1->tag == L_KEY) && (!strcmp(lab1->regexp->pattern->str, lab2->regexp->pattern->str))) {
@@ -4680,105 +4750,74 @@ ay_ynode_delete_seq_node(struct ay_ynode *tree)
 }
 
 /**
- * @brief Unify the lists under the choice relationship if they have the same key.
+ * @brief Unify the containers or lists under the choice relationship if they have the same key.
  *
- * If list's are in choice relation and they have same key then there will be one list and its nodes will
- * have that choice relation.
- * Transform "[key lns1 {some_nodes1} ] | [key lns1 {some_nodes2}]" -> "[key lns1 {some_nodes1 | some_nodes2}]"
+ * If containers or lists are in choice relation and they have same key then merge them and its nodes will have that
+ * choice relation.
  *
  * @param[in,out] tree Tree of ynodes.
  * @return 0.
  */
 static int
-ay_delete_list_with_same_key(struct ay_ynode *tree)
+ay_delete_conlist_with_same_key(struct ay_ynode *tree)
 {
-    ly_bool cont1_inserted;
-    struct ay_ynode *list1, *cont1, *cont2;
     LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *first, *second, *cont;
+    ly_bool cont_inserted;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        list1 = &tree[i];
-        cont1_inserted = 0;
-        while (ay_ynode_rule_list_with_same_key(list1)) {
-            if (!cont1_inserted && list1->child) {
+        cont_inserted = 0;
+        while (ay_ynode_rule_conlist_with_same_key(&tree[i])) {
+            first = &tree[i];
+            if (!cont_inserted && first->child) {
                 /* in first iteration create cont1 */
-                ay_ynode_insert_parent(tree, list1->child);
-                cont1 = list1->child;
-                cont1->type = YN_CONTAINER;
-                /* set cont1 the same choice */
-                cont1->choice = list1->choice;
-                list1->choice = NULL;
-                cont1_inserted = 1;
+                ay_ynode_insert_parent(tree, first->child);
+                cont = first->child;
+                cont->type = YN_CONTAINER;
+                /* set cont the same choice */
+                cont->choice = first->choice;
+                cont_inserted = 1;
             }
-
-            /* change second list to container */
-            cont2 = list1->next;
-            cont2->type = YN_CONTAINER;
-            cont2->label = NULL;
-            cont2->choice = list1->choice;
+            second = first->next;
 
             /* YN_VALUES nodes are united in yang union-stmt */
-            if (cont2->value && list1->value) {
+            if (second->value && first->value) {
                 /* union will be created */
-                ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), list1->value, cont2->value);
-            } else if (cont2->value && !list1->value) {
+                ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first->value, second->value);
+            } else if (second->value && !first->value) {
                 /* [key lns1 ] | [key lns1 store lns2]   -> [key lns1 store lns2] */
-                list1->value = cont2->value;
+                first->value = second->value;
+            } else if (first->value) {
+                /* YN_VALUE of first node must have mandatory false. */
+                first->flags &= ~AY_YNODE_MAND_MASK;
+                first->flags |= AY_YNODE_MAND_FALSE;
             }
-            cont2->value = NULL;
+            second->value = NULL;
 
-            if (cont2->child) {
-                ay_ynode_move_subtree_as_last_child(tree, list1, cont2);
+            if (second->child) {
+                /* Move second node to the first. The second node is merged. */
+                second->label = NULL;
+                second->choice = first->choice;
+                if (!second->child->next) {
+                    ay_ynode_delete_node(tree, second);
+                }
+                if (!first->child) {
+                    second->flags |= AY_CHOICE_MAND_FALSE;
+                }
+                first->flags &= ~AY_YNODE_MAND_MASK;
+                first->flags |= AY_YNODE_MAND_FALSE;
+                ay_ynode_move_subtree_as_last_child(tree, first, second);
+            } else {
+                /* Delete second node. Nothing to merge. */
+                if (first->child) {
+                    first->child->flags |= AY_CHOICE_MAND_FALSE;
+                }
+                ay_ynode_delete_node(tree, second);
             }
-
-            /* All containers (cont1 and cont2) without children should be deleted in ::ay_delete_poor_container(). */
         }
     }
 
     return 0;
-}
-
-/**
- * @brief Delete container (next to the container) which has same leaf key.
- *
- * The leaf key is special leaf which carries the key pattern from the container.
- * Children are moved and a choice is added between them.
- * [key lns1 . lns2 ] | [key lns1 . lns3 ]   -> [key lns1 (lns2 | lns3) ]
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_delete_container_with_same_key(struct ay_ynode *tree)
-{
-    struct ay_ynode *cont1, *cont2;
-    struct lens *contlab1, *contlab2;
-    LY_ARRAY_COUNT_TYPE i;
-
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        cont1 = &tree[i];
-        contlab1 = AY_LABEL_LENS(cont1);
-        if ((cont1->type != YN_CONTAINER) || !cont1->choice || !contlab1) {
-            continue;
-        } else if (contlab1->tag != L_KEY) {
-            continue;
-        }
-
-        for (cont2 = cont1->next; cont2 && (cont2->choice == cont1->choice); cont2 = cont2->next) {
-            contlab2 = AY_LABEL_LENS(cont2);
-            if ((cont2->type != YN_CONTAINER) || !contlab2 || (contlab2->tag != L_KEY)) {
-                continue;
-            } else if (contlab1->regexp != contlab2->regexp) {
-                continue;
-            }
-
-            cont2->label = NULL;
-
-            /* move cont2 into cont1 */
-            ay_ynode_move_subtree_as_last_child(tree, cont1, cont2);
-        }
-        cont1->flags &= ~AY_YNODE_MAND_MASK;
-        cont1->flags = AY_YNODE_MAND_FALSE;
-    }
 }
 
 /**
@@ -4837,6 +4876,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
                 }
             }
             if (!iter) {
+                cont->child->flags |= (cont->flags & AY_CHOICE_MAND_FALSE);
                 ay_ynode_delete_node(tree, cont);
                 i--;
             }
@@ -5145,7 +5185,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             ay_ynode_insert_wrapper(tree, child);
             list = child;
             list->type = YN_LIST;
-            list->flags |= list->next ? (list->next->flags & AY_YNODE_MAND_MASK) : list->flags;
+            list->flags |= (list->child->flags & AY_YNODE_MAND_MASK);
 
             /* every next LIST or LEAFLIST move to wrapper */
             while (list->next &&
@@ -5384,11 +5424,10 @@ ay_ynode_transformations(struct ay_ynode **tree)
      */
     AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container));
 
-    /* [key lns1 . lns2 ] | [key lns1 . lns3 ]   -> [key lns1 (lns2 | lns3) ] */
-    ay_delete_container_with_same_key(*tree);
-
-    /* [key lns1 [nodes1] ]* | [key lns1 [nodes2]]*   -> [key lns1 (nodes1 | nodes2)]* */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_list_with_same_key, ay_delete_list_with_same_key));
+    /* [key lns1 . lns2 ]* | [key lns1 . lns3 ]*   -> [key lns1 (lns2 | lns3)]* */
+    /* [key lns1 . lns2 ]  | [key lns1 . lns3 ]    -> [key lns1 (lns2 | lns3)]  */
+    /* [key lns1 . lns2 ]  | [key lns1 . lns3 ]*   -> [key lns1 (lns2 | lns3)]* */
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_conlist_with_same_key, ay_delete_conlist_with_same_key));
 
     /* [key "a" | "b"] -> list a {} list b {} */
     /* TODO: generally nodes, not just a list nodes? */

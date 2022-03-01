@@ -11,6 +11,7 @@ module ssh {
   grouping algorithms {
     list config-entries {
       key "_id";
+      min-elements 1;
       ordered-by user;
       leaf _id {
         type uint64;
@@ -155,6 +156,7 @@ module ssh {
           presence "Type of config entry.";
           list config-entries {
             key "_id";
+            min-elements 1;
             ordered-by user;
             leaf _id {
               type uint64;
@@ -341,6 +343,7 @@ module ssh {
                 presence "Type of config entry.";
                 list config-entries {
                   key "_id";
+                  min-elements 1;
                   ordered-by user;
                   leaf _id {
                     type uint64;
@@ -560,6 +563,7 @@ module ssh {
                   presence "Type of config entry.";
                   list config-entries {
                     key "_id";
+                    min-elements 1;
                     ordered-by user;
                     leaf _id {
                       type uint64;
