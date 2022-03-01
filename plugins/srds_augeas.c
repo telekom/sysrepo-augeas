@@ -2076,6 +2076,11 @@ augds_aug2yang_augnode_create_node(const struct lysc_node *schema, const char *v
 
     /* create and append the node to the parent */
     if (schema->nodetype & LYD_NODE_TERM) {
+        if (!val_str && !(schema->flags & LYS_MAND_TRUE)) {
+            /* optional node without value, do not create */
+            goto cleanup;
+        }
+
         /* term node */
         if (lyd_new_term(parent, schema->module, schema->name, val_str, 0, &new_node)) {
             AUG_LOG_ERRLY_GOTO(schema->module->ctx, rc, cleanup);
