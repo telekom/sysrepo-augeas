@@ -15,6 +15,7 @@ module postfix_sasl_smtpd {
     }
     list config-entries {
       key "_id";
+      min-elements 1;
       ordered-by user;
       leaf _id {
         type uint64;

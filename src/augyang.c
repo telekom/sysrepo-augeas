@@ -1491,6 +1491,7 @@ ay_ident_character_is_valid(const char *ch)
     if (((*ch < 65) && (*ch != 45) && (*ch != 32)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
         return 0;
     } else {
+        /* [_- A-Za-z] */
         return 1;
     }
 }
@@ -1688,6 +1689,112 @@ ay_ynode_find_ident_in_pattern(struct ay_ynode *node)
 }
 
 /**
+ * @brief Store standardized @p ident located in @p patt to @p buffer.
+ *
+ * @param[in] patt Lense pattern.
+ * @param[in] ident Identifier from @p patt to standardize.
+ * @param[in] ident_len Length of @p ident.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Buffer in which a valid identifier will be written.
+ * @return 0 on success.
+ */
+static int
+ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_len, enum ay_ident_dst opt, char *buffer)
+{
+    int ret;
+    const char *prefix, *suffix, *iter, *brop, *brcl;
+
+    assert(patt && ident);
+
+    /* skip opening bracket */
+    for (iter = ident; iter < (ident + ident_len); iter++) {
+        if (*ident == '(') {
+            ident_len--;
+            ident++;
+        } else {
+            break;
+        }
+    }
+    /* close bracket delimits ident */
+    for (iter = ident; iter < (ident + ident_len); iter++) {
+        if (*iter == ')') {
+            ident_len = iter - ident;
+            break;
+        }
+    }
+
+    /* Find if ident has prefix: prefix_string(...|ident|...) */
+    /* find ')' */
+    brcl = NULL;
+    for (iter = ident; *iter; iter++) {
+        if (*iter == '(') {
+            /* Pattern is too complex or prefix is not available. */
+            break;
+        } else if (*iter == ')') {
+            brcl = iter;
+            break;
+        }
+    }
+    /* find '(' */
+    brop = NULL;
+    for (iter = ident; iter != (patt - 1); iter--) {
+        if (*iter == ')') {
+            /* Pattern is too complex or prefix is not available. */
+            break;
+        } else if (*iter == '(') {
+            brop = iter;
+            break;
+        }
+    }
+    if (brop && brcl) {
+        /* ident is in "( )" */
+
+        /* Find prefix. */
+        prefix = NULL;
+        for (iter = brop - 1; iter != (patt - 1); iter--) {
+            if (ay_ident_character_is_valid(iter)) {
+                prefix = iter;
+                continue;
+            } else if (*iter == '|') {
+                prefix = (iter + 1) != brop ? iter + 1 : NULL;
+            } else {
+                break;
+            }
+        }
+
+        if (prefix) {
+            /* Standardize prefix. */
+            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, buffer);
+            AY_CHECK_RET(ret);
+            buffer = buffer + strlen(buffer);
+        }
+    }
+
+    /* Standardize ident. */
+    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, buffer);
+    AY_CHECK_RET(ret);
+    buffer = buffer + strlen(buffer);
+
+    /* Find if ident has suffix: (...|ident|...)suffix_string */
+    if (brop && brcl) {
+        /* Find suffix. */
+        suffix = (brcl + 1);
+        for (iter = suffix; *iter; iter++) {
+            if (!ay_ident_character_is_valid(iter)) {
+                break;
+            }
+        }
+        if (ay_ident_character_is_valid(suffix)) {
+            /* Standardize suffix. */
+            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, buffer);
+            AY_CHECK_RET(ret);
+        }
+    }
+
+    return ret;
+}
+
+/**
  * @brief Get identifier of the ynode from the label lense.
  *
  * @param[in] node Node to process.
@@ -1839,7 +1946,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     }
 
     if (len) {
-        ret = ay_get_ident_from_pattern_standardized(str, len, opt, buffer);
+        ret = ay_get_ident_from_pattern(label->regexp->pattern->str, str, len, opt, buffer);
     } else if (opt == AY_IDENT_NODE_NAME) {
         ret = ay_get_ident_standardized(str, opt, buffer);
     } else {
@@ -2593,6 +2700,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_nesting_begin2(ctx, node->id);
 
     ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
+    ay_print_yang_minelements(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ly_print(ctx->out, "%*sleaf _id", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
@@ -2602,7 +2710,6 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
             ctx->space + SPACE_INDENT, "");
     ay_print_yang_nesting_end(ctx);
 
-    ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
@@ -2746,10 +2853,28 @@ static int
 ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
+    uint32_t choice_cnt;
+    struct ay_ynode *iter;
+    const struct ay_lnode *last_choice;
 
-    if (node->parent) {
-        ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
-        ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
+    assert(node->parent);
+
+    /* Taking care of duplicate choice names. */
+    choice_cnt = 1;
+    last_choice = NULL;
+    for (iter = node->parent->child; iter != node; iter = iter->next) {
+        if (iter->choice && (iter->choice != node->choice) && (last_choice != iter->choice)) {
+            choice_cnt++;
+            last_choice = iter->choice;
+        }
+    }
+
+    ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
+    ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
+
+    if (choice_cnt > 1) {
+        ly_print(ctx->out, "%" PRIu32 "", choice_cnt);
     }
 
     return ret;
@@ -3679,8 +3804,9 @@ static uint64_t
 ay_ynode_rule_list_with_same_key(struct ay_ynode *node)
 {
     struct ay_ynode *iter;
+    struct lens *lab1, *lab2;
 
-    if (!node->parent || (node->type != YN_LIST) || (!node->choice)) {
+    if (!node->parent || (node->type != YN_LIST) || (!node->choice) || !node->next) {
         return 0;
     }
 
@@ -3694,9 +3820,17 @@ ay_ynode_rule_list_with_same_key(struct ay_ynode *node)
     }
     /* The node is first list in choice statement. */
 
-    if (node->next && (node->next->type == YN_LIST) && (node->choice == node->next->choice) &&
-            (node->label->lens == node->next->label->lens)) {
-        return 1;
+    lab1 = AY_LABEL_LENS(node);
+    lab2 = AY_LABEL_LENS(node->next);
+    if ((node->next->type == YN_LIST) && (node->choice == node->next->choice) && lab1 && lab2 &&
+            (lab1->tag == lab2->tag)) {
+        if ((lab1->tag == L_LABEL) && (!strcmp(lab1->string->str, lab2->string->str))) {
+            return 1;
+        } else if ((lab1->tag == L_KEY) && (!strcmp(lab1->regexp->pattern->str, lab2->regexp->pattern->str))) {
+            return 1;
+        } else {
+            return 0;
+        }
     } else {
         return 0;
     }
@@ -5011,6 +5145,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             ay_ynode_insert_wrapper(tree, child);
             list = child;
             list->type = YN_LIST;
+            list->flags |= list->next ? (list->next->flags & AY_YNODE_MAND_MASK) : list->flags;
 
             /* every next LIST or LEAFLIST move to wrapper */
             while (list->next &&
