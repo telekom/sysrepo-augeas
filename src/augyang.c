@@ -1344,8 +1344,8 @@ struct regex_map {
 static int
 ay_get_regex_standardized(const struct regexp *rp, char **regout)
 {
-    char *hit = NULL, *regex;
-    uint32_t cnt;
+    char *hit = NULL, *regex = NULL, *tmp;
+    uint32_t cnt, offset;
 
     struct regex_map regmap[] = {
         {"[_.A-Za-z0-9][-_.A-Za-z0-9]*\\\\$?", "[_.A-Za-z0-9][-_.A-Za-z0-9]*"},
@@ -1363,12 +1363,23 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
         {"[^]\\r\\n]+", "[^\\\\]\\n]+"},
         {"([^# \\t\\n\\\\]|\\\\\\\\.)+", "([^# \\t\\n\\\\\\\\]|\\\\\\\\.)+"},   /* pam.aug */
         {"\\\\[[^]#\\n]*\\\\]|[a-zA-Z]+", "\\\\[[^\\\\]#\\n]*\\\\\\\\]|[a-zA-Z]+"}, /* pam.aug */
-        {"\\\\[[^]#\\n]+\\\\]|[^[#\\n \\t\\\\][^#\\n \\t\\\\]*", "\\\\[[^\\\\]#\\n]+\\\\]|[^\\\\[#\\n \\t\\\\\\\\][^#\\n \\t\\\\\\\\]*"} /* pam.aug */
+        {"\\\\[[^]#\\n]+\\\\]|[^[#\\n \\t\\\\][^#\\n \\t\\\\]*", "\\\\[[^\\\\]#\\n]+\\\\]|[^\\\\[#\\n \\t\\\\\\\\][^#\\n \\t\\\\\\\\]*"}, /* pam.aug */
+
+        {"[^# \\t\\n]*[^# \\t\\n\\\\]", "[^# \\t\\n]*[^# \\t\\n\\\\\\\\]"}, /* systemd.aug */
+        {"([^# \\t\\n\\\\][^#\\n\\\\]*[^# \\t\\n\\\\]|[^# \\t\\n\\\\])(((\\\\\\\\\\n)([^# \\t\\n\\\\]" /* systemd.aug */
+            "[^#\\n\\\\]*[^# \\t\\n\\\\]|[^# \\t\\n\\\\]))*)",
+
+            "([^# \\t\\n\\\\\\\\][^#\\n\\\\\\\\]*[^# \\t\\n\\\\\\\\]|[^# \\t\\n\\\\\\\\])(((\\\\\\n)([^# \\t\\n\\\\\\\\]"
+            "[^#\\n\\\\\\\\]*[^# \\t\\n\\\\\\\\]|[^# \\t\\n\\\\\\\\]))*)"},
+        {"[^#@ \\t\\n\\\\-][^#@ \\t\\n\\\\-][^# \\t\\n\\\\]*", "[^#@ \\t\\n\\\\-][^#@ \\t\\n\\\\-][^# \\t\\n\\\\\\\\]*"}, /* systemd.aug */
+        {"[^#'\" \\t\\n]*[^#'\" \\t\\n\\\\]", "[^#'\\\" \\t\\n]*[^#'\\\" \\t\\n\\\\\\\\]"},  /* systemd.aug */
+        {"\"[^#\"\\t\\n]*[^#\"\\t\\n\\\\]\"", "\\\"[^#\\\"\\t\\n]*[^#\\\"\\t\\n\\\\\\\\]\\\""}, /* systemd.aug */
+        {"'[^#'\\t\\n]*[^#'\\t\\n\\\\]'", "'[^#'\\t\\n]*[^#'\\t\\n\\\\\\\\]'"}, /* systemd.aug */
+        {"[^#\"'\\n]*[ \\t]+[^#\"'\\n]*", "[^#\\\"'\\n]*[ \\t]+[^#\\\"'\\n]*"}, /* systemd.aug */
     };
-    // TODO: if right side of the regsub rule is bigger -> danger of valgrind error
     struct regex_map regsub[] = {
         {"\\/", "/"},
-        {"    minclock", "minclock"}   /* ntp.aug looks wrong */
+        {"    minclock", "minclock"},   /* ntp.aug looks wrong */
     };
     const char *regdel[] = {
         "\\r",
@@ -1398,8 +1409,19 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
     }
 
     for (uint32_t i = 0; i < sizeof(regsub) / sizeof(struct regex_map); i++) {
+        hit = NULL;
         do {
-            hit = (char *)strstr(regex, regsub[i].aug);
+            hit = hit ?
+                    (char *)strstr(hit + strlen(regsub[i].yang), regsub[i].aug) :
+                    (char *)strstr(regex, regsub[i].aug);
+            if (hit && (strlen(regsub[i].aug) < strlen(regsub[i].yang))) {
+                /* in 'regex' create enough memory space for the substituent */
+                offset = hit - regex;
+                tmp = realloc(regex, strlen(regex) + 1 + (strlen(regsub[i].yang - strlen(regsub[i].aug))));
+                AY_CHECK_GOTO(!tmp, error);
+                regex = tmp;
+                hit = regex + offset;
+            }
             if (hit) {
                 /* remove needle from haystack */
                 memmove(hit, hit + strlen(regsub[i].aug), (regex + strlen(regex) + 1) - (hit + strlen(regsub[i].aug)));
@@ -1418,8 +1440,9 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
             cnt++;
         }
     }
-    regex = realloc(regex, strlen(regex) + 1 + sizeof(char) * cnt);
-    AY_CHECK_COND(!regex, AYE_MEMORY);
+    tmp = realloc(regex, strlen(regex) + 1 + sizeof(char) * cnt);
+    AY_CHECK_GOTO(!tmp, error);
+    regex = tmp;
     /* add escape character for \" */
     for (uint32_t i = 0; i < strlen(regex); i++) {
         if (regex[i] == '\"') {
@@ -1432,6 +1455,11 @@ ay_get_regex_standardized(const struct regexp *rp, char **regout)
     *regout = regex;
 
     return 0;
+
+error:
+    free(regex);
+
+    return AYE_MEMORY;
 }
 
 /**
@@ -5170,7 +5198,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
 {
     uint64_t i;
     struct ay_ynode *parent, *child, *list, *iter;
-    const struct ay_lnode *choice;
+    const struct ay_lnode *choice, *star;
 
     for (i = 0; i < tree->descendants; i++) {
         parent = &tree[i + 1];
@@ -5182,6 +5210,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                 continue;
             }
             choice = child->choice;
+            star = ay_ynode_get_repetition(child);
 
             /* wrapper is list to maintain the order of the augeas data */
             ay_ynode_insert_wrapper(tree, child);
@@ -5192,7 +5221,8 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             /* every next LIST or LEAFLIST move to wrapper */
             while (list->next &&
                     ((list->next->type == YN_LIST) ||
-                    ((list->next->type == YN_LEAFLIST) && (choice == list->next->choice)))) {
+                    ((list->next->type == YN_LEAFLIST) && (choice == list->next->choice))) &&
+                    (star == ay_ynode_get_repetition(list->next))) {
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
             }
 
@@ -5202,7 +5232,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             }
 
             /* set list label to repetition because an identifier may be available */
-            list->label = ay_ynode_get_repetition(list->child);
+            list->label = star;
         }
     }
 

@@ -343,6 +343,15 @@ module sshd {
           }
         }
       }
+    }
+    list config-entries2 {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
       container match {
         augex:data-path "Match";
         presence "Config entry.";
