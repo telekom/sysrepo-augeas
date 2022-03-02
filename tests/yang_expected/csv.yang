@@ -37,33 +37,20 @@ module csv {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          choice ch_config-entries {
-            mandatory true;
-            container field {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Type of config entry.";
-              leaf field {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
+          container field {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Type of config entry.";
+            leaf field {
+              mandatory true;
+              type uint64;
+            }
+            leaf value {
+              mandatory true;
+              type union {
                 type string {
                   pattern "([^\n\"#;])*";
                 }
-              }
-            }
-            container field2 {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Type of config entry.";
-              leaf field {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
                 type string {
                   pattern "(\"[^\"#]*\")+";
                 }

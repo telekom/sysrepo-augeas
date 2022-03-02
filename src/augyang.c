@@ -3896,6 +3896,8 @@ ay_ynode_rule_conlist_with_same_key(struct ay_ynode *node)
             (node->choice == node->next->choice) && lab1 && lab2 && (lab1->tag == lab2->tag)) {
         if ((lab1->tag == L_LABEL) && (!strcmp(lab1->string->str, lab2->string->str))) {
             return 1;
+        } else if ((lab1->tag == L_SEQ) && (!strcmp(lab1->string->str, lab2->string->str))) {
+            return 1;
         } else if ((lab1->tag == L_KEY) && (!strcmp(lab1->regexp->pattern->str, lab2->regexp->pattern->str))) {
             return 1;
         } else {
