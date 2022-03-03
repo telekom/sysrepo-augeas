@@ -23,7 +23,6 @@ module dhclient {
         mandatory true;
         case c_sto_to_spc_noeval {
           leaf sto_to_spc_noeval {
-            mandatory true;
             type string {
               pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
             }

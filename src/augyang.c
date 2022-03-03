@@ -735,6 +735,65 @@ ay_ynode_get_last(struct ay_ynode *node)
 }
 
 /**
+ * @brief Get first node which belongs to @p choice.
+ *
+ * @param[in] parent Node in which some of his immediate children contain @p choice.
+ * @param[in] choice Choice id to find.
+ * @return First node in choice or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_first_in_choice(const struct ay_ynode *parent, const struct ay_lnode *choice)
+{
+    struct ay_ynode *iter;
+
+    if (!choice || !parent) {
+        return NULL;
+    }
+
+    for (iter = parent->child; iter; iter = iter->next) {
+        if (iter->choice == choice) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Check if @p node is the only node in the choice.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if node is alone.
+ */
+ly_bool
+ay_ynode_alone_in_choice(const struct ay_ynode *node)
+{
+    struct ay_ynode *iter;
+    uint32_t sum;
+    ly_bool node_hit;
+
+    if (!node->choice) {
+        return 1;
+    }
+
+    sum = 0;
+    node_hit = 0;
+    for (iter = node->parent->child; iter; iter = iter->next) {
+        if (iter->choice == node->choice) {
+            node_hit = iter == node ? 1 : node_hit;
+            sum++;
+        } else if (node_hit) {
+            break;
+        } else {
+            sum = 0;
+            node_hit = 0;
+        }
+    }
+
+    return (sum == 1) && node_hit;
+}
+
+/**
  * @brief Check if lenses are equal.
  *
  * @param[in] l1 First lense.
@@ -4542,7 +4601,7 @@ static void
 ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *node;
+    struct ay_ynode *node, *ch_node;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
@@ -4555,7 +4614,10 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             }
         }
 
-        if ((node->type == YN_LEAF) && (node->flags & AY_YNODE_MAND_TRUE) && node->choice) {
+        if (((node->type == YN_LEAF) || (node->type == YN_VALUE)) &&
+                (ch_node = ay_ynode_get_first_in_choice(node->parent, node->choice)) &&
+                !(ch_node->flags & AY_CHOICE_MAND_FALSE) &&
+                !ay_ynode_alone_in_choice(node)) {
             node->flags &= ~AY_YNODE_MAND_MASK;
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && ay_yang_type_is_empty(node->value)) {
