@@ -1748,10 +1748,31 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
     }
 
     if (diff_node2) {
-        /* process the other node, too */
+        /* process the other value-yang-path node, too */
         cur_op2 = augds_diff_get_op(diff_node2, parent_op);
         if (cur_op2 && (cur_op2 != cur_op)) {
             /* different operation must be applied */
+            switch (cur_op2) {
+            case AUGDS_OP_CREATE:
+                /* creating Augeas value simply means setting it */
+                cur_op2 = AUGDS_OP_REPLACE;
+                break;
+            case AUGDS_OP_REPLACE:
+            case AUGDS_OP_NONE:
+                /* operation is fine */
+                break;
+            case AUGDS_OP_DELETE:
+                /* deleting YANG node representing Augeas value means setting Augeas value to NULL */
+                cur_op2 = AUGDS_OP_REPLACE;
+                aug_value = NULL;
+                break;
+            case AUGDS_OP_INSERT:
+            case AUGDS_OP_MOVE:
+            case AUGDS_OP_UNKNOWN:
+                AUG_LOG_ERRINT_GOTO(rc, cleanup);
+            }
+
+            /* apply #2 */
             if ((rc = augds_yang2aug_diff_apply(aug, cur_op2, aug_path, aug_anchor_path, aug_before, aug_value,
                     aug_moved_back, NULL))) {
                 goto cleanup;
@@ -1762,7 +1783,7 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
     if (!applied_r) {
         /* process children recursively */
         LY_LIST_FOR(lyd_child_no_keys(diff_node), diff_iter) {
-            if ((rc = augds_yang2aug_diff_r(aug, diff_iter, aug_path, cur_op, diff_data))) {
+            if ((rc = augds_yang2aug_diff_r(aug, diff_iter, aug_path ? aug_path : parent_path, cur_op, diff_data))) {
                 goto cleanup;
             }
         }
