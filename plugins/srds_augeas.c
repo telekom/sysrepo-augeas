@@ -1154,6 +1154,11 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
         *diff_node2 = NULL;
     }
 
+    if (!diff_node) {
+        /* there is no node so no path */
+        goto cleanup;
+    }
+
     /* node extension data-path */
     augds_get_ext_path(diff_node->schema, &data_path, &value_path);
     if (!data_path) {
@@ -1234,7 +1239,7 @@ cleanup:
  * @brief Get Augeas anchor for a diff node in YANG data.
  *
  * @param[in] diff_data_node Diff node from diff data.
- * @param[out] anchor YANG data anchor.
+ * @param[out] anchor YANG data anchor, NULL if the only item.
  * @param[out] aug_before Whether the new Augeas label should be inserted before or after @p anchor.
  * @return SR error code.
  */
@@ -1350,15 +1355,17 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
 
     switch (op) {
     case AUGDS_OP_INSERT:
-        /* get the label from the full path */
-        if ((rc = augds_yang2aug_diff_path_label(aug_path, &aug_label))) {
-            goto cleanup;
-        }
+        if (aug_path_anchor) {
+            /* get the label from the full path */
+            if ((rc = augds_yang2aug_diff_path_label(aug_path, &aug_label))) {
+                goto cleanup;
+            }
 
-        /* insert the label */
-        if (aug_insert(aug, aug_path_anchor, aug_label, aug_before) == -1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-        }
+            /* insert the label */
+            if (aug_insert(aug, aug_path_anchor, aug_label, aug_before) == -1) {
+                AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+            }
+        } /* else is the only instance */
 
         /* set its value */
         if (aug_set(aug, aug_path, aug_value) == -1) {
@@ -1469,6 +1476,8 @@ augds_yang2aug_find_anchor(const struct lyd_node *diff_node, const struct lyd_no
     struct lyd_meta *meta;
     const char *meta_val;
 
+    assert(diff_node->schema == data_sibling->schema);
+
     /* learn the previous instance key/value */
     if (diff_node->schema->nodetype == LYS_LIST) {
         meta = lyd_find_meta(diff_node->meta, NULL, "yang:key");
@@ -1476,7 +1485,11 @@ augds_yang2aug_find_anchor(const struct lyd_node *diff_node, const struct lyd_no
         meta = lyd_find_meta(diff_node->meta, NULL, "yang:value");
     }
     if (!meta) {
-        AUG_LOG_ERRINT_GOTO(rc, cleanup);
+        /* parent was created with all these nested user-ord list instances, they are in the correct order */
+        assert(data_sibling->prev->next);
+        *data_anchor = data_sibling->prev;
+        *before = 0;
+        goto cleanup;
     }
 
     /* find the anchor */
@@ -2079,6 +2092,36 @@ cleanup:
 }
 
 /**
+ * @brief Learn whether a leaf type is/includes empty.
+ *
+ * @param[in] schema Schema node of the leaf to check.
+ * @return Whether it includes empty or not.
+ */
+static int
+augds_leaf_is_empty(const struct lysc_node *schema)
+{
+    const struct lysc_node_leaf *leaf;
+    struct lysc_type **types;
+    LY_ARRAY_COUNT_TYPE u;
+
+    assert(schema->nodetype & LYD_NODE_TERM);
+    leaf = (struct lysc_node_leaf *)schema;
+
+    if (leaf->type->basetype == LY_TYPE_EMPTY) {
+        return 1;
+    } else if (leaf->type->basetype == LY_TYPE_UNION) {
+        types = ((struct lysc_type_union *)leaf->type)->types;
+        LY_ARRAY_FOR(types, u) {
+            if (types[u]->basetype == LY_TYPE_EMPTY) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Create single YANG node and append to existing data.
  *
  * @param[in] schema Schema node of the data node.
@@ -2097,7 +2140,7 @@ augds_aug2yang_augnode_create_node(const struct lysc_node *schema, const char *v
 
     /* create and append the node to the parent */
     if (schema->nodetype & LYD_NODE_TERM) {
-        if (!val_str && !(schema->flags & LYS_MAND_TRUE)) {
+        if (!val_str && !(schema->flags & LYS_MAND_TRUE) && !augds_leaf_is_empty(schema)) {
             /* optional node without value, do not create */
             goto cleanup;
         }
