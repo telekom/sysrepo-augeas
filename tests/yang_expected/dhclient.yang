@@ -19,12 +19,16 @@ module dhclient {
           pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
         }
       }
-      leaf sto_to_spc_noeval {
-        type string {
-          pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
-        }
-      }
       choice ch_word {
+        mandatory true;
+        case c_sto_to_spc_noeval {
+          leaf sto_to_spc_noeval {
+            mandatory true;
+            type string {
+              pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+            }
+          }
+        }
         case c_node {
           leaf code {
             mandatory true;

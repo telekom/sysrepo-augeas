@@ -251,6 +251,7 @@ enum yang_type {
 #define AY_YNODE_MAND_FALSE     0x02    /**< No mandatory-stmt is printed. */
 #define AY_YNODE_MAND_MASK      0x03    /**< Mask for mandatory-stmt. */
 #define AY_CHOICE_MAND_FALSE    0x04    /**< Choice statement must be false. */
+#define AY_VALUE_IN_CHOICE      0x08    /**< YN_VALUE of node must be in choice statement. */
 /** @} ynodeflags */
 
 /**
@@ -2989,7 +2990,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct ay_ynode *iter;
     const struct ay_lnode *choice;
 
-    if (!node->choice || (node->type == YN_VALUE)) {
+    if (!node->choice) {
         return ay_print_yang_node_(ctx, node);
     }
 
@@ -3303,6 +3304,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     }
     if (node->flags & AY_CHOICE_MAND_FALSE) {
         ly_print(ctx->out, "%*s flag: choice_mand_false\n", ctx->space, "");
+    }
+    if (node->flags & AY_VALUE_IN_CHOICE) {
+        ly_print(ctx->out, "%*s flag: value_in_choice\n", ctx->space, "");
     }
 }
 
@@ -4792,7 +4796,7 @@ static int
 ay_delete_conlist_with_same_key(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *first, *second, *cont;
+    struct ay_ynode *first, *second, *cont, *iter;
     ly_bool cont_inserted;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
@@ -4817,10 +4821,9 @@ ay_delete_conlist_with_same_key(struct ay_ynode *tree)
             } else if (second->value && !first->value) {
                 /* [key lns1 ] | [key lns1 store lns2]   -> [key lns1 store lns2] */
                 first->value = second->value;
-            } else if (first->value) {
-                /* YN_VALUE of first node must have mandatory false. */
-                first->flags &= ~AY_YNODE_MAND_MASK;
-                first->flags |= AY_YNODE_MAND_FALSE;
+            }
+            if (first->value || second->value) {
+                first->flags |= AY_VALUE_IN_CHOICE;
             }
             second->value = NULL;
 
@@ -4834,8 +4837,12 @@ ay_delete_conlist_with_same_key(struct ay_ynode *tree)
                 if (!first->child) {
                     second->flags |= AY_CHOICE_MAND_FALSE;
                 }
-                first->flags &= ~AY_YNODE_MAND_MASK;
-                first->flags |= AY_YNODE_MAND_FALSE;
+                /* reset children choice because second container may be deleted */
+                for (iter = second->child; iter; iter = iter->next) {
+                    if (iter->choice) {
+                        iter->choice = first->choice;
+                    }
+                }
                 ay_ynode_move_subtree_as_last_child(tree, first, second);
             } else {
                 /* Delete second node. Nothing to merge. */
@@ -5012,6 +5019,9 @@ ay_insert_cont_key(struct ay_ynode *tree)
                 key->next->flags |= AY_YNODE_MAND_FALSE;
             } else {
                 key->next->flags |= AY_YNODE_MAND_TRUE;
+            }
+            if (parent->flags & AY_VALUE_IN_CHOICE) {
+                key->next->choice = parent->choice;
             }
         }
     }
