@@ -977,54 +977,62 @@ augds_diff_get_op(const struct lyd_node *diff_node, enum augds_diff_op parent_op
  * @param[in] diff_data Data tree with @p diff_node change applied or not depending on the operation, needed to
  * correctly learn @p value.
  * @param[out] value Value associated with @p diff_node.
+ * @param[out] diff_node2 Optional second YANG diff node if the value is not found in @p diff_node directly.
  * @return SR error code.
  */
 static int
-augds_yang2aug_value(const struct lyd_node *diff_node, const struct lyd_node *diff_data, const char **value)
+augds_yang2aug_value(const struct lyd_node *diff_node, const struct lyd_node *diff_data, const char **value,
+        struct lyd_node **diff_node2)
 {
     int rc = SR_ERR_OK;
     char *path = NULL;
     void *mem;
     const struct lysc_node *cont_schild;
-    struct lyd_node *cont_child;
+    struct lyd_node *cont_child = NULL;
     size_t len;
+    LY_ERR r;
 
     if (diff_node->schema->nodetype == LYS_CONTAINER) {
+        /* try to find the node with value in diff, but it may be only in data */
         cont_schild = lysc_node_child(diff_node->schema);
-        if (cont_schild->flags & LYS_MAND_TRUE) {
-            /* first child is mandatory so there must be value in data, maybe even in the diff */
-            if (lyd_child(diff_node)->schema == cont_schild) {
-                cont_child = lyd_child(diff_node);
-            } else {
-                /* get container path */
-                path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
-                if (!path) {
-                    AUG_LOG_ERRMEM_GOTO(rc, cleanup);
-                }
 
-                /* append first child name */
-                len = strlen(path);
-                mem = realloc(path, len + 1 + strlen(cont_schild->name) + 1);
-                if (!mem) {
-                    AUG_LOG_ERRMEM_GOTO(rc, cleanup);
-                }
-                path = mem;
-                sprintf(path + len, "/%s", cont_schild->name);
-
-                /* get it from the diff data */
-                if (lyd_find_path(diff_data, path, 0, &cont_child)) {
-                    AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_data), rc, cleanup);
-                }
-            }
-            *value = lyd_get_value(cont_child);
+        if (lyd_child(diff_node) && (lyd_child(diff_node)->schema == cont_schild)) {
+            /* node is in diff */
+            cont_child = lyd_child(diff_node);
         } else {
-            /* no mandatory child meaning no value */
-            *value = NULL;
+            /* get container path */
+            path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
+            if (!path) {
+                AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+            }
+
+            /* append first child name */
+            len = strlen(path);
+            mem = realloc(path, len + 1 + strlen(cont_schild->name) + 1);
+            if (!mem) {
+                AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+            }
+            path = mem;
+            sprintf(path + len, "/%s", cont_schild->name);
+
+            /* get it from the diff data */
+            r = lyd_find_path(diff_data, path, 0, &cont_child);
+            if (r == LY_EINCOMPLETE) {
+                /* we do not care */
+                cont_child = NULL;
+            } else if (r && (r != LY_ENOTFOUND)) {
+                AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_data), rc, cleanup);
+            }
         }
+        *value = lyd_get_value(cont_child);
     } else {
         /* just get the value of the term node */
         assert(diff_node->schema->nodetype & LYD_NODE_TERM);
         *value = lyd_get_value(diff_node);
+    }
+
+    if (diff_node2) {
+        *diff_node2 = cont_child;
     }
 
 cleanup:
@@ -1184,7 +1192,7 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
         break;
     case AUGDS_EXT_NODE_LABEL:
         /* YANG data value as Augeas label */
-        if ((rc = augds_yang2aug_value(diff_node, diff_data, &label))) {
+        if ((rc = augds_yang2aug_value(diff_node, diff_data, &label, NULL))) {
             goto cleanup;
         }
         if ((rc = augds_yang2aug_label_index(diff_node, label, diff_data, &aug_index))) {
@@ -1202,7 +1210,7 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
             switch (node_type) {
             case AUGDS_EXT_NODE_VALUE:
                 /* get value from the YANG node (or first child) */
-                if ((rc = augds_yang2aug_value(diff_node, diff_data, aug_value))) {
+                if ((rc = augds_yang2aug_value(diff_node, diff_data, aug_value, diff_node2))) {
                     goto cleanup;
                 }
                 break;
