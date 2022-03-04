@@ -54,7 +54,6 @@ module dnsmasq {
             }
           }
           leaf-list domain {
-            min-elements 1;
             type string {
               pattern "[^/ \t\n]+";
             }

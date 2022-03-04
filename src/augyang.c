@@ -4735,9 +4735,11 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             }
 
             /* set minimal-elements for node2 */
-            assert(!(node2->flags & AY_YNODE_MAND_MASK));
-            node2->flags &= ~AY_YNODE_MAND_MASK;
-            node2->flags = AY_YNODE_MAND_TRUE;
+            if (!ay_lnode_has_maybe(node2->snode)) {
+                assert(!(node2->flags & AY_YNODE_MAND_MASK));
+                node2->flags &= ~AY_YNODE_MAND_MASK;
+                node2->flags = AY_YNODE_MAND_TRUE;
+            }
 
             /* delete node1 because it is useless */
             ay_ynode_delete_subtree(tree, node1);

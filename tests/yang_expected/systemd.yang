@@ -86,7 +86,6 @@ module systemd {
                 }
               }
               leaf-list value {
-                min-elements 1;
                 type string {
                   pattern "[^# \t\n]*[^# \t\n\\\\]";
                 }

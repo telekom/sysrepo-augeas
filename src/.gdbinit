@@ -91,8 +91,8 @@ define ay_next_type
     set $dbi = 1
     set $dbe = LY_ARRAY_COUNT($arg0) - ($arg1 - $arg0)
     while $dbi < $dbe
-        if $arg1[$dbi].type == $arg2
-            p &$arg1[$dbi]
+        if ($arg1)[$dbi].type == $arg2
+            p ($arg1)[$dbi]
             loop_break
         end
         set $dbi = $dbi + 1
@@ -108,10 +108,11 @@ end
 define ay_find
     set $dbi = 1
     while $dbi < LY_ARRAY_COUNT($arg0) 
-        if $arg1 == $arg0[$dbi].id
-            p &$arg0[$dbi]
+        if $arg1 == ($arg0)[$dbi].id
+            p ($arg0)[$dbi]
             loop_break
         end
+        set $dbi = $dbi + 1
     end
 end
 document ay_find
