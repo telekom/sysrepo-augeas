@@ -23,9 +23,9 @@ module iptables {
       }
       container table {
         augex:data-path "table";
-        augex:value-yang-path "table";
+        augex:value-yang-path "value";
         presence "Config entry.";
-        leaf table {
+        leaf value {
           mandatory true;
           type string {
             pattern "[a-z]+";
@@ -81,9 +81,9 @@ module iptables {
                   mandatory true;
                   container protocol {
                     augex:data-path "protocol";
-                    augex:value-yang-path "protocol";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf protocol {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -96,9 +96,9 @@ module iptables {
                   }
                   container source {
                     augex:data-path "source";
-                    augex:value-yang-path "source";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf source {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -111,9 +111,9 @@ module iptables {
                   }
                   container destination {
                     augex:data-path "destination";
-                    augex:value-yang-path "destination";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf destination {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -138,9 +138,9 @@ module iptables {
                   }
                   container in-interface {
                     augex:data-path "in-interface";
-                    augex:value-yang-path "in-interface";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf in-interface {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -153,9 +153,9 @@ module iptables {
                   }
                   container out-interface {
                     augex:data-path "out-interface";
-                    augex:value-yang-path "out-interface";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf out-interface {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -168,9 +168,9 @@ module iptables {
                   }
                   container fragment {
                     augex:data-path "fragment";
-                    augex:value-yang-path "fragment";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf fragment {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -250,9 +250,9 @@ module iptables {
                   mandatory true;
                   container protocol {
                     augex:data-path "protocol";
-                    augex:value-yang-path "protocol";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf protocol {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -265,9 +265,9 @@ module iptables {
                   }
                   container source {
                     augex:data-path "source";
-                    augex:value-yang-path "source";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf source {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -280,9 +280,9 @@ module iptables {
                   }
                   container destination {
                     augex:data-path "destination";
-                    augex:value-yang-path "destination";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf destination {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -307,9 +307,9 @@ module iptables {
                   }
                   container in-interface {
                     augex:data-path "in-interface";
-                    augex:value-yang-path "in-interface";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf in-interface {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -322,9 +322,9 @@ module iptables {
                   }
                   container out-interface {
                     augex:data-path "out-interface";
-                    augex:value-yang-path "out-interface";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf out-interface {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
@@ -337,9 +337,9 @@ module iptables {
                   }
                   container fragment {
                     augex:data-path "fragment";
-                    augex:value-yang-path "fragment";
+                    augex:value-yang-path "value";
                     presence "Type of config entry.";
-                    leaf fragment {
+                    leaf value {
                       mandatory true;
                       type string {
                         pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";

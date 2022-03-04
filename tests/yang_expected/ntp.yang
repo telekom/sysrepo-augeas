@@ -218,9 +218,9 @@ module ntp {
         }
         container restrict_record {
           augex:data-path "restrict";
-          augex:value-yang-path "restrict";
+          augex:value-yang-path "value";
           presence "Type of config entry.";
-          leaf restrict {
+          leaf value {
             mandatory true;
             type string {
               pattern "[^,# \n\t-][^,# \n\t]*";

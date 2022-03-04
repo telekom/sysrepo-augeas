@@ -43,14 +43,11 @@ module dnsmasq {
         }
         container server {
           augex:data-path "server";
-          augex:value-yang-path "server";
+          augex:value-yang-path "value";
           presence "Type of config entry.";
-          leaf server {
-            type union {
-              type empty;
-              type string {
-                pattern "#|([^#@/ \t\n]+)";
-              }
+          leaf value {
+            type string {
+              pattern "#|([^#@/ \t\n]+)";
             }
           }
           leaf-list domain {
@@ -65,9 +62,9 @@ module dnsmasq {
           }
           container source {
             augex:data-path "source";
-            augex:value-yang-path "source";
+            augex:value-yang-path "value";
             presence "Config entry.";
-            leaf source {
+            leaf value {
               mandatory true;
               type string {
                 pattern "[^#/ \t\n]+";

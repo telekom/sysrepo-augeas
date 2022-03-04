@@ -2514,7 +2514,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
         empty_type = ay_yang_type_is_empty(lnode);
     }
 
-    if (empty_type && (node->type == YN_VALUE)) {
+    if (empty_type && (node->type == YN_VALUE) && (node->flags & AY_YNODE_MAND_FALSE)) {
         empty_type = 0;
     }
 
@@ -3911,12 +3911,10 @@ ay_ynode_rule_cont_key(struct ay_ynode *node)
     value = AY_VALUE_LENS(node);
     if ((node->type != YN_CONTAINER) || !label) {
         return 0;
-    } else if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label)) {
+    } else if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(label)) {
         return value ? 1 : 0;
     } else if (label->tag == L_SEQ) {
         return value ? 2 : 1;
-    } else if (ay_lense_pattern_has_idents(label)) {
-        return value ? 1 : 0;
     } else {
         assert(label->tag == L_KEY);
         return value ? 2 : 1;
@@ -4943,7 +4941,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
             continue;
         }
 
-        if (ay_lense_pattern_has_idents(label) && !ay_lense_pattern_is_label(label) && !cont->uses) {
+        if (label && ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(label))) {
             if (cont->descendants == 0) {
                 cont->type = YN_LEAF;
                 cont->flags &= ~AY_YNODE_MAND_MASK;
@@ -4955,19 +4953,12 @@ ay_delete_poor_container(struct ay_ynode *tree)
         }
 
         if (cont->descendants == 0) {
-            if (ay_lense_pattern_is_label(label)) {
-                cont->type = YN_LEAF;
-                cont->flags &= ~AY_YNODE_MAND_MASK;
-            } else {
-                ay_ynode_delete_node(tree, cont);
-                i--;
-            }
+            ay_ynode_delete_node(tree, cont);
+            i--;
         } else if ((cont->descendants == 1) && (cont->label == cont->child->label)) {
             cont->child->choice = cont->choice;
-            if (cont->child->type == YN_KEY) {
-                cont->child->type = YN_LEAF;
-                cont->child->flags &= ~AY_YNODE_MAND_MASK;
-            }
+            cont->child->type = YN_LEAF;
+            cont->child->flags &= ~AY_YNODE_MAND_MASK;
             ay_ynode_delete_node(tree, cont);
             i--;
         } else if (cont->child->choice && (cont->label == cont->child->label)) {
@@ -5052,7 +5043,7 @@ ay_insert_cont_key(struct ay_ynode *tree)
         }
         parent = &tree[i];
         label = AY_LABEL_LENS(parent);
-        if (ay_lense_pattern_has_idents(label) && !ay_lense_pattern_is_label(label)) {
+        if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(label)) {
             ay_ynode_insert_child(tree, parent);
             parent->child->type = YN_VALUE;
             parent->child->label = parent->label;
@@ -5069,11 +5060,8 @@ ay_insert_cont_key(struct ay_ynode *tree)
         key->label = parent->label;
         key->value = parent->value;
         key->snode = parent->snode;
-        if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label)) {
-            key->flags |= ay_yang_type_is_empty(parent->value) ? AY_YNODE_MAND_FALSE : AY_YNODE_MAND_TRUE;
-        } else {
-            ay_ynode_set_mandatory(key);
-        }
+        ay_ynode_set_mandatory(key);
+
         if (count == 2) {
             ay_ynode_insert_sibling(tree, key);
             key->next->type = YN_VALUE;
