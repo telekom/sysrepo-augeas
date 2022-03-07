@@ -8,17 +8,17 @@ define ay_label
             printf "ynode is NULL\n"
             loop_break
         end
-        if $arg0->label == 0x0
+        if ($arg0)->label == 0x0
             printf "label is NULL\n"
             loop_break
         end
-        p $arg0->label->lens->tag
-        if $arg0->label->lens->tag == L_LABEL || $arg0->label->lens->tag == L_SEQ
-            printf "%s\n", $arg0->label->lens->string->str
+        p ($arg0)->label->lens->tag
+        if ($arg0)->label->lens->tag == L_LABEL || ($arg0)->label->lens->tag == L_SEQ
+            printf "%s\n", ($arg0)->label->lens->string->str
             loop_break
         end
-        if $arg0->label->lens->tag == L_KEY
-            printf "%s\n", $arg0->label->lens->regexp->pattern->str
+        if ($arg0)->label->lens->tag == L_KEY
+            printf "%s\n", ($arg0)->label->lens->regexp->pattern->str
             loop_break
         end
         loop_break
@@ -92,7 +92,7 @@ define ay_next_type
     set $dbe = LY_ARRAY_COUNT($arg0) - ($arg1 - $arg0)
     while $dbi < $dbe
         if ($arg1)[$dbi].type == $arg2
-            p ($arg1)[$dbi]
+            p &(($arg1)[$dbi])
             loop_break
         end
         set $dbi = $dbi + 1
@@ -109,7 +109,8 @@ define ay_find
     set $dbi = 1
     while $dbi < LY_ARRAY_COUNT($arg0) 
         if $arg1 == ($arg0)[$dbi].id
-            p ($arg0)[$dbi]
+            p &(($arg0)[$dbi])
+            p (($arg0)[$dbi])
             loop_break
         end
         set $dbi = $dbi + 1
