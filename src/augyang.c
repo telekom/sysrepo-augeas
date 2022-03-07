@@ -310,7 +310,9 @@ struct ay_ynode {
  */
 struct ay_ynode_root {
     struct ay_ynode *parent;        /**< Always NULL. */
-    struct ay_ynode *next;          /**< Always NULL. */
+    uint64_t arrsize;               /**< Allocated ynodes in LY_ARRAY. Root is also counted.
+                                         NOTE: The LY_ARRAY_COUNT integer is used to store the number of items
+                                         (ynode nodes) in the array and therefore is not used for array size. */
     struct ay_ynode *child;         /**< Pointer to the first child node. */
     uint32_t descendants;           /**< Number of descendants in the ynode tree. */
 
@@ -325,6 +327,12 @@ struct ay_ynode_root {
     uint32_t flags;                 /**< Not used. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
 };
+
+/**
+ * @brief Get ay_ynode_root.arrsize from ynode tree.
+ */
+#define AY_YNODE_ROOT_ARRSIZE(TREE) \
+    ((struct ay_ynode_root *)(TREE))->arrsize
 
 /**
  * @brief Get ay_ynode_root.ltree from ynode tree.
@@ -3837,6 +3845,8 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
     }
 
     /* Set YN_ROOT members. */
+    AY_YNODE_ROOT_ARRSIZE(*tree) = LY_ARRAY_COUNT(*tree);
+    assert(AY_YNODE_ROOT_ARRSIZE(*tree) == ((*tree)->descendants + 1));
     labcount = 0;
     valcount = 0;
     LY_ARRAY_FOR(ltree, i) {
@@ -4162,6 +4172,7 @@ ay_test_ynode_copy(uint64_t vercode, struct ay_ynode *forest)
 static void
 ay_ynode_insert_gap(struct ay_ynode *tree, uint32_t index)
 {
+    assert(AY_YNODE_ROOT_ARRSIZE(tree) > LY_ARRAY_COUNT(tree));
     memmove(&tree[index + 1], &tree[index], (LY_ARRAY_COUNT(tree) - index) * sizeof *tree);
     memset(&tree[index], 0, sizeof *tree);
     LY_ARRAY_INCREMENT(tree);
@@ -4217,7 +4228,9 @@ ay_ynode_delete_node(struct ay_ynode *tree, struct ay_ynode *node)
 static void
 ay_ynode_delete_subtree(struct ay_ynode *tree, struct ay_ynode *subtree, ly_bool delete_root)
 {
+    struct ay_ynode *iter;
     uint32_t deleted_nodes;
+    uint32_t index, i;
 
     if (delete_root) {
         deleted_nodes = subtree->descendants + 1;
@@ -4226,9 +4239,16 @@ ay_ynode_delete_subtree(struct ay_ynode *tree, struct ay_ynode *subtree, ly_bool
         subtree++;
     }
 
-    for (uint32_t i = 0; i < deleted_nodes; i++) {
-        ay_ynode_delete_node(tree, subtree);
+    index = AY_INDEX(tree, subtree);
+    for (iter = subtree->parent; iter; iter = iter->parent) {
+        iter->descendants = iter->descendants - deleted_nodes;
     }
+
+    for (i = 0; i < deleted_nodes; i++) {
+        ay_ynode_delete_gap(tree, index);
+    }
+
+    ay_ynode_tree_correction(tree);
 }
 
 /**
@@ -5495,14 +5515,18 @@ ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, int (*inser
 {
     int ret;
     struct ay_ynode *new = NULL;
+    uint64_t free_space, new_size;
 
-    LY_ARRAY_CREATE(NULL, new, items_count + LY_ARRAY_COUNT(*tree), return AYE_MEMORY);
-    ay_ynode_copy(new, *tree);
-    /* The old tree's dynamic memory is moved to new. */
-    ret = insert(new);
-    LY_ARRAY_FREE(*tree);
-
-    *tree = new;
+    free_space = AY_YNODE_ROOT_ARRSIZE(*tree) - LY_ARRAY_COUNT(*tree);
+    if (free_space < items_count) {
+        new_size = AY_YNODE_ROOT_ARRSIZE(*tree) + (items_count - free_space);
+        LY_ARRAY_CREATE(NULL, new, new_size, return AYE_MEMORY);
+        ay_ynode_copy(new, *tree);
+        AY_YNODE_ROOT_ARRSIZE(new) = new_size;
+        LY_ARRAY_FREE(*tree);
+        *tree = new;
+    }
+    ret = insert(*tree);
 
     return ret;
 }
