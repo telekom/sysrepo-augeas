@@ -54,7 +54,7 @@ module devfsrules {
             leaf line_re {
               mandatory true;
               type string {
-                pattern "[^][#; \t\n][^#;\n]*[^#; \t\n]";
+                pattern "[^\\]\\[#; \t\n][^#;\n]*[^#; \t\n]";
               }
             }
           }

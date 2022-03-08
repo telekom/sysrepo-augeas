@@ -50,7 +50,7 @@ module pam {
           leaf control {
             mandatory true;
             type string {
-              pattern "\\[[^\\]#\n]*\\\\]|[a-zA-Z]+";
+              pattern "\\[[^\\]#\n]*\\]|[a-zA-Z]+";
             }
             augex:data-path "control";
           }

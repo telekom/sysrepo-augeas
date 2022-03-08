@@ -1423,143 +1423,204 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, char *buffer
 }
 
 /**
- * @brief Substitution of regular pattern parts.
+ * @brief Replace all occurences of @p target with @p replace.
  *
- * Auxiliary structure for ay_get_regex_standardized()
+ * @param[in,out] str String in which to search @p target.
+ * @param[in] target Substring being searched.
+ * @param[in] replace Substituent.
  */
-struct regex_map {
-    const char *aug;    /**< Input string to match. */
-    const char *yang;   /**< Substituent satisfying yang language. */
-};
+static void
+ay_replace_substr(char *str, const char *target, const char *replace)
+{
+    char *hit, *remain;
+    size_t trlen, rplen, rmlen;
+
+    assert(str && target && (*target != '\0') && replace);
+    trlen = strlen(target);
+    rplen = strlen(replace);
+    assert(trlen > rplen);
+
+    while ((hit = strstr(str, target))) {
+        if (rplen) {
+            /* insert @p replace */
+            strncpy(hit, replace, rplen);
+            rmlen = trlen - rplen;
+            if (rmlen) {
+                remain = hit + rplen;
+                *remain = '\0';
+                strcat(str, remain + rmlen);
+            }
+        } else {
+            /* remove target in str */
+            *hit = '\0';
+            strcat(str, hit + trlen);
+        }
+    }
+}
 
 /**
- * @brief Modify augeas regular pattern to conform to the constraints of the yang regular pattern.
+ * @brief Remove parentheses around the entire regex pattern.
  *
- * TODO: add reliable conversion.
+ * TODO optimization: move code to the caller.
  *
- * @param[in] rp Regular pattern to check or possibly change.
- * @param[out] regout Regular pattern that conforms to the yang language. The caller must free memory.
+ * @param[in,out] src Regex pattern.
+ */
+static void
+ay_regex_remove_parentheses(char **src)
+{
+    int level;
+    uint64_t i;
+    size_t len;
+    char *str;
+
+    str = *src;
+    len = strlen(str);
+    if ((*str != '(') && (*(str + len - 1) != ')')) {
+        return;
+    }
+
+    level = 1;
+    for (i = 1; i < (len - 1); i++) {
+        if (str[i] == '(') {
+            level += 1;
+        } else if (str[i] == ')') {
+            level -= 1;
+        }
+        if (level == 0) {
+            break;
+        }
+    }
+
+    if (level == 1) {
+        *(str + len - 1) = '\0';
+        *src = str + 1;
+    }
+}
+
+/**
+ * @brief Print lense regex pattern to be valid for libyang.
+ *
+ * @param[in,out] out Output handler for printing.
+ * @param[in] patt Regex pattern to print.
  * @return 0 on success.
  */
 static int
-ay_get_regex_standardized(const struct regexp *rp, char **regout)
+ay_print_regex_standardized(struct ly_out *out, const char *patt)
 {
-    char *hit = NULL, *regex = NULL, *tmp;
-    uint32_t cnt, offset;
+    const char *ch1, *ch2, *ch3, *ch4, *skip;
+    char *mem, *src;
+    ly_bool charClassExpr;
 
-    struct regex_map regmap[] = {
-        {"[_.A-Za-z0-9][-_.A-Za-z0-9]*\\\\$?", "[_.A-Za-z0-9][-_.A-Za-z0-9]*"},
+    /* substitution of erroneous strings in lenses */
+    mem = strdup(patt);
+    AY_CHECK_COND(!mem, AYE_MEMORY);
+    src = mem;
+    ay_replace_substr(src, "\n                  ", ""); /* Rx.hostname looks wrong */
+    ay_replace_substr(src, "    minclock", "minclock"); /* ntp.aug looks wrong */
 
-        {"#commen((t[^]\\n\\r\\/]|[^]\\n\\r\\/t])[^]\\n\\r\\/]*|)|#comme([^]\\n\\r\\/n][^]\\n\\r\\/]*|)|"
-            "#comm([^]\\n\\r\\/e][^]\\n\\r\\/]*|)|#com([^]\\n\\r\\/m][^]\\n\\r\\/]*|)|"
-            "#co([^]\\n\\r\\/m][^]\\n\\r\\/]*|)|#c([^]\\n\\r\\/o][^]\\n\\r\\/]*|)|"
-            "(#[^]\\n\\r\\/c]|[^]\\n\\r#\\/][^]\\n\\r\\/])[^]\\n\\r\\/]*|#|[^]\\n\\r#\\/]",
+    /* remove () around pattern  */
+    ay_regex_remove_parentheses(&src);
 
-            "#commen((t[^\\\\]\\n/]|[^\\\\]\\n/t])[^\\\\]\\n/]*|)|#comme([^\\\\]\\n/n][^\\\\]\\n/]*|)|"
-            "#comm([^\\\\]\\n/e][^\\\\]\\n/]*|)|#com([^\\\\]\\n/m][^\\\\]\\n/]*|)|"
-            "#co([^\\\\]\\n/m][^\\\\]\\n/]*|)|#c([^\\\\]\\n/o][^\\\\]\\n/]*|)|"
-            "(#[^\\\\]\\n/c]|[^\\\\]\\n#/][^\\\\]\\n/])[^\\\\]\\n/]*|#|[^\\\\]\\n#/]"},
+    // TODO empty brackets () if substring is removed, etc. '(\$?)'
 
-        {"[^]\\r\\n]+", "[^\\\\]\\n]+"},
-        {"([^# \\t\\n\\\\]|\\\\\\\\.)+", "([^# \\t\\n\\\\\\\\]|\\\\\\\\.)+"},   /* pam.aug */
-        {"\\\\[[^]#\\n]*\\\\]|[a-zA-Z]+", "\\\\[[^\\\\]#\\n]*\\\\\\\\]|[a-zA-Z]+"}, /* pam.aug */
-        {"\\\\[[^]#\\n]+\\\\]|[^[#\\n \\t\\\\][^#\\n \\t\\\\]*", "\\\\[[^\\\\]#\\n]+\\\\]|[^\\\\[#\\n \\t\\\\\\\\][^#\\n \\t\\\\\\\\]*"}, /* pam.aug */
+    for (ch1 = src; *ch1 != '\0'; ch1++) {
+        skip = ch1;
+        ch2 = ch1 + 1;
+        ch3 = ch1 + 2;
+        ch4 = ch1 + 3;
 
-        {"[^# \\t\\n]*[^# \\t\\n\\\\]", "[^# \\t\\n]*[^# \\t\\n\\\\\\\\]"}, /* systemd.aug */
-        {"([^# \\t\\n\\\\][^#\\n\\\\]*[^# \\t\\n\\\\]|[^# \\t\\n\\\\])(((\\\\\\\\\\n)([^# \\t\\n\\\\]" /* systemd.aug */
-            "[^#\\n\\\\]*[^# \\t\\n\\\\]|[^# \\t\\n\\\\]))*)",
-
-            "([^# \\t\\n\\\\\\\\][^#\\n\\\\\\\\]*[^# \\t\\n\\\\\\\\]|[^# \\t\\n\\\\\\\\])(((\\\\\\n)([^# \\t\\n\\\\\\\\]"
-            "[^#\\n\\\\\\\\]*[^# \\t\\n\\\\\\\\]|[^# \\t\\n\\\\\\\\]))*)"},
-        {"[^#@ \\t\\n\\\\-][^#@ \\t\\n\\\\-][^# \\t\\n\\\\]*", "[^#@ \\t\\n\\\\-][^#@ \\t\\n\\\\-][^# \\t\\n\\\\\\\\]*"}, /* systemd.aug */
-        {"[^#'\" \\t\\n]*[^#'\" \\t\\n\\\\]", "[^#'\\\" \\t\\n]*[^#'\\\" \\t\\n\\\\\\\\]"},  /* systemd.aug */
-        {"\"[^#\"\\t\\n]*[^#\"\\t\\n\\\\]\"", "\\\"[^#\\\"\\t\\n]*[^#\\\"\\t\\n\\\\\\\\]\\\""}, /* systemd.aug */
-        {"'[^#'\\t\\n]*[^#'\\t\\n\\\\]'", "'[^#'\\t\\n]*[^#'\\t\\n\\\\\\\\]'"}, /* systemd.aug */
-        {"[^#\"'\\n]*[ \\t]+[^#\"'\\n]*", "[^#\\\"'\\n]*[ \\t]+[^#\\\"'\\n]*"}, /* systemd.aug */
-    };
-    struct regex_map regsub[] = {
-        {"\\/", "/"},
-        {"    minclock", "minclock"},   /* ntp.aug looks wrong */
-    };
-    const char *regdel[] = {
-        "\\r",
-        "\\n                  " /* Rx.hostname looks wrong */
-    };
-
-    regex = regexp_escape(rp);
-    AY_CHECK_COND(!regex, AYE_MEMORY);
-
-    for (uint32_t i = 0; i < sizeof(regmap) / sizeof(struct regex_map); i++) {
-        if (!strcmp(regex, regmap[i].aug)) {
-            free(regex);
-            *regout = strdup(regmap[i].yang);
-            AY_CHECK_COND(!(*regout), AYE_MEMORY);
-            return 0;
-        }
-    }
-
-    for (uint32_t i = 0; i < sizeof(regdel) / sizeof(char *); i++) {
-        do {
-            hit = (char *)strstr(regex, regdel[i]);
-            if (hit) {
-                /* remove needle from haystack */
-                memmove(hit, hit + strlen(regdel[i]), (regex + strlen(regex) + 1) - (hit + strlen(regdel[i])));
+        switch (*ch1) {
+        case '[':
+            if ((*ch2 == '^') && (*ch3 == ']') && (*ch4 == '[')) {
+                ly_print(out, "[^\\\\]\\\\[");
+                skip = ch4;
+            } else if ((*ch2 == '^') && (*ch3 == '[') && (*ch4 == ']')) {
+                ly_print(out, "[^\\\\[\\\\]");
+                skip = ch4;
+            } else if ((*ch2 == '^') && (*ch3 == '[')) {
+                ly_print(out, "[^\\\\[");
+                skip = ch3;
+            } else if ((*ch2 == '^') && (*ch3 == ']')) {
+                ly_print(out, "[^\\\\]");
+                skip = ch3;
+            } else {
+                ly_print(out, "[");
             }
-        } while (hit);
-    }
-
-    for (uint32_t i = 0; i < sizeof(regsub) / sizeof(struct regex_map); i++) {
-        hit = NULL;
-        do {
-            hit = hit ?
-                    (char *)strstr(hit + strlen(regsub[i].yang), regsub[i].aug) :
-                    (char *)strstr(regex, regsub[i].aug);
-            if (hit && (strlen(regsub[i].aug) < strlen(regsub[i].yang))) {
-                /* in 'regex' create enough memory space for the substituent */
-                offset = hit - regex;
-                tmp = realloc(regex, strlen(regex) + 1 + (strlen(regsub[i].yang - strlen(regsub[i].aug))));
-                AY_CHECK_GOTO(!tmp, error);
-                regex = tmp;
-                hit = regex + offset;
+            charClassExpr = 1;
+            break;
+        case ']':
+            ly_print(out, "]");
+            charClassExpr = 0;
+            break;
+        case '\n':
+            ly_print(out, "\\n");
+            break;
+        case '\r':
+            /* remove \r */
+            break;
+        case '\t':
+            ly_print(out, "\\t");
+            break;
+        case '\"':
+            ly_print(out, "\\\"");
+            break;
+        case '(':
+            if (*ch2 == ')') {
+                /* remove () */
+                skip = ch2;
+            } else {
+                /* just print ( */
+                ly_print(out, "(");
             }
-            if (hit) {
-                /* remove needle from haystack */
-                memmove(hit, hit + strlen(regsub[i].aug), (regex + strlen(regex) + 1) - (hit + strlen(regsub[i].aug)));
-                /* make space for regsub[i].yang */
-                memmove(hit + strlen(regsub[i].yang), hit, (regex + strlen(regex) + 1) - hit);
-                /* copy regsub[i].yang */
-                strncpy(hit, regsub[i].yang, strlen(regsub[i].yang));
+            break;
+        case '|':
+            if ((*ch2 == '(') && (*ch3 == ')')) {
+                /* remove */
+                skip = ch3;
+            } else {
+                /* just print | */
+                ly_print(out, "|");
             }
-        } while (hit);
+            break;
+        case '\\':
+            switch (*ch2) {
+            case '$':
+                // TODO brackets?
+                if ((*ch3 == '?') || (*ch3 == '*') || (*ch3 == '+')) {
+                    /* remove \$? */
+                    skip = ch3;
+                } else {
+                    /* remove \$ */
+                    skip = ch2;
+                }
+                break;
+            case ']':
+                if (charClassExpr) {
+                    /* TODO weird */
+                    ly_print(out, "\\\\\\\\]");
+                    skip = ch2;
+                } else {
+                    ly_print(out, "\\\\]");
+                    skip = ch2;
+                }
+                break;
+            default:
+                /* just print first \ */
+                ly_print(out, "\\\\");
+                break;
+            }
+            break;
+        default:
+            ly_print(out, "%c", *ch1);
+            break;
+        }
+
+        ch1 = skip;
     }
 
-    /* count number of \" character */
-    cnt = 0;
-    for (uint32_t i = 0; i < strlen(regex); i++) {
-        if (regex[i] == '\"') {
-            cnt++;
-        }
-    }
-    tmp = realloc(regex, strlen(regex) + 1 + sizeof(char) * cnt);
-    AY_CHECK_GOTO(!tmp, error);
-    regex = tmp;
-    /* add escape character for \" */
-    for (uint32_t i = 0; i < strlen(regex); i++) {
-        if (regex[i] == '\"') {
-            memmove(&regex[i] + 1, &regex[i], strlen(&regex[i]) + 1);
-            regex[i] = '\\';
-            i += 1;
-        }
-    }
-
-    *regout = regex;
+    free(mem);
 
     return 0;
-
-error:
-    free(regex);
-
-    return AYE_MEMORY;
 }
 
 /**
@@ -2364,7 +2425,6 @@ static int
 ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
 {
     int ret = 0;
-    char *regex = NULL;
 
     if (!rp) {
         ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
@@ -2373,10 +2433,11 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
 
     ly_print(ctx->out, "%*stype string", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
-    ret = ay_get_regex_standardized(rp, &regex);
-    AY_CHECK_RET(ret);
-    ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", regex);
-    free(regex);
+
+    ly_print(ctx->out, "%*spattern \"", ctx->space, "");
+    ay_print_regex_standardized(ctx->out, rp->pattern->str);
+    ly_print(ctx->out, "\";\n");
+
     ay_print_yang_nesting_end(ctx);
 
     return ret;
