@@ -2436,18 +2436,22 @@ ay_yang_type_is_empty(const struct ay_lnode *lnode)
 /**
  * @brief Check if empty string should be printed.
  *
- * @param[in] rp Regular expression to check.
- * @return 1 if empty string is in @p rp.
+ * @param[in] lens Lense in which the regular expression is check.
+ * @return 1 if empty string is in @p lens.
  */
 static ly_bool
-ay_yang_type_is_empty_string(const struct regexp *rp)
+ay_yang_type_is_empty_string(const struct lens *lens)
 {
     const char *rpstr;
     size_t rplen;
     const char *patstr = "{0,1}";
     const size_t patlen = 5; /* strlen("{0,1}") */
 
-    rpstr = rp->pattern->str;
+    if ((lens->tag != L_KEY) && (lens->tag != L_STORE)) {
+        return 0;
+    }
+
+    rpstr = lens->regexp->pattern->str;
     rplen = strlen(rpstr);
     if (rplen < patlen) {
         return 0;
@@ -2456,18 +2460,38 @@ ay_yang_type_is_empty_string(const struct regexp *rp)
 }
 
 /**
- * @brief Print type-stmt string and also pattern-stmt if necessary.
+ * @brief Print type enumeration for lense with tag L_VALUE.
  *
  * @param[in] ctx Context for printing.
- * @param[in] rp Regular expression to printed. It can be NULL.
+ * @param[in] lens Lense used to print enum value.
  * @return 0 on success.
  */
 static int
-ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
+ay_print_yang_enumeration(struct yprinter_ctx *ctx, struct lens *lens)
+{
+    assert(lens->tag == L_VALUE);
+
+    ly_print(ctx->out, "%*stype enumeration", ctx->space, "");
+    ay_print_yang_nesting_begin(ctx);
+    ly_print(ctx->out, "%*senum \"%s\";\n", ctx->space, "", lens->string->str);
+    ay_print_yang_nesting_end(ctx);
+
+    return 0;
+}
+
+/**
+ * @brief Print type-stmt string and also pattern-stmt if necessary.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] lens Lense used to print type. It can be NULL.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_type_string(struct yprinter_ctx *ctx, struct lens *lens)
 {
     int ret = 0;
 
-    if (!rp) {
+    if (!lens) {
         ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
         return ret;
     }
@@ -2475,9 +2499,14 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct regexp *rp)
     ly_print(ctx->out, "%*stype string", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
 
-    ly_print(ctx->out, "%*spattern \"", ctx->space, "");
-    ay_print_regex_standardized(ctx->out, rp->pattern->str);
-    ly_print(ctx->out, "\";\n");
+    if (lens->tag == L_VALUE) {
+        ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", lens->string->str);
+    } else {
+        assert((lens->tag == L_KEY) || (lens->tag == L_STORE));
+        ly_print(ctx->out, "%*spattern \"", ctx->space, "");
+        ay_print_regex_standardized(ctx->out, lens->regexp->pattern->str);
+        ly_print(ctx->out, "\";\n");
+    }
 
     ay_print_yang_nesting_end(ctx);
 
@@ -2529,6 +2558,10 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
 
     assert(reg);
 
+    if ((reg->tag != L_STORE) && (reg->tag != L_KEY)) {
+        return 1;
+    }
+
     ay_get_filename(reg->regexp->info->filename->str, &filename, &len);
 
     if (!strncmp(filename, "rx", len)) {
@@ -2562,7 +2595,11 @@ ay_print_yang_type_item(struct yprinter_ctx *ctx, struct lens *item)
     ret = ay_print_yang_type_builtin(ctx, item);
     if (ret) {
         /* The builtin print failed, so print just string pattern. */
-        ret = ay_print_yang_type_string(ctx, item->regexp);
+        if (item->tag == L_VALUE) {
+            ret = ay_print_yang_enumeration(ctx, item);
+        } else {
+            ret = ay_print_yang_type_string(ctx, item);
+        }
     }
 
     return ret;
@@ -2590,7 +2627,7 @@ ay_print_yang_type_union_items(struct yprinter_ctx *ctx, struct ay_dnode *key)
     /* Print dnode KEY'S VALUES. */
     AY_DNODE_VAL_FOR(key, i) {
         item = key[i].lval->lens;
-        assert((item->tag == L_STORE) || (item->tag == L_KEY));
+        assert((item->tag == L_STORE) || (item->tag == L_KEY) || (item->tag == L_VALUE));
         ret = ay_print_yang_type_item(ctx, item);
         AY_CHECK_RET(ret);
     }
@@ -2623,7 +2660,6 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
     if (node->type == YN_VALUE) {
-        assert(value && (value->tag == L_STORE));
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
     } else if (ay_lense_pattern_has_idents(label) && value) {
@@ -2664,14 +2700,14 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
                 break;
             }
             if (!empty_string) {
-                empty_string = ay_yang_type_is_empty_string(key[i].lnode->lens->regexp);
+                empty_string = ay_yang_type_is_empty_string(key[i].lnode->lens);
             }
             if (!empty_type) {
                 empty_type = ay_yang_type_is_empty(key[i].lnode);
             }
         }
     } else {
-        empty_string = ay_yang_type_is_empty_string(lnode->lens->regexp);
+        empty_string = ay_yang_type_is_empty_string(lnode->lens);
         empty_type = ay_yang_type_is_empty(lnode);
     }
 
@@ -2709,33 +2745,6 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (empty_string || empty_type || key) {
         ay_print_yang_nesting_end(ctx);
     }
-
-    return ret;
-}
-
-/**
- * @brief Print yang default-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] node Node for which the default-stmt is to be printed.
- * @return 0 on success.
- */
-static int
-ay_print_yang_default_value(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    int ret = 0;
-    struct lens *value;
-
-    value = AY_VALUE_LENS(node);
-    if (!value) {
-        return ret;
-    }
-
-    if (value->tag != L_VALUE) {
-        return ret;
-    }
-
-    ly_print(ctx->out, "%*sdefault \"%s\";", ctx->space, "", value->string->str);
 
     return ret;
 }
@@ -2829,8 +2838,6 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_mandatory(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
-    ret = ay_print_yang_default_value(ctx, node);
-    AY_CHECK_RET(ret);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
@@ -2894,8 +2901,6 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
     } else {
         ret = ay_print_yang_type(ctx, node);
-        AY_CHECK_RET(ret);
-        ret = ay_print_yang_default_value(ctx, node);
         AY_CHECK_RET(ret);
     }
     ay_print_yang_nesting_end(ctx);
