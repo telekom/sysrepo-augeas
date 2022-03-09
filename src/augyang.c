@@ -1440,20 +1440,19 @@ ay_replace_substr(char *str, const char *target, const char *replace)
     rplen = strlen(replace);
     assert(trlen > rplen);
 
-    while ((hit = strstr(str, target))) {
+    hit = str;
+    while ((hit = strstr(hit, target))) {
         if (rplen) {
             /* insert @p replace */
             strncpy(hit, replace, rplen);
             rmlen = trlen - rplen;
             if (rmlen) {
                 remain = hit + rplen;
-                *remain = '\0';
-                strcat(str, remain + rmlen);
+                memmove(remain, remain + rmlen, strlen(remain + rmlen) + 1);
             }
         } else {
             /* remove target in str */
-            *hit = '\0';
-            strcat(str, hit + trlen);
+            memmove(hit, hit + trlen, strlen(hit + trlen) + 1);
         }
     }
 }
@@ -1461,7 +1460,7 @@ ay_replace_substr(char *str, const char *target, const char *replace)
 /**
  * @brief Remove parentheses around the entire regex pattern.
  *
- * TODO optimization: move code to the caller.
+ * TODO optimization: move code logic to the caller.
  *
  * @param[in,out] src Regex pattern.
  */
@@ -1498,6 +1497,78 @@ ay_regex_remove_parentheses(char **src)
 }
 
 /**
+ * @brief Greedy search for a substring to skip (and finally delete).
+ *
+ * Searched substrings are for example: (), \$?, \r, |() ...
+ *
+ * @param[in] curr Current position in pattern to search substring.
+ * @return Pointer to character that must not be skiped (deleted).
+ */
+static const char *
+ay_regex_try_skip(const char *curr)
+{
+    const char *skip, *old;
+    int64_t parcnt;
+
+    skip = curr;
+    parcnt = 0;
+    /* Let's skip these symbols and watch the number of parentheses. */
+    do {
+        old = skip;
+        switch (skip[0]) {
+        case '\\':
+            switch (skip[1]) {
+            case '$':
+                skip += 2;
+                break;
+            }
+            break;
+        case '(':
+            parcnt++;
+            skip++;
+            break;
+        case ')':
+            parcnt--;
+            skip++;
+            break;
+        case '|':
+        case '\r':
+            skip++;
+            break;
+        }
+
+        if (parcnt < 0) {
+            /* There is more ')' than '('. The ')' must be printed. */
+            return skip - 1;
+        }
+    } while (old != skip);
+
+    if (parcnt != 0) {
+        /* There is some '(' in the substring that should be printed. */
+        return curr;
+    }
+
+    /* If some characters are skipped then skip repeat operator too. */
+    if (skip != curr) {
+        switch (*skip) {
+        case '?':
+        case '*':
+        case '+':
+            skip++;
+            break;
+        default:
+            /* But OR operator cannot be skipped. */
+            if (*(skip - 1) == '|') {
+                skip--;
+            }
+            break;
+        }
+    }
+
+    return skip;
+}
+
+/**
  * @brief Print lense regex pattern to be valid for libyang.
  *
  * @param[in,out] out Output handler for printing.
@@ -1507,7 +1578,7 @@ ay_regex_remove_parentheses(char **src)
 static int
 ay_print_regex_standardized(struct ly_out *out, const char *patt)
 {
-    const char *ch1, *ch2, *ch3, *ch4, *skip;
+    const char *ch, *skip;
     char *mem, *src;
     ly_bool charClassExpr;
 
@@ -1521,28 +1592,29 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
     /* remove () around pattern  */
     ay_regex_remove_parentheses(&src);
 
-    // TODO empty brackets () if substring is removed, etc. '(\$?)'
+    for (ch = src; *ch; ch++) {
 
-    for (ch1 = src; *ch1 != '\0'; ch1++) {
-        skip = ch1;
-        ch2 = ch1 + 1;
-        ch3 = ch1 + 2;
-        ch4 = ch1 + 3;
+        if ((skip = ay_regex_try_skip(ch)) != ch) {
+            ch = skip - 1;
+            continue;
+        } else {
+            skip = ch;
+        }
 
-        switch (*ch1) {
+        switch (*ch) {
         case '[':
-            if ((*ch2 == '^') && (*ch3 == ']') && (*ch4 == '[')) {
+            if ((ch[1] == '^') && (ch[2] == ']') && (ch[3] == '[')) {
                 ly_print(out, "[^\\\\]\\\\[");
-                skip = ch4;
-            } else if ((*ch2 == '^') && (*ch3 == '[') && (*ch4 == ']')) {
+                skip = &ch[3];
+            } else if ((ch[1] == '^') && (ch[2] == '[') && (ch[3] == ']')) {
                 ly_print(out, "[^\\\\[\\\\]");
-                skip = ch4;
-            } else if ((*ch2 == '^') && (*ch3 == '[')) {
+                skip = &ch[3];
+            } else if ((ch[1] == '^') && (ch[2] == '[')) {
                 ly_print(out, "[^\\\\[");
-                skip = ch3;
-            } else if ((*ch2 == '^') && (*ch3 == ']')) {
+                skip = &ch[2];
+            } else if ((ch[1] == '^') && (ch[2] == ']')) {
                 ly_print(out, "[^\\\\]");
-                skip = ch3;
+                skip = &ch[2];
             } else {
                 ly_print(out, "[");
             }
@@ -1555,53 +1627,22 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
         case '\n':
             ly_print(out, "\\n");
             break;
-        case '\r':
-            /* remove \r */
-            break;
         case '\t':
             ly_print(out, "\\t");
             break;
         case '\"':
             ly_print(out, "\\\"");
             break;
-        case '(':
-            if (*ch2 == ')') {
-                /* remove () */
-                skip = ch2;
-            } else {
-                /* just print ( */
-                ly_print(out, "(");
-            }
-            break;
-        case '|':
-            if ((*ch2 == '(') && (*ch3 == ')')) {
-                /* remove */
-                skip = ch3;
-            } else {
-                /* just print | */
-                ly_print(out, "|");
-            }
-            break;
         case '\\':
-            switch (*ch2) {
-            case '$':
-                // TODO brackets?
-                if ((*ch3 == '?') || (*ch3 == '*') || (*ch3 == '+')) {
-                    /* remove \$? */
-                    skip = ch3;
-                } else {
-                    /* remove \$ */
-                    skip = ch2;
-                }
-                break;
+            switch (ch[1]) {
             case ']':
                 if (charClassExpr) {
                     /* TODO weird */
                     ly_print(out, "\\\\\\\\]");
-                    skip = ch2;
+                    skip = &ch[1];
                 } else {
                     ly_print(out, "\\\\]");
-                    skip = ch2;
+                    skip = &ch[1];
                 }
                 break;
             default:
@@ -1611,11 +1652,11 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
             }
             break;
         default:
-            ly_print(out, "%c", *ch1);
+            ly_print(out, "%c", *ch);
             break;
         }
 
-        ch1 = skip;
+        ch = skip;
     }
 
     free(mem);
