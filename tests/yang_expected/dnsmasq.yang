@@ -39,6 +39,7 @@ module dnsmasq {
               pattern "[^/ \t\n]+";
             }
             augex:data-path "domain";
+            ordered-by user;
           }
         }
         container server {
@@ -55,6 +56,7 @@ module dnsmasq {
               pattern "[^/ \t\n]+";
             }
             augex:data-path "domain";
+            ordered-by user;
           }
           leaf port {
             type uint64;

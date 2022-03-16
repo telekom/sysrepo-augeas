@@ -36,6 +36,7 @@ module smbusers {
             pattern "[^ \t\n]+";
           }
           augex:data-path "username";
+          ordered-by user;
         }
       }
     }

@@ -54,6 +54,7 @@ module backuppchosts {
             pattern "[^#, \n\t/]+";
           }
           augex:data-path "moreusers";
+          ordered-by user;
         }
       }
     }

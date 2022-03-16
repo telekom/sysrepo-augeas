@@ -90,6 +90,7 @@ module systemd {
                   pattern "[^# \t\n]*[^# \t\n\\\\]";
                 }
                 augex:data-path "value";
+                ordered-by user;
               }
             }
             container entry_command {

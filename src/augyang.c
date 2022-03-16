@@ -2771,6 +2771,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
+    ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
 
     ay_print_yang_nesting_end(ctx);
 

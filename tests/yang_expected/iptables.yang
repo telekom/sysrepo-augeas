@@ -118,6 +118,7 @@ module iptables {
               pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
             }
             augex:data-path "mask";
+            ordered-by user;
           }
           leaf-list set {
             min-elements 1;
@@ -125,6 +126,7 @@ module iptables {
               pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
             }
             augex:data-path "set";
+            ordered-by user;
           }
         }
         container node {
