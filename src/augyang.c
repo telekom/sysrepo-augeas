@@ -73,7 +73,17 @@
     *(((LY_ARRAY_COUNT_TYPE *)ARRAY) - 1) = SIZE;
 
 /**
- * @brief Check if the lense cannnot have children.
+ * @brief Check if the lense is L_REC with the rec_internal flag set.
+ *
+ * If the rec_internal option is set, there is a risk of an infinite recursive loop.
+ *
+ * @param[in] LENSE The lense to check.
+ * @return 1 if rec_internal is set.
+ */
+#define AY_LENSE_REC_INTERNAL(LENSE) ((LENSE->tag == L_REC) && (LENSE->rec_internal))
+
+/**
+ * @brief Check if the lense cannot have children.
  *
  * @param[in] TAG Tag of the lense.
  */
@@ -84,7 +94,7 @@
  *
  * @param[in] TAG Tag of the lense.
  */
-#define AY_LENSE_HAS_ONE_CHILD(TAG) (TAG >= L_SUBTREE)
+#define AY_LENSE_HAS_ONE_CHILD(TAG) ((TAG >= L_SUBTREE) && (TAG != L_REC))
 
 /**
  * @brief Check if the lense can have more children (not at most one).
@@ -100,9 +110,14 @@
  * @return Child or NULL.
  */
 #define AY_GET_FIRST_LENSE_CHILD(LENSE) \
-    (AY_LENSE_HAS_ONE_CHILD(LENSE->tag) ? \
+    (LENSE->tag == L_REC) && !LENSE->rec_internal ? \
+        lens->body : \
+    LENSE->tag == L_REC ? \
+        NULL : \
+    AY_LENSE_HAS_ONE_CHILD(LENSE->tag) ? \
         lens->child : \
-        (lens->nchildren ? lens->children[0] : NULL))
+    lens->nchildren ? \
+        lens->children[0] : NULL
 
 /**
  * @brief Get lense from ynode.label.
@@ -228,6 +243,7 @@ struct ay_dnode;
 enum yang_type {
     YN_UNKNOWN = 0,     /**< Unknown or undefined type. */
     YN_LEAF,            /**< Yang statement "leaf". */
+    YN_LEAFREF,         /**< Yang statement "leaf" of type leafref. */
     YN_LEAFLIST,        /**< Yang statement "leaf-list". */
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
@@ -578,16 +594,10 @@ ay_get_filename(char *path, char **name, uint64_t *len)
  * @param[in] lens Main lense where to start.
  * @param[out] ltree_size Number of lenses.
  * @param[out] yforest_size Number of lenses with L_SUBTREE tag.
- * @param[out] l_rec Flag if some lense has tag L_REC tag.
  */
 static void
-ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size, ly_bool *l_rec)
+ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size)
 {
-    if (lens->tag == L_REC) {
-        *l_rec = 1;
-        return;
-    }
-
     (*ltree_size)++;
     *yforest_size = lens->tag == L_SUBTREE ?
             *yforest_size + 1 :
@@ -598,11 +608,13 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
     }
 
     if (AY_LENSE_HAS_ONE_CHILD(lens->tag)) {
-        ay_lense_summary(lens->child, ltree_size, yforest_size, l_rec);
-    } else {
+        ay_lense_summary(lens->child, ltree_size, yforest_size);
+    } else if (AY_LENSE_HAS_CHILDREN(lens->tag)) {
         for (uint64_t i = 0; i < lens->nchildren; i++) {
-            ay_lense_summary(lens->children[i], ltree_size, yforest_size, l_rec);
+            ay_lense_summary(lens->children[i], ltree_size, yforest_size);
         }
+    } else if ((lens->tag == L_REC) && !lens->rec_internal) {
+        ay_lense_summary(lens->body, ltree_size, yforest_size);
     }
 }
 
@@ -1031,8 +1043,8 @@ ay_print_lens_node(struct lprinter_ctx *ctx, struct lens *lens)
             break;
         case L_REC:
             ay_print_lens_node_header(out, lens, sp, "L_REC");
-            ly_print(out, "ay_print_lens_node error: L_REC not supported\n");
-            return;
+            ly_print(out, "%*s lens_rec_id: %p\n", sp, "", lens->body);
+            break;
         case L_SQUARE:
             ay_print_lens_node_header(out, lens, sp, "L_SQUARE");
             break;
@@ -1645,6 +1657,11 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
                     skip = &ch[1];
                 }
                 break;
+            case '\\':
+                /* just print \\ */
+                ly_print(out, "\\\\\\\\");
+                skip = &ch[1];
+                break;
             default:
                 /* just print first \ */
                 ly_print(out, "\\\\");
@@ -2124,9 +2141,17 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             }
         }
     } else if (node->type == YN_LIST) {
-        /* label can points to L_STAR lense */
-        str = ay_get_lense_name(ctx->mod, label);
-        str = !str || !strcmp(str, "lns") ? "config-entries" : str;
+        if (node->snode && (node->snode->lens->tag == L_REC)) {
+            /* get identifier of node behind key */
+            ret = ay_get_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME, buffer);
+            AY_CHECK_RET(ret);
+            strcpy(buffer + strlen(buffer), "_list");
+            str = buffer;
+        } else {
+            /* label can points to L_STAR lense */
+            str = ay_get_lense_name(ctx->mod, label);
+            str = !str || !strcmp(str, "lns") ? "config-entries" : str;
+        }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
         if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
             str = ay_ynode_find_ident_in_pattern(node);
@@ -2251,7 +2276,7 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ide
     /* Make duplicate identifiers unique. */
     opt = AY_IDENT_NODE_NAME;
     for (iter = node->parent->child; iter; iter = iter->next) {
-        if (iter->type == YN_KEY) {
+        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
             continue;
         } else if (iter == node) {
             break;
@@ -2849,6 +2874,49 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang leafref-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node printed as leafref-stmt.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret = 0;
+    struct ay_ynode *refnode, *iter;
+
+    ly_print(ctx->out, "%*sleaf _", ctx->space, "");
+    if (node->parent->type == YN_LIST) {
+        refnode = node->parent->parent;
+    } else {
+        refnode = node->parent;
+    }
+    ret = ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
+    ly_print(ctx->out, "-ref");
+    ay_print_yang_nesting_begin2(ctx, node->id);
+
+    ly_print(ctx->out, "%*stype leafref", ctx->space, "");
+    ay_print_yang_nesting_begin2(ctx, node->id);
+    ly_print(ctx->out, "%*spath \"../../", ctx->space, "");
+    for (iter = node->parent; iter && (iter->snode != node->snode); iter = iter->parent) {
+        ly_print(ctx->out, "../");
+    }
+    assert(iter);
+    ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
+    ly_print(ctx->out, "/_id\";\n");
+    ay_print_yang_nesting_end(ctx);
+
+    ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
+    ly_print(ctx->out, "%*s\"Implicitly generated leaf to maintain recursive augeas data.\";\n",
+            ctx->space + SPACE_INDENT, "");
+    ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
  * @brief Print yang grouping-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -3051,6 +3119,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         return 1;
     case YN_LEAF:
         ret = ay_print_yang_leaf(ctx, node);
+        break;
+    case YN_LEAFREF:
+        ret = ay_print_yang_leafref(ctx, node);
         break;
     case YN_LEAFLIST:
         ret = ay_print_yang_leaflist(ctx, node);
@@ -3362,6 +3433,9 @@ ay_print_lens_transition(struct lprinter_ctx *ctx)
             ctx->data = lens->children[i];
             ay_print_lens_node(ctx, ctx->data);
         }
+    } else if ((lens->tag == L_REC) && !lens->rec_internal) {
+        ctx->data = lens->body;
+        ay_print_lens_node(ctx, ctx->data);
     }
 }
 
@@ -3497,6 +3571,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     case YN_LEAF:
         ly_print(ctx->out, "%*s ynode_type: YN_LEAF", ctx->space, "");
+        break;
+    case YN_LEAFREF:
+        ly_print(ctx->out, "%*s ynode_type: YN_LEAFREF", ctx->space, "");
         break;
     case YN_LEAFLIST:
         ly_print(ctx->out, "%*s ynode_type: YN_LEAFLIST", ctx->space, "");
@@ -3708,7 +3785,7 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
     LY_ARRAY_INCREMENT(root);
     node->lens = lens;
 
-    if (AY_LENSE_HAS_NO_CHILD(lens->tag)) {
+    if (AY_LENSE_HAS_NO_CHILD(lens->tag) || AY_LENSE_REC_INTERNAL(lens)) {
         /* values are set by the parent */
         return;
     }
@@ -3719,7 +3796,7 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
     ay_lnode_create_tree(root, AY_GET_FIRST_LENSE_CHILD(lens), child);
     node->descendants = 1 + child->descendants;
 
-    if (AY_LENSE_HAS_ONE_CHILD(lens->tag)) {
+    if (AY_LENSE_HAS_ONE_CHILD(lens->tag) || (lens->tag == L_REC)) {
         return;
     }
 
@@ -4232,6 +4309,40 @@ ay_ynode_rule_ordered_entries(const struct ay_lnode *tree)
 }
 
 /**
+ * @brief Rule decide how many nodes must be inserted to create a recursive form.
+ *
+ * @param[in] tree Pointer to lnode tree.
+ * @return Number of nodes to insert.
+ */
+static uint64_t
+ay_ynode_rule_recursive_form(const struct ay_lnode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j;
+    const struct ay_lnode *iter;
+    uint64_t ret = 0, nodes;
+
+    LY_ARRAY_FOR(tree, i) {
+        if ((tree[i].lens->tag != L_REC) || tree[i].lens->rec_internal) {
+            continue;
+        }
+
+        nodes = 0;
+        for (j = 0; j < tree[i].descendants; j++) {
+            iter = &tree[i + j + 1];
+            if (iter->lens->tag == L_SUBTREE) {
+                nodes++;
+            }
+        }
+
+        /* nodes * 2 -> copied nodes in the choice (due to rec_internal), which certainly can not be more  */
+        /* 3 -> 1 recursive list, 1 config-entries list, 1 reference leaf */
+        ret += (nodes * 2 + 3);
+    }
+
+    return ret;
+}
+
+/**
  * @brief Test ay_ynode_copy().
  *
  * @param[in] vercode Verbose that decides the execution of a function.
@@ -4471,7 +4582,7 @@ ay_ynode_insert_sibling(struct ay_ynode *tree, struct ay_ynode *node)
  * @brief Move subtree to another place.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] dst Index of the place where the subtree is moved. Gap are inserted on this index.
+ * @param[in] dst Index of the place where the subtree is moved. Gaps are inserted on this index.
  * @param[in] src Index to the root of subtree. Gap is deleted after the move.
  */
 static void
@@ -4571,6 +4682,58 @@ ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
     } else {
         ay_ynode_move_subtree_as_child(tree, dst, src);
     }
+}
+
+/**
+ * @brief Copy subtree to another place.
+ *
+ * @param[in] dst Index of the place where the subtree is copied. Gaps are inserted on this index.
+ * @param[in] src Index to the root of subtree.
+ */
+static void
+ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
+{
+    uint32_t subtree_size;
+    struct ay_ynode node;
+
+    if (dst == src) {
+        return;
+    }
+
+    subtree_size = tree[src].descendants + 1;
+    for (uint32_t i = 0; i < subtree_size; i++) {
+        node = tree[src];
+        ay_ynode_insert_gap(tree, dst);
+        src = src > dst ? src + 1 : src;
+        ay_ynode_copy_data(&tree[dst], &node);
+        dst++;
+    }
+}
+
+/**
+ * @brief Copy subtree @p src and insert it as child of @p dst.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] dst Pointer to parent where @p src will be copied.
+ * @param[in] src Root of some subtree.
+ */
+static void
+ay_ynode_copy_subtree_as_child(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
+{
+    struct ay_ynode *iter;
+    uint32_t subtree_size;
+
+    if (dst->child == src) {
+        return;
+    }
+
+    subtree_size = src->descendants + 1;
+    for (iter = dst; iter; iter = iter->parent) {
+        iter->descendants += subtree_size;
+    }
+
+    ay_ynode_copy_subtree(tree, AY_INDEX(tree, dst + 1), AY_INDEX(tree, src));
+    ay_ynode_tree_correction(tree);
 }
 
 /**
@@ -4860,7 +5023,9 @@ ay_delete_comment(struct ay_ynode *tree)
         iter = &tree[i];
         parent = iter->parent;
         label = AY_LABEL_LENS(iter);
-        if (label && (label->tag == L_LABEL) && !strcmp("#comment", label->string->str)) {
+        if (label && (label->tag == L_LABEL) &&
+                (!strcmp("#comment", label->string->str) ||
+                (!strcmp("#scomment", label->string->str)))) {
             ay_ynode_delete_node(tree, &tree[i]);
             i--;
             /* if the Comment node has a single sibling, then set choice to NULL */
@@ -5562,6 +5727,217 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Get lnode of type L_REC and having attribut rec_internal set to 0.
+ *
+ * @param[in] node Node to check if it is under L_REC node.
+ * @return Parenting lrec node or NULL.
+ */
+static const struct ay_lnode *
+ay_lnode_get_lrec_external(const struct ay_lnode *node)
+{
+    const struct ay_lnode *iter, *ret = NULL;
+
+    if (!node || (node->lens->tag != L_SUBTREE)) {
+        return NULL;
+    }
+
+    for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+        if (iter->lens->tag == L_REC) {
+            ret = iter;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Get lnode of type L_REC and having attribut rec_internal set to 1.
+ *
+ * @param[in] node Node to check if has lrec_external and corresponding lrec_internal.
+ * @return Pointer to lrec_internal or NULL.
+ */
+static const struct ay_lnode *
+ay_lnode_get_lrec_internal(struct ay_ynode *node)
+{
+    uint64_t i;
+    const struct ay_lnode *lrec_int, *iter, *lrec_ext;
+
+    lrec_ext = ay_lnode_get_lrec_external(node->snode);
+    if (!lrec_ext) {
+        return NULL;
+    }
+
+    lrec_int = NULL;
+    for (i = 0; i < node->snode->descendants; i++) {
+        iter = &node->snode[i + 1];
+        if (AY_LENSE_REC_INTERNAL(iter->lens) && (iter->lens->body == lrec_ext->lens->body)) {
+            lrec_int = iter;
+            break;
+        }
+    }
+
+    return lrec_int;
+}
+
+/**
+ * @brief Get ynode containing @p lrec.
+ *
+ * @param[in] branch Subtree of ynodes to search.
+ * @param[in] lrec Searched lrec_internal.
+ * @return Pointer to ynode or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_containing_lrec_internal(struct ay_ynode *branch, const struct ay_lnode *lrec)
+{
+    uint64_t i;
+    const struct ay_lnode *liter, *snode = NULL;
+
+    assert(branch->snode);
+    for (liter = lrec->parent; liter != branch->snode; liter = liter->parent) {
+        if (liter->lens->tag == L_SUBTREE) {
+            snode = liter;
+            break;
+        }
+    }
+    if (!snode) {
+        snode = branch->snode;
+    }
+
+    for (i = 0; i <= branch->descendants; i++) {
+        if (branch[i].snode == snode) {
+            return &branch[i];
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Insert list for keep ordering of entries in recursive form.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] lrec_parent Ynode containing @p lrec_internal.
+ * @param[in] lrec_internal Pointer to lrec with rec_internal set to 1.
+ * @return Pointer to inserted listord.
+ */
+static struct ay_ynode *
+ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *lrec_parent, const struct ay_lnode *lrec_internal)
+{
+    uint64_t i;
+    struct ay_ynode *iter;
+
+    if (lrec_parent->descendants == 0) {
+        ay_ynode_insert_child(tree, lrec_parent);
+        return lrec_parent->child;
+    }
+
+    for (i = 0; i < (lrec_parent->descendants - 1); i++) {
+        iter = &lrec_parent[i + 1];
+        if (!iter->snode) {
+            continue;
+        }
+        if (iter->snode > lrec_internal) {
+            ay_ynode_insert_child(tree, lrec_parent);
+            return lrec_parent->child;
+        } else if (iter->next->snode && (iter->next->snode > lrec_internal)) {
+            ay_ynode_insert_sibling(tree, iter);
+            return iter->next;
+        }
+    }
+    /* last child of lrec_parent */
+    iter = &lrec_parent[i + 1];
+    if (iter->snode > lrec_internal) {
+        ay_ynode_insert_child(tree, lrec_parent);
+        return lrec_parent->child;
+    } else {
+        ay_ynode_insert_sibling(tree, iter);
+        return iter->next;
+    }
+}
+
+/**
+ * @brief Set mandatory for @p listord.
+ *
+ * @param[in,out] listord List to set mandatory.
+ * @param[in] lrec_internal The lrec node to examine.
+ */
+static void
+ay_ynode_lrec_listord_set_mandatory(struct ay_ynode *listord, const struct ay_lnode *lrec_internal)
+{
+    /* recognise build list pattern Build.opt_list */
+    if ((lrec_internal->parent->lens->tag == L_CONCAT) &&
+            (lrec_internal->next->lens->tag == L_STAR) &&
+            (lrec_internal->next->child->lens->tag == L_REC) &&
+            (lrec_internal->lens->body == lrec_internal->next->lens->body)) {
+        listord->flags |= AY_YNODE_MAND_TRUE;
+    }
+}
+
+/**
+ * @brief Create recursive form for every ynode which contains L_REC lense.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_recursive_form(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    uint32_t cnt;
+    struct ay_ynode *yiter, *node, *lrec_parent, *listord;
+    const struct ay_lnode *lrec_internal;
+
+    for (i = 0; i < tree->descendants; i++) {
+        node = &tree[i + 1];
+        if (!(lrec_internal = ay_lnode_get_lrec_internal(node))) {
+            continue;
+        }
+
+        /* get ynode containing lrec_internal */
+        lrec_parent = ay_ynode_containing_lrec_internal(node, lrec_internal);
+        assert(lrec_parent);
+
+        ay_ynode_insert_wrapper(tree, node);
+        node->type = YN_LIST;
+        node->choice = node->child->choice;
+        node->snode = lrec_internal;
+        lrec_parent++;
+
+        lrec_parent->type = YN_CONTAINER;
+        listord = ay_ynode_lrec_insert_listord(tree, lrec_parent, lrec_internal);
+        listord->type = YN_LIST;
+        ay_ynode_lrec_listord_set_mandatory(listord, lrec_internal);
+
+        cnt = 1;
+        for (yiter = ay_ynode_get_first_in_choice(node->parent, node->choice);
+                yiter && (yiter->choice == node->choice); yiter = yiter->next) {
+            if (yiter == node) {
+                continue;
+            }
+            ay_ynode_copy_subtree_as_child(tree, listord, yiter);
+            cnt++;
+        }
+
+        /* insert referencing node */
+        ay_ynode_insert_child(tree, listord);
+        listord->child->type = YN_LEAFREF;
+        listord->child->snode = lrec_internal;
+
+        /* unite nodes into choice */
+        for (yiter = listord->child; yiter; yiter = yiter->next) {
+            /* just setting some choice id, it doesn't matter what it points to */
+            yiter->choice = AY_YNODE_ROOT_LTREE(tree);
+        }
+
+        /* skip list for recursion and container */
+        i++;
+    }
+
+    return 0;
+}
+
+/**
  * @brief Move groupings in front of the config-file list.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -5723,6 +6099,10 @@ ay_ynode_transformations(struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_trans_insert2(tree,
             ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_ordered_entries));
 
+    /* Apply recursive yang form for recursive lenses. */
+    AY_CHECK_RV(ay_ynode_trans_insert2(tree,
+            ay_ynode_rule_recursive_form(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_recursive_form));
+
     /* Create additional groupings. First groupings could be created in ::ay_ynode_list_split(). */
     ay_ynode_create_groupings(*tree);
 
@@ -5749,15 +6129,13 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct ay_lnode *ltree = NULL;
     struct ay_ynode *yforest = NULL, *ytree = NULL;
     uint32_t ltree_size = 0, yforest_size = 0;
-    ly_bool l_rec = 0;
 
     assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
 
     lens = ay_lense_get_root(mod);
     AY_CHECK_COND(!lens, AYE_LENSE_NOT_FOUND);
 
-    ay_lense_summary(lens, &ltree_size, &yforest_size, &l_rec);
-    AY_CHECK_COND(l_rec, AYE_L_REC);
+    ay_lense_summary(lens, &ltree_size, &yforest_size);
 
     /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);

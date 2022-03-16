@@ -1,0 +1,83 @@
+module xendconfsxp {
+  namespace "aug:xendconfsxp";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Xendconfsxp";
+
+  list xendconfsxp {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container sexpr {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf var_name {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        choice ch_sexpr {
+          mandatory true;
+          leaf item {
+            type string {
+              pattern "[A-Za-z0-9_./-]+|\\\"([^\\\"\\\\]|(\\\\.))*\\\"|'([^'\\\\]|(\\\\.))*'";
+            }
+            augex:data-path "item";
+          }
+          list array_list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container array {
+              augex:data-path "array";
+              presence "Type of config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch_config-entries {
+                  mandatory true;
+                  leaf _array-ref {
+                    type leafref {
+                      path "../../../../array_list/_id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  leaf item {
+                    type string {
+                      pattern "[A-Za-z0-9_./-]+|\\\"([^\\\"\\\\]|(\\\\.))*\\\"|'([^'\\\\]|(\\\\.))*'";
+                    }
+                    augex:data-path "item";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
