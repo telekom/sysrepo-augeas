@@ -53,8 +53,8 @@ module backuppchosts {
           type string {
             pattern "[^#, \n\t/]+";
           }
-          augex:data-path "moreusers";
           ordered-by user;
+          augex:data-path "moreusers";
         }
       }
     }

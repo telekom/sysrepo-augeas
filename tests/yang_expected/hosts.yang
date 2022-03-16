@@ -46,8 +46,8 @@ module hosts {
           type string {
             pattern "[^# \n\t]+";
           }
-          augex:data-path "alias";
           ordered-by user;
+          augex:data-path "alias";
         }
       }
     }

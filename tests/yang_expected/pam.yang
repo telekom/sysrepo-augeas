@@ -65,8 +65,8 @@ module pam {
             type string {
               pattern "\\[[^\\]#\n]+\\]|[^\\[#\n \t\\\\][^#\n \t\\\\]*";
             }
-            augex:data-path "argument";
             ordered-by user;
+            augex:data-path "argument";
           }
         }
       }

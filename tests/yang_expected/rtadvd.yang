@@ -29,15 +29,15 @@ module rtadvd {
           type string {
             pattern "[^#:\\\\\t\n|][^:\\\\\t\n|]*";
           }
-          augex:data-path "name";
           ordered-by user;
+          augex:data-path "name";
         }
         leaf-list capability {
           type string {
             pattern "[a-zA-Z0-9-]+(#?@|#[0-9]+|=(\"[^\"]*\"|[^:\"]*))?";
           }
-          augex:data-path "capability";
           ordered-by user;
+          augex:data-path "capability";
         }
       }
     }

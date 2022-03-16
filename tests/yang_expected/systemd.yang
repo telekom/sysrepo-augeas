@@ -89,8 +89,8 @@ module systemd {
                 type string {
                   pattern "[^# \t\n]*[^# \t\n\\\\]";
                 }
-                augex:data-path "value";
                 ordered-by user;
+                augex:data-path "value";
               }
             }
             container entry_command {

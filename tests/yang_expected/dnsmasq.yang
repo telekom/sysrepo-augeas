@@ -38,8 +38,8 @@ module dnsmasq {
             type string {
               pattern "[^/ \t\n]+";
             }
-            augex:data-path "domain";
             ordered-by user;
+            augex:data-path "domain";
           }
         }
         container server {
@@ -55,8 +55,8 @@ module dnsmasq {
             type string {
               pattern "[^/ \t\n]+";
             }
-            augex:data-path "domain";
             ordered-by user;
+            augex:data-path "domain";
           }
           leaf port {
             type uint64;

@@ -89,8 +89,8 @@ module ntp {
       type string {
         pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
       }
-      augex:data-path "flag";
       ordered-by user;
+      augex:data-path "flag";
     }
   }
   list ntp {
@@ -241,8 +241,8 @@ module ntp {
             type string {
               pattern "[^,# \n\t-][^,# \n\t]*";
             }
-            augex:data-path "action";
             ordered-by user;
+            augex:data-path "action";
           }
         }
         leaf broadcastdelay {
@@ -430,8 +430,8 @@ module ntp {
             type string {
               pattern "[^,# \n\t]+";
             }
-            augex:data-path "key";
             ordered-by user;
+            augex:data-path "key";
           }
         }
         container tinker {
