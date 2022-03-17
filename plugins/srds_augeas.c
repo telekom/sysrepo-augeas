@@ -2736,7 +2736,17 @@ srpds_aug_access_get(const struct lys_module *mod, sr_datastore_t ds, char **own
         goto cleanup;
     }
     if (!file_count) {
-        AUG_LOG_ERRINT_GOTO(rc, cleanup);
+        /* unknown */
+        if (owner) {
+            *owner = strdup("<unknown>");
+        }
+        if (group) {
+            *group = strdup("<unknown>");
+        }
+        if (perm) {
+            *perm = 0;
+        }
+        goto cleanup;
     }
 
     /* use the first file, nothing much better to do */
@@ -2798,7 +2808,14 @@ srpds_aug_access_check(const struct lys_module *mod, sr_datastore_t ds, int *rea
         goto cleanup;
     }
     if (!file_count) {
-        AUG_LOG_ERRINT_GOTO(rc, cleanup);
+        /* unknown, pass */
+        if (read) {
+            *read = 1;
+        }
+        if (write) {
+            *write = 1;
+        }
+        goto cleanup;
     }
 
     /* check read */
