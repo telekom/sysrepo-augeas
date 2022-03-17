@@ -17,11 +17,8 @@ else
     SYSREPOCTL=`command -v sysrepoctl`
 fi
 
-# install augeas DS plugin if not already
-AUG_DS_PLUGIN=`$SYSREPOCTL -L | grep "augeas DS"`
-if [ -z "$AUG_DS_PLUGIN" ]; then
-    $SYSREPOCTL -P "$BINARY_DIR/srds_augeas.so"
-fi
+# install augeas DS plugin
+$SYSREPOCTL -P "$BINARY_DIR/srds_augeas.so"
 
 # get current modules
 SCTL_MODULES=`$SYSREPOCTL -l`
