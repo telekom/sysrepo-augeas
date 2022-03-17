@@ -176,11 +176,6 @@ target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
 target_link_libraries(ay_startup ${SYSREPO_LIBRARIES})
 include_directories(${SYSREPO_INCLUDE_DIRS})
 
-# selinux
-find_package(SELinux REQUIRED)
-target_link_libraries(augyang ${SELINUX_LIBRARIES})
-include_directories(${SELINUX_INCLUDE_DIRS})
-
 # augeas external project
 set(AUGEAS_DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas "${AUGEAS_DIR}" 2> /dev/null || true)
 set(GNULIB_DOWNLOAD_COMMAND git clone https://git.savannah.gnu.org/git/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
@@ -195,6 +190,11 @@ add_dependencies(augyang augeas_ext)
 target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
 target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
 target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
+
+# selinux (must be last)
+find_package(SELinux REQUIRED)
+target_link_libraries(augyang ${SELINUX_LIBRARIES})
+include_directories(${SELINUX_INCLUDE_DIRS})
 
 # generate files
 configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
