@@ -135,7 +135,7 @@ diff_file(const char *file1, const char *file2, char **output)
         buf[r] = '\0';
 
         *output = realloc(*output, out_len + r + 1);
-        snprintf((*output) + out_len, r, buf);
+        snprintf((*output) + out_len, r, "%s", buf);
         out_len += r;
     }
     (*output)[out_len] = '\0';
