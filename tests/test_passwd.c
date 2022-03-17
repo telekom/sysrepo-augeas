@@ -30,10 +30,12 @@
 #include <libyang/libyang.h>
 #include <sysrepo/plugins_datastore.h>
 
+#define AUG_TEST_MODULE "passwd"
+
 static int
 setup_f(void **state)
 {
-    return tsetup_glob(state, "passwd", &srpds__, AUG_TEST_INPUT_FILES);
+    return tsetup_glob(state, AUG_TEST_MODULE, &srpds__, AUG_TEST_INPUT_FILES);
 }
 
 static void
@@ -46,8 +48,8 @@ test_load(void **state)
     lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
 
     assert_string_equal(str,
-            "<passwd xmlns=\"aug:passwd\">\n"
-            "  <config-file>" AUG_CONFIG_FILES_DIR "/passwd</config-file>\n"
+            "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <entry>\n"
@@ -187,7 +189,7 @@ test_load(void **state)
             "      <shell>/bin/bash</shell>\n"
             "    </nisuserplus>\n"
             "  </config-entries>\n"
-            "</passwd>\n");
+            "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
 

@@ -30,10 +30,12 @@
 #include <libyang/libyang.h>
 #include <sysrepo/plugins_datastore.h>
 
+#define AUG_TEST_MODULE "ntp"
+
 static int
 setup_f(void **state)
 {
-    return tsetup_glob(state, "ntp", &srpds__, AUG_TEST_INPUT_FILES);
+    return tsetup_glob(state, AUG_TEST_MODULE, &srpds__, AUG_TEST_INPUT_FILES);
 }
 
 static void
@@ -46,8 +48,8 @@ test_load(void **state)
     lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
 
     assert_string_equal(str,
-            "<ntp xmlns=\"aug:ntp\">\n"
-            "  <config-file>" AUG_CONFIG_FILES_DIR "/ntp</config-file>\n"
+            "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <server>\n"
@@ -209,7 +211,7 @@ test_load(void **state)
             "    <_id>18</_id>\n"
             "    <revoke/>\n"       /* no value cause of weird lens with empty label */
             "  </config-entries>\n"
-            "</ntp>\n");
+            "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
 

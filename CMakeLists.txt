@@ -87,7 +87,7 @@ else()
     option(ENABLE_TESTS "Build tests" OFF)
     option(ENABLE_VALGRIND_TESTS "Build tests with valgrind" OFF)
 endif()
-set(SUPPORTED_LENSES "cron dhclient dnsmasq iptables ntp ntpd passwd postfix_sasl_smtpd simplevars"
+set(SUPPORTED_LENSES "cron dhclient dnsmasq iptables ntp ntpd pam passwd postfix_sasl_smtpd simplevars"
         CACHE STRING "Space-separated list of Augeas lenses to be supported in sysrepo, by default all of them")
 option(INSTALL_MODULES "Install supported Augeas lens YANG modules into sysrepo" ON)
 set(YANG_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/yang/modules/augyang" CACHE STRING "Directory where to copy the generated YANG modules to")

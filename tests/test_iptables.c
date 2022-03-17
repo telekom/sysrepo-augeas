@@ -30,10 +30,12 @@
 #include <libyang/libyang.h>
 #include <sysrepo/plugins_datastore.h>
 
+#define AUG_TEST_MODULE "iptables"
+
 static int
 setup_f(void **state)
 {
-    return tsetup_glob(state, "iptables", &srpds__, AUG_TEST_INPUT_FILES);
+    return tsetup_glob(state, AUG_TEST_MODULE, &srpds__, AUG_TEST_INPUT_FILES);
 }
 
 static void
@@ -46,8 +48,8 @@ test_load(void **state)
     lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
 
     assert_string_equal(str,
-            "<iptables xmlns=\"aug:iptables\">\n"
-            "  <config-file>" AUG_CONFIG_FILES_DIR "/iptables</config-file>\n"
+            "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <table>\n"
@@ -262,7 +264,7 @@ test_load(void **state)
             "      </config-entries>\n"
             "    </table>\n"
             "  </config-entries>\n"
-            "</iptables>\n");
+            "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
 

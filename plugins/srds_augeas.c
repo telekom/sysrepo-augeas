@@ -61,7 +61,6 @@ enum augds_ext_node_type {
 
 enum augds_diff_op {
     AUGDS_OP_UNKNOWN = 0,
-    AUGDS_OP_CREATE,
     AUGDS_OP_INSERT,
     AUGDS_OP_DELETE,
     AUGDS_OP_REPLACE,
@@ -908,7 +907,7 @@ augds_diff_str2op(const char *str)
     switch (str[0]) {
     case 'c':
         assert(!strcmp(str, "create"));
-        return AUGDS_OP_CREATE;
+        return AUGDS_OP_INSERT;
     case 'd':
         assert(!strcmp(str, "delete"));
         return AUGDS_OP_DELETE;
@@ -947,10 +946,8 @@ augds_diff_get_op(const struct lyd_node *diff_node, enum augds_diff_op parent_op
     }
 
     if (!op) {
-        /* inherit OP, but not insert nor move */
-        if (parent_op == AUGDS_OP_INSERT) {
-            op = AUGDS_OP_CREATE;
-        } else if (parent_op == AUGDS_OP_MOVE) {
+        /* inherit OP, but not move */
+        if (parent_op == AUGDS_OP_MOVE) {
             op = AUGDS_OP_NONE;
         } else {
             op = parent_op;
@@ -958,16 +955,38 @@ augds_diff_get_op(const struct lyd_node *diff_node, enum augds_diff_op parent_op
     }
 
     sparent = lysc_data_parent(diff_node->schema);
-    if (lysc_is_userordered(sparent) && (parent_op == AUGDS_OP_CREATE) && (op == AUGDS_OP_CREATE)) {
-        /* special create OP for children of user-ordered lists */
-        op = AUGDS_OP_INSERT;
-    } else if (lysc_is_userordered(sparent) && (parent_op == AUGDS_OP_REPLACE) && (op == AUGDS_OP_REPLACE)) {
-        /* special move OP for children of user-ordered lists */
+    if ((op == AUGDS_OP_REPLACE) && ((lysc_is_userordered(sparent) && (parent_op == AUGDS_OP_REPLACE)) ||
+            ((diff_node->schema->nodetype == LYS_LEAFLIST) && lysc_is_userordered(diff_node->schema)))) {
+        /* special move OP for children of user-ordered lists or user-ordered leaf-lists */
         op = AUGDS_OP_MOVE;
     }
 
     assert(op);
     return op;
+}
+
+/**
+ * @brief Get value of a term node. It is NULL for empty types.
+ *
+ * @param[in] node Term node to read from.
+ * @return Node value.
+ */
+static const char *
+augds_get_term_value(const struct lyd_node *node)
+{
+    const char *val;
+
+    if (!node || !(node->schema->nodetype & LYD_NODE_TERM)) {
+        return NULL;
+    }
+
+    if (((struct lyd_node_term *)node)->value.realtype->basetype == LY_TYPE_EMPTY) {
+        val = NULL;
+    } else {
+        val = lyd_get_value(node);
+    }
+
+    return val;
 }
 
 /**
@@ -1024,11 +1043,11 @@ augds_yang2aug_value(const struct lyd_node *diff_node, const struct lyd_node *di
                 AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_data), rc, cleanup);
             }
         }
-        *value = lyd_get_value(cont_child);
+        *value = augds_get_term_value(cont_child);
     } else {
         /* just get the value of the term node */
         assert(diff_node->schema->nodetype & LYD_NODE_TERM);
-        *value = lyd_get_value(diff_node);
+        *value = augds_get_term_value(diff_node);
     }
 
     if (diff_node2) {
@@ -1055,6 +1074,7 @@ augds_yang2aug_label_index(const struct lyd_node *diff_node, const char *aug_lab
         uint32_t *aug_index)
 {
     int rc = SR_ERR_OK, len;
+    const struct lysc_node_leaf *sleaf = NULL;
     struct lyd_node *data_node;
     struct ly_set *set = NULL;
     uint32_t i;
@@ -1065,6 +1085,17 @@ augds_yang2aug_label_index(const struct lyd_node *diff_node, const char *aug_lab
     assert(diff_node->schema->nodetype & (LYS_CONTAINER | LYD_NODE_TERM));
     assert((diff_node->schema->nodetype != LYS_CONTAINER) || !aug_label ||
             lysc_node_child(diff_node->schema)->flags & LYS_MAND_TRUE);
+
+    if (diff_node->schema->nodetype == LYD_NODE_TERM) {
+        sleaf = (struct lysc_node_leaf *)diff_node->schema;
+    } else if ((diff_node->schema->nodetype == LYS_CONTAINER) && aug_label) {
+        sleaf = (struct lysc_node_leaf *)lysc_node_child(diff_node->schema);
+        assert(sleaf->nodetype == LYS_LEAF);
+    }
+    if (sleaf && (sleaf->type->basetype == LY_TYPE_UINT64)) {
+        /* sequential Augeas type, has no index */
+        goto cleanup;
+    }
 
     /* get the node in data */
     path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
@@ -1221,7 +1252,7 @@ augds_yang2aug_path(const struct lyd_node *diff_node, const char *parent_aug_pat
                 } else {
                     lyd_find_path(lyd_parent(diff_node), value_path, 0, diff_node2);
                 }
-                *aug_value = lyd_get_value(*diff_node2);
+                *aug_value = augds_get_term_value(*diff_node2);
                 break;
             }
         }
@@ -1247,24 +1278,54 @@ cleanup:
  * @brief Get Augeas anchor for a diff node in YANG data.
  *
  * @param[in] diff_data_node Diff node from diff data.
- * @param[out] anchor YANG data anchor, NULL if the only item.
+ * @param[out] anchor YANG data anchor for Augeas operations, NULL if the only item.
  * @param[out] aug_before Whether the new Augeas label should be inserted before or after @p anchor.
  * @return SR error code.
  */
 static int
 augds_yang2aug_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anchor, int *aug_before)
 {
-    /* go to the parent list instance */
-    diff_data_node = lyd_parent(diff_data_node);
+    const char *data_path;
+    int anchor_child = 0;
 
-    if (!diff_data_node->prev->next || lysc_is_key(diff_data_node->prev->schema)) {
-        /* first instance */
-        *anchor = lyd_child_no_keys(diff_data_node->next);
+    assert(lyd_parent(diff_data_node));
+
+    if (lysc_is_userordered(lyd_parent(diff_data_node)->schema)) {
+        /* nodes with data-paths are nested in the user-ordered lists */
+        diff_data_node = lyd_parent(diff_data_node);
+        anchor_child = 1;
+    } else {
+        augds_get_ext_path(diff_data_node->schema, &data_path, NULL);
+        if (!data_path) {
+            /* some uninteresting implicit node, does not need an anchor */
+            *anchor = NULL;
+            *aug_before = 0;
+            return SR_ERR_OK;
+        }
+    }
+
+    if (diff_data_node->prev->next && (!anchor_child || (diff_data_node->prev->schema == diff_data_node->schema))) {
+        /* previous instance */
+        *anchor = anchor_child ? lyd_child_no_keys(diff_data_node->prev) : diff_data_node->prev;
+        *aug_before = 0;
+
+        augds_get_ext_path((*anchor)->schema, &data_path, NULL);
+        if (data_path) {
+            /* okay, we can use it as an anchor */
+            return SR_ERR_OK;
+        }
+
+        /* use another anchor, there is no (suitable) preceding anchor */
+    }
+
+    if (diff_data_node->next && (!anchor_child || (diff_data_node->next->schema == diff_data_node->schema))) {
+        /* next instance */
+        *anchor = anchor_child ? lyd_child_no_keys(diff_data_node->next) : diff_data_node->next;
         *aug_before = 1;
     } else {
-        /* instance with a preceding node */
-        *anchor = lyd_child_no_keys(diff_data_node->prev);
-        *aug_before = 0;
+        /* the only instance */
+        *anchor = NULL;
+        *aug_before = 1;
     }
 
     return SR_ERR_OK;
@@ -1350,7 +1411,8 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
         int aug_before, const char *aug_value, int aug_moved_back, int *applied_r)
 {
     int rc = SR_ERR_OK;
-    char *aug_label = NULL, *aug_path2 = NULL;
+    char *aug_label = NULL, *aug_path2 = NULL, *anchor_d = NULL, *path_d = NULL;
+    const char *val;
 
     if (applied_r) {
         *applied_r = 0;
@@ -1359,6 +1421,26 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
     if (!aug_path) {
         /* nothing to do */
         goto cleanup;
+    }
+
+    /* relative paths starting with numbers are not interpreted properly, use full absolute path instead */
+    if (isdigit(aug_path[0])) {
+        if (aug_get(aug, "/augeas/context", &val) != 1) {
+            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+        }
+        if (asprintf(&path_d, "%s/%s", val, aug_path) == -1) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
+        aug_path = path_d;
+    }
+    if (aug_path_anchor && isdigit(aug_path_anchor[0])) {
+        if (aug_get(aug, "/augeas/context", &val) != 1) {
+            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+        }
+        if (asprintf(&anchor_d, "%s/%s", val, aug_path_anchor) == -1) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
+        aug_path_anchor = anchor_d;
     }
 
     switch (op) {
@@ -1376,12 +1458,6 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
         } /* else is the only instance */
 
         /* set its value */
-        if (aug_set(aug, aug_path, aug_value) == -1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-        }
-        break;
-    case AUGDS_OP_CREATE:
-        /* set the augeas data, the label must not exist yet */
         if (aug_set(aug, aug_path, aug_value) == -1) {
             AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
         }
@@ -1432,6 +1508,8 @@ augds_yang2aug_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_pa
     }
 
 cleanup:
+    free(path_d);
+    free(anchor_d);
     free(aug_label);
     free(aug_path2);
     return rc;
@@ -1472,7 +1550,7 @@ cleanup:
  *
  * @param[in] diff_node Diff node.
  * @param[in] data_sibling Sibling of @p diff_node in diff data.
- * @param[out] data_anchor Anchor in data.
+ * @param[out] data_anchor YANG anchor in YANG data, NULL if none.
  * @param[out] before Relative position of node to anchor.
  * @return SR error code.
  */
@@ -1494,9 +1572,19 @@ augds_yang2aug_find_anchor(const struct lyd_node *diff_node, const struct lyd_no
     }
     if (!meta) {
         /* parent was created with all these nested user-ord list instances, they are in the correct order */
-        assert(data_sibling->prev->next);
-        *data_anchor = data_sibling->prev;
-        *before = 0;
+        if (data_sibling->prev->next) {
+            /* preceding instance */
+            *data_anchor = data_sibling->prev;
+            *before = 0;
+        } else if (data_sibling->next) {
+            /* following instance */
+            *data_anchor = data_sibling->next;
+            *before = 1;
+        } else {
+            /* the only instance */
+            *data_anchor = NULL;
+            *before = 0;
+        }
         goto cleanup;
     }
 
@@ -1572,7 +1660,6 @@ augds_yang2aug_diff_data_update(const struct lyd_node *diff_node, enum augds_dif
     assert(!diff_data_node || (op == AUGDS_OP_INSERT));
 
     switch (op) {
-    case AUGDS_OP_CREATE:
     case AUGDS_OP_INSERT:
         /* find our parent, cannot be top-level */
         assert(lyd_parent(diff_node));
@@ -1581,8 +1668,7 @@ augds_yang2aug_diff_data_update(const struct lyd_node *diff_node, enum augds_dif
         }
 
         /* duplicate the tree and append it to diff_data directly */
-        if (lyd_dup_single(diff_node, (struct lyd_node_inner *)data_parent, LYD_DUP_RECURSIVE | LYD_DUP_NO_META,
-                &data_node)) {
+        if (lyd_dup_single(diff_node, (struct lyd_node_inner *)data_parent, LYD_DUP_NO_META, &data_node)) {
             AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_node), rc, cleanup);
         }
 
@@ -1593,14 +1679,16 @@ augds_yang2aug_diff_data_update(const struct lyd_node *diff_node, enum augds_dif
                 goto cleanup;
             }
 
-            /* move the instance */
-            if (before) {
-                if (lyd_insert_before(anchor, data_node)) {
-                    AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
-                }
-            } else {
-                if (lyd_insert_after(anchor, data_node)) {
-                    AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+            if (anchor) {
+                /* move the instance */
+                if (before) {
+                    if (lyd_insert_before(anchor, data_node)) {
+                        AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+                    }
+                } else {
+                    if (lyd_insert_after(anchor, data_node)) {
+                        AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+                    }
                 }
             }
         }
@@ -1628,14 +1716,16 @@ augds_yang2aug_diff_data_update(const struct lyd_node *diff_node, enum augds_dif
                 goto cleanup;
             }
 
-            /* move the instance */
-            if (before) {
-                if (lyd_insert_before(anchor, data_node)) {
-                    AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
-                }
-            } else {
-                if (lyd_insert_after(anchor, data_node)) {
-                    AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+            if (anchor) {
+                /* move the instance */
+                if (before) {
+                    if (lyd_insert_before(anchor, data_node)) {
+                        AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+                    }
+                } else {
+                    if (lyd_insert_after(anchor, data_node)) {
+                        AUG_LOG_ERRLY_GOTO(LYD_CTX(data_node), rc, cleanup);
+                    }
                 }
             }
         } else {
@@ -1690,7 +1780,6 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
     cur_op = augds_diff_get_op(diff_node, parent_op);
 
     switch (cur_op) {
-    case AUGDS_OP_CREATE:
     case AUGDS_OP_REPLACE:
     case AUGDS_OP_NONE:
         /* update diff data by applying this diff BEFORE Augeas path (index) is generated */
@@ -1774,8 +1863,8 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
         if (cur_op2 && (cur_op2 != cur_op)) {
             /* different operation must be applied */
             switch (cur_op2) {
-            case AUGDS_OP_CREATE:
-                /* creating Augeas value simply means setting it */
+            case AUGDS_OP_INSERT:
+                /* inserting Augeas value simply means setting it */
                 cur_op2 = AUGDS_OP_REPLACE;
                 break;
             case AUGDS_OP_REPLACE:
@@ -1787,7 +1876,6 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
                 cur_op2 = AUGDS_OP_REPLACE;
                 aug_value = NULL;
                 break;
-            case AUGDS_OP_INSERT:
             case AUGDS_OP_MOVE:
             case AUGDS_OP_UNKNOWN:
                 AUG_LOG_ERRINT_GOTO(rc, cleanup);

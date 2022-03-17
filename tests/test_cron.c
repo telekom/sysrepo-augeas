@@ -30,10 +30,12 @@
 #include <libyang/libyang.h>
 #include <sysrepo/plugins_datastore.h>
 
+#define AUG_TEST_MODULE "cron"
+
 static int
 setup_f(void **state)
 {
-    return tsetup_glob(state, "cron", &srpds__, AUG_TEST_INPUT_FILES);
+    return tsetup_glob(state, AUG_TEST_MODULE, &srpds__, AUG_TEST_INPUT_FILES);
 }
 
 static void
@@ -46,8 +48,8 @@ test_load(void **state)
     lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
 
     assert_string_equal(str,
-            "<cron xmlns=\"aug:cron\">\n"
-            "  <config-file>" AUG_CONFIG_FILES_DIR "/cron</config-file>\n"
+            "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
             "    <shellvar>\n"
@@ -126,7 +128,7 @@ test_load(void **state)
             "      <user>foo</user>\n"
             "    </entry>\n"
             "  </config-entries>\n"
-            "</cron>\n");
+            "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
 

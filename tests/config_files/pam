@@ -1,0 +1,6 @@
+session  required        pam_limits.so
+auth     required        pam_unix.so     try_first_pass quiet
+session  optional        common-auth
+account  optional        pam_env.so      revoke force
+session  include         pam_systemd.so  onerr=succeed sense=allow
+password include         common-password
