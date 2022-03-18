@@ -39,12 +39,12 @@ module xendconfsxp {
             augex:data-path "item";
           }
           list array_list {
-            key "_id";
+            key "_r-id";
             ordered-by user;
-            leaf _id {
+            leaf _r-id {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Implicitly generated list key to maintain the recursive augeas data.";
             }
             container array {
               augex:data-path "array";
@@ -61,7 +61,7 @@ module xendconfsxp {
                   mandatory true;
                   leaf _array-ref {
                     type leafref {
-                      path "../../../../array_list/_id";
+                      path "../../../../array_list/_r-id";
                     }
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";

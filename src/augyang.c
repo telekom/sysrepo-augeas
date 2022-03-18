@@ -2905,7 +2905,7 @@ ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
     assert(iter);
     ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
-    ly_print(ctx->out, "/_id\";\n");
+    ly_print(ctx->out, "/_r-id\";\n");
     ay_print_yang_nesting_end(ctx);
 
     ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
@@ -3018,6 +3018,7 @@ static int
 ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret = 0;
+    ly_bool is_lrec;
 
     if (node->parent->type == YN_ROOT) {
         ay_print_yang_list_files(ctx, node);
@@ -3029,15 +3030,30 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin2(ctx, node->id);
 
-    ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
+    is_lrec = node->snode && (node->snode->lens->tag == L_REC);
+    if (is_lrec) {
+        ly_print(ctx->out, "%*skey \"_r-id\";\n", ctx->space, "");
+    } else {
+        ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
+    }
     ay_print_yang_minelements(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
-    ly_print(ctx->out, "%*sleaf _id", ctx->space, "");
+    if (is_lrec) {
+        ly_print(ctx->out, "%*sleaf _r-id", ctx->space, "");
+    } else {
+        ly_print(ctx->out, "%*sleaf _id", ctx->space, "");
+    }
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
     ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
-    ly_print(ctx->out, "%*s\"Implicitly generated list key to maintain the order of the augeas data.\";\n",
-            ctx->space + SPACE_INDENT, "");
+
+    if (is_lrec) {
+        ly_print(ctx->out, "%*s\"Implicitly generated list key to maintain the recursive augeas data.\";\n",
+                ctx->space + SPACE_INDENT, "");
+    } else {
+        ly_print(ctx->out, "%*s\"Implicitly generated list key to maintain the order of the augeas data.\";\n",
+                ctx->space + SPACE_INDENT, "");
+    }
     ay_print_yang_nesting_end(ctx);
 
     ret = ay_print_yang_data_path(ctx, node);
