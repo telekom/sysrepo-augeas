@@ -40,7 +40,6 @@ module xendconfsxp {
           }
           list array_list {
             key "_r-id";
-            ordered-by user;
             leaf _r-id {
               type uint64;
               description

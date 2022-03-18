@@ -3037,10 +3037,10 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
     }
     ay_print_yang_minelements(ctx, node);
-    ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     if (is_lrec) {
         ly_print(ctx->out, "%*sleaf _r-id", ctx->space, "");
     } else {
+        ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
         ly_print(ctx->out, "%*sleaf _id", ctx->space, "");
     }
     ay_print_yang_nesting_begin(ctx);
