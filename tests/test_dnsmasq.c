@@ -631,6 +631,8 @@ test_store_modify(void **state)
             LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='63']/entry/sto_to_eol",
             "192.168.0.10-192.168.0.40", LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='71']/entry/entry_re",
+            "hname", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -648,7 +650,11 @@ test_store_modify(void **state)
             "80c80\n"
             "< alias=192.168.0.10-192.168.0.40,10.0.0.0,255.255.255.0\n"
             "---\n"
-            "> alias=192.168.0.10-192.168.0.40"));
+            "> alias=192.168.0.10-192.168.0.40\n"
+            "91c91\n"
+            "< cname=bertand,bert\n"
+            "---\n"
+            "> hname=bertand,bert"));
 }
 
 static void

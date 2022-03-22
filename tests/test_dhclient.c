@@ -406,6 +406,11 @@ test_store_modify(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/lease/config-entries[_id='12']/"
             "expire/month", "6", LYD_NEW_PATH_UPDATE, NULL));
 
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/send/word/word", "fqdn.qdn",
+            LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/send/word/sto_to_spc_noeval",
+            "\"grosse.fuge.com.\"", LYD_NEW_PATH_UPDATE, NULL));
+
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
 
@@ -415,11 +420,16 @@ test_store_modify(void **state)
             "< \tsubnet-mask,\n"
             "---\n"
             "> \tsubnet,\n"
-            "25c25\n"
+            "13,14c13\n"
+            "< \tfqdn.fqdn\n"
+            "< \t  \"grosse.fugue.com.\";\n"
+            "---\n"
+            "> \tfqdn.qdn \"grosse.fuge.com.\";\n"
+            "25c24\n"
             "<    request subnet-mask, broadcast-address, time-offset, routers,\n"
             "---\n"
             ">    request subnet, broadcast-address, time-offset, routers,\n"
-            "48c48\n"
+            "48c47\n"
             "<   expire 2 2000/1/12 00:00:01;\n"
             "---\n"
             ">   expire 2 2000/6/12 00:00:01;"));

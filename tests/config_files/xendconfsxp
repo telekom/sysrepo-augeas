@@ -1,0 +1,12 @@
+( key value )( key2 value2 )
+(key (listitem1) )
+(key ((foo foo foo (bar bar bar))))
+(aaa ((bbb ccc ddd) (eee fff)))
+(foo ((foo foo 'foo') (unix none)))
+(xen-api-server ((9363 pam '^localhost$ example\\.com$') (unix none)))
+# -*- sh -*-
+#foo
+#bar
+
+
+(foo bar)

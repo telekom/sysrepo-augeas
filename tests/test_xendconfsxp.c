@@ -1,0 +1,301 @@
+/**
+ * @file test_xendconfsxp.c
+ * @author Michal Vasko <mvasko@cesnet.cz>
+ * @brief xendconfsxp SR DS plugin test
+ *
+ * @copyright
+ * Copyright (c) 2022 Deutsche Telekom AG.
+ * Copyright (c) 2022 CESNET, z.s.p.o.
+ *
+ * This source code is licensed under BSD 3-Clause License (the "License").
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://opensource.org/licenses/BSD-3-Clause
+ */
+
+#include "tconfig.h"
+
+/* augeas SR DS plugin */
+#define AUG_TEST_INPUT_FILES AUG_CONFIG_FILES_DIR "/xendconfsxp"
+#include "srds_augeas.c"
+
+#include <assert.h>
+#include <dlfcn.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <unistd.h>
+
+#include <cmocka.h>
+#include <libyang/libyang.h>
+#include <sysrepo/plugins_datastore.h>
+
+#define AUG_TEST_MODULE "xendconfsxp"
+
+static int
+setup_f(void **state)
+{
+    return tsetup_glob(state, AUG_TEST_MODULE, &srpds__, AUG_TEST_INPUT_FILES);
+}
+
+static void
+test_load(void **state)
+{
+    struct tstate *st = (struct tstate *)*state;
+    char *str;
+
+    assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
+    lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
+
+    assert_string_equal(str,
+            "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
+            "  <config-entries>\n"
+            "    <_id>1</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>key</var_name>\n"
+            "      <item>value</item>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>2</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>key2</var_name>\n"
+            "      <item>value2</item>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>3</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>key</var_name>\n"
+            "      <array_list>\n"
+            "        <_r-id>1</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>listitem1</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>4</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>key</var_name>\n"
+            "      <array_list>\n"
+            "        <_r-id>1</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <_array-ref>2</_array-ref>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>2</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>foo</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>foo</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>3</_id>\n"
+            "            <item>foo</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>4</_id>\n"
+            "            <_array-ref>3</_array-ref>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>3</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>bar</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>bar</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>3</_id>\n"
+            "            <item>bar</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>5</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>aaa</var_name>\n"
+            "      <array_list>\n"
+            "        <_r-id>1</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <_array-ref>2</_array-ref>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <_array-ref>3</_array-ref>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>2</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>bbb</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>ccc</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>3</_id>\n"
+            "            <item>ddd</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>3</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>eee</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>fff</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>6</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>foo</var_name>\n"
+            "      <array_list>\n"
+            "        <_r-id>1</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <_array-ref>2</_array-ref>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <_array-ref>3</_array-ref>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>2</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>foo</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>foo</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>3</_id>\n"
+            "            <item>'foo'</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>3</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>unix</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>none</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>7</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>xen-api-server</var_name>\n"
+            "      <array_list>\n"
+            "        <_r-id>1</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <_array-ref>2</_array-ref>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <_array-ref>3</_array-ref>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>2</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>9363</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>pam</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>3</_id>\n"
+            "            <item>'^localhost$ example\\\\.com$'</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "      <array_list>\n"
+            "        <_r-id>3</_r-id>\n"
+            "        <array>\n"
+            "          <config-entries>\n"
+            "            <_id>1</_id>\n"
+            "            <item>unix</item>\n"
+            "          </config-entries>\n"
+            "          <config-entries>\n"
+            "            <_id>2</_id>\n"
+            "            <item>none</item>\n"
+            "          </config-entries>\n"
+            "        </array>\n"
+            "      </array_list>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "  <config-entries>\n"
+            "    <_id>8</_id>\n"
+            "    <sexpr>\n"
+            "      <var_name>foo</var_name>\n"
+            "      <item>bar</item>\n"
+            "    </sexpr>\n"
+            "  </config-entries>\n"
+            "</" AUG_TEST_MODULE ">\n");
+    free(str);
+}
+
+int
+main(void)
+{
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test_teardown(test_load, tteardown),
+    };
+
+    return cmocka_run_group_tests(tests, setup_f, tteardown_glob);
+}
