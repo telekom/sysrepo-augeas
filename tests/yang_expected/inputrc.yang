@@ -1,0 +1,186 @@
+module inputrc {
+  namespace "aug:inputrc";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Inputrc";
+
+  grouping entry {
+    leaf mapping {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+      }
+      augex:data-path "mapping";
+    }
+  }
+  list inputrc {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch_config-entries {
+        mandatory true;
+        list if_list {
+          key "_r-id";
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          container if {
+            augex:data-path "@if";
+            augex:value-yang-path "space_in";
+            presence "Config entry.";
+            leaf space_in {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
+            }
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch_config-entries {
+                mandatory true;
+                leaf _if-ref {
+                  type leafref {
+                    path "../../../../if_list/_r-id";
+                  }
+                  description
+                    "Implicitly generated leaf to maintain recursive augeas data.";
+                }
+                container variable {
+                  augex:data-path "$$";
+                  augex:value-yang-path "word";
+                  presence "Type of config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+                    }
+                  }
+                  leaf word {
+                    mandatory true;
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                  }
+                }
+                container entry {
+                  augex:data-path "entry";
+                  augex:value-yang-path "value";
+                  presence "Type of config entry.";
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[^\" \t\n]+";
+                    }
+                  }
+                  uses entry;
+                }
+              }
+            }
+            container else {
+              augex:data-path "@else";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch_config-entries {
+                  mandatory true;
+                  leaf _if-ref {
+                    type leafref {
+                      path "../../../../../if_list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container variable {
+                    augex:data-path "$$";
+                    augex:value-yang-path "word";
+                    presence "Type of config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+                      }
+                    }
+                    leaf word {
+                      mandatory true;
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                      }
+                    }
+                  }
+                  container entry {
+                    augex:data-path "entry";
+                    augex:value-yang-path "value";
+                    presence "Type of config entry.";
+                    leaf value {
+                      mandatory true;
+                      type string {
+                        pattern "[^\" \t\n]+";
+                      }
+                    }
+                    uses entry;
+                  }
+                }
+              }
+            }
+          }
+        }
+        container variable {
+          augex:data-path "$$";
+          augex:value-yang-path "word";
+          presence "Type of config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+            }
+          }
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+        }
+        container entry {
+          augex:data-path "entry";
+          augex:value-yang-path "value";
+          presence "Type of config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\" \t\n]+";
+            }
+          }
+          uses entry;
+        }
+      }
+    }
+  }
+}
