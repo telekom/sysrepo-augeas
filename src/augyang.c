@@ -239,6 +239,7 @@ enum yang_type {
     YN_CONTAINER,       /**< Yang statement "container". */
     YN_KEY,             /**< The node is the key in the yang "list" or first node in special container. */
     YN_VALUE,           /**< Yang statement "leaf". The node was generated to store the augeas node value. */
+    YN_USES,            /**< Yang statement "uses". */
     YN_GROUPING,        /**< Yang statement "grouping". */
     YN_REC,             /**< A special type of node that doesn't print in yang. Contains a reference to L_REC lense. */
     YN_ROOT             /**< A special type that is only one in the ynode tree. Indicates the root of the entire tree.
@@ -304,8 +305,7 @@ struct ay_ynode {
                                          Can be NULL. */
     const struct ay_lnode *choice;  /**< Pointer to the lnode with lense tag L_UNION.
                                          Set if the node is under the influence of the union operator. */
-    uint32_t uses;                  /**< Numeric identifier to ynode of type YN_GROUPING.
-                                         If set ynode contains uses-stmt. */
+    uint32_t uses;                  /**< Numeric identifier to ynode of type YN_GROUPING. */
     uint32_t flags;                 /**< [ynode flags](@ref ynodeflags) */
     uint32_t id;                    /**< Numeric identifier of ynode node. */
 };
@@ -2825,33 +2825,6 @@ ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Print yang uses-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] node Node for which the uses-stmt is to be printed.
- */
-static int
-ay_print_yang_uses(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    int ret = 0;
-    struct ay_ynode *iter;
-
-    if (node->uses) {
-        ly_print(ctx->out, "%*suses ", ctx->space, "");
-        for (iter = ctx->tree->child; iter; iter = iter->next) {
-            if (iter->id == node->uses) {
-                break;
-            }
-        }
-        assert(iter);
-        ret = ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
-        ly_print(ctx->out, ";\n");
-    }
-
-    return ret;
-}
-
-/**
  * @brief Print yang leaf-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2942,6 +2915,31 @@ ay_print_yang_grouping(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
 
     ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
+ * @brief Print yang uses-stmt
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node printed as uses node.
+ */
+static int
+ay_print_yang_uses(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret;
+    struct ay_ynode *iter;
+
+    ly_print(ctx->out, "%*suses ", ctx->space, "");
+    for (iter = ctx->tree->child; iter; iter = iter->next) {
+        if (iter->id == node->uses) {
+            break;
+        }
+    }
+    assert(iter);
+    ret = ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
+    ly_print(ctx->out, ";\n");
 
     return ret;
 }
@@ -3068,8 +3066,6 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
-    ret = ay_print_yang_uses(ctx, node);
-    AY_CHECK_RET(ret);
 
     ay_print_yang_nesting_end(ctx);
 
@@ -3114,8 +3110,6 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_presence(ctx, node);
     ret = ay_print_yang_children(ctx, node);
-    AY_CHECK_RET(ret);
-    ret = ay_print_yang_uses(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
 
@@ -3162,6 +3156,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         break;
     case YN_GROUPING:
         ret = ay_print_yang_grouping(ctx, node);
+        break;
+    case YN_USES:
+        ret = ay_print_yang_uses(ctx, node);
         break;
     case YN_REC:
         ret = ay_print_yang_children(ctx, node);
@@ -3617,6 +3614,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     case YN_GROUPING:
         ly_print(ctx->out, "%*s ynode_type: YN_GROUPING", ctx->space, "");
+        break;
+    case YN_USES:
+        ly_print(ctx->out, "%*s ynode_type: YN_USES", ctx->space, "");
         break;
     case YN_REC:
         ly_print(ctx->out, "%*s ynode_type: YN_REC", ctx->space, "");
@@ -4300,7 +4300,7 @@ static uint64_t
 ay_ynode_rule_list_split(struct ay_ynode *node)
 {
     struct lens *label;
-    uint64_t count;
+    uint64_t count, uses_cnt;
     uint8_t grouping_present;
 
     label = AY_LABEL_LENS(node);
@@ -4313,12 +4313,13 @@ ay_ynode_rule_list_split(struct ay_ynode *node)
 
     if ((count = ay_lense_pattern_idents_count(label)) && (count > 1)) {
         grouping_present = node->child ? 1 : 0;
+        uses_cnt = grouping_present ? count : 0;
         /* What should happens: grouping will be inserted and for every identifier there will be one list.
          * But one list is already there (@p node is that list).
-         * So for grouping node (+1), first identifier in pattern (0), for every other identifiers in pattern (+n).
-         * And therefore:
+         * So for grouping node (+1), first identifier in pattern (0), for every other identifiers in pattern (+n) and
+         * every identifier has the 'uses' node.
          */
-        return grouping_present + (count - 1);
+        return grouping_present + (count - 1) + uses_cnt;
     } else {
         return 0;
     }
@@ -5336,7 +5337,7 @@ ay_delete_poor_container(struct ay_ynode *tree)
         cont = &tree[i];
         label = AY_LABEL_LENS(cont);
 
-        if (cont->uses || (cont->type != YN_CONTAINER)) {
+        if (cont->type != YN_CONTAINER) {
             continue;
         }
 
@@ -5571,29 +5572,39 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i, j;
     struct ay_ynode *iti, *itj, *grouping;
-    ly_bool contains_leafref;
+    ly_bool skip;
+    uint64_t grouping_id;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iti = &tree[i];
-        if (((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) || iti->uses || !iti->child) {
+        if (((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) || !iti->child) {
             continue;
         }
 
-        contains_leafref = 0;
-        for (j = 0; j < iti->descendants; j++) {
-            if (iti[j + 1].type == YN_LEAFREF) {
-                contains_leafref = 1;
+        /* Skip if node contains only YN_USES node. */
+        if ((iti->descendants == 1) && (iti->child->type == YN_USES)) {
+            continue;
+        }
+
+        skip = 0;
+        /* Skip if node contains leafref. */
+        for (itj = iti->child; itj; itj = itj->next) {
+            if (itj->type == YN_LEAFREF) {
+                skip = 1;
                 break;
             }
         }
-        if (contains_leafref) {
+        if (skip) {
             continue;
         }
 
         if ((grouping = ay_ynode_get_grouping(tree->child->next, iti->child, iti->descendants))) {
+            grouping_id = grouping->id;
             /* Grouping is already created. */
             ay_ynode_delete_subtree(tree, iti, 0);
-            iti->uses = grouping->id;
+            ay_ynode_insert_child(tree, iti);
+            iti->child->type = YN_USES;
+            iti->child->uses = grouping_id;
             continue;
         }
 
@@ -5614,18 +5625,25 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
                 grouping = iti->child;
                 grouping->type = YN_GROUPING;
                 grouping->snode = iti->snode;
-                iti->uses = grouping->id;
+                grouping_id = grouping->id;
                 iti = grouping;
             }
-            itj->uses = grouping->id;
+            ay_ynode_insert_child(tree, itj);
+            itj->child->type = YN_USES;
+            itj->child->uses = grouping_id;
         }
         if (grouping) {
+            iti = grouping->parent;
             if (!grouping->child->next) {
                 /* Choice is useless. */
                 grouping->child->choice = NULL;
             }
             /* Move created grouping to the place where are the other groupings. */
             ay_ynode_move_subtree_as_last_child(tree, tree, grouping);
+            /* Insert uses node. */
+            ay_ynode_insert_child(tree, iti);
+            iti->child->type = YN_USES;
+            iti->child->uses = grouping_id;
         }
     }
 
@@ -5671,7 +5689,7 @@ ay_ynode_get_nodedata(struct ay_ynode *node, uint64_t *data_count)
 static int
 ay_ynode_list_split(struct ay_ynode *tree)
 {
-    uint64_t idents_count, listdata_count, i, j;
+    uint64_t idents_count, listdata_count, i, j, grouping_id;
     struct ay_ynode *last, *grouping, *list, *list_new, *listdata;
 
     for (i = 1; i <= tree->descendants; i++) {
@@ -5695,14 +5713,19 @@ ay_ynode_list_split(struct ay_ynode *tree)
             grouping = listdata;
             grouping->type = YN_GROUPING;
             grouping->snode = grouping->parent->snode;
-            list->uses = grouping->id;
+            grouping_id = grouping->id;
 
             /* temporary insert grouping behind config-file list (also behind groupings) */
             last = ay_ynode_get_last(tree->child);
             ay_ynode_move_subtree_as_sibling(tree, last, grouping);
         } else if (grouping) {
-            list->uses = grouping->id;
+            grouping_id = grouping->id;
             ay_ynode_delete_subtree(tree, list, 0);
+        }
+        if (grouping) {
+            ay_ynode_insert_child(tree, list);
+            list->child->type = YN_USES;
+            list->child->uses = grouping_id;
         }
 
         list->flags &= ~AY_YNODE_MAND_MASK;
@@ -5715,7 +5738,11 @@ ay_ynode_list_split(struct ay_ynode *tree)
             ay_ynode_insert_sibling(tree, list);
             list_new = list->next;
             ay_ynode_copy_data(list_new, list);
-            list_new->uses = list->uses;
+            if (grouping) {
+                ay_ynode_insert_child(tree, list_new);
+                list_new->child->type = YN_USES;
+                list_new->child->uses = grouping_id;
+            }
         }
     }
 
