@@ -8,19 +8,6 @@ module ssh {
 
   augex:augeas-mod-name "Ssh";
 
-  grouping algorithms {
-    list config-entries {
-      key "_id";
-      min-elements 1;
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      uses commas_entry;
-    }
-  }
   grouping ch_send_env {
     choice ch_send_env {
       mandatory true;
@@ -71,27 +58,27 @@ module ssh {
       container macs {
         augex:data-path "MACs";
         presence "Type of config entry.";
-        uses algorithms;
+        uses commas_entry;
       }
       container ciphers {
         augex:data-path "Ciphers";
         presence "Type of config entry.";
-        uses algorithms;
+        uses commas_entry;
       }
       container HostKeyAlgorithms {
         augex:data-path "HostKeyAlgorithms";
         presence "Type of config entry.";
-        uses algorithms;
+        uses commas_entry;
       }
       container KexAlgorithms {
         augex:data-path "KexAlgorithms";
         presence "Type of config entry.";
-        uses algorithms;
+        uses commas_entry;
       }
       container pubkey_accepted_key_types {
         augex:data-path "PubkeyAcceptedKeyTypes";
         presence "Type of config entry.";
-        uses algorithms;
+        uses commas_entry;
       }
       container global_knownhosts_file {
         augex:data-path "GlobalKnownHostsFile";
@@ -158,23 +145,6 @@ module ssh {
       }
     }
   }
-  grouping commas_entry {
-    container commas_entry {
-      augex:data-path "$$";
-      augex:value-yang-path "value_to_comma";
-      presence "Config entry.";
-      leaf commas_entry {
-        mandatory true;
-        type uint64;
-      }
-      leaf value_to_comma {
-        mandatory true;
-        type string {
-          pattern "[^, \t\n=][^, \t\n]*";
-        }
-      }
-    }
-  }
   grouping remote_fw {
     container node {
       augex:data-path "$$";
@@ -190,6 +160,33 @@ module ssh {
         mandatory true;
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+    }
+  }
+  grouping commas_entry {
+    list config-entries {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container commas_entry {
+        augex:data-path "$$";
+        augex:value-yang-path "value_to_comma";
+        presence "Config entry.";
+        leaf commas_entry {
+          mandatory true;
+          type uint64;
+        }
+        leaf value_to_comma {
+          mandatory true;
+          type string {
+            pattern "[^, \t\n=][^, \t\n]*";
+          }
         }
       }
     }

@@ -260,6 +260,7 @@ enum yang_type {
 #define AY_YNODE_MAND_MASK      0x03    /**< Mask for mandatory-stmt. */
 #define AY_CHOICE_MAND_FALSE    0x04    /**< Choice statement must be false. */
 #define AY_VALUE_IN_CHOICE      0x08    /**< YN_VALUE of node must be in choice statement. */
+#define AY_GROUPING_CHILDREN    0x10    /**< The ay_ynode.uses only affects children. */
 /** @} ynodeflags */
 
 /**
@@ -2066,6 +2067,8 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, uint64_t *len)
     }
 }
 
+static int ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer);
+
 /**
  * @brief Evaluate the identifier for the node.
  *
@@ -2076,7 +2079,7 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, uint64_t *len)
  * @return 0 on success.
  */
 static int
-ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
+ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
 {
     int ret = 0;
     const char *str, *tmp;
@@ -2117,21 +2120,46 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
      */
 
     if (node->type == YN_GROUPING) {
-        str = ay_get_lense_name(ctx->mod, snode);
-        if (!str) {
-            assert(node->child);
-            ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
+        assert(node->child);
+        *buffer = 0;
+        str = NULL;
+        for (iter = node->child; iter; iter = iter->child) {
+            if ((iter->type == YN_USES) || (iter->type == YN_LEAFREF)) {
+                break;
+            }
+            if (iter->next || iter->choice) {
+                break;
+            }
+            if (iter->snode && (tmp = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
+                str = tmp;
+                break;
+            }
+            ret = ay_get_yang_ident(ctx, iter, opt, buffer);
             AY_CHECK_RET(ret);
-            if (!strcmp(buffer, "node")) {
-                str = "gr";
-            } else if (node->child->choice) {
-                memmove(buffer + 3, buffer, strlen(buffer) + 1);
-                memcpy(buffer, "ch_", 3);
-                str = buffer;
+            if (!strcmp(buffer, "config-entries") || !strcmp(buffer, "node")) {
+                *buffer = 0;
+                continue;
             } else {
-                str = buffer;
+                break;
             }
         }
+        if (!(*buffer) && !str) {
+            str = ay_get_lense_name(ctx->mod, snode);
+            if (!str) {
+                ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
+                AY_CHECK_RET(ret);
+                if (!strcmp(buffer, "node")) {
+                    str = "gr";
+                } else if (node->child->choice) {
+                    memmove(buffer + 3, buffer, strlen(buffer) + 1);
+                    memcpy(buffer, "ch_", 3);
+                    str = buffer;
+                }
+            }
+        } else if (!str) {
+            str = buffer;
+        }
+        assert(str);
     } else if (node->type == YN_LEAFREF) {
         assert(snode);
         for (iter = node->parent; iter; iter = iter->parent) {
@@ -2144,8 +2172,18 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, iter->child, opt, buffer);
         AY_CHECK_RET(ret);
         memmove(buffer + 1, buffer, strlen(buffer) + 1);
-        memcpy(buffer, "_", 1);
+        buffer[0] = '_';
         strcat(buffer, "-ref");
+        str = buffer;
+    } else if (node->type == YN_USES) {
+        for (iter = ctx->tree->child; iter; iter = iter->next) {
+            if (iter->id == node->uses) {
+                break;
+            }
+        }
+        assert(iter);
+        ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
+        AY_CHECK_RET(ret);
         str = buffer;
     } else if (node->type == YN_LIST) {
         if (node->snode && (node->snode->lens->tag == L_REC)) {
@@ -2240,6 +2278,70 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
 }
 
 /**
+ * @brief Evaluate unique identifier for a yang node.
+ *
+ * @param[in] ctx Current printing context.
+ * @param[in] node Node for which the identifier is to be derived.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] ident Buffer in which the obtained identifier is written.
+ * @return 0 on success.
+ */
+static int
+ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *ident)
+{
+    int ret = 0;
+    char siblings_ident[AY_MAX_IDENT_SIZE];
+    struct ay_ynode *iter;
+    uint32_t duplicates = 1;
+
+    ret = ay_get_yang_ident_(ctx, node, opt, ident);
+    AY_CHECK_RET(ret);
+
+    if (opt == AY_IDENT_DATA_PATH) {
+        /* Duplicate identifiers are not resolved in the data-path. */
+        return ret;
+    }
+
+    assert(node->parent);
+    if ((node->type == YN_KEY) && (opt == AY_IDENT_NODE_NAME)) {
+        /* The YN_KEY should has unique name. */
+        for (iter = node->next; iter; iter = iter->next) {
+            if ((iter->type == YN_LEAFREF) || (iter->type == YN_USES)) {
+                continue;
+            }
+            ret = ay_get_yang_ident_(ctx, iter, opt, siblings_ident);
+            AY_CHECK_RET(ret);
+            if (!strcmp(ident, siblings_ident)) {
+                strcpy(ident, "_id");
+                return ret;
+            }
+        }
+        return ret;
+    }
+
+    /* Make duplicate identifiers unique. */
+    opt = AY_IDENT_NODE_NAME;
+    for (iter = node->parent->child; iter; iter = iter->next) {
+        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || (iter->type == YN_USES)) {
+            continue;
+        } else if (iter == node) {
+            break;
+        }
+        ret = ay_get_yang_ident_(ctx, iter, opt, siblings_ident);
+        AY_CHECK_RET(ret);
+        if (!strcmp(ident, siblings_ident)) {
+            duplicates++;
+        }
+    }
+
+    if (duplicates > 1) {
+        sprintf(ident + strlen(ident),  "%" PRIu32, duplicates);
+    }
+
+    return ret;
+}
+
+/**
  * @brief Print node identifier according to the yang language.
  *
  * @param[in] ctx Context for printing.
@@ -2250,56 +2352,12 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
 static int
 ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt)
 {
-    int ret = 0;
+    int ret;
     char ident[AY_MAX_IDENT_SIZE];
-    char siblings_ident[AY_MAX_IDENT_SIZE];
-    struct ay_ynode *iter;
-    uint32_t duplicates = 1;
 
     ret = ay_get_yang_ident(ctx, node, opt, ident);
     AY_CHECK_RET(ret);
-
-    if (opt == AY_IDENT_DATA_PATH) {
-        /* Duplicate identifiers are not resolved in the data-path. */
-        ly_print(ctx->out, "%s", ident);
-        return ret;
-    }
-
-    assert(node->parent);
-    if ((node->type == YN_KEY) && (opt == AY_IDENT_NODE_NAME)) {
-        /* The YN_KEY should has unique name. */
-        for (iter = node->next; iter; iter = iter->next) {
-            ret = ay_get_yang_ident(ctx, iter, opt, siblings_ident);
-            AY_CHECK_RET(ret);
-            if (!strcmp(ident, siblings_ident)) {
-                ly_print(ctx->out, "_id");
-                return ret;
-            }
-        }
-        ly_print(ctx->out, "%s", ident);
-        return ret;
-    }
-
-    /* Make duplicate identifiers unique. */
-    opt = AY_IDENT_NODE_NAME;
-    for (iter = node->parent->child; iter; iter = iter->next) {
-        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
-            continue;
-        } else if (iter == node) {
-            break;
-        }
-        ret = ay_get_yang_ident(ctx, iter, opt, siblings_ident);
-        AY_CHECK_RET(ret);
-        if (!strcmp(ident, siblings_ident)) {
-            duplicates++;
-        }
-    }
-
-    if (duplicates > 1) {
-        ly_print(ctx->out, "%s%" PRIu32, ident, duplicates);
-    } else {
-        ly_print(ctx->out, "%s", ident);
-    }
+    ly_print(ctx->out, "%s", ident);
 
     return ret;
 }
@@ -2929,16 +2987,9 @@ static int
 ay_print_yang_uses(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret;
-    struct ay_ynode *iter;
 
     ly_print(ctx->out, "%*suses ", ctx->space, "");
-    for (iter = ctx->tree->child; iter; iter = iter->next) {
-        if (iter->id == node->uses) {
-            break;
-        }
-    }
-    assert(iter);
-    ret = ay_print_yang_ident(ctx, iter, AY_IDENT_NODE_NAME);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     ly_print(ctx->out, ";\n");
 
     return ret;
@@ -3266,28 +3317,21 @@ ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
  *
  * @param[in] ctx Context for printing.
  * @param[in] node Node under choice-stmt.
+ * @param[in] alone Flag must be set if @p node is alone in choice statement.
  * @return 0 on success.
  */
 static int
-ay_print_yang_node_in_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
+ay_print_yang_node_in_choice(struct yprinter_ctx *ctx, struct ay_ynode *node, ly_bool alone)
 {
     int ret;
-    struct ay_ynode *iter;
-    ly_bool case_stmt;
 
-    /* Find out if case-stmt needs to be printed. */
-    case_stmt = 0;
-    for (iter = node->parent->child; iter; iter = iter->next) {
-        if ((iter->choice == node->choice) && (iter->type == YN_CONTAINER) && !iter->label) {
-            case_stmt = 1;
-            break;
+    if (((node->type == YN_CONTAINER) && !node->label) || (node->type == YN_USES)) {
+        if (!alone) {
+            ret = ay_print_yang_case(ctx, node);
+            ay_print_yang_nesting_begin2(ctx, node->id);
+            AY_CHECK_RET(ret);
         }
-    }
 
-    if (case_stmt) {
-        ret = ay_print_yang_case(ctx, node);
-        ay_print_yang_nesting_begin2(ctx, node->id);
-        AY_CHECK_RET(ret);
         if ((node->type == YN_CONTAINER) && !node->label) {
             /* Ignore container, print only children of container. */
             ret = ay_print_yang_children(ctx, node);
@@ -3295,7 +3339,10 @@ ay_print_yang_node_in_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
             /* Print the node under case-stmt. */
             ret = ay_print_yang_node_(ctx, node);
         }
-        ay_print_yang_nesting_end(ctx);
+
+        if (!alone) {
+            ay_print_yang_nesting_end(ctx);
+        }
     } else {
         /* Just print the node. */
         ret = ay_print_yang_node_(ctx, node);
@@ -3339,19 +3386,19 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     if (alone) {
         /* choice with one 'case' is not printed */
-        ret = ay_print_yang_node_in_choice(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node, alone);
     } else if (first && !last) {
         /* print choice */
         ay_print_yang_choice(ctx, node);
         /* start of choice nesting */
         ay_print_yang_nesting_begin(ctx);
         ay_print_yang_mandatory_choice(ctx, node);
-        ret = ay_print_yang_node_in_choice(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node, alone);
     } else if (!last) {
-        ret = ay_print_yang_node_in_choice(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node, alone);
     } else {
         /* print last case */
-        ret = ay_print_yang_node_in_choice(ctx, node);
+        ret = ay_print_yang_node_in_choice(ctx, node, alone);
         /* end of choice nesting */
         ay_print_yang_nesting_end(ctx);
     }
@@ -4297,11 +4344,10 @@ ay_ynode_rule_conlist_with_same_key(struct ay_ynode *node)
  * @return 0 or unsigned integer greater than 1 if node must be splitted.
  */
 static uint64_t
-ay_ynode_rule_list_split(struct ay_ynode *node)
+ay_ynode_rule_node_split(struct ay_ynode *node)
 {
     struct lens *label;
-    uint64_t count, uses_cnt;
-    uint8_t grouping_present;
+    uint64_t count;
 
     label = AY_LABEL_LENS(node);
 
@@ -4312,14 +4358,15 @@ ay_ynode_rule_list_split(struct ay_ynode *node)
     }
 
     if ((count = ay_lense_pattern_idents_count(label)) && (count > 1)) {
-        grouping_present = node->child ? 1 : 0;
-        uses_cnt = grouping_present ? count : 0;
-        /* What should happens: grouping will be inserted and for every identifier there will be one list.
-         * But one list is already there (@p node is that list).
-         * So for grouping node (+1), first identifier in pattern (0), for every other identifiers in pattern (+n) and
-         * every identifier has the 'uses' node.
-         */
-        return grouping_present + (count - 1) + uses_cnt;
+        if (node->descendants) {
+            /* For first identifier in pattern (0), for every other identifiers in pattern (+n),
+             * One grouping node and YN_USES node for every identifier in pattern.
+             */
+            return (count - 1) + 1 + count;
+        } else {
+            /* For first identifier in pattern (0), for every other identifiers in pattern (+n). */
+            return count - 1;
+        }
     } else {
         return 0;
     }
@@ -4375,6 +4422,26 @@ ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
     }
 
     return ret;
+}
+
+/**
+ * @brief Rule decide how many nodes will be inserted for grouping.
+ *
+ * @param[in] node to check.
+ * @return Number of nodes to insert.
+ */
+static uint64_t
+ay_ynode_rule_create_groupings_toplevel(struct ay_ynode *node)
+{
+    if (node->id == node->uses) {
+        /* YN_GROUPING + YN_USES */
+        return 2;
+    } else if (node->uses) {
+        /* YN_USES */
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -4491,6 +4558,9 @@ ay_ynode_delete_subtree(struct ay_ynode *tree, struct ay_ynode *subtree, ly_bool
     } else {
         deleted_nodes = subtree->descendants;
         subtree++;
+    }
+    if (!deleted_nodes) {
+        return;
     }
 
     index = AY_INDEX(tree, subtree);
@@ -5473,7 +5543,7 @@ ay_insert_cont_key(struct ay_ynode *tree)
                 key->next->flags |= AY_YNODE_MAND_TRUE;
             }
             if (parent->flags & AY_VALUE_IN_CHOICE) {
-                key->next->choice = parent->choice;
+                key->next->choice = key->next->next ? key->next->next->choice : NULL;
             }
         }
     }
@@ -5522,74 +5592,35 @@ ay_ynode_insert_container(struct ay_ynode *tree)
 }
 
 /**
- * @brief Find grouping which has the same nodes as @p listdata.
+ * @brief Nodes that belong to the same grouping are marked by ay_ynode.uses.
  *
- * @param[in] groupings_start First node of type YN_GROUPING. There may be other groupings behind it,
- * which will also be searched.
- * @param[in] listdata First data node behind list key (YN_VALUE to list key belongs to the key part).
- * @param[in] listdata_count Number of nodes in @p listdata.
- * @return Pointer to grouping or NULL.
- */
-static struct ay_ynode *
-ay_ynode_get_grouping(struct ay_ynode *groupings_start, struct ay_ynode *listdata, uint64_t listdata_count)
-{
-    uint64_t i, j;
-    struct ay_ynode *node1, *node2, *grouping;
-
-    if (!groupings_start || (groupings_start->type != YN_GROUPING) || !listdata) {
-        return NULL;
-    }
-
-    for (grouping = groupings_start; grouping && (grouping->type != YN_LIST); grouping = grouping->next) {
-        if (grouping->descendants != listdata_count) {
-            continue;
-        }
-        for (i = 0, j = 0; i < listdata_count; i++, j++) {
-            node1 = listdata + i;
-            node2 = grouping + j + 1;
-            if (!ay_ynode_equal(node1, node2)) {
-                break;
-            }
-        }
-        if (i != listdata_count) {
-            continue;
-        }
-
-        return grouping;
-    }
-
-    return NULL;
-}
-
-/**
- * @brief Create new groupings or set ay_ynode.uses.
+ * This function is preparation before calling ::ay_ynode_create_groupings_toplevel().
  *
- * @param[in] tree Tree of ynodes to process.
- * @return 0 on success.
+ * @param[in,out] tree Tree of ynodes.
+ * @return 0.
  */
-static int
-ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
+static void
+ay_ynode_set_uses(struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i, j;
-    struct ay_ynode *iti, *itj, *grouping;
-    ly_bool skip;
-    uint64_t grouping_id;
+    LY_ARRAY_COUNT_TYPE i, j, start;
+    struct ay_ynode *iti, *itj;
+    ly_bool skip, children_eq, subtree_eq;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        /* Get default subtree. */
         iti = &tree[i];
-        if (((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) || !iti->child) {
+        if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
+            continue;
+        } else if (iti->uses) {
+            i += iti->descendants;
             continue;
         }
-
-        /* Skip if node contains only YN_USES node. */
-        if ((iti->descendants == 1) && (iti->child->type == YN_USES)) {
-            continue;
-        }
+        start = i + iti->descendants + 1;
 
         skip = 0;
-        /* Skip if node contains leafref. */
-        for (itj = iti->child; itj; itj = itj->next) {
-            if (itj->type == YN_LEAFREF) {
+        /* Skip if subtree contains leafref because it can break recursive form. */
+        for (j = 0; j < iti->descendants; j++) {
+            if (iti[j + 1].type == YN_LEAFREF) {
                 skip = 1;
                 break;
             }
@@ -5598,150 +5629,194 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
             continue;
         }
 
-        if ((grouping = ay_ynode_get_grouping(tree->child->next, iti->child, iti->descendants))) {
-            grouping_id = grouping->id;
-            /* Grouping is already created. */
-            ay_ynode_delete_subtree(tree, iti, 0);
-            ay_ynode_insert_child(tree, iti);
-            iti->child->type = YN_USES;
-            iti->child->uses = grouping_id;
-            continue;
+        /* Find subtrees which are the same. */
+        subtree_eq = 0;
+        children_eq = 0;
+        for (j = start; j < LY_ARRAY_COUNT(tree); j++) {
+            itj = &tree[j];
+            if (itj->uses) {
+                j += itj->descendants;
+                continue;
+            } else if (ay_ynode_subtree_equal(iti, itj, 1)) {
+                /* Subtrees including root node are equal. */
+                subtree_eq = 1;
+                itj->uses = iti->id;
+                j += itj->descendants;
+            } else if (itj->descendants && ay_ynode_subtree_equal(iti, itj, 0)) {
+                /* Subtrees without root node are equal. */
+                children_eq = 1;
+                itj->uses = iti->id;
+                j += itj->descendants;
+            }
+            if (subtree_eq && children_eq) {
+                break;
+            }
         }
 
-        grouping = NULL;
-        for (j = i + 1; j < LY_ARRAY_COUNT(tree); j++) {
+        /* Setting 'iti->uses' and flag AY_GROUPING_CHILDREN. */
+        if ((subtree_eq && children_eq) || (!subtree_eq && children_eq)) {
+            /* Flag children_eq has higher priority than subtree_eq. */
+            for (j = start; j < LY_ARRAY_COUNT(tree); j++) {
+                itj = &tree[j];
+                if (itj->uses == iti->id) {
+                    itj->flags |= AY_GROUPING_CHILDREN;
+                }
+            }
+            iti->uses = iti->id;
+            iti->flags |= AY_GROUPING_CHILDREN;
+        } else if (subtree_eq) {
+            iti->uses = iti->id;
+        }
+    }
+}
+
+/**
+ * @brief Insert YN_USES and grouping, then move groupings to the beginning of the module.
+ *
+ * The function assumes that the ::ay_ynode_set_uses() function was called before it.
+ *
+ * @param[in] tree Tree of ynodes to process.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_ynode *iti, *itj, *grouping, *uses;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iti = &tree[i];
+        if (!iti->uses) {
+            continue;
+        } else if ((iti->parent->type == YN_GROUPING) && !iti->next) {
+            continue;
+        } else if ((iti->type == YN_USES) || (iti->type == YN_LEAFREF)) {
+            continue;
+        }
+        assert(iti->id == iti->uses);
+
+        /* Insert YN_GROUPING. */
+        if (iti->flags & AY_GROUPING_CHILDREN) {
+            assert(iti->child);
+            ay_ynode_insert_parent(tree, iti->child);
+            grouping = iti->child;
+            grouping->snode = iti->snode;
+        } else {
+            ay_ynode_insert_wrapper(tree, iti);
+            grouping = iti;
+            grouping->snode = NULL;
+            iti++;
+        }
+        grouping->type = YN_GROUPING;
+
+        /* Find, remove duplicate subtree and create YN_USES. */
+        for (j = AY_INDEX(tree, grouping) + 1; j < LY_ARRAY_COUNT(tree); j++) {
             itj = &tree[j];
-            if (!ay_ynode_subtree_equal(iti, itj, 0)) {
+            if (itj->uses != iti->uses) {
+                continue;
+            } else if ((itj->parent->type == YN_GROUPING) && !itj->next) {
+                continue;
+            } else if (iti->type == YN_USES) {
                 continue;
             }
 
-            /* remove duplicit nodes */
+            /* Delete duplicite subtree. */
             ay_ynode_delete_subtree(tree, itj, 0);
+            /* Create YN_USES at 'itj' node. */
+            if (iti->flags & AY_GROUPING_CHILDREN) {
+                /* YN_USES for children. */
+                ay_ynode_insert_child(tree, itj);
+                uses = itj->child;
+            } else {
+                /* YN_USES for subtree (itj node). */
+                uses = itj;
+                uses->snode = uses->label = uses->value = NULL;
+                uses->flags = 0;
+            }
+            /* itj node is processed */
+            itj->uses = 0;
+            /* Set YN_USES. */
+            uses->type = YN_USES;
+            uses->uses = grouping->id;
+        }
+        /* iti node is processed */
+        iti->uses = 0;
 
-            /* create grouping */
-            if (!grouping) {
-                ay_ynode_insert_parent(tree, iti->child);
-                itj++;
-                grouping = iti->child;
-                grouping->type = YN_GROUPING;
-                grouping->snode = iti->snode;
-                grouping_id = grouping->id;
-                iti = grouping;
-            }
-            ay_ynode_insert_child(tree, itj);
-            itj->child->type = YN_USES;
-            itj->child->uses = grouping_id;
-        }
-        if (grouping) {
-            iti = grouping->parent;
-            if (!grouping->child->next) {
-                /* Choice is useless. */
-                grouping->child->choice = NULL;
-            }
-            /* Move created grouping to the place where are the other groupings. */
-            ay_ynode_move_subtree_as_last_child(tree, tree, grouping);
-            /* Insert uses node. */
-            ay_ynode_insert_child(tree, iti);
-            iti->child->type = YN_USES;
-            iti->child->uses = grouping_id;
-        }
+        /* Insert YN_USES at 'iti' node. */
+        ay_ynode_insert_sibling(tree, grouping);
+        uses = grouping->next;
+        uses->type = YN_USES;
+        uses->uses = grouping->id;
+        uses->choice = grouping == iti->parent ? iti->choice : NULL;
+
+        /* Move grouping. */
+        grouping->child->choice = !grouping->child->next ? NULL : grouping->child->choice;
+        ay_ynode_move_subtree_as_last_child(tree, tree, grouping);
     }
-
     return 0;
 }
 
 /**
- * @brief From the list or container get the part where nodes are behind the YN_KEY and its YN_VALUE.
+ * @brief Split node if his pattern consists of identifiers in sequence.
  *
- * @param[in] node Node of type YN_LIST or YN_CONTAINER to process.
- * @param[out] data_count Number of nodes behind YN_KEY (and its YN_VALUE).
- * @return Pointer to first node in data part.
- */
-static struct ay_ynode *
-ay_ynode_get_nodedata(struct ay_ynode *node, uint64_t *data_count)
-{
-    if (node->child && (node->child->type == YN_KEY)) {
-        if (node->child->next && (node->child->next->type == YN_VALUE)) {
-            *data_count = node->descendants - 2;
-            return node->child->next->next;
-        } else if (node->child->next) {
-            *data_count = node->descendants - 1;
-            return node->child->next;
-        } else {
-            *data_count = 0;
-            return NULL;
-        }
-    } else {
-        *data_count = node->descendants;
-        return node->child;
-    }
-}
-
-/**
- * @brief Split list if his pattern consists of identifiers in sequence.
- * Also groupings may be inserted behind the config-file list.
- *
- * [key "a" | "b"] -> list a {} list b {}
+ * Example: [key "a" | "b"] -> list a {} list b {}
  *
  * @param[in,out] tree Tree of ynodes.
  * @return 0.
  */
 static int
-ay_ynode_list_split(struct ay_ynode *tree)
+ay_ynode_node_split(struct ay_ynode *tree)
 {
-    uint64_t idents_count, listdata_count, i, j, grouping_id;
-    struct ay_ynode *last, *grouping, *list, *list_new, *listdata;
+    uint64_t idents_count, i, j, grouping_id;
+    struct ay_ynode *node, *node_new, *grouping;
 
-    for (i = 1; i <= tree->descendants; i++) {
-        list = &tree[i];
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
 
-        if (!ay_ynode_rule_list_split(list)) {
+        if (!ay_ynode_rule_node_split(node)) {
             continue;
-        } else if (ay_ynode_splitted_seq_index(list) != 0) {
+        } else if (ay_ynode_splitted_seq_index(node) != 0) {
             continue;
         }
 
-        assert(list->label);
-        idents_count = ay_lense_pattern_idents_count(list->label->lens);
+        assert(node->label);
+        idents_count = ay_lense_pattern_idents_count(node->label->lens);
         assert(idents_count > 1);
-        listdata = ay_ynode_get_nodedata(list, &listdata_count);
-        grouping = ay_ynode_get_grouping(tree->child->next, listdata, listdata_count);
 
-        if (listdata && !grouping) {
-            /* wrap listdata */
-            ay_ynode_insert_parent_for_rest(tree, listdata);
-            grouping = listdata;
+        node->flags &= ~AY_YNODE_MAND_MASK;
+        node->flags |= AY_YNODE_MAND_FALSE;
+        /* Just set choice to some value if not already set. */
+        node->choice = !node->choice ? AY_YNODE_ROOT_LTREE(tree) : node->choice;
+
+        grouping_id = 0;
+        if (node->child && (node->child->type == YN_USES)) {
+            assert(node->descendants == 1);
+            grouping_id = node->child->uses;
+        } else if (node->descendants) {
+            /* Create grouping. */
+            ay_ynode_insert_parent(tree, node->child);
+            grouping = node->child;
             grouping->type = YN_GROUPING;
             grouping->snode = grouping->parent->snode;
             grouping_id = grouping->id;
-
-            /* temporary insert grouping behind config-file list (also behind groupings) */
-            last = ay_ynode_get_last(tree->child);
-            ay_ynode_move_subtree_as_sibling(tree, last, grouping);
-        } else if (grouping) {
-            grouping_id = grouping->id;
-            ay_ynode_delete_subtree(tree, list, 0);
-        }
-        if (grouping) {
-            ay_ynode_insert_child(tree, list);
-            list->child->type = YN_USES;
-            list->child->uses = grouping_id;
+            ay_ynode_move_subtree_as_last_child(tree, tree, grouping);
+            /* Create YN_USES node. */
+            ay_ynode_insert_child(tree, node);
+            node->child->type = YN_USES;
+            node->child->uses = grouping_id;
         }
 
-        list->flags &= ~AY_YNODE_MAND_MASK;
-        list->flags |= AY_YNODE_MAND_FALSE;
-        /* Just set choice to some value if not already set. */
-        list->choice = !list->choice ? AY_YNODE_ROOT_LTREE(tree) : list->choice;
-        /* insert new lists */
+        /* Split node. */
         for (j = 0; j < (idents_count - 1); j++) {
-            /* insert new list node */
-            ay_ynode_insert_sibling(tree, list);
-            list_new = list->next;
-            ay_ynode_copy_data(list_new, list);
-            if (grouping) {
-                ay_ynode_insert_child(tree, list_new);
-                list_new->child->type = YN_USES;
-                list_new->child->uses = grouping_id;
+            /* insert new node node */
+            ay_ynode_insert_sibling(tree, node);
+            node_new = node->next;
+            ay_ynode_copy_data(node_new, node);
+            if (grouping_id) {
+                /* Insert YN_USES node. */
+                ay_ynode_insert_child(tree, node_new);
+                node_new->child->type = YN_USES;
+                node_new->child->uses = grouping_id;
             }
         }
     }
@@ -5855,17 +5930,17 @@ ay_ynode_lrec_internal(struct ay_ynode *lrec_ext, const struct ay_ynode *lrec_in
  * @param[in] lrec_internal Inner recursive reference.
  */
 static void
-ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, struct ay_ynode *lrec_internal)
+ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, struct ay_ynode **lrec_internal)
 {
     struct ay_ynode *listord, *iter, *iter2;
 
-    if (lrec_internal->parent->type != YN_LIST) {
-        ay_ynode_insert_parent(tree, lrec_internal);
-        lrec_internal++;
-        listord = lrec_internal->parent;
+    if ((*lrec_internal)->parent->type != YN_LIST) {
+        ay_ynode_insert_parent(tree, *lrec_internal);
+        (*lrec_internal)++;
+        listord = (*lrec_internal)->parent;
         listord->type = YN_LIST;
     } else {
-        listord = lrec_internal->parent;
+        listord = (*lrec_internal)->parent;
     }
 
     if (!branch->choice) {
@@ -5931,18 +6006,20 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
             for (iter = lrec_internal; iter && (iter->parent != lrec_external); iter = iter->parent) {}
             assert(iter);
             branch = iter;
-            ay_ynode_lrec_insert_listord(tree, iter, lrec_internal);
+            ay_ynode_lrec_insert_listord(tree, iter, &lrec_internal);
 
             /* Insert listrec. */
             if (branch->type == YN_LIST) {
                 listrec = branch;
             } else {
                 ay_ynode_insert_wrapper(tree, branch);
+                lrec_internal++;
                 listrec = branch;
                 listrec->type = YN_LIST;
                 listrec->choice = listrec->child->choice;
             }
             listrec->snode = lrec_external->snode;
+            lrec_internal->uses = listrec->id;
         }
     }
 
@@ -6131,10 +6208,6 @@ ay_ynode_transformations(struct ay_ynode **tree)
     /* [key lns1 . lns2 ]  | [key lns1 . lns3 ]*   -> [key lns1 (lns2 | lns3)]* */
     AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_conlist_with_same_key, ay_delete_conlist_with_same_key));
 
-    /* [key "a" | "b"] -> list a {} list b {} */
-    /* TODO: generally nodes, not just a list nodes? */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_list_split, ay_ynode_list_split));
-
     /* Make a tree that reflects the order of records.
      * list A {} list B{} -> list C { container A{} container B{}}
      */
@@ -6145,11 +6218,20 @@ ay_ynode_transformations(struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_trans_insert2(tree,
             ay_ynode_rule_recursive_form(*tree), ay_ynode_recursive_form));
 
-    /* Create additional groupings. First groupings could be created in ::ay_ynode_list_split(). */
-    ay_ynode_create_groupings_toplevel(*tree);
+    /* Groupings are resolved in functions ay_ynode_set_uses() and ay_ynode_create_groupings_toplevel() */
+    /* Link nodes that should be in grouping by number. */
+    ay_ynode_set_uses(*tree);
+
+    /* Create groupings and uses-stmt. Grouping are moved to the top-level part of the module. */
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree,
+            ay_ynode_rule_create_groupings_toplevel, ay_ynode_create_groupings_toplevel));
 
     /* Delete YN_REC nodes. */
     ay_ynode_delete_ynrec(*tree);
+
+    /* [key "a" | "b"] -> list a {} list b {} */
+    /* It is for generally nodes, not just a list nodes. */
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_ynode_node_split));
 
     /* [label str store lns]*   -> container { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> container { YN_KEY{} YN_VALUE{} } */

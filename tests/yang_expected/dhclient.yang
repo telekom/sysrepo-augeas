@@ -8,11 +8,11 @@ module dhclient {
 
   augex:augeas-mod-name "Dhclient";
 
-  grouping stmt_opt_mod {
+  grouping word {
     container word {
       augex:data-path "$$";
       augex:value-yang-path "sto_to_spc_noeval";
-      presence "Type of config entry.";
+      presence "Config entry.";
       leaf word {
         mandatory true;
         type string {
@@ -21,11 +21,9 @@ module dhclient {
       }
       choice ch_word {
         mandatory true;
-        case c_sto_to_spc_noeval {
-          leaf sto_to_spc_noeval {
-            type string {
-              pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
-            }
+        leaf sto_to_spc_noeval {
+          type string {
+            pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
           }
         }
         case c_node {
@@ -44,18 +42,36 @@ module dhclient {
             augex:data-path "value";
           }
         }
-        case c_eval {
-          leaf eval {
-            type string {
-              pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
-            }
-            augex:data-path "#eval";
+        leaf eval {
+          type string {
+            pattern "[^ \t\n][^;\n]+[^ \t]|[^ \t;\n]+";
           }
+          augex:data-path "#eval";
         }
       }
     }
   }
-  grouping stmt_array {
+  grouping ch_media {
+    choice ch_media {
+      mandatory true;
+      container media {
+        augex:data-path "media";
+        presence "Type of config entry.";
+        uses stmt_array;
+      }
+      container request {
+        augex:data-path "request";
+        presence "Type of config entry.";
+        uses stmt_array;
+      }
+      container require {
+        augex:data-path "require";
+        presence "Type of config entry.";
+        uses stmt_array;
+      }
+    }
+  }
+  grouping stmt_block {
     list config-entries {
       key "_id";
       min-elements 1;
@@ -65,78 +81,40 @@ module dhclient {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container stmt_array {
-        augex:data-path "$$";
-        augex:value-yang-path "sto_to_spc";
-        presence "Config entry.";
-        leaf stmt_array {
-          mandatory true;
-          type uint64;
-        }
-        leaf sto_to_spc {
-          mandatory true;
-          type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-          }
-        }
-      }
-    }
-  }
-  grouping stmt_block {
-    list config-entries {
-      key "_id";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
       choice ch_config-entries {
         mandatory true;
-        container media {
-          augex:data-path "media";
-          presence "Type of config entry.";
-          uses stmt_array;
-        }
-        container request {
-          augex:data-path "request";
-          presence "Type of config entry.";
-          uses stmt_array;
-        }
-        container require {
-          augex:data-path "require";
-          presence "Type of config entry.";
-          uses stmt_array;
+        case c_ch_media {
+          uses ch_media;
         }
         container send {
           augex:data-path "send";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container option {
           augex:data-path "option";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container append {
           augex:data-path "append";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container prepend {
           augex:data-path "prepend";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container default {
           augex:data-path "default";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container supersede {
           augex:data-path "supersede";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         leaf interface {
           type string {
@@ -200,6 +178,33 @@ module dhclient {
           augex:data-path "expire";
           presence "Type of config entry.";
           uses stmt_block_date;
+        }
+      }
+    }
+  }
+  grouping stmt_array {
+    list config-entries {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container stmt_array {
+        augex:data-path "$$";
+        augex:value-yang-path "sto_to_spc";
+        presence "Config entry.";
+        leaf stmt_array {
+          mandatory true;
+          type uint64;
+        }
+        leaf sto_to_spc {
+          mandatory true;
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
         }
       }
     }
@@ -321,47 +326,35 @@ module dhclient {
         container append {
           augex:data-path "append";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container prepend {
           augex:data-path "prepend";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container default {
           augex:data-path "default";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container supersede {
           augex:data-path "supersede";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
-        container media {
-          augex:data-path "media";
-          presence "Type of config entry.";
-          uses stmt_array;
-        }
-        container request {
-          augex:data-path "request";
-          presence "Type of config entry.";
-          uses stmt_array;
-        }
-        container require {
-          augex:data-path "require";
-          presence "Type of config entry.";
-          uses stmt_array;
+        case c_ch_media {
+          uses ch_media;
         }
         container send {
           augex:data-path "send";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container option {
           augex:data-path "option";
           presence "Type of config entry.";
-          uses stmt_opt_mod;
+          uses word;
         }
         container interface {
           augex:data-path "interface";

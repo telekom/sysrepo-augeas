@@ -8,13 +8,43 @@ module inputrc {
 
   augex:augeas-mod-name "Inputrc";
 
-  grouping entry {
-    leaf mapping {
-      mandatory true;
-      type string {
-        pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+  grouping variable {
+    container variable {
+      augex:data-path "$$";
+      augex:value-yang-path "word";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+        }
       }
-      augex:data-path "mapping";
+      leaf word {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+      }
+    }
+  }
+  grouping entry {
+    container entry {
+      augex:data-path "entry";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^\" \t\n]+";
+        }
+      }
+      leaf mapping {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+        }
+        augex:data-path "mapping";
+      }
     }
   }
   list inputrc {
@@ -66,33 +96,10 @@ module inputrc {
                   description
                     "Implicitly generated leaf to maintain recursive augeas data.";
                 }
-                container variable {
-                  augex:data-path "$$";
-                  augex:value-yang-path "word";
-                  presence "Type of config entry.";
-                  leaf label {
-                    mandatory true;
-                    type string {
-                      pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
-                    }
-                  }
-                  leaf word {
-                    mandatory true;
-                    type string {
-                      pattern "[A-Za-z0-9_.-]+";
-                    }
-                  }
+                case c_variable {
+                  uses variable;
                 }
-                container entry {
-                  augex:data-path "entry";
-                  augex:value-yang-path "value";
-                  presence "Type of config entry.";
-                  leaf value {
-                    mandatory true;
-                    type string {
-                      pattern "[^\" \t\n]+";
-                    }
-                  }
+                case c_entry {
                   uses entry;
                 }
               }
@@ -117,33 +124,10 @@ module inputrc {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container variable {
-                    augex:data-path "$$";
-                    augex:value-yang-path "word";
-                    presence "Type of config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
-                      }
-                    }
-                    leaf word {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                      }
-                    }
+                  case c_variable {
+                    uses variable;
                   }
-                  container entry {
-                    augex:data-path "entry";
-                    augex:value-yang-path "value";
-                    presence "Type of config entry.";
-                    leaf value {
-                      mandatory true;
-                      type string {
-                        pattern "[^\" \t\n]+";
-                      }
-                    }
+                  case c_entry {
                     uses entry;
                   }
                 }
@@ -151,33 +135,10 @@ module inputrc {
             }
           }
         }
-        container variable {
-          augex:data-path "$$";
-          augex:value-yang-path "word";
-          presence "Type of config entry.";
-          leaf label {
-            mandatory true;
-            type string {
-              pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
-            }
-          }
-          leaf word {
-            mandatory true;
-            type string {
-              pattern "[A-Za-z0-9_.-]+";
-            }
-          }
+        case c_variable {
+          uses variable;
         }
-        container entry {
-          augex:data-path "entry";
-          augex:value-yang-path "value";
-          presence "Type of config entry.";
-          leaf value {
-            mandatory true;
-            type string {
-              pattern "[^\" \t\n]+";
-            }
-          }
+        case c_entry {
           uses entry;
         }
       }

@@ -84,7 +84,7 @@ module ntp {
       }
     }
   }
-  grouping flags {
+  grouping flag {
     leaf-list flag {
       type string {
         pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
@@ -254,12 +254,12 @@ module ntp {
         container enable {
           augex:data-path "enable";
           presence "Type of config entry.";
-          uses flags;
+          uses flag;
         }
         container disable {
           augex:data-path "disable";
           presence "Type of config entry.";
-          uses flags;
+          uses flag;
         }
         leaf driftfile {
           type string {
