@@ -261,6 +261,7 @@ enum yang_type {
 #define AY_CHOICE_MAND_FALSE    0x04    /**< Choice statement must be false. */
 #define AY_VALUE_IN_CHOICE      0x08    /**< YN_VALUE of node must be in choice statement. */
 #define AY_GROUPING_CHILDREN    0x10    /**< The ay_ynode.uses only affects children. */
+#define AY_CONFIG_FALSE         0x20    /**< Print 'config false' for this node. */
 /** @} ynodeflags */
 
 /**
@@ -2840,6 +2841,20 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang config-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node to process.
+ */
+static void
+ay_print_yang_config(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    if (node->flags & AY_CONFIG_FALSE) {
+        ly_print(ctx->out, "%*sconfig false;\n", ctx->space, "");
+    }
+}
+
+/**
  * @brief Print yang leaf-list-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2859,6 +2874,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
+    ay_print_yang_config(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
@@ -2902,6 +2918,7 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_mandatory(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
+    ay_print_yang_config(ctx, node);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
@@ -2948,6 +2965,7 @@ ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
     ly_print(ctx->out, "%*s\"Implicitly generated leaf to maintain recursive augeas data.\";\n",
             ctx->space + SPACE_INDENT, "");
+    ay_print_yang_config(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     return ret;
@@ -3027,6 +3045,7 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_type(ctx, node);
         AY_CHECK_RET(ret);
     }
+    ay_print_yang_config(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     return ret;
@@ -3052,6 +3071,7 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sleaf config-file", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
+    ay_print_yang_config(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     ret = ay_print_yang_children(ctx, node);
@@ -3092,6 +3112,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
     }
     ay_print_yang_minelements(ctx, node);
+    ay_print_yang_config(ctx, node);
     if (is_lrec) {
         ly_print(ctx->out, "%*sleaf _r-id", ctx->space, "");
     } else {
@@ -3160,6 +3181,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_value_path(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_presence(ctx, node);
+    ay_print_yang_config(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
@@ -6019,6 +6041,7 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
                 listrec->choice = listrec->child->choice;
             }
             listrec->snode = lrec_external->snode;
+            listrec->flags |= AY_CONFIG_FALSE;
             lrec_internal->uses = listrec->id;
         }
     }
