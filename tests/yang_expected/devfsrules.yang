@@ -46,7 +46,7 @@ module devfsrules {
           container entry {
             augex:data-path "$$";
             augex:value-yang-path "line_re";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf entry {
               mandatory true;
               type uint64;

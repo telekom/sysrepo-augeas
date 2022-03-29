@@ -13,7 +13,7 @@ module sshd {
       mandatory true;
       container accept_env {
         augex:data-path "AcceptEnv";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -25,7 +25,7 @@ module sshd {
           container AcceptEnv {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf AcceptEnv {
               mandatory true;
               type uint64;
@@ -46,7 +46,7 @@ module sshd {
       }
       container allow_groups {
         augex:data-path "AllowGroups";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -58,7 +58,7 @@ module sshd {
           container AllowGroups {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf AllowGroups {
               mandatory true;
               type uint64;
@@ -79,7 +79,7 @@ module sshd {
       }
       container allow_users {
         augex:data-path "AllowUsers";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -91,7 +91,7 @@ module sshd {
           container AllowUsers {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf AllowUsers {
               mandatory true;
               type uint64;
@@ -112,7 +112,7 @@ module sshd {
       }
       container deny_groups {
         augex:data-path "DenyGroups";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -124,7 +124,7 @@ module sshd {
           container DenyGroups {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf DenyGroups {
               mandatory true;
               type uint64;
@@ -145,7 +145,7 @@ module sshd {
       }
       container subsystem {
         augex:data-path "Subsystem";
-        presence "Type of config entry.";
+        presence "Config entry.";
         container subsystemvalue {
           augex:data-path "$$";
           augex:value-yang-path "value";
@@ -166,7 +166,7 @@ module sshd {
       }
       container deny_users {
         augex:data-path "DenyUsers";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -178,7 +178,7 @@ module sshd {
           container DenyUsers {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf DenyUsers {
               mandatory true;
               type uint64;
@@ -199,7 +199,7 @@ module sshd {
       }
       container macs {
         augex:data-path "MACs";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           min-elements 1;
@@ -228,7 +228,7 @@ module sshd {
       }
       container ciphers {
         augex:data-path "Ciphers";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           min-elements 1;
@@ -257,7 +257,7 @@ module sshd {
       }
       container kexalgorithms {
         augex:data-path "KexAlgorithms";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           min-elements 1;
@@ -286,7 +286,7 @@ module sshd {
       }
       container hostkeyalgorithms {
         augex:data-path "HostKeyAlgorithms";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           min-elements 1;
@@ -316,7 +316,7 @@ module sshd {
       container other_entry {
         augex:data-path "$$";
         augex:value-yang-path "value";
-        presence "Type of config entry.";
+        presence "Config entry.";
         leaf key_re {
           mandatory true;
           type string {
@@ -373,7 +373,7 @@ module sshd {
             container node {
               augex:data-path "$$";
               augex:value-yang-path "value";
-              presence "Type of config entry.";
+              presence "Config entry.";
               leaf label {
                 mandatory true;
                 type string {

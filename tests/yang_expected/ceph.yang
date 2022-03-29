@@ -41,7 +41,7 @@ module ceph {
           container entry_re {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf entry_re {
               mandatory true;
               type string {

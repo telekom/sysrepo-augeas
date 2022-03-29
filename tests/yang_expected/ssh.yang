@@ -13,7 +13,7 @@ module ssh {
       mandatory true;
       container send_env {
         augex:data-path "SendEnv";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           ordered-by user;
@@ -47,42 +47,42 @@ module ssh {
       }
       container remote_fw {
         augex:data-path "RemoteForward";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses remote_fw;
       }
       container local_fw {
         augex:data-path "LocalForward";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses remote_fw;
       }
       container macs {
         augex:data-path "MACs";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses commas_entry;
       }
       container ciphers {
         augex:data-path "Ciphers";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses commas_entry;
       }
       container HostKeyAlgorithms {
         augex:data-path "HostKeyAlgorithms";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses commas_entry;
       }
       container KexAlgorithms {
         augex:data-path "KexAlgorithms";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses commas_entry;
       }
       container pubkey_accepted_key_types {
         augex:data-path "PubkeyAcceptedKeyTypes";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses commas_entry;
       }
       container global_knownhosts_file {
         augex:data-path "GlobalKnownHostsFile";
-        presence "Type of config entry.";
+        presence "Config entry.";
         list config-entries {
           key "_id";
           min-elements 1;
@@ -111,7 +111,7 @@ module ssh {
       }
       container rekey_limit {
         augex:data-path "RekeyLimit";
-        presence "Type of config entry.";
+        presence "Config entry.";
         leaf amount {
           mandatory true;
           type string {
@@ -129,7 +129,7 @@ module ssh {
       container other_entry {
         augex:data-path "$$";
         augex:value-yang-path "value_to_spc";
-        presence "Type of config entry.";
+        presence "Config entry.";
         leaf key_re {
           mandatory true;
           type string {
@@ -219,7 +219,7 @@ module ssh {
         container host {
           augex:data-path "Host";
           augex:value-yang-path "value_to_eol";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf value_to_eol {
             mandatory true;
             type string {
@@ -239,7 +239,7 @@ module ssh {
         }
         container match {
           augex:data-path "Match";
-          presence "Type of config entry.";
+          presence "Config entry.";
           container match_cond {
             augex:data-path "Condition";
             presence "Config entry.";
@@ -255,7 +255,7 @@ module ssh {
               container node {
                 augex:data-path "$$";
                 augex:value-yang-path "value";
-                presence "Type of config entry.";
+                presence "Config entry.";
                 leaf label {
                   mandatory true;
                   type string {

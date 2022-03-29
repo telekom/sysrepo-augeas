@@ -31,7 +31,7 @@ module pam {
         }
         container record_svc {
           augex:data-path "$$";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf record {
             mandatory true;
             type uint64;

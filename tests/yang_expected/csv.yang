@@ -40,7 +40,7 @@ module csv {
           container field {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf field {
               mandatory true;
               type uint64;

@@ -3153,11 +3153,8 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_presence(struct yprinter_ctx *ctx, struct ay_ynode *cont)
 {
-    if (cont->choice) {
-        ly_print(ctx->out, "%*spresence \"Type of config entry.\";\n", ctx->space, "");
-    } else {
-        ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
-    }
+    (void) cont;
+    ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
 }
 
 /**
@@ -3253,23 +3250,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_mandatory_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    const struct ay_lnode *snode = NULL;
-    struct ay_ynode *iter;
-
     if (node->flags & AY_CHOICE_MAND_FALSE) {
         return;
-    }
-
-    /* Take some snode under choice. */
-    for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
-        if (iter->snode) {
-            snode = iter->snode;
-        }
-    }
-    assert(snode);
-
-    /* match pattern: (lns1 | lns2 ...)? */
-    if (!ay_lnode_has_maybe(snode)) {
+    } else {
         ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
     }
 }
@@ -4542,23 +4525,63 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 /**
  * @brief Delete node from the tree.
  *
- * Children of deleted node are moved up in the tree level.
+ * Children of deleted node are moved up in the tree level. Member ay_ynode.choice is set on children.
+ * Under certain conditions, the node is not deleted, but instead is cast to a container,
+ * which is later overwritten in case-stmt.
  *
  * @param[in,out] tree Tree of ynodes.
  * @param[in] node The ynode to be deleted.
+ * @return 0 if node was deleted or 1 if node changed type to YN_CONTAINER.
  */
-static void
+static ly_bool
 ay_ynode_delete_node(struct ay_ynode *tree, struct ay_ynode *node)
 {
-    struct ay_ynode *iter;
+    struct ay_ynode *iter, *parent;
     uint32_t index;
+    ly_bool cast_cont;
 
+    if (node->choice && node->child && node->child->next) {
+        /* Choice setting for children. */
+        /* Cast @p node to container if all children have choice set. */
+        cast_cont = 0;
+        for (iter = node->child; iter; iter = iter->next) {
+            if (!iter->choice) {
+                cast_cont = 1;
+            }
+        }
+        if (cast_cont) {
+            /* Just cast to container (case-stmt). */
+            node->type = YN_CONTAINER;
+            node->snode = node->label = node->value = NULL;
+            node->uses = node->flags = 0;
+            return 1;
+        } else {
+            /* Set children choice. */
+            for (iter = node->child; iter; iter = iter->next) {
+                iter->choice = node->choice;
+            }
+            /* Delete @p node. */
+        }
+    } else if (node->choice && node->child) {
+        node->child->choice = node->choice;
+        /* Delete @p node. */
+    }
+
+    /* Delete @p node. */
     index = AY_INDEX(tree, node);
     for (iter = tree[index].parent; iter; iter = iter->parent) {
         iter->descendants--;
     }
+    parent = node->parent;
     ay_ynode_delete_gap(tree, index);
     ay_ynode_tree_correction(tree);
+
+    /* If parent has only one child, then set choice to NULL. */
+    if (parent->child && !parent->child->next) {
+        parent->child->choice = NULL;
+    }
+
+    return 0;
 }
 
 /**
@@ -4869,201 +4892,6 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
 }
 
 /**
- * @brief Compare arrays of ynodes and print information if the nodes are different.
- *
- * @param[in] iter Index where to start the comparison.
- * @param[in] arr1 First array of ynodes.
- * @param[in] arr2 Second array of ynodes.
- * @param[in] count Number of elements to compare.
- * @return 0 on success.
- */
-static int
-ay_test_ynode_snap(uint64_t iter, struct ay_ynode *arr1, struct ay_ynode *arr2, uint64_t count)
-{
-    for (uint64_t i = 0; i < count; i++) {
-        if (arr1[i].parent != arr2[i].parent) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.parent\n", iter, i);
-            return 1;
-        } else if (arr1[i].next != arr2[i].next) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.next\n", iter, i);
-            return 1;
-        } else if (arr1[i].child != arr2[i].child) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.child\n", iter, i);
-            return 1;
-        } else if (arr1[i].descendants != arr2[i].descendants) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.descendants\n", iter, i);
-            return 1;
-        } else if (arr1[i].type != arr2[i].type) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.type\n", iter, i);
-            return 1;
-        } else if (arr1[i].snode != arr2[i].snode) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.snode\n", iter, i);
-            return 1;
-        } else if (arr1[i].label != arr2[i].label) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.label\n", iter, i);
-            return 1;
-        } else if (arr1[i].value != arr2[i].value) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.value\n", iter, i);
-            return 1;
-        } else if (arr1[i].choice != arr2[i].choice) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.choice\n", iter, i);
-            return 1;
-        } else if (arr1[i].uses != arr2[i].uses) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.uses\n", iter, i);
-            return 1;
-        } else if (arr1[i].flags != arr2[i].flags) {
-            printf(AY_NAME " DEBUG: iteration %" PRIu64 ", diff at node %" PRIu64 " ynode.flags\n", iter, i);
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-/**
- * @brief Test insert and delete ynode tree operations.
- *
- * @param[in] vercode Verbose that decides the execution of a function.
- * @param[in] tree Tree of ynodes. It will not be changed.
- * @return 0 on success.
- */
-static int
-ay_test_ynode_insert_delete(uint64_t vercode, struct ay_ynode *tree)
-{
-    LY_ARRAY_COUNT_TYPE i;
-    int ret = 0;
-    const char *msg;
-    struct ay_ynode *dupl = NULL, *snap = NULL;
-
-    if (!vercode) {
-        return ret;
-    }
-
-    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree) + 1, ret, cleanup);
-    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, cleanup);
-
-    msg = "ynode insert_child";
-    LY_ARRAY_FOR(tree, i) {
-        ay_ynode_copy(dupl, tree);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_child(dupl, &dupl[i]);
-        ay_ynode_delete_node(dupl, &dupl[i + 1]);
-        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-    msg = "ynode insert_wrapper";
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        ay_ynode_copy(dupl, tree);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_wrapper(dupl, &dupl[i]);
-        ay_ynode_delete_node(dupl, &dupl[i]);
-        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-    msg = "ynode insert_parent";
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        ay_ynode_copy(dupl, tree);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_parent(dupl, &dupl[i]);
-        ay_ynode_delete_node(dupl, dupl[i + 1].parent);
-        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-    msg = "ynode insert_parent_for_rest";
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        ay_ynode_copy(dupl, tree);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_parent_for_rest(dupl, &dupl[i]);
-        ay_ynode_delete_node(dupl, dupl[i + 1].parent);
-        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-    msg = "ynode insert_sibling";
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        ay_ynode_copy(dupl, tree);
-        memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-        ay_ynode_insert_sibling(dupl, &dupl[i]);
-        ay_ynode_delete_node(dupl, dupl[i].next);
-        AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        AY_SET_LY_ARRAY_SIZE(dupl, 0);
-    }
-
-cleanup:
-    if (ret) {
-        printf(AY_NAME " DEBUG: %s failed\n", msg);
-    }
-    LY_ARRAY_FREE(dupl);
-    LY_ARRAY_FREE(snap);
-
-    return ret;
-
-error:
-    ret = AYE_DEBUG_FAILED;
-    goto cleanup;
-}
-
-/**
- * @brief Test move ynode subtree operations.
- *
- * @param[in] vercode Verbose that decides the execution of a function.
- * @param[in] tree Tree of ynodes. It will not be changed.
- * @return 0 on successs.
- */
-static int
-ay_test_ynode_move_subtree(uint64_t vercode, struct ay_ynode *tree)
-{
-    int ret = 0;
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *dupl = NULL, *snap = NULL, *place;
-    const char *msg;
-
-    if (!vercode) {
-        return ret;
-    }
-
-    LY_ARRAY_CREATE_GOTO(NULL, dupl, LY_ARRAY_COUNT(tree), ret, cleanup);
-    LY_ARRAY_CREATE_GOTO(NULL, snap, LY_ARRAY_COUNT(tree), ret, cleanup);
-    ay_ynode_copy(dupl, tree);
-    memcpy(snap, dupl, LY_ARRAY_COUNT(tree) * sizeof *tree);
-
-    msg = "ynode move_subtree_as_sibling";
-    for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
-        if (dupl[i].next && dupl[i].next->next) {
-            ay_ynode_move_subtree_as_sibling(dupl, &dupl[i], dupl[i].next->next);
-            place = dupl[i].next->next ? dupl[i].next->next : dupl[i].next + dupl[i].next->descendants + 1;
-            ay_ynode_move_subtree_as_sibling(dupl, place, dupl[i].next);
-            AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        }
-    }
-
-    msg = "ynode move_subtree_as_child";
-    for (i = 1; i < LY_ARRAY_COUNT(tree) - 1; i++) {
-        if (dupl[i].next && dupl[i].next->child) {
-            ay_ynode_move_subtree_as_child(dupl, &dupl[i], dupl[i].next->child);
-            ay_ynode_move_subtree_as_child(dupl, dupl[i].next, dupl[i].child);
-            AY_CHECK_GOTO(ay_test_ynode_snap(0, snap, dupl, LY_ARRAY_COUNT(tree)), error);
-        }
-    }
-
-cleanup:
-    if (ret) {
-        printf(AY_NAME " DEBUG: %s failed\n", msg);
-    }
-    LY_ARRAY_FREE(dupl);
-    LY_ARRAY_FREE(snap);
-
-    return ret;
-
-error:
-    ret = AYE_DEBUG_FAILED;
-    goto cleanup;
-}
-
-/**
  * @brief Set ynode.mandatory for node.
  *
  * @param[in,out] node Node whose mandatory statement will be set.
@@ -5077,6 +4905,41 @@ ay_ynode_set_mandatory(struct ay_ynode *node)
     } else {
         node->flags &= ~AY_YNODE_MAND_MASK;
         node->flags = AY_YNODE_MAND_TRUE;
+    }
+}
+
+/**
+ * @brief Set AY_CHOICE_MAND_FALSE to ynode.flag for every node in the tree.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_set_flag(struct ay_ynode *tree)
+{
+    struct ay_ynode *iter, *first, *sibl;
+    LY_ARRAY_COUNT_TYPE i;
+
+    /* Set AY_CHOICE_MAND_FALSE. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+
+        if (iter->label && ay_lense_pattern_has_idents(iter->label->lens)) {
+            if (iter->snode && ay_lnode_has_maybe(iter->snode)) {
+                iter->flags |= AY_CHOICE_MAND_FALSE;
+            }
+            continue;
+        }
+
+        first = ay_ynode_get_first_in_choice(iter->parent, iter->choice);
+        if (first != iter) {
+            continue;
+        }
+
+        for (sibl = first; sibl && (sibl->choice == first->choice); sibl = sibl->next) {
+            if (sibl->snode && ay_lnode_has_maybe(sibl->snode)) {
+                first->flags |= AY_CHOICE_MAND_FALSE;
+            }
+        }
     }
 }
 
@@ -5124,17 +4987,11 @@ static void
 ay_delete_type_unknown(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *parent;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         if ((tree[i].type == YN_UNKNOWN) && (!tree[i].child)) {
-            parent = tree[i].parent;
-            ay_ynode_delete_node(tree, &tree[i]);
+            ay_ynode_delete_subtree(tree, &tree[i], 1);
             i--;
-            /* If the Unknown node has a single sibling, then set choice to NULL. */
-            if (parent->child && !parent->child->next) {
-                parent->child->choice = NULL;
-            }
         }
     }
 }
@@ -5148,22 +5005,17 @@ static void
 ay_delete_comment(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *iter, *parent;
+    struct ay_ynode *iter;
     struct lens *label;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iter = &tree[i];
-        parent = iter->parent;
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL) &&
                 (!strcmp("#comment", label->string->str) ||
                 (!strcmp("#scomment", label->string->str)))) {
-            ay_ynode_delete_node(tree, &tree[i]);
+            ay_ynode_delete_subtree(tree, &tree[i], 1);
             i--;
-            /* if the Comment node has a single sibling, then set choice to NULL */
-            if (parent->child && !parent->child->next) {
-                parent->child->choice = NULL;
-            }
         }
     }
 }
@@ -5350,7 +5202,7 @@ static int
 ay_delete_conlist_with_same_key(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *first, *second, *cont, *iter;
+    struct ay_ynode *first, *second, *cont;
     ly_bool cont_inserted;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
@@ -5385,19 +5237,9 @@ ay_delete_conlist_with_same_key(struct ay_ynode *tree)
                 /* Move second node to the first. The second node is merged. */
                 second->label = NULL;
                 second->choice = first->choice;
-                if (!second->child->next) {
-                    ay_ynode_delete_node(tree, second);
-                }
-                if (!first->child) {
-                    second->flags |= AY_CHOICE_MAND_FALSE;
-                }
-                /* reset children choice because second container may be deleted */
-                for (iter = second->child; iter; iter = iter->next) {
-                    if (iter->choice) {
-                        iter->choice = first->choice;
-                    }
-                }
                 ay_ynode_move_subtree_as_last_child(tree, first, second);
+                second = ay_ynode_get_last(first->child);
+                ay_ynode_delete_node(tree, second);
             } else {
                 /* Delete second node. Nothing to merge. */
                 if (first->child) {
@@ -5419,7 +5261,8 @@ ay_delete_conlist_with_same_key(struct ay_ynode *tree)
 static void
 ay_delete_poor_container(struct ay_ynode *tree)
 {
-    struct ay_ynode *cont, *iter;
+    int ret;
+    struct ay_ynode *cont;
     struct lens *label;
     uint32_t i;
 
@@ -5448,22 +5291,15 @@ ay_delete_poor_container(struct ay_ynode *tree)
             ay_ynode_delete_node(tree, cont);
             i--;
         } else if ((cont->descendants == 1) && (cont->label == cont->child->label)) {
-            cont->child->choice = cont->choice;
             cont->child->type = YN_LEAF;
             cont->child->flags &= ~AY_YNODE_MAND_MASK;
             ay_ynode_delete_node(tree, cont);
             i--;
-        } else if (cont->child->choice && (cont->label == cont->child->label)) {
-            for (iter = cont->child; iter; iter = iter->next) {
-                if (iter->next && (iter->next->choice != iter->choice)) {
-                    break;
-                }
-            }
-            if (!iter) {
-                cont->child->flags |= (cont->flags & AY_CHOICE_MAND_FALSE);
-                ay_ynode_delete_node(tree, cont);
-                i--;
-            }
+        } else if (cont->child->choice && !cont->label) {
+            /* Remove container if all his children have the same choice. Otherwise choice under case appear. */
+            /* All children have the same choice. */
+            ret = ay_ynode_delete_node(tree, cont);
+            i = ret ? i - 1 : i;
         }
     }
 }
@@ -6211,6 +6047,8 @@ ay_ynode_transformations(struct ay_ynode **tree)
 
     ay_delete_type_unknown(*tree);
 
+    ay_ynode_set_flag(*tree);
+
     /* [ (key lns1 | key lns2) lns3 ]    -> node { type union { pattern lns1; pattern lns2; }}
      * store to YN_ROOT.labels
      * [ key lns1 (store lns2 | store lns3)) ]    -> node { type union { pattern lns2; pattern lns3; }}
@@ -6312,10 +6150,6 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     AY_CHECK_GOTO(ret, cleanup);
 
     /* Apply transformations. */
-    ret = ay_test_ynode_insert_delete(vercode, ytree);
-    AY_CHECK_GOTO(ret, cleanup);
-    ret = ay_test_ynode_move_subtree(vercode, ytree);
-    AY_CHECK_GOTO(ret, cleanup);
     ret = ay_ynode_transformations(&ytree);
     AY_CHECK_GOTO(ret, cleanup);
     ret = ay_debug_ynode_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);

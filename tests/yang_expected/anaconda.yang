@@ -41,7 +41,7 @@ module anaconda {
           container node {
             augex:data-path "$$";
             augex:value-yang-path "value";
-            presence "Type of config entry.";
+            presence "Config entry.";
             leaf label {
               mandatory true;
               type string {

@@ -37,7 +37,7 @@ module star {
         }
         container archive {
           augex:data-path "$$";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf label {
             mandatory true;
             type string {

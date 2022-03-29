@@ -56,17 +56,17 @@ module dhclient {
       mandatory true;
       container media {
         augex:data-path "media";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses stmt_array;
       }
       container request {
         augex:data-path "request";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses stmt_array;
       }
       container require {
         augex:data-path "require";
-        presence "Type of config entry.";
+        presence "Config entry.";
         uses stmt_array;
       }
     }
@@ -88,32 +88,32 @@ module dhclient {
         }
         container send {
           augex:data-path "send";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container option {
           augex:data-path "option";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container append {
           augex:data-path "append";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container prepend {
           augex:data-path "prepend";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container default {
           augex:data-path "default";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container supersede {
           augex:data-path "supersede";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         leaf interface {
@@ -166,17 +166,17 @@ module dhclient {
         }
         container renew {
           augex:data-path "renew";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses stmt_block_date;
         }
         container rebind {
           augex:data-path "rebind";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses stmt_block_date;
         }
         container expire {
           augex:data-path "expire";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses stmt_block_date;
         }
       }
@@ -325,22 +325,22 @@ module dhclient {
         }
         container append {
           augex:data-path "append";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container prepend {
           augex:data-path "prepend";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container default {
           augex:data-path "default";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container supersede {
           augex:data-path "supersede";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         case c_ch_media {
@@ -348,18 +348,18 @@ module dhclient {
         }
         container send {
           augex:data-path "send";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container option {
           augex:data-path "option";
-          presence "Type of config entry.";
+          presence "Config entry.";
           uses word;
         }
         container interface {
           augex:data-path "interface";
           augex:value-yang-path "sto_to_spc";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf sto_to_spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
@@ -370,7 +370,7 @@ module dhclient {
         container lease {
           augex:data-path "lease";
           augex:value-yang-path "sto_to_spc";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf sto_to_spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
@@ -381,7 +381,7 @@ module dhclient {
         container alias {
           augex:data-path "alias";
           augex:value-yang-path "sto_to_spc";
-          presence "Type of config entry.";
+          presence "Config entry.";
           leaf sto_to_spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";

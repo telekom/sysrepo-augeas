@@ -71,7 +71,7 @@ module systemd {
             mandatory true;
             container entry_single {
               augex:data-path "Description";
-              presence "Type of config entry.";
+              presence "Config entry.";
               leaf value {
                 type string {
                   pattern "([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\])(((\\\\\n)([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\]))*)";
@@ -81,7 +81,7 @@ module systemd {
             }
             container entry_multi {
               augex:data-path "$$";
-              presence "Type of config entry.";
+              presence "Config entry.";
               leaf entry_multi_kw {
                 mandatory true;
                 type string {
@@ -98,7 +98,7 @@ module systemd {
             }
             container entry_command {
               augex:data-path "$$";
-              presence "Type of config entry.";
+              presence "Config entry.";
               leaf entry_command_kw {
                 mandatory true;
                 type string {
@@ -151,7 +151,7 @@ module systemd {
             }
             container entry_env {
               augex:data-path "Environment";
-              presence "Type of config entry.";
+              presence "Config entry.";
               list config-entries {
                 key "_id";
                 min-elements 1;
@@ -164,7 +164,7 @@ module systemd {
                 container env_key {
                   augex:data-path "$$";
                   augex:value-yang-path "value";
-                  presence "Type of config entry.";
+                  presence "Config entry.";
                   leaf env_key {
                     mandatory true;
                     type string {
