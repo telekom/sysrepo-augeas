@@ -88,11 +88,13 @@ aym_usage(void)
             "  -e, --explicit     default value of the -I parameter is not used;\n"
             "                     only the directories specified by the -I parameter are used\n");
     fprintf(stderr,
-            "  -I, --include DIR  search DIR for augeas modules; can be given multiple times\n"
+            "  -I, --include DIR  search DIR for augeas modules; can be given multiple times;\n"
             "                     default value: %s\n", AUGEAS_LENSES_DIR);
     fprintf(stderr,
             "  -O, --outdir DIR   directory in which the generated yang file is written;\n"
             "                     default value: ./\n");
+    fprintf(stderr,
+            "  -q, --quiet        generated yang is not printed or written to the file\n");
     fprintf(stderr,
             "  -s, --show         print the generated yang only to stdout and not to the file\n");
     fprintf(stderr,
@@ -382,7 +384,7 @@ aym_allocate_filename_buffer(int argc, char **argv, int optind, char *outdir, ch
 int
 main(int argc, char **argv)
 {
-    int opt, ret = 0, ret2 = 0, explicit = 0, show = 0;
+    int opt, ret = 0, ret2 = 0, explicit = 0, show = 0, quiet = 0;
     struct augeas *aug = NULL;
     char *loadpath = NULL, *str = NULL, *modname, *outdir = NULL;
     const char *dirpath;
@@ -398,6 +400,7 @@ main(int argc, char **argv)
         {"explicit",  0, 0, 'e'},
         {"include",   1, 0, 'I'},
         {"outdir",    1, 0, 'O'},
+        {"quiet",     0, 0, 'q'},
         {"show",      0, 0, 's'},
         {"verbose",   1, 0, 'v'},
         {0, 0, 0, 0}
@@ -405,7 +408,7 @@ main(int argc, char **argv)
     int idx;
     unsigned int flags = AUG_TYPE_CHECK | AUG_NO_MODL_AUTOLOAD;
 
-    while ((opt = getopt_long(argc, argv, "heI:O:sv:", options, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "heI:O:qsv:", options, &idx)) != -1) {
         switch (opt) {
         case 'e':
             explicit = 1;
@@ -415,6 +418,9 @@ main(int argc, char **argv)
             break;
         case 'O':
             outdir = optarg;
+            break;
+        case 'q':
+            quiet = 1;
             break;
         case 's':
             show = 1;
@@ -450,7 +456,15 @@ main(int argc, char **argv)
     }
 
     if (show && outdir) {
-        fprintf(stderr, "ERROR: options \'-O\' and \'-s\' should not be entered at the same time.");
+        fprintf(stderr, "\nERROR: options \'-O\' and \'-s\' should not be entered at the same time.\n\n");
+        aym_usage();
+        goto cleanup;
+    } else if (show && quiet) {
+        fprintf(stderr, "\nERROR: options \'-q\' and \'-s\' should not be entered at the same time.\n\n");
+        aym_usage();
+        goto cleanup;
+    } else if (outdir && quiet) {
+        fprintf(stderr, "\nERROR: options \'-O\' and \'-q\' should not be entered at the same time.\n\n");
         aym_usage();
         goto cleanup;
     }
@@ -516,7 +530,7 @@ main(int argc, char **argv)
         if (show) {
             /* write result to stdout */
             printf("%s", str);
-        } else {
+        } else if (!quiet) {
             /* write result to the yang file */
             aym_insert_filename(modname, ".yang", filename);
             aym_insert_dirpath(outdir, filename);
