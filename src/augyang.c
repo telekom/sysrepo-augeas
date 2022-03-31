@@ -1293,18 +1293,18 @@ ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *
  * @brief Print module name.
  *
  * @param[in] mod Module whose name is to be printed.
- * @param[in] out Output for printing.
+ * @param[out] namelen Length of module name.
+ * @return Module name.
  */
-static void
-ay_print_yang_module_name(struct module *mod, struct ly_out *out)
+static char *
+ay_get_yang_module_name(struct module *mod, size_t *namelen)
 {
     char *name, *path;
-    size_t namelen;
 
     path = mod->bindings->value->info->filename->str;
-    ay_get_filename(path, &name, &namelen);
+    ay_get_filename(path, &name, namelen);
 
-    ly_print(out, "%.*s", namelen, name);
+    return name;
 }
 
 /**
@@ -2194,7 +2194,12 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
         AY_CHECK_RET(ret);
         str = buffer;
     } else if (node->type == YN_LIST) {
-        if (node->snode && (node->snode->lens->tag == L_REC)) {
+        if (node->parent->type == YN_ROOT) {
+            tmp = ay_get_yang_module_name(ctx->mod, &len);
+            strncpy(buffer, tmp, len);
+            buffer[len] = '\0';
+            str = buffer;
+        } else if (node->snode && (node->snode->lens->tag == L_REC)) {
             /* get identifier of node behind key */
             ret = ay_get_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME, buffer);
             AY_CHECK_RET(ret);
@@ -3071,7 +3076,8 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
 
     ly_print(ctx->out, "%*slist ", ctx->space, "");
-    ay_print_yang_module_name(ctx->mod, ctx->out);
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
     ay_print_yang_nesting_begin(ctx);
 
     ly_print(ctx->out, "%*skey \"config-file\";\n", ctx->space, "");
@@ -3433,7 +3439,8 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     int ret;
     struct yprinter_ctx ctx;
     struct ly_out *out;
-    char *str;
+    char *str, *modname;
+    size_t modname_len;
 
     if (ly_out_new_memory(&str, 0, &out)) {
         return AYE_MEMORY;
@@ -3446,12 +3453,9 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ctx.out = out;
     ctx.space = SPACE_INDENT;
 
-    ly_print(out, "module ");
-    ay_print_yang_module_name(ctx.mod, ctx.out);
-    ly_print(out, " {\n");
-    ly_print(out, "  namespace \"aug:");
-    ay_print_yang_module_name(ctx.mod, ctx.out);
-    ly_print(out, "\";\n");
+    modname = ay_get_yang_module_name(ctx.mod, &modname_len);
+    ly_print(out, "module %.*s {\n", modname_len, modname);
+    ly_print(out, "  namespace \"aug:%.*s\";\n", modname_len, modname);
     ly_print(out, "  prefix aug;\n\n");
     ly_print(out, "  import augeas-extension {\n");
     ly_print(out, "    prefix " AY_EXT_PREFIX ";\n");
