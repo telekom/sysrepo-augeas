@@ -13,7 +13,7 @@ module devfsrules {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list record-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -35,7 +35,7 @@ module devfsrules {
           type uint64;
           augex:data-path "id";
         }
-        list config-entries {
+        list entry-list {
           key "_id";
           ordered-by user;
           leaf _id {

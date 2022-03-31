@@ -13,7 +13,7 @@ module simplelines {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list line-list {
       key "_id";
       ordered-by user;
       leaf _id {

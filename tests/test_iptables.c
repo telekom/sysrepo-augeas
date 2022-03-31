@@ -50,7 +50,7 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <config-entries>\n"
+            "  <table-list>\n"
             "    <_id>1</_id>\n"
             "    <table>\n"
             "      <value>filter</value>\n"
@@ -172,8 +172,8 @@ test_load(void **state)
             "        </append>\n"
             "      </config-entries>\n"
             "    </table>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </table-list>\n"
+            "  <table-list>\n"
             "    <_id>2</_id>\n"
             "    <table>\n"
             "      <value>mangle</value>\n"
@@ -213,8 +213,8 @@ test_load(void **state)
             "        </chain>\n"
             "      </config-entries>\n"
             "    </table>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </table-list>\n"
+            "  <table-list>\n"
             "    <_id>3</_id>\n"
             "    <table>\n"
             "      <value>nat</value>\n"
@@ -263,7 +263,7 @@ test_load(void **state)
             "        </insert>\n"
             "      </config-entries>\n"
             "    </table>\n"
-            "  </config-entries>\n"
+            "  </table-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -278,24 +278,24 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
             "append/ipt_match[_id='4']/tcp_flags/mask", "ALL", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
             "append/ipt_match[_id='4']/tcp_flags/set", "FIN", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
             "append/ipt_match[_id='4']/tcp_flags/set", "PSH", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/table/value", "mytable", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/table/config-entries[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='4']/table/value", "mytable", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='4']/table/config-entries[_id='1']/"
             "chain/chain_name", "chain1", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/table/config-entries[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='4']/table/config-entries[_id='1']/"
             "chain/policy", "REJECT", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "table-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='3']/table/config-entries[_id='4']/"
             "insert/ipt_match[_id='4']/out-interface/value", "eth25", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='3']/table/config-entries[_id='4']/"
             "insert/ipt_match[_id='4']/out-interface/not", NULL, 0, NULL));
 
     /* store new data */
@@ -350,11 +350,11 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
             "append/ipt_match[_id='2']/node/value", "ESTABLISHED", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='3']/table/config-entries[_id='4']/"
             "insert/ipt_match[_id='1']/out-interface/not", NULL, 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/table/config-entries[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='3']/table/config-entries[_id='1']/"
             "chain/policy", "-", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -386,10 +386,10 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']/table/config-entries[_id='4']/"
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "table-list[_id='1']/table/config-entries[_id='4']/"
             "append/ipt_match[_id='2']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']/table/config-entries[_id='3']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "table-list[_id='2']/table/config-entries[_id='3']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

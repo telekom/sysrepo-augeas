@@ -13,7 +13,7 @@ module cmdline {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list word-list {
       key "_id";
       ordered-by user;
       leaf _id {

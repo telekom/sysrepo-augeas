@@ -13,7 +13,7 @@ module darkice {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list record-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -31,7 +31,7 @@ module darkice {
             pattern "[^\\]\n]+";
           }
         }
-        list config-entries {
+        list entry_re-list {
           key "_id";
           ordered-by user;
           leaf _id {

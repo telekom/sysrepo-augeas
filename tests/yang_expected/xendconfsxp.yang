@@ -13,7 +13,7 @@ module xendconfsxp {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list sexpr-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -38,7 +38,7 @@ module xendconfsxp {
             }
             augex:data-path "item";
           }
-          list array_list {
+          list array-list {
             key "_r-id";
             config false;
             leaf _r-id {
@@ -62,7 +62,7 @@ module xendconfsxp {
                   mandatory true;
                   leaf _array-ref {
                     type leafref {
-                      path "../../../../array_list/_r-id";
+                      path "../../../../array-list/_r-id";
                     }
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";

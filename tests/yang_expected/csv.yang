@@ -28,7 +28,7 @@ module csv {
           mandatory true;
           type uint64;
         }
-        list config-entries {
+        list field-list {
           key "_id";
           min-elements 1;
           ordered-by user;

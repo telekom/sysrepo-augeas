@@ -8,13 +8,13 @@ module sshd {
 
   augex:augeas-mod-name "Sshd";
 
-  grouping ch_accept_env {
-    choice ch_accept_env {
+  grouping ch-accept_env {
+    choice ch-accept_env {
       mandatory true;
       container accept_env {
         augex:data-path "AcceptEnv";
         presence "Config entry.";
-        list config-entries {
+        list AcceptEnv-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -47,7 +47,7 @@ module sshd {
       container allow_groups {
         augex:data-path "AllowGroups";
         presence "Config entry.";
-        list config-entries {
+        list AllowGroups-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -80,7 +80,7 @@ module sshd {
       container allow_users {
         augex:data-path "AllowUsers";
         presence "Config entry.";
-        list config-entries {
+        list AllowUsers-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -113,7 +113,7 @@ module sshd {
       container deny_groups {
         augex:data-path "DenyGroups";
         presence "Config entry.";
-        list config-entries {
+        list DenyGroups-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -167,7 +167,7 @@ module sshd {
       container deny_users {
         augex:data-path "DenyUsers";
         presence "Config entry.";
-        list config-entries {
+        list DenyUsers-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -200,7 +200,7 @@ module sshd {
       container macs {
         augex:data-path "MACs";
         presence "Config entry.";
-        list config-entries {
+        list MACs-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -229,7 +229,7 @@ module sshd {
       container ciphers {
         augex:data-path "Ciphers";
         presence "Config entry.";
-        list config-entries {
+        list Ciphers-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -258,7 +258,7 @@ module sshd {
       container kexalgorithms {
         augex:data-path "KexAlgorithms";
         presence "Config entry.";
-        list config-entries {
+        list KexAlgorithms-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -287,7 +287,7 @@ module sshd {
       container hostkeyalgorithms {
         augex:data-path "HostKeyAlgorithms";
         presence "Config entry.";
-        list config-entries {
+        list HostKeyAlgorithms-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -345,9 +345,9 @@ module sshd {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      uses ch_accept_env;
+      uses ch-accept_env;
     }
-    list config-entries2 {
+    list match-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -406,7 +406,7 @@ module sshd {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            uses ch_accept_env;
+            uses ch-accept_env;
           }
         }
       }

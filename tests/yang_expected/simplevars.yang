@@ -13,7 +13,7 @@ module simplevars {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list entry-list {
       key "_id";
       ordered-by user;
       leaf _id {

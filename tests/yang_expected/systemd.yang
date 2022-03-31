@@ -42,7 +42,7 @@ module systemd {
       }
       uses include;
     }
-    list config-entries2 {
+    list record-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -122,7 +122,7 @@ module systemd {
               container arguments {
                 augex:data-path "arguments";
                 presence "Config entry.";
-                list config-entries {
+                list args-list {
                   key "_id";
                   min-elements 1;
                   ordered-by user;
@@ -152,7 +152,7 @@ module systemd {
             container entry_env {
               augex:data-path "Environment";
               presence "Config entry.";
-              list config-entries {
+              list env_key-list {
                 key "_id";
                 min-elements 1;
                 ordered-by user;
@@ -190,7 +190,7 @@ module systemd {
                 }
               }
             }
-            case c_include {
+            case include {
               uses include;
             }
           }

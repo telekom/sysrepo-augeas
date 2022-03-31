@@ -2078,6 +2078,47 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, uint64_t *len)
 static int ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer);
 
 /**
+ * @brief Try to find identifier in first children.
+ *
+ * @param[in] ctx Current printing context.
+ * @param[in] node Node whose children will be examined.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Buffer in which the obtained identifier is written.
+ */
+static int
+ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt,
+        char *buffer)
+{
+    int ret;
+    char *str;
+    struct ay_ynode *iter;
+
+    buffer[0] = '\0';
+    for (iter = node->child; iter; iter = iter->child) {
+        if ((iter->type == YN_USES) || (iter->type == YN_LEAFREF)) {
+            break;
+        }
+        if (iter->next) {
+            break;
+        }
+        if (iter->snode && (str = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
+            strcpy(buffer, str);
+            break;
+        }
+        ret = ay_get_yang_ident(ctx, iter, opt, buffer);
+        AY_CHECK_RET(ret);
+        if (!strcmp(buffer, "config-entries") || !strcmp(buffer, "node")) {
+            buffer[0] = '\0';
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Evaluate the identifier for the node.
  *
  * @param[in] ctx Current printing context.
@@ -2129,29 +2170,10 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
 
     if (node->type == YN_GROUPING) {
         assert(node->child);
-        *buffer = 0;
-        str = NULL;
-        for (iter = node->child; iter; iter = iter->child) {
-            if ((iter->type == YN_USES) || (iter->type == YN_LEAFREF)) {
-                break;
-            }
-            if (iter->next || iter->choice) {
-                break;
-            }
-            if (iter->snode && (tmp = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
-                str = tmp;
-                break;
-            }
-            ret = ay_get_yang_ident(ctx, iter, opt, buffer);
-            AY_CHECK_RET(ret);
-            if (!strcmp(buffer, "config-entries") || !strcmp(buffer, "node")) {
-                *buffer = 0;
-                continue;
-            } else {
-                break;
-            }
-        }
-        if (!(*buffer) && !str) {
+        ret = ay_get_yang_ident_first_descendants(ctx, node, opt, buffer);
+        AY_CHECK_RET(ret);
+
+        if (!buffer[0]) {
             str = ay_get_lense_name(ctx->mod, snode);
             if (!str) {
                 ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
@@ -2160,11 +2182,13 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
                     str = "gr";
                 } else if (node->child->choice) {
                     memmove(buffer + 3, buffer, strlen(buffer) + 1);
-                    memcpy(buffer, "ch_", 3);
+                    memcpy(buffer, "ch-", 3);
+                    str = buffer;
+                } else {
                     str = buffer;
                 }
             }
-        } else if (!str) {
+        } else {
             str = buffer;
         }
         assert(str);
@@ -2198,17 +2222,22 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
             tmp = ay_get_yang_module_name(ctx->mod, &len);
             strncpy(buffer, tmp, len);
             buffer[len] = '\0';
+            len = 0;
             str = buffer;
         } else if (node->snode && (node->snode->lens->tag == L_REC)) {
             /* get identifier of node behind key */
             ret = ay_get_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME, buffer);
             AY_CHECK_RET(ret);
-            strcpy(buffer + strlen(buffer), "_list");
+            strcpy(buffer + strlen(buffer), "-list");
+            str = buffer;
+        } else if ((tmp = ay_get_lense_name(ctx->mod, label)) && strcmp(tmp, "lns")) {
+            /* label can points to L_STAR lense */
+            str = tmp;
+        } else if (!ay_get_yang_ident_first_descendants(ctx, node, opt, buffer) && buffer[0]) {
+            strcat(buffer, "-list");
             str = buffer;
         } else {
-            /* label can points to L_STAR lense */
-            str = ay_get_lense_name(ctx->mod, label);
-            str = !str || !strcmp(str, "lns") ? "config-entries" : str;
+            str = "config-entries";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
         if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
@@ -2274,10 +2303,6 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
         return AYE_IDENT_NOT_FOUND;
     }
 
-    if (str == buffer) {
-        return ret;
-    }
-
     if (len) {
         ret = ay_get_ident_from_pattern(label->regexp->pattern->str, str, len, opt, buffer);
     } else if (opt == AY_IDENT_NODE_NAME) {
@@ -2303,9 +2328,9 @@ static int
 ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *ident)
 {
     int ret = 0;
-    char siblings_ident[AY_MAX_IDENT_SIZE];
+    char second[AY_MAX_IDENT_SIZE];
     struct ay_ynode *iter;
-    uint32_t duplicates = 1;
+    uint32_t dupl_cnt, dupl_index;
 
     ret = ay_get_yang_ident_(ctx, node, opt, ident);
     AY_CHECK_RET(ret);
@@ -2313,42 +2338,37 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     if (opt == AY_IDENT_DATA_PATH) {
         /* Duplicate identifiers are not resolved in the data-path. */
         return ret;
-    }
-
-    assert(node->parent);
-    if ((node->type == YN_KEY) && (opt == AY_IDENT_NODE_NAME)) {
-        /* The YN_KEY should has unique name. */
-        for (iter = node->next; iter; iter = iter->next) {
-            if ((iter->type == YN_LEAFREF) || (iter->type == YN_USES)) {
-                continue;
-            }
-            ret = ay_get_yang_ident_(ctx, iter, opt, siblings_ident);
-            AY_CHECK_RET(ret);
-            if (!strcmp(ident, siblings_ident)) {
-                strcpy(ident, "_id");
-                return ret;
-            }
-        }
+    } else if (node->type == YN_USES) {
         return ret;
     }
 
-    /* Make duplicate identifiers unique. */
+    assert(node->parent);
+
+    /* Find duplicate identifiers. */
     opt = AY_IDENT_NODE_NAME;
+    dupl_cnt = 0;
     for (iter = node->parent->child; iter; iter = iter->next) {
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || (iter->type == YN_USES)) {
             continue;
         } else if (iter == node) {
-            break;
+            dupl_index = dupl_cnt;
+            continue;
         }
-        ret = ay_get_yang_ident_(ctx, iter, opt, siblings_ident);
+        ret = ay_get_yang_ident_(ctx, iter, opt, second);
         AY_CHECK_RET(ret);
-        if (!strcmp(ident, siblings_ident)) {
-            duplicates++;
+        if (!strcmp(ident, second)) {
+            dupl_cnt++;
         }
     }
+    if (!dupl_cnt) {
+        return ret;
+    }
 
-    if (duplicates > 1) {
-        sprintf(ident + strlen(ident),  "%" PRIu32, duplicates);
+    /* Make duplicate identifiers unique. */
+    if (node->type == YN_KEY) {
+        strcpy(ident, "_id");
+    } else if (dupl_index) {
+        sprintf(ident + strlen(ident),  "%" PRIu32, dupl_index + 1);
     }
 
     return ret;
@@ -3324,8 +3344,12 @@ ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     int ret;
 
-    ly_print(ctx->out, "%*scase c_", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    ly_print(ctx->out, "%*scase ", ctx->space, "");
+    if (node->child) {
+        ret = ay_print_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME);
+    } else {
+        ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    }
 
     return ret;
 }

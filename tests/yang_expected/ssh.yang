@@ -8,13 +8,13 @@ module ssh {
 
   augex:augeas-mod-name "Ssh";
 
-  grouping ch_send_env {
-    choice ch_send_env {
+  grouping ch-send_env {
+    choice ch-send_env {
       mandatory true;
       container send_env {
         augex:data-path "SendEnv";
         presence "Config entry.";
-        list config-entries {
+        list array_entry-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -58,32 +58,32 @@ module ssh {
       container macs {
         augex:data-path "MACs";
         presence "Config entry.";
-        uses commas_entry;
+        uses commas_entry-list;
       }
       container ciphers {
         augex:data-path "Ciphers";
         presence "Config entry.";
-        uses commas_entry;
+        uses commas_entry-list;
       }
       container HostKeyAlgorithms {
         augex:data-path "HostKeyAlgorithms";
         presence "Config entry.";
-        uses commas_entry;
+        uses commas_entry-list;
       }
       container KexAlgorithms {
         augex:data-path "KexAlgorithms";
         presence "Config entry.";
-        uses commas_entry;
+        uses commas_entry-list;
       }
       container pubkey_accepted_key_types {
         augex:data-path "PubkeyAcceptedKeyTypes";
         presence "Config entry.";
-        uses commas_entry;
+        uses commas_entry-list;
       }
       container global_knownhosts_file {
         augex:data-path "GlobalKnownHostsFile";
         presence "Config entry.";
-        list config-entries {
+        list spaces_entry-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -164,8 +164,8 @@ module ssh {
       }
     }
   }
-  grouping commas_entry {
-    list config-entries {
+  grouping commas_entry-list {
+    list commas_entry-list {
       key "_id";
       min-elements 1;
       ordered-by user;
@@ -204,7 +204,7 @@ module ssh {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      uses ch_send_env;
+      uses ch-send_env;
     }
     list config-entries2 {
       key "_id";
@@ -234,7 +234,7 @@ module ssh {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            uses ch_send_env;
+            uses ch-send_env;
           }
         }
         container match {
@@ -288,7 +288,7 @@ module ssh {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              uses ch_send_env;
+              uses ch-send_env;
             }
           }
         }

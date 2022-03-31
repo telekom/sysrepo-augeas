@@ -13,7 +13,7 @@ module ceph {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list record-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -30,7 +30,7 @@ module ceph {
             pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*)|#comme([^\\]\n/n][^\\]\n/]*)|#comm([^\\]\n/e][^\\]\n/]*)|#com([^\\]\n/m][^\\]\n/]*)|#co([^\\]\n/m][^\\]\n/]*)|#c([^\\]\n/o][^\\]\n/]*)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
           }
         }
-        list config-entries {
+        list entry_re-list {
           key "_id";
           ordered-by user;
           leaf _id {
