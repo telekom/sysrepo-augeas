@@ -177,6 +177,7 @@
 #define AYE_DEBUG_FAILED 4
 #define AYE_IDENT_NOT_FOUND 5
 #define AYE_IDENT_LIMIT 6
+#define AYE_LTREE_NO_ROOT 7
 
 /**
  * @brief Check if lense tag belongs to ynode.label.
@@ -489,7 +490,7 @@ augyang_get_error_message(int err_code)
     case AYE_MEMORY:
         return AY_NAME " ERROR: memory allocation failed.\n";
     case AYE_LENSE_NOT_FOUND:
-        return AY_NAME " ERROR: lense was not found.\n";
+        return AY_NAME " ERROR: Augyang does not know which lense is the root.\n";
     case AYE_L_REC:
         return AY_NAME " ERROR: lense with tag \'L_REC\' is not supported.\n";
     case AYE_DEBUG_FAILED:
@@ -498,6 +499,8 @@ augyang_get_error_message(int err_code)
         return AY_NAME " ERROR: identifier not found. Output YANG is not valid.\n";
     case AYE_IDENT_LIMIT:
         return AY_NAME " ERROR: identifier is too long. Output YANG is not valid.\n";
+    case AYE_LTREE_NO_ROOT:
+        return AY_NAME " ERROR: Augyang does not know which lense is the root.\n";
     default:
         return AY_NAME " INTERNAL ERROR: error message not defined.\n";
     }
@@ -681,6 +684,10 @@ static void
 ay_ynode_tree_free(struct ay_ynode *tree)
 {
     struct ay_ynode_root *root;
+
+    if (!tree) {
+        return;
+    }
 
     assert(tree->type == YN_ROOT);
 
@@ -3896,6 +3903,37 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
 }
 
 /**
+ * @brief Check if lnode tree is usable for generating yang.
+ *
+ * The goal is to detect auxiliary augeas modules such as build.aug, rx.aug etc.
+ *
+ * @param[in] ltree Tree of lnodes to check.
+ * @param[in] mod Augeas module from which @p ltree was derived.
+ */
+static int
+ay_lnode_tree_check(const struct ay_lnode *ltree, const struct module *mod)
+{
+    uint64_t bcnt;
+    struct binding *bind_iter;
+
+    if (mod->autoload) {
+        return 0;
+    }
+
+    /* Count number of bindings in module. */
+    bcnt = 0;
+    LY_LIST_FOR(mod->bindings, bind_iter) {
+        bcnt++;
+    }
+
+    if (LY_ARRAY_COUNT(ltree) < bcnt) {
+        return AYE_LTREE_NO_ROOT;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Create basic ynode forest from lnode tree.
  *
  * Only ay_ynode.snode and ay_ynode.descendants are set.
@@ -6104,6 +6142,8 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);
     ay_lnode_create_tree(ltree, lens, ltree);
+    ret = ay_lnode_tree_check(ltree, mod);
+    AY_CHECK_GOTO(ret, cleanup);
     ay_test_lnode_tree(vercode, mod, ltree);
 
     /* Create ynode forest. */
