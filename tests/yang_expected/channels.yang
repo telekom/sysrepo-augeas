@@ -1,0 +1,236 @@
+module channels {
+  namespace "aug:channels";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Channels";
+
+  grouping entry-list {
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "entry";
+        augex:value-yang-path "no_semicolon";
+        presence "Config entry.";
+        leaf no_semicolon {
+          mandatory true;
+          type string {
+            pattern "[^;\n]+";
+          }
+        }
+        leaf provider {
+          type string {
+            pattern "[^: \t\n][^:\n]*[^: \t\n]|[^:\n]";
+          }
+          augex:data-path "provider";
+        }
+        leaf frequency {
+          mandatory true;
+          type uint64;
+          augex:data-path "frequency";
+        }
+        leaf parameter {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "parameter";
+        }
+        leaf signal_source {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "signal_source";
+        }
+        leaf symbol_rate {
+          mandatory true;
+          type uint64;
+          augex:data-path "symbol_rate";
+        }
+        container vpid {
+          augex:data-path "vpid";
+          augex:value-yang-path "integer";
+          presence "Config entry.";
+          leaf integer {
+            mandatory true;
+            type uint64;
+          }
+          uses codec;
+        }
+        container vpid_pcr {
+          augex:data-path "vpid_pcr";
+          augex:value-yang-path "integer";
+          presence "Config entry.";
+          leaf integer {
+            mandatory true;
+            type uint64;
+          }
+          uses codec;
+        }
+        list apid-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container apid {
+            augex:data-path "apid";
+            augex:value-yang-path "integer";
+            presence "Config entry.";
+            leaf integer {
+              mandatory true;
+              type uint64;
+            }
+            uses ch-lang;
+          }
+        }
+        list apid_dolby-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container apid_dolby {
+            augex:data-path "apid_dolby";
+            augex:value-yang-path "integer";
+            presence "Config entry.";
+            leaf integer {
+              mandatory true;
+              type uint64;
+            }
+            uses ch-lang;
+          }
+        }
+        leaf tpid {
+          mandatory true;
+          type uint64;
+          augex:data-path "tpid";
+        }
+        list tpid_bylang-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container tpid_bylang {
+            augex:data-path "tpid_bylang";
+            augex:value-yang-path "integer";
+            presence "Config entry.";
+            leaf integer {
+              mandatory true;
+              type uint64;
+            }
+            leaf-list lang {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              ordered-by user;
+              augex:data-path "lang";
+            }
+          }
+        }
+        leaf-list caid {
+          min-elements 1;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "caid";
+        }
+        leaf sid {
+          mandatory true;
+          type uint64;
+          augex:data-path "sid";
+        }
+        leaf nid {
+          mandatory true;
+          type uint64;
+          augex:data-path "nid";
+        }
+        leaf tid {
+          mandatory true;
+          type uint64;
+          augex:data-path "tid";
+        }
+        leaf rid {
+          mandatory true;
+          type uint64;
+          augex:data-path "rid";
+        }
+      }
+    }
+  }
+  grouping codec {
+    leaf codec {
+      type uint64;
+      augex:data-path "codec";
+    }
+  }
+  grouping ch-lang {
+    choice ch-lang {
+      case lang {
+        leaf-list lang {
+          min-elements 1;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "lang";
+        }
+        leaf codec {
+          type uint64;
+          augex:data-path "codec";
+        }
+      }
+      leaf codec2 {
+        type uint64;
+        augex:data-path "codec";
+      }
+    }
+  }
+  list channels {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    uses entry-list;
+    list group-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container group {
+        augex:data-path "group";
+        augex:value-yang-path "no_colon";
+        presence "Config entry.";
+        leaf no_colon {
+          mandatory true;
+          type string {
+            pattern "[^: \t\n][^:\n]*[^: \t\n]|[^:\n]";
+          }
+        }
+        uses entry-list;
+      }
+    }
+  }
+}
