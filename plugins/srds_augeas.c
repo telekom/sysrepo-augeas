@@ -2917,6 +2917,12 @@ next_iter:
                         &label_matches[j], 1, new_node, first))) {
                     goto cleanup;
                 }
+
+                if (!lyd_child_no_keys(new_node)) {
+                    /* no children matched, free */
+                    lyd_free_tree(new_node);
+                    --(*idx_p);
+                }
             }
         } else if (augnodes[i].schema->nodetype == LYS_LEAF) {
             /* this is a leafref, handle all recursive Augeas data */
