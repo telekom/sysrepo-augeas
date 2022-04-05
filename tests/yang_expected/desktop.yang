@@ -1,0 +1,61 @@
+module desktop {
+  namespace "aug:desktop";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Desktop";
+
+  list desktop {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*)|#comme([^\\]\n/n][^\\]\n/]*)|#comm([^\\]\n/e][^\\]\n/]*)|#com([^\\]\n/m][^\\]\n/]*)|#co([^\\]\n/m][^\\]\n/]*)|#c([^\\]\n/o][^\\]\n/]*)|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+          }
+        }
+        list setting-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container setting {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf setting {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+([][@A-Za-z0-9_.-]+)?";
+              }
+            }
+            leaf value {
+              type string {
+                pattern "[^# \t\n][^#\n]*[^# \t\n]|[^# \t\n]";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

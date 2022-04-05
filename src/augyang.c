@@ -538,7 +538,7 @@ static struct lens *
 ay_lense_get_root(struct module *mod)
 {
     struct binding *bnd;
-    struct value *val;
+    enum value_tag tag;
 
     /* Print lense. */
     if (mod->autoload) {
@@ -550,14 +550,19 @@ ay_lense_get_root(struct module *mod)
             return NULL;
         }
 
-        val = bnd->value;
-        if (val->tag != V_LENS) {
-            return NULL;
+        LY_LIST_FOR(mod->bindings, bnd) {
+            tag = bnd->value->tag;
+            if ((tag == V_TRANSFORM) || (tag == V_FILTER)) {
+                continue;
+            } else if (tag == V_LENS) {
+                return bnd->value->lens;
+            } else {
+                return NULL;
+            }
         }
-
-        /* suppose the first lense is the root */
-        return val->lens;
     }
+
+    return NULL;
 }
 
 /**
