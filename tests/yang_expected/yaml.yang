@@ -1,0 +1,145 @@
+module yaml {
+  namespace "aug:yaml";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "YAML";
+
+  grouping _repo {
+    container _repo {
+      augex:data-path "$$";
+      augex:value-yang-path "val";
+      presence "Config entry.";
+      leaf word {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+      }
+      choice ch__repo {
+        mandatory true;
+        leaf val {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        container mval {
+          augex:data-path "@mval";
+          presence "Config entry.";
+          leaf-list line {
+            min-elements 1;
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+            ordered-by user;
+            augex:data-path "@line";
+          }
+        }
+      }
+    }
+  }
+  list yaml {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    leaf yaml {
+      type union {
+        type empty;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+      augex:data-path "@yaml";
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch_config-entries {
+        mandatory true;
+        container sequence {
+          augex:data-path "@sequence";
+          presence "Config entry.";
+          list _repo-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            uses _repo;
+          }
+        }
+        container entry {
+          augex:data-path "$$";
+          augex:value-yang-path "val";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          leaf val {
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          choice ch_entry {
+            mandatory true;
+            case _inherit {
+              container _inherit {
+                augex:data-path "$$";
+                augex:value-yang-path "val";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "<<";
+                  }
+                }
+                leaf val {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                }
+              }
+              list _repo-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                uses _repo;
+              }
+            }
+            list _repo-list2 {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              uses _repo;
+            }
+          }
+        }
+      }
+    }
+  }
+}

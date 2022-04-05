@@ -8,6 +8,26 @@ module dhclient {
 
   augex:augeas-mod-name "Dhclient";
 
+  grouping ch-media {
+    choice ch-media {
+      mandatory true;
+      container media {
+        augex:data-path "media";
+        presence "Config entry.";
+        uses stmt_array-list;
+      }
+      container request {
+        augex:data-path "request";
+        presence "Config entry.";
+        uses stmt_array-list;
+      }
+      container require {
+        augex:data-path "require";
+        presence "Config entry.";
+        uses stmt_array-list;
+      }
+    }
+  }
   grouping word {
     container word {
       augex:data-path "$$";
@@ -48,26 +68,6 @@ module dhclient {
           }
           augex:data-path "#eval";
         }
-      }
-    }
-  }
-  grouping ch-media {
-    choice ch-media {
-      mandatory true;
-      container media {
-        augex:data-path "media";
-        presence "Config entry.";
-        uses stmt_array-list;
-      }
-      container request {
-        augex:data-path "request";
-        presence "Config entry.";
-        uses stmt_array-list;
-      }
-      container require {
-        augex:data-path "require";
-        presence "Config entry.";
-        uses stmt_array-list;
       }
     }
   }
@@ -182,33 +182,6 @@ module dhclient {
       }
     }
   }
-  grouping stmt_array-list {
-    list stmt_array-list {
-      key "_id";
-      min-elements 1;
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      container stmt_array {
-        augex:data-path "$$";
-        augex:value-yang-path "sto_to_spc";
-        presence "Config entry.";
-        leaf stmt_array {
-          mandatory true;
-          type uint64;
-        }
-        leaf sto_to_spc {
-          mandatory true;
-          type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-          }
-        }
-      }
-    }
-  }
   grouping stmt_block_date {
     leaf weekday {
       mandatory true;
@@ -258,6 +231,33 @@ module dhclient {
         pattern "[0-9][0-9]*";
       }
       augex:data-path "second";
+    }
+  }
+  grouping stmt_array-list {
+    list stmt_array-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container stmt_array {
+        augex:data-path "$$";
+        augex:value-yang-path "sto_to_spc";
+        presence "Config entry.";
+        leaf stmt_array {
+          mandatory true;
+          type uint64;
+        }
+        leaf sto_to_spc {
+          mandatory true;
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
+        }
+      }
     }
   }
   list dhclient {

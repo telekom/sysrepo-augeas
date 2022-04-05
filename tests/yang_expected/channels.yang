@@ -177,12 +177,6 @@ module channels {
       }
     }
   }
-  grouping codec {
-    leaf codec {
-      type uint64;
-      augex:data-path "codec";
-    }
-  }
   grouping ch-lang {
     choice ch-lang {
       case lang {
@@ -203,6 +197,12 @@ module channels {
         type uint64;
         augex:data-path "codec";
       }
+    }
+  }
+  grouping codec {
+    leaf codec {
+      type uint64;
+      augex:data-path "codec";
     }
   }
   list channels {

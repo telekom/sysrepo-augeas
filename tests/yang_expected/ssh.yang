@@ -145,25 +145,6 @@ module ssh {
       }
     }
   }
-  grouping remote_fw {
-    container node {
-      augex:data-path "$$";
-      augex:value-yang-path "value_to_eol";
-      presence "Config entry.";
-      leaf label {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n/=][^ \t\n/]*";
-        }
-      }
-      leaf value_to_eol {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-        }
-      }
-    }
-  }
   grouping commas_entry-list {
     list commas_entry-list {
       key "_id";
@@ -191,12 +172,31 @@ module ssh {
       }
     }
   }
+  grouping remote_fw {
+    container node {
+      augex:data-path "$$";
+      augex:value-yang-path "value_to_eol";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n/=][^ \t\n/]*";
+        }
+      }
+      leaf value_to_eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+    }
+  }
   list ssh {
     key "config-file";
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list ch-send_env-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -206,7 +206,7 @@ module ssh {
       }
       uses ch-send_env;
     }
-    list config-entries2 {
+    list config-entries {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -214,7 +214,7 @@ module ssh {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries2 {
+      choice ch_config-entries {
         mandatory true;
         container host {
           augex:data-path "Host";
@@ -226,7 +226,7 @@ module ssh {
               pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
             }
           }
-          list config-entries {
+          list ch-send_env-list {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -279,7 +279,7 @@ module ssh {
           container Settings {
             augex:data-path "Settings";
             presence "Config entry.";
-            list config-entries {
+            list ch-send_env-list {
               key "_id";
               min-elements 1;
               ordered-by user;

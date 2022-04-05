@@ -337,7 +337,7 @@ module sshd {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list ch-accept_env-list {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -397,7 +397,7 @@ module sshd {
         container Settings {
           augex:data-path "Settings";
           presence "Config entry.";
-          list config-entries {
+          list ch-accept_env-list {
             key "_id";
             min-elements 1;
             ordered-by user;
