@@ -36,7 +36,7 @@ module inputrc {
       leaf label {
         mandatory true;
         type string {
-          pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*)|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*)|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*)|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+          pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
         }
       }
       leaf word {

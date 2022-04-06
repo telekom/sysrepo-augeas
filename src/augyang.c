@@ -1548,7 +1548,7 @@ ay_regex_remove_parentheses(char **src)
 /**
  * @brief Greedy search for a substring to skip (and finally delete).
  *
- * Searched substrings are for example: (), \$?, \r, |() ...
+ * Searched substrings are for example: \$?, \r ...
  *
  * @param[in] curr Current position in pattern to search substring.
  * @return Pointer to character that must not be skiped (deleted).
@@ -1558,6 +1558,13 @@ ay_regex_try_skip(const char *curr)
 {
     const char *skip, *old;
     int64_t parcnt;
+
+    /* Cannot be skiped, this substring is important. */
+    if (curr[1] && curr[2] && !strncmp(curr, "|()", 3)) {
+        return curr;
+    } else if (curr[1] && !strncmp(curr, "()", 2)) {
+        return curr;
+    }
 
     skip = curr;
     parcnt = 0;
