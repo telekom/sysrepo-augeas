@@ -95,6 +95,8 @@ static struct auginfo {
     pcre2_code *pcode_uint64;       /**< compiled PCRE2 pattern to match uint64 values, to be reused */
 } auginfo;
 
+static int augds_check_erraug(augeas *aug);
+
 /**
  * @brief Free auginfo augnode.
  *
@@ -441,6 +443,119 @@ augds_get_label_node(const char *label, char **dyn)
 }
 
 /**
+ * @brief Append a single piece of error information to the message.
+ *
+ * @param[in] name Error information label.
+ * @param[in] value Error information value.
+ * @param[in,out] msg Message to append to.
+ * @param[in,out] msg_len Length of @p msg, is updated.
+ * @return SR error code.
+ */
+static int
+augds_erraug_append(const char *name, const char *value, char **msg, int *msg_len)
+{
+    int new_len;
+    void *mem;
+
+    if (!name) {
+        /* alloc memory */
+        new_len = *msg_len + 1;
+        mem = realloc(*msg, new_len + 1);
+        if (!mem) {
+            AUG_LOG_ERRMEM_RET;
+        }
+        *msg = mem;
+
+        /* append */
+        sprintf(*msg + *msg_len, "\n");
+        *msg_len = new_len;
+
+        return SR_ERR_OK;
+    }
+
+    /* alloc memory */
+    new_len = *msg_len + 2 + strlen(name) + 2 + strlen(value);
+    mem = realloc(*msg, new_len + 1);
+    if (!mem) {
+        AUG_LOG_ERRMEM_RET;
+    }
+    *msg = mem;
+
+    /* append */
+    sprintf(*msg + *msg_len, "\n\t%s: %s", name, value);
+    *msg_len = new_len;
+
+    return SR_ERR_OK;
+}
+
+/**
+ * @brief Process single Augeas error.
+ *
+ * @param[in] aug Augeas handle.
+ * @param[in] aug_err_path Augeas path to the error.
+ * @param[in,out] msg Message to append to.
+ * @param[in,out] msg_len Length of @p msg, is updated.
+ * @return SR error code.
+ */
+static int
+augds_erraug_error(augeas *aug, const char *aug_err_path, char **msg, int *msg_len)
+{
+    int rc = SR_ERR_OK, len, i, label_count = 0;
+    const char *value;
+    char *path = NULL, *file = NULL, **label_matches = NULL;
+
+    /* get error */
+    if (aug_get(aug, aug_err_path, &value) != 1) {
+        AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+    }
+    if ((rc = augds_erraug_append("error", value, msg, msg_len))) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+
+    /* get file from the error path itself */
+    assert(!strncmp(aug_err_path, "/augeas/files", 13));
+    assert(!strcmp(aug_err_path + strlen(aug_err_path) - 6, "/error"));
+    len = strlen(aug_err_path);
+    file = strndup(aug_err_path + 13, (len - 13) - 6);
+    if (!file) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+    if ((rc = augds_erraug_append("file", file, msg, msg_len))) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+
+    /* get error details */
+    if (asprintf(&path, "%s/*", aug_err_path) == -1) {
+        AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+    }
+    label_count = aug_match(aug, path, &label_matches);
+    if (label_count == -1) {
+        AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+    }
+
+    for (i = 0; i < label_count; ++i) {
+        /* get value */
+        if (aug_get(aug, label_matches[i], &value) != 1) {
+            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+        }
+
+        /* append */
+        if ((rc = augds_erraug_append(augds_get_label_node(label_matches[i], NULL), value, msg, msg_len))) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
+    }
+
+cleanup:
+    for (i = 0; i < label_count; ++i) {
+        free(label_matches[i]);
+    }
+    free(label_matches);
+    free(path);
+    free(file);
+    return rc;
+}
+
+/**
  * @brief Check for augeas errors.
  *
  * @param[in] aug Augeas handle.
@@ -449,8 +564,8 @@ augds_get_label_node(const char *label, char **dyn)
 static int
 augds_check_erraug(augeas *aug)
 {
-    int rc = SR_ERR_OK, i, label_count = 0, len, new_len;
-    const char *aug_err_mmsg, *aug_err_details, *data_error, *value;
+    int rc = SR_ERR_OK, i, label_count = 0, len;
+    const char *aug_err_mmsg, *aug_err_details;
     char **label_matches = NULL, *msg = NULL;
 
     if (!aug) {
@@ -473,7 +588,7 @@ augds_check_erraug(augeas *aug)
     }
 
     /* check for data error */
-    label_count = aug_match(aug, "/augeas/files//error//.", &label_matches);
+    label_count = aug_match(aug, "/augeas/files//error", &label_matches);
     if (label_count == -1) {
         AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
     } else if (!label_count) {
@@ -482,37 +597,23 @@ augds_check_erraug(augeas *aug)
     }
 
     /* data error */
-    assert(!strcmp(augds_get_label_node(label_matches[0], NULL), "error"));
-    if (aug_get(aug, label_matches[0], &data_error) != 1) {
-        AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-    }
-
-    if (label_count == 1) {
-        /* no more information */
-        SRPLG_LOG_ERR(srpds_name, "Augeas data error \"%s\".", data_error);
-        rc = SR_ERR_OPERATION_FAILED;
-        goto cleanup;
-    }
-
-    /* create the error message with all the information */
-    if ((len = asprintf(&msg, "Augeas data error \"%s\".", data_error)) == -1) {
+    if ((len = asprintf(&msg, "Augeas data error:")) == -1) {
         AUG_LOG_ERRMEM_GOTO(rc, cleanup);
     }
-    for (i = 1; i < label_count; ++i) {
-        /* get value */
-        if (aug_get(aug, label_matches[i], &value) != 1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+
+    /* process all the errors */
+    for (i = 0; i < label_count; ++i) {
+        if ((rc = augds_erraug_error(aug, label_matches[i], &msg, &len))) {
+            goto cleanup;
         }
 
-        /* alloc memory */
-        new_len = len + 2 + strlen(augds_get_label_node(label_matches[i], NULL)) + 2 + strlen(value);
-        msg = realloc(msg, new_len + 1);
-
-        /* append */
-        sprintf(msg + len, "\n\t%s: %s", augds_get_label_node(label_matches[i], NULL), value);
-        len = new_len;
+        /* finish error with a newline */
+        if ((rc = augds_erraug_append(NULL, NULL, &msg, &len))) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
     }
 
+    /* log */
     SRPLG_LOG_ERR(srpds_name, msg);
     rc = SR_ERR_OPERATION_FAILED;
 
