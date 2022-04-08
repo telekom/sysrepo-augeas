@@ -119,7 +119,6 @@ endif()
 # local augeas lib paths
 set(AUGEAS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/augeas)
 set(AUGEAS_DIR ${AUGEAS_PREFIX}/src/augeas_ext)
-set(AUGEAS_LENSES_DIR ${AUGEAS_DIR}/lenses)
 set(AUGEAS_SRC_DIR ${AUGEAS_PREFIX}/src/augeas_ext-build/src)
 
 # local GNU lib paths
@@ -189,7 +188,6 @@ ExternalProject_Add(augeas_ext
 add_dependencies(augyang augeas_ext)
 target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
 target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
-target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
 
 # selinux (must be last, linked to augeas as well)
 find_package(SELinux REQUIRED)
@@ -198,6 +196,7 @@ include_directories(${SELINUX_INCLUDE_DIRS})
 
 # generate files
 configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/src/ayg_config.h.in" "${PROJECT_BINARY_DIR}/ayg_config.h" ESCAPE_QUOTES @ONLY)
 
 # install latest lenses with our patches
 add_custom_target(install_lens

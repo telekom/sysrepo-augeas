@@ -41,6 +41,8 @@
 
 #define _GNU_SOURCE
 
+#include "ayg_config.h"
+
 #include <dirent.h>
 #include <getopt.h>
 #include <stdint.h>

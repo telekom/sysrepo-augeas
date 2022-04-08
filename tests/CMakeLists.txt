@@ -32,8 +32,6 @@ find_program(YANGLINT_BIN yanglint)
 file(GLOB yang_expected_files "${YANG_EXP_DIR}/*.yang")
 foreach(expfile ${yang_expected_files})
     get_filename_component(mod ${expfile} NAME_WE)
-    set(genfile ${YANG_GEN_DIR}/${mod}.yang)
-
     add_test(NAME "aytest_${mod}" COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/AYtest.cmake
         ${PROJECT_SOURCE_DIR} ${YANG_EXP_DIR} ${YANG_GEN_DIR} $<TARGET_FILE:augyang> ${YANGLINT_BIN} ${mod})
 endforeach()
