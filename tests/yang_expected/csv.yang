@@ -13,7 +13,7 @@ module csv {
     leaf config-file {
       type string;
     }
-    list lns_semicol {
+    list lns-semicol {
       key "_id";
       ordered-by user;
       leaf _id {

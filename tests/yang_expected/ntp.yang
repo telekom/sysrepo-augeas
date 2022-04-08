@@ -17,7 +17,7 @@ module ntp {
       augex:data-path "flag";
     }
   }
-  grouping command_record {
+  grouping command-record {
     list config-entries {
       key "_id";
       ordered-by user;
@@ -26,7 +26,7 @@ module ntp {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         leaf minpoll {
           type string {
@@ -106,7 +106,7 @@ module ntp {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         container pool {
           augex:data-path "pool";
@@ -118,7 +118,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container server {
           augex:data-path "server";
@@ -130,7 +130,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container peer {
           augex:data-path "peer";
@@ -142,7 +142,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container broadcast {
           augex:data-path "broadcast";
@@ -154,7 +154,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container manycastclient {
           augex:data-path "manycastclient";
@@ -166,7 +166,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container multicastclient {
           augex:data-path "multicastclient";
@@ -178,7 +178,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
         container manycastserver {
           augex:data-path "manycastserver";
@@ -190,9 +190,9 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          uses command_record;
+          uses command-record;
         }
-        container fudge_record {
+        container fudge-record {
           augex:data-path "fudge";
           augex:value-yang-path "word";
           presence "Config entry.";
@@ -202,7 +202,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          choice ch_fudge_record {
+          choice ch-fudge-record {
             leaf refid {
               type string {
                 pattern "[^,# \n\t]+";
@@ -217,7 +217,7 @@ module ntp {
             }
           }
         }
-        container restrict_record {
+        container restrict-record {
           augex:data-path "restrict";
           augex:value-yang-path "value";
           presence "Config entry.";
@@ -227,7 +227,7 @@ module ntp {
               pattern "[^,# \n\t-][^,# \n\t]*";
             }
           }
-          choice ch_restrict_record {
+          choice ch-restrict-record {
             leaf ipv6 {
               type empty;
               augex:data-path "ipv6";
@@ -297,7 +297,7 @@ module ntp {
           }
           augex:data-path "ntpsigndsocket";
         }
-        container statistics_record {
+        container statistics-record {
           augex:data-path "statistics";
           presence "Config entry.";
           list config-entries {
@@ -308,7 +308,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch_config-entries {
+            choice ch-config-entries {
               mandatory true;
               leaf loopstats {
                 type empty;
@@ -329,7 +329,7 @@ module ntp {
             }
           }
         }
-        container filegen_record {
+        container filegen-record {
           augex:data-path "filegen";
           augex:value-yang-path "word";
           presence "Config entry.";
@@ -347,7 +347,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch_config-entries {
+            choice ch-config-entries {
               mandatory true;
               leaf file {
                 type string {
@@ -445,7 +445,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch_config-entries {
+            choice ch-config-entries {
               mandatory true;
               leaf step {
                 type string {
@@ -503,7 +503,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch_config-entries {
+            choice ch-config-entries {
               mandatory true;
               leaf beacon {
                 type string {

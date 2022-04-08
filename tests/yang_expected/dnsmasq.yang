@@ -21,13 +21,13 @@ module dnsmasq {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         container address {
           augex:data-path "address";
-          augex:value-yang-path "sto_no_slash";
+          augex:value-yang-path "sto-no-slash";
           presence "Config entry.";
-          leaf sto_no_slash {
+          leaf sto-no-slash {
             mandatory true;
             type string {
               pattern "[^/ \t\n]+";
@@ -80,15 +80,15 @@ module dnsmasq {
         }
         container entry {
           augex:data-path "$$";
-          augex:value-yang-path "sto_to_eol";
+          augex:value-yang-path "sto-to-eol";
           presence "Config entry.";
-          leaf entry_re {
+          leaf entry-re {
             mandatory true;
             type string {
               pattern "addres((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|addre([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|addr([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|add([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|ad([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|serve((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|(s[.0-9A-Z_a-df-z-]|a[.0-9A-Z_a-ce-z-]|[.0-9A-Z_b-rt-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|s|a|[.0-9A-Z_b-rt-z-]";
             }
           }
-          leaf sto_to_eol {
+          leaf sto-to-eol {
             type string {
               pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
             }

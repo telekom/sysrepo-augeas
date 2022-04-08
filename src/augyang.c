@@ -1423,11 +1423,12 @@ enum ay_ident_dst {
  *
  * @param[in] ident Identifier for standardization.
  * @param[in] opt Where the identifier will be placed.
+ * @param[in] internal If set then add '_' to the beginning of the buffer.
  * @param[out] buffer Buffer in which a valid identifier will be written.
  * @return 0 on success.
  */
 static int
-ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, char *buffer)
+ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool internal, char *buffer)
 {
     int64_t i, j, len, stop;
 
@@ -1441,22 +1442,29 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, char *buffer
             j--;
             break;
         case ' ':
-            buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
+            buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
             break;
         case '+':
-            len = strlen("plus_");
+            len = strlen("plus-");
             AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            strcpy(&buffer[j], "plus_");
+            strcpy(&buffer[j], "plus-");
             j += len - 1;
             break;
         case '-':
             if (j == 0) {
-                len = strlen("minus_");
+                len = strlen("minus-");
                 AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-                strcpy(&buffer[j], "minus_");
+                strcpy(&buffer[j], "minus-");
                 j += len - 1;
             } else {
                 AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+                buffer[j] = '-';
+            }
+            break;
+        case '_':
+            if (j == 0) {
+                j--;
+            } else {
                 buffer[j] = '-';
             }
             break;
@@ -1467,6 +1475,11 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, char *buffer
     }
 
     buffer[j] = '\0';
+
+    if (internal) {
+        memmove(buffer + 1, buffer, strlen(buffer) + 1);
+        buffer[0] = '_';
+    }
 
     return 0;
 }
@@ -1743,12 +1756,12 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
     for (i = 0, j = 0; i < stop; i++, j++) {
         switch (ident[i]) {
         case ' ':
-            if (j && (buffer[j - 1] == '_')) {
+            if (j && (buffer[j - 1] == '-')) {
                 j--;
             } else if (j == 0) {
                 j--;
             } else {
-                buffer[j] = opt == AY_IDENT_NODE_NAME ? '_' : ' ';
+                buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
             }
             break;
         case '(':
@@ -1759,6 +1772,13 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
             break;
         case '\n':
             j--;
+            break;
+        case '_':
+            if (j == 0) {
+                j--;
+            } else {
+                buffer[j] = '-';
+            }
             break;
         default:
             AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
@@ -2179,6 +2199,7 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
     struct lens *label, *value, *snode;
     struct ay_ynode *iter;
     uint64_t len = 0;
+    ly_bool internal = 0;
 
     snode = AY_SNODE_LENS(node);
     label = AY_LABEL_LENS(node);
@@ -2247,8 +2268,7 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
         assert(iter);
         ret = ay_get_yang_ident(ctx, iter->child, opt, buffer);
         AY_CHECK_RET(ret);
-        memmove(buffer + 1, buffer, strlen(buffer) + 1);
-        buffer[0] = '_';
+        internal = 1;
         strcat(buffer, "-ref");
         str = buffer;
     } else if (node->type == YN_USES) {
@@ -2353,8 +2373,8 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
 
     if (len) {
         ret = ay_get_ident_from_pattern(label->regexp->pattern->str, str, len, opt, buffer);
-    } else if (opt == AY_IDENT_NODE_NAME) {
-        ret = ay_get_ident_standardized(str, opt, buffer);
+    } else if ((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH)) {
+        ret = ay_get_ident_standardized(str, opt, internal, buffer);
     } else {
         assert((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH));
         strcpy(buffer, str);
@@ -3407,7 +3427,7 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (node->parent->type == YN_GROUPING) {
         ly_print(ctx->out, "%*schoice ", ctx->space, "");
     } else {
-        ly_print(ctx->out, "%*schoice ch_", ctx->space, "");
+        ly_print(ctx->out, "%*schoice ch-", ctx->space, "");
     }
     ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
     AY_CHECK_RET(ret);
@@ -3551,7 +3571,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     struct yprinter_ctx ctx;
     struct ly_out *out;
     char *str, *modname;
-    size_t modname_len;
+    size_t i, modname_len;
 
     if (ly_out_new_memory(&str, 0, &out)) {
         return AYE_MEMORY;
@@ -3565,8 +3585,19 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ctx.space = SPACE_INDENT;
 
     modname = ay_get_yang_module_name(ctx.mod, &modname_len);
-    ly_print(out, "module %.*s {\n", modname_len, modname);
-    ly_print(out, "  namespace \"aug:%.*s\";\n", modname_len, modname);
+
+    ly_print(out, "module ");
+    for (i = 0; i < modname_len; i++) {
+        ly_print(out, "%c", modname[i] == '_' ? '-' : modname[i]);
+    }
+    ly_print(out, " {\n");
+
+    ly_print(out, "  namespace \"aug:");
+    for (i = 0; i < modname_len; i++) {
+        ly_print(out, "%c", modname[i] == '_' ? '-' : modname[i]);
+    }
+    ly_print(out, "\";\n");
+
     ly_print(out, "  prefix aug;\n\n");
     ly_print(out, "  import augeas-extension {\n");
     ly_print(out, "    prefix " AY_EXT_PREFIX ";\n");

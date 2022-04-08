@@ -81,7 +81,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>5</_id>\n"
             "    <entry>\n"
-            "      <space_in>test -x /etc/init.d/anacron &amp;&amp; /usr/sbin/invoke-rc.d anacron start &gt;/dev/null</space_in>\n"
+            "      <space-in>test -x /etc/init.d/anacron &amp;&amp; /usr/sbin/invoke-rc.d anacron start &gt;/dev/null</space-in>\n"
             "      <time>\n"
             "        <minute>30</minute>\n"
             "        <hour>7</hour>\n"
@@ -95,7 +95,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>6</_id>\n"
             "    <entry>\n"
-            "      <space_in>somecommand</space_in>\n"
+            "      <space-in>somecommand</space-in>\n"
             "      <time>\n"
             "        <minute>00</minute>\n"
             "        <hour>*/3</hour>\n"
@@ -109,7 +109,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>7</_id>\n"
             "    <entry>\n"
-            "      <space_in>somecommand</space_in>\n"
+            "      <space-in>somecommand</space-in>\n"
             "      <time>\n"
             "        <minute>00</minute>\n"
             "        <hour>*/3</hour>\n"
@@ -123,7 +123,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>8</_id>\n"
             "    <entry>\n"
-            "      <space_in>a command</space_in>\n"
+            "      <space-in>a command</space-in>\n"
             "      <schedule>yearly</schedule>\n"
             "      <user>foo</user>\n"
             "    </entry>\n"
@@ -147,14 +147,14 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/entry/space_in", "rm -rf /", 0,
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/entry/space-in", "rm -rf /", 0,
             &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/entry/schedule", "reboot", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/entry/user", "nobody", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='7']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/entry/space_in", "echo \"hello\"",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/entry/space-in", "echo \"hello\"",
             0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/entry/time/minute", "00", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/entry/time/hour", "*/6", 0, NULL));
@@ -189,7 +189,7 @@ test_store_modify(void **state)
     /* modify some data */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='2']/shellvar/value",
             "/usr/local/bin:/bin:/usr/bin", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='6']/entry/space_in", "shutdown now",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='6']/entry/space-in", "shutdown now",
             LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='8']/entry/schedule", "annually",
             LYD_NEW_PATH_UPDATE, NULL));

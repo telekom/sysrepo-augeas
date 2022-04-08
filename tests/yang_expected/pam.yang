@@ -21,7 +21,7 @@ module pam {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         leaf include {
           type string {
@@ -29,7 +29,7 @@ module pam {
           }
           augex:data-path "include";
         }
-        container record_svc {
+        container record-svc {
           augex:data-path "$$";
           presence "Config entry.";
           leaf record {

@@ -8,8 +8,8 @@ module yaml {
 
   augex:augeas-mod-name "YAML";
 
-  grouping _repo {
-    container _repo {
+  grouping repo {
+    container repo {
       augex:data-path "$$";
       augex:value-yang-path "val";
       presence "Config entry.";
@@ -19,7 +19,7 @@ module yaml {
           pattern "[A-Za-z0-9_.-]+";
         }
       }
-      choice ch__repo {
+      choice ch-repo {
         mandatory true;
         leaf val {
           type string {
@@ -63,12 +63,12 @@ module yaml {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         container sequence {
           augex:data-path "@sequence";
           presence "Config entry.";
-          list _repo-list {
+          list repo-list {
             key "_id";
             min-elements 1;
             ordered-by user;
@@ -77,7 +77,7 @@ module yaml {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            uses _repo;
+            uses repo;
           }
         }
         container entry {
@@ -95,10 +95,10 @@ module yaml {
               pattern "[A-Za-z0-9_.-]+";
             }
           }
-          choice ch_entry {
+          choice ch-entry {
             mandatory true;
-            case _inherit {
-              container _inherit {
+            case inherit {
+              container inherit {
                 augex:data-path "$$";
                 augex:value-yang-path "val";
                 presence "Config entry.";
@@ -115,7 +115,7 @@ module yaml {
                   }
                 }
               }
-              list _repo-list {
+              list repo-list {
                 key "_id";
                 ordered-by user;
                 leaf _id {
@@ -123,10 +123,10 @@ module yaml {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                uses _repo;
+                uses repo;
               }
             }
-            list _repo-list2 {
+            list repo-list2 {
               key "_id";
               min-elements 1;
               ordered-by user;
@@ -135,7 +135,7 @@ module yaml {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              uses _repo;
+              uses repo;
             }
           }
         }

@@ -21,7 +21,7 @@ module ntpd {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         container listen {
           augex:data-path "listen on";

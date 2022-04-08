@@ -23,15 +23,15 @@ module iscsid {
       }
       container kv {
         augex:data-path "$$";
-        augex:value-yang-path "value_re";
+        augex:value-yang-path "value-re";
         presence "Config entry.";
-        leaf key_re {
+        leaf key-re {
           mandatory true;
           type string {
             pattern "[][A-Za-z0-9_.-]+";
           }
         }
-        leaf value_re {
+        leaf value-re {
           mandatory true;
           type string {
             pattern "[^ \t\n](.*[^ \t\n])?";

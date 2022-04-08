@@ -1,5 +1,5 @@
-module vmware_config {
-  namespace "aug:vmware_config";
+module vmware-config {
+  namespace "aug:vmware-config";
   prefix aug;
 
   import augeas-extension {
@@ -8,7 +8,7 @@ module vmware_config {
 
   augex:augeas-mod-name "VMware_Config";
 
-  list vmware_config {
+  list vmware-config {
     key "config-file";
     leaf config-file {
       type string;

@@ -76,23 +76,23 @@ test_load(void **state)
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
-            "    <restrict_record>\n"
+            "    <restrict-record>\n"
             "      <value>default</value>\n"
             "      <action>ignore</action>\n"
-            "    </restrict_record>\n"
+            "    </restrict-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>5</_id>\n"
-            "    <restrict_record>\n"
+            "    <restrict-record>\n"
             "      <value>192.168.0.150</value>\n"
             "      <action>nomodify</action>\n"
-            "    </restrict_record>\n"
+            "    </restrict-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>6</_id>\n"
-            "    <restrict_record>\n"
+            "    <restrict-record>\n"
             "      <value>127.0.0.1</value>\n"
-            "    </restrict_record>\n"
+            "    </restrict-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>7</_id>\n"
@@ -108,7 +108,7 @@ test_load(void **state)
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>10</_id>\n"
-            "    <statistics_record>\n"
+            "    <statistics-record>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <loopstats/>\n"
@@ -121,11 +121,11 @@ test_load(void **state)
             "        <_id>3</_id>\n"
             "        <clockstats/>\n"
             "      </config-entries>\n"
-            "    </statistics_record>\n"
+            "    </statistics-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>11</_id>\n"
-            "    <filegen_record>\n"
+            "    <filegen-record>\n"
             "      <word>loopstats</word>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
@@ -143,11 +143,11 @@ test_load(void **state)
             "        <_id>4</_id>\n"
             "        <link>link</link>\n"
             "      </config-entries>\n"
-            "    </filegen_record>\n"
+            "    </filegen-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>12</_id>\n"
-            "    <filegen_record>\n"
+            "    <filegen-record>\n"
             "      <word>peerstats</word>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
@@ -161,11 +161,11 @@ test_load(void **state)
             "        <_id>3</_id>\n"
             "        <enable>disable</enable>\n"
             "      </config-entries>\n"
-            "    </filegen_record>\n"
+            "    </filegen-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>13</_id>\n"
-            "    <filegen_record>\n"
+            "    <filegen-record>\n"
             "      <word>clockstats</word>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
@@ -183,7 +183,7 @@ test_load(void **state)
             "        <_id>4</_id>\n"
             "        <link>nolink</link>\n"
             "      </config-entries>\n"
-            "    </filegen_record>\n"
+            "    </filegen-record>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>14</_id>\n"
@@ -233,9 +233,9 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='20']/fudge_record/word",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='20']/fudge-record/word",
             "not-sure-what", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='20']/fudge_record/refid", "5", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='20']/fudge-record/refid", "5", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='6']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -265,7 +265,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/filegen_record/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/filegen-record/"
             "config-entries[_id='4']/link", "nolink", LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='14']/interface/action", "drop",
             LYD_NEW_PATH_UPDATE, NULL));
@@ -303,7 +303,7 @@ test_store_remove(void **state)
     /* remove 2 list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']/server/config-entries[_id='1']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='10']/statistics_record/config-entries[_id='2']",
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='10']/statistics-record/config-entries[_id='2']",
             0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='16']", 0, &node));

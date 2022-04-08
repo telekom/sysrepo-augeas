@@ -1,5 +1,5 @@
-module postfix_sasl_smtpd {
-  namespace "aug:postfix_sasl_smtpd";
+module postfix-sasl-smtpd {
+  namespace "aug:postfix-sasl-smtpd";
   prefix aug;
 
   import augeas-extension {
@@ -8,7 +8,7 @@ module postfix_sasl_smtpd {
 
   augex:augeas-mod-name "Postfix_sasl_smtpd";
 
-  list postfix_sasl_smtpd {
+  list postfix-sasl-smtpd {
     key "config-file";
     leaf config-file {
       type string;
@@ -22,45 +22,45 @@ module postfix_sasl_smtpd {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
-        leaf pwcheck_method {
+        leaf pwcheck-method {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "pwcheck_method";
         }
-        leaf auxprop_plugin {
+        leaf auxprop-plugin {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "auxprop_plugin";
         }
-        leaf saslauthd_path {
+        leaf saslauthd-path {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "saslauthd_path";
         }
-        leaf mech_list {
+        leaf mech-list {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "mech_list";
         }
-        leaf sql_engine {
+        leaf sql-engine {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "sql_engine";
         }
-        leaf log_level {
+        leaf log-level {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
           augex:data-path "log_level";
         }
-        leaf auto_transition {
+        leaf auto-transition {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }

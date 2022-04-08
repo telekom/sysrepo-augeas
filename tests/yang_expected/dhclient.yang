@@ -14,24 +14,24 @@ module dhclient {
       container media {
         augex:data-path "media";
         presence "Config entry.";
-        uses stmt_array-list;
+        uses stmt-array-list;
       }
       container request {
         augex:data-path "request";
         presence "Config entry.";
-        uses stmt_array-list;
+        uses stmt-array-list;
       }
       container require {
         augex:data-path "require";
         presence "Config entry.";
-        uses stmt_array-list;
+        uses stmt-array-list;
       }
     }
   }
   grouping word {
     container word {
       augex:data-path "$$";
-      augex:value-yang-path "sto_to_spc_noeval";
+      augex:value-yang-path "sto-to-spc-noeval";
       presence "Config entry.";
       leaf word {
         mandatory true;
@@ -39,9 +39,9 @@ module dhclient {
           pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
         }
       }
-      choice ch_word {
+      choice ch-word {
         mandatory true;
-        leaf sto_to_spc_noeval {
+        leaf sto-to-spc-noeval {
           type string {
             pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
           }
@@ -71,7 +71,7 @@ module dhclient {
       }
     }
   }
-  grouping stmt_block {
+  grouping stmt-block {
     list config-entries {
       key "_id";
       min-elements 1;
@@ -81,7 +81,7 @@ module dhclient {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         case ch-media {
           uses ch-media;
@@ -158,7 +158,7 @@ module dhclient {
           }
           augex:data-path "medium";
         }
-        leaf vendor_option_space {
+        leaf vendor-option-space {
           type string {
             pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
           }
@@ -167,22 +167,22 @@ module dhclient {
         container renew {
           augex:data-path "renew";
           presence "Config entry.";
-          uses stmt_block_date;
+          uses stmt-block-date;
         }
         container rebind {
           augex:data-path "rebind";
           presence "Config entry.";
-          uses stmt_block_date;
+          uses stmt-block-date;
         }
         container expire {
           augex:data-path "expire";
           presence "Config entry.";
-          uses stmt_block_date;
+          uses stmt-block-date;
         }
       }
     }
   }
-  grouping stmt_block_date {
+  grouping stmt-block-date {
     leaf weekday {
       mandatory true;
       type string {
@@ -233,8 +233,8 @@ module dhclient {
       augex:data-path "second";
     }
   }
-  grouping stmt_array-list {
-    list stmt_array-list {
+  grouping stmt-array-list {
+    list stmt-array-list {
       key "_id";
       min-elements 1;
       ordered-by user;
@@ -243,15 +243,15 @@ module dhclient {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container stmt_array {
+      container stmt-array {
         augex:data-path "$$";
-        augex:value-yang-path "sto_to_spc";
+        augex:value-yang-path "sto-to-spc";
         presence "Config entry.";
-        leaf stmt_array {
+        leaf stmt-array {
           mandatory true;
           type uint64;
         }
-        leaf sto_to_spc {
+        leaf sto-to-spc {
           mandatory true;
           type string {
             pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
@@ -273,7 +273,7 @@ module dhclient {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         leaf timeout {
           type string {
@@ -358,36 +358,36 @@ module dhclient {
         }
         container interface {
           augex:data-path "interface";
-          augex:value-yang-path "sto_to_spc";
+          augex:value-yang-path "sto-to-spc";
           presence "Config entry.";
-          leaf sto_to_spc {
+          leaf sto-to-spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
             }
           }
-          uses stmt_block;
+          uses stmt-block;
         }
         container lease {
           augex:data-path "lease";
-          augex:value-yang-path "sto_to_spc";
+          augex:value-yang-path "sto-to-spc";
           presence "Config entry.";
-          leaf sto_to_spc {
+          leaf sto-to-spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
             }
           }
-          uses stmt_block;
+          uses stmt-block;
         }
         container alias {
           augex:data-path "alias";
-          augex:value-yang-path "sto_to_spc";
+          augex:value-yang-path "sto-to-spc";
           presence "Config entry.";
-          leaf sto_to_spc {
+          leaf sto-to-spc {
             type string {
               pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
             }
           }
-          uses stmt_block;
+          uses stmt-block;
         }
       }
     }

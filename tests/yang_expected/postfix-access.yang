@@ -1,5 +1,5 @@
-module postfix_access {
-  namespace "aug:postfix_access";
+module postfix-access {
+  namespace "aug:postfix-access";
   prefix aug;
 
   import augeas-extension {
@@ -8,7 +8,7 @@ module postfix_access {
 
   augex:augeas-mod-name "Postfix_Access";
 
-  list postfix_access {
+  list postfix-access {
     key "config-file";
     leaf config-file {
       type string;

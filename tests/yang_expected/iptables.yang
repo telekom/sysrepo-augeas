@@ -8,8 +8,8 @@ module iptables {
 
   augex:augeas-mod-name "Iptables";
 
-  grouping ipt_match {
-    list ipt_match {
+  grouping ipt-match {
+    list ipt-match {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -17,7 +17,7 @@ module iptables {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_ipt_match {
+      choice ch-ipt-match {
         mandatory true;
         container protocol {
           augex:data-path "protocol";
@@ -109,7 +109,7 @@ module iptables {
           }
           augex:data-path "match";
         }
-        container tcp_flags {
+        container tcp-flags {
           augex:data-path "tcp-flags";
           presence "Config entry.";
           leaf-list mask {
@@ -189,13 +189,13 @@ module iptables {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          choice ch_config-entries {
+          choice ch-config-entries {
             mandatory true;
             container chain {
               augex:data-path "chain";
-              augex:value-yang-path "chain_name";
+              augex:value-yang-path "chain-name";
               presence "Config entry.";
-              leaf chain_name {
+              leaf chain-name {
                 mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_-]+";
@@ -211,27 +211,27 @@ module iptables {
             }
             container append {
               augex:data-path "append";
-              augex:value-yang-path "chain_name";
+              augex:value-yang-path "chain-name";
               presence "Config entry.";
-              leaf chain_name {
+              leaf chain-name {
                 mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_-]+";
                 }
               }
-              uses ipt_match;
+              uses ipt-match;
             }
             container insert {
               augex:data-path "insert";
-              augex:value-yang-path "chain_name";
+              augex:value-yang-path "chain-name";
               presence "Config entry.";
-              leaf chain_name {
+              leaf chain-name {
                 mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_-]+";
                 }
               }
-              uses ipt_match;
+              uses ipt-match;
             }
           }
         }

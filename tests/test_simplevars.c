@@ -54,28 +54,28 @@ test_load(void **state)
             "    <_id>1</_id>\n"
             "    <entry>\n"
             "      <word>mykey</word>\n"
-            "      <to_comment_re>myvalue</to_comment_re>\n"
+            "      <to-comment-re>myvalue</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>2</_id>\n"
             "    <entry>\n"
             "      <word>anotherkey</word>\n"
-            "      <to_comment_re>another value</to_comment_re>\n"
+            "      <to-comment-re>another value</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>3</_id>\n"
             "    <entry>\n"
             "      <word>UserParameter</word>\n"
-            "      <to_comment_re>custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'</to_comment_re>\n"
+            "      <to-comment-re>custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>4</_id>\n"
             "    <entry>\n"
             "      <word>foo</word>\n"
-            "      <to_comment_re/>\n"
+            "      <to-comment-re/>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "</simplevars>\n"
@@ -85,21 +85,21 @@ test_load(void **state)
             "    <_id>1</_id>\n"
             "    <entry>\n"
             "      <word>key1</word>\n"
-            "      <to_comment_re>value1</to_comment_re>\n"
+            "      <to-comment-re>value1</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>2</_id>\n"
             "    <entry>\n"
             "      <word>key2</word>\n"
-            "      <to_comment_re>value2</to_comment_re>\n"
+            "      <to-comment-re>value2</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>3</_id>\n"
             "    <entry>\n"
             "      <word>key3</word>\n"
-            "      <to_comment_re>value3</to_comment_re>\n"
+            "      <to-comment-re>value3</to-comment-re>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "</" AUG_TEST_MODULE ">\n");
@@ -116,9 +116,9 @@ test_store_add(void **state)
 
     /* add some variable to both files */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/word", "newvar", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/to_comment_re", "value", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/to-comment-re", "value", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry-list[_id='4']/entry/word", "newvar2", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry-list[_id='4']/entry/to_comment_re",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry-list[_id='4']/entry/to-comment-re",
             "value", 0, NULL));
 
     /* store new data */
@@ -141,7 +141,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify a variable in the second file */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry-list[_id='2']/entry/to_comment_re",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data->next, NULL, "entry-list[_id='2']/entry/to-comment-re",
             "changed value", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */

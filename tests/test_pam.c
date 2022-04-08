@@ -52,63 +52,63 @@ test_load(void **state)
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>1</record>\n"
             "      <type>session</type>\n"
             "      <control>required</control>\n"
             "      <module>pam_limits.so</module>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>2</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>2</record>\n"
             "      <type>auth</type>\n"
             "      <control>required</control>\n"
             "      <module>pam_unix.so</module>\n"
             "      <argument>try_first_pass</argument>\n"
             "      <argument>quiet</argument>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>3</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>3</record>\n"
             "      <type>session</type>\n"
             "      <control>optional</control>\n"
             "      <module>common-auth</module>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>4</record>\n"
             "      <type>account</type>\n"
             "      <control>optional</control>\n"
             "      <module>pam_env.so</module>\n"
             "      <argument>revoke</argument>\n"
             "      <argument>force</argument>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>5</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>5</record>\n"
             "      <type>session</type>\n"
             "      <control>include</control>\n"
             "      <module>pam_systemd.so</module>\n"
             "      <argument>onerr=succeed</argument>\n"
             "      <argument>sense=allow</argument>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>6</_id>\n"
-            "    <record_svc>\n"
+            "    <record-svc>\n"
             "      <record>6</record>\n"
             "      <type>password</type>\n"
             "      <control>include</control>\n"
             "      <module>common-password</module>\n"
-            "    </record_svc>\n"
+            "    </record-svc>\n"
             "  </config-entries>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -124,21 +124,21 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record_svc/record",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record-svc/record",
             "7", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record_svc/type",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record-svc/type",
             "auth", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record_svc/control",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record-svc/control",
             "optional", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record_svc/module",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record-svc/module",
             "my_module.so", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record_svc/argument",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record-svc/argument",
             "quiet", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record_svc/argument[.='revoke']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument[.='revoke']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/record_svc/optional", NULL, 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/record-svc/optional", NULL, 0, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -164,11 +164,11 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='2']/record_svc/control",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='2']/record-svc/control",
             "optional", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/record_svc/type",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/record-svc/type",
             "password", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record_svc/module",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record-svc/module",
             "pam_acc.so", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -200,7 +200,7 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record_svc/argument[.='revoke']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument[.='revoke']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

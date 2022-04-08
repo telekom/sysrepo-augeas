@@ -24,13 +24,13 @@ module xendconfsxp {
       container sexpr {
         augex:data-path "$$";
         presence "Config entry.";
-        leaf var_name {
+        leaf var-name {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        choice ch_sexpr {
+        choice ch-sexpr {
           mandatory true;
           leaf item {
             type string {
@@ -58,7 +58,7 @@ module xendconfsxp {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                choice ch_config-entries {
+                choice ch-config-entries {
                   mandatory true;
                   leaf _array-ref {
                     type leafref {

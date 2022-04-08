@@ -21,15 +21,15 @@ module star {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
-        leaf STAR_FIFOSIZE {
+        leaf STAR-FIFOSIZE {
           type string {
             pattern "[0-9x*.a-z]+";
           }
           augex:data-path "STAR_FIFOSIZE";
         }
-        leaf STAR_FIFOSIZE_MAX {
+        leaf STAR-FIFOSIZE-MAX {
           type string {
             pattern "[0-9x*.a-z]+";
           }

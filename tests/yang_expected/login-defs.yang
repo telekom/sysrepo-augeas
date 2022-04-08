@@ -1,5 +1,5 @@
-module login_defs {
-  namespace "aug:login_defs";
+module login-defs {
+  namespace "aug:login-defs";
   prefix aug;
 
   import augeas-extension {
@@ -8,7 +8,7 @@ module login_defs {
 
   augex:augeas-mod-name "Login_defs";
 
-  list login_defs {
+  list login-defs {
     key "config-file";
     leaf config-file {
       type string;

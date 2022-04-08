@@ -11,7 +11,7 @@ module systemd {
   grouping include {
     container include {
       augex:data-path "$$";
-      augex:value-yang-path "sto_value";
+      augex:value-yang-path "sto-value";
       presence "Config entry.";
       leaf label {
         mandatory true;
@@ -19,7 +19,7 @@ module systemd {
           pattern "\\.include";
         }
       }
-      leaf sto_value {
+      leaf sto-value {
         mandatory true;
         type string {
           pattern "[^# \t\n]*[^# \t\n\\\\]";
@@ -67,9 +67,9 @@ module systemd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          choice ch_config-entries {
+          choice ch-config-entries {
             mandatory true;
-            container entry_single {
+            container entry-single {
               augex:data-path "Description";
               presence "Config entry.";
               leaf value {
@@ -79,10 +79,10 @@ module systemd {
                 augex:data-path "value";
               }
             }
-            container entry_multi {
+            container entry-multi {
               augex:data-path "$$";
               presence "Config entry.";
-              leaf entry_multi_kw {
+              leaf entry-multi-kw {
                 mandatory true;
                 type string {
                   pattern "Descriptio((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|Descripti([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Descript([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Descrip([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|Descri([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|Descr([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Desc([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Des([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|De([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|Environmen((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|Environme([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Environm([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|Environ([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|Enviro([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Envir([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Envi([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Env([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Exec([.0-9_-][.0-9A-Z_a-z-]*|[A-Za-z]|())|Exe([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|(Ex[.0-9A-Z_a-df-z-]|En[.0-9A-Z_a-uw-z-]|(E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|Ex|En|E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-]";
@@ -96,10 +96,10 @@ module systemd {
                 augex:data-path "value";
               }
             }
-            container entry_command {
+            container entry-command {
               augex:data-path "$$";
               presence "Config entry.";
-              leaf entry_command_kw {
+              leaf entry-command-kw {
                 mandatory true;
                 type string {
                   pattern "Exec[A-Za-z][A-Za-z0-9._-]+";
@@ -133,13 +133,13 @@ module systemd {
                   }
                   container args {
                     augex:data-path "$$";
-                    augex:value-yang-path "sto_value";
+                    augex:value-yang-path "sto-value";
                     presence "Config entry.";
                     leaf args {
                       mandatory true;
                       type uint64;
                     }
-                    leaf sto_value {
+                    leaf sto-value {
                       mandatory true;
                       type string {
                         pattern "[^# \t\n]*[^# \t\n\\\\]";
@@ -149,10 +149,10 @@ module systemd {
                 }
               }
             }
-            container entry_env {
+            container entry-env {
               augex:data-path "Environment";
               presence "Config entry.";
-              list env_key-list {
+              list env-key-list {
                 key "_id";
                 min-elements 1;
                 ordered-by user;
@@ -161,11 +161,11 @@ module systemd {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                container env_key {
+                container env-key {
                   augex:data-path "$$";
                   augex:value-yang-path "value";
                   presence "Config entry.";
-                  leaf env_key {
+                  leaf env-key {
                     mandatory true;
                     type string {
                       pattern "[A-Za-z0-9_]+(\\[[0-9]+\\])?";

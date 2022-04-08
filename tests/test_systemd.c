@@ -56,18 +56,18 @@ test_load(void **state)
             "      <label>Unit</label>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
-            "        <entry_single>\n"
+            "        <entry-single>\n"
             "          <value>The Apache HTTP Server</value>\n"
-            "        </entry_single>\n"
+            "        </entry-single>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>2</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>After</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>After</entry-multi-kw>\n"
             "          <value>network.target</value>\n"
             "          <value>remote-fs.target</value>\n"
             "          <value>nss-lookup.target</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
             "  </record-list>\n"
@@ -77,126 +77,126 @@ test_load(void **state)
             "      <label>Service</label>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>Type</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>Type</entry-multi-kw>\n"
             "          <value>notify</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>2</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>EnvironmentFile</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>EnvironmentFile</entry-multi-kw>\n"
             "          <value>/etc/sysconfig/httpd</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>3</_id>\n"
-            "        <entry_env>\n"
-            "          <env_key-list>\n"
+            "        <entry-env>\n"
+            "          <env-key-list>\n"
             "            <_id>1</_id>\n"
-            "            <env_key>\n"
-            "              <env_key>MYVAR</env_key>\n"
+            "            <env-key>\n"
+            "              <env-key>MYVAR</env-key>\n"
             "              <value>value</value>\n"
-            "            </env_key>\n"
-            "          </env_key-list>\n"
-            "          <env_key-list>\n"
+            "            </env-key>\n"
+            "          </env-key-list>\n"
+            "          <env-key-list>\n"
             "            <_id>2</_id>\n"
-            "            <env_key>\n"
-            "              <env_key>ANOTHERVAR</env_key>\n"
+            "            <env-key>\n"
+            "              <env-key>ANOTHERVAR</env-key>\n"
             "              <value>\"\"</value>\n"
-            "            </env_key>\n"
-            "          </env_key-list>\n"
-            "        </entry_env>\n"
+            "            </env-key>\n"
+            "          </env-key-list>\n"
+            "        </entry-env>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>4</_id>\n"
-            "        <entry_command>\n"
-            "          <entry_command_kw>ExecStart</entry_command_kw>\n"
+            "        <entry-command>\n"
+            "          <entry-command-kw>ExecStart</entry-command-kw>\n"
             "          <command>/usr/sbin/httpd</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
             "              <_id>1</_id>\n"
             "              <args>\n"
             "                <args>1</args>\n"
-            "                <sto_value>$OPTIONS</sto_value>\n"
+            "                <sto-value>$OPTIONS</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "            <args-list>\n"
             "              <_id>2</_id>\n"
             "              <args>\n"
             "                <args>2</args>\n"
-            "                <sto_value>-DFOREGROUND</sto_value>\n"
+            "                <sto-value>-DFOREGROUND</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "          </arguments>\n"
-            "        </entry_command>\n"
+            "        </entry-command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>5</_id>\n"
-            "        <entry_command>\n"
-            "          <entry_command_kw>ExecReload</entry_command_kw>\n"
+            "        <entry-command>\n"
+            "          <entry-command-kw>ExecReload</entry-command-kw>\n"
             "          <command>/usr/sbin/httpd</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
             "              <_id>1</_id>\n"
             "              <args>\n"
             "                <args>1</args>\n"
-            "                <sto_value>$OPTIONS</sto_value>\n"
+            "                <sto-value>$OPTIONS</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "            <args-list>\n"
             "              <_id>2</_id>\n"
             "              <args>\n"
             "                <args>2</args>\n"
-            "                <sto_value>-k</sto_value>\n"
+            "                <sto-value>-k</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "            <args-list>\n"
             "              <_id>3</_id>\n"
             "              <args>\n"
             "                <args>3</args>\n"
-            "                <sto_value>graceful</sto_value>\n"
+            "                <sto-value>graceful</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "          </arguments>\n"
-            "        </entry_command>\n"
+            "        </entry-command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>6</_id>\n"
-            "        <entry_command>\n"
-            "          <entry_command_kw>ExecStop</entry_command_kw>\n"
+            "        <entry-command>\n"
+            "          <entry-command-kw>ExecStop</entry-command-kw>\n"
             "          <command>/bin/kill</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
             "              <_id>1</_id>\n"
             "              <args>\n"
             "                <args>1</args>\n"
-            "                <sto_value>-WINCH</sto_value>\n"
+            "                <sto-value>-WINCH</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "            <args-list>\n"
             "              <_id>2</_id>\n"
             "              <args>\n"
             "                <args>2</args>\n"
-            "                <sto_value>${MAINPID}</sto_value>\n"
+            "                <sto-value>${MAINPID}</sto-value>\n"
             "              </args>\n"
             "            </args-list>\n"
             "          </arguments>\n"
-            "        </entry_command>\n"
+            "        </entry-command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>7</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>KillSignal</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>KillSignal</entry-multi-kw>\n"
             "          <value>SIGCONT</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>8</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>PrivateTmp</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>PrivateTmp</entry-multi-kw>\n"
             "          <value>true</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
             "  </record-list>\n"
@@ -206,10 +206,10 @@ test_load(void **state)
             "      <label>Install</label>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
-            "        <entry_multi>\n"
-            "          <entry_multi_kw>WantedBy</entry_multi_kw>\n"
+            "        <entry-multi>\n"
+            "          <entry-multi-kw>WantedBy</entry-multi-kw>\n"
             "          <value>multi-user.target</value>\n"
-            "        </entry_multi>\n"
+            "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
             "  </record-list>\n"
@@ -228,22 +228,22 @@ test_store_add(void **state)
 
     /* add some new list instances */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry_multi/entry_multi_kw", "Documentation", 0, &entries));
+            "/entry-multi/entry-multi-kw", "Documentation", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry_multi/value", "man:apache(8)", 0, NULL));
+            "/entry-multi/value", "man:apache(8)", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry_multi/value", "man:httpd(8)", 0, NULL));
+            "/entry-multi/value", "man:httpd(8)", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
-            "/entry_multi/value", "/etc/sysconfig/apache", 0, &entries));
+            "/entry-multi/value", "/etc/sysconfig/apache", 0, &entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/label", "Socket", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"
-            "/entry_multi/entry_multi_kw", "ListenStream", 0, NULL));
+            "/entry-multi/entry-multi-kw", "ListenStream", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"
-            "/entry_multi/value", "/run/www/apache.socket", 0, NULL));
+            "/entry-multi/value", "/run/www/apache.socket", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -273,13 +273,13 @@ test_store_modify(void **state)
 
     /* modify some values */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry_single/value", "Apache", LYD_NEW_PATH_UPDATE, NULL));
+            "/entry-single/value", "Apache", LYD_NEW_PATH_UPDATE, NULL));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
-            "/entry_multi/entry_multi_kw", "ReadWritePaths", LYD_NEW_PATH_UPDATE, NULL));
+            "/entry-multi/entry-multi-kw", "ReadWritePaths", LYD_NEW_PATH_UPDATE, NULL));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='6']"
-            "/entry_command/arguments/args-list[_id='2']/args/sto_value", "${CHILDPID}", LYD_NEW_PATH_UPDATE, NULL));
+            "/entry-command/arguments/args-list[_id='2']/args/sto-value", "${CHILDPID}", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -309,12 +309,12 @@ test_store_remove(void **state)
 
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='5']"
-            "/entry_command/arguments/args-list[_id='2']", 0, &node));
+            "/entry-command/arguments/args-list[_id='2']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='7']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/config-entries[_id='2']"
-            "/entry_multi/value[.='network.target']", 0, &node));
+            "/entry-multi/value[.='network.target']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

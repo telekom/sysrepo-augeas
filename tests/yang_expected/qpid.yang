@@ -23,7 +23,7 @@ module qpid {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "space_in";
+        augex:value-yang-path "space-in";
         presence "Config entry.";
         leaf word {
           mandatory true;
@@ -31,7 +31,7 @@ module qpid {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf space_in {
+        leaf space-in {
           mandatory true;
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";

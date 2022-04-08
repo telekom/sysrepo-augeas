@@ -60,7 +60,7 @@ module inputrc {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch_config-entries {
+      choice ch-config-entries {
         mandatory true;
         list if-list {
           key "_r-id";
@@ -72,9 +72,9 @@ module inputrc {
           }
           container if {
             augex:data-path "@if";
-            augex:value-yang-path "space_in";
+            augex:value-yang-path "space-in";
             presence "Config entry.";
-            leaf space_in {
+            leaf space-in {
               mandatory true;
               type string {
                 pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
@@ -88,7 +88,7 @@ module inputrc {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              choice ch_config-entries {
+              choice ch-config-entries {
                 mandatory true;
                 leaf _if-ref {
                   type leafref {
@@ -116,7 +116,7 @@ module inputrc {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                choice ch_config-entries {
+                choice ch-config-entries {
                   mandatory true;
                   leaf _if-ref {
                     type leafref {

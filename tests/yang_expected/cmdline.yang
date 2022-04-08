@@ -23,14 +23,14 @@ module cmdline {
       }
       container word {
         augex:data-path "$$";
-        augex:value-yang-path "no_spaces";
+        augex:value-yang-path "no-spaces";
         presence "Config entry.";
         leaf word {
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf no_spaces {
+        leaf no-spaces {
           type string {
             pattern "[^ \t\n]+";
           }

@@ -1,5 +1,5 @@
-module device_map {
-  namespace "aug:device_map";
+module device-map {
+  namespace "aug:device-map";
   prefix aug;
 
   import augeas-extension {
@@ -8,7 +8,7 @@ module device_map {
 
   augex:augeas-mod-name "Device_map";
 
-  list device_map {
+  list device-map {
     key "config-file";
     leaf config-file {
       type string;

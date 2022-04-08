@@ -45,13 +45,13 @@ module devfsrules {
           }
           container entry {
             augex:data-path "$$";
-            augex:value-yang-path "line_re";
+            augex:value-yang-path "line-re";
             presence "Config entry.";
             leaf entry {
               mandatory true;
               type uint64;
             }
-            leaf line_re {
+            leaf line-re {
               mandatory true;
               type string {
                 pattern "[^\\]\\[#; \t\n][^#;\n]*[^#; \t\n]";

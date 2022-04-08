@@ -19,9 +19,9 @@ module channels {
       }
       container entry {
         augex:data-path "entry";
-        augex:value-yang-path "no_semicolon";
+        augex:value-yang-path "no-semicolon";
         presence "Config entry.";
-        leaf no_semicolon {
+        leaf no-semicolon {
           mandatory true;
           type string {
             pattern "[^;\n]+";
@@ -45,14 +45,14 @@ module channels {
           }
           augex:data-path "parameter";
         }
-        leaf signal_source {
+        leaf signal-source {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
           augex:data-path "signal_source";
         }
-        leaf symbol_rate {
+        leaf symbol-rate {
           mandatory true;
           type uint64;
           augex:data-path "symbol_rate";
@@ -67,7 +67,7 @@ module channels {
           }
           uses codec;
         }
-        container vpid_pcr {
+        container vpid-pcr {
           augex:data-path "vpid_pcr";
           augex:value-yang-path "integer";
           presence "Config entry.";
@@ -97,7 +97,7 @@ module channels {
             uses ch-lang;
           }
         }
-        list apid_dolby-list {
+        list apid-dolby-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -105,7 +105,7 @@ module channels {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container apid_dolby {
+          container apid-dolby {
             augex:data-path "apid_dolby";
             augex:value-yang-path "integer";
             presence "Config entry.";
@@ -121,7 +121,7 @@ module channels {
           type uint64;
           augex:data-path "tpid";
         }
-        list tpid_bylang-list {
+        list tpid-bylang-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -129,7 +129,7 @@ module channels {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container tpid_bylang {
+          container tpid-bylang {
             augex:data-path "tpid_bylang";
             augex:value-yang-path "integer";
             presence "Config entry.";
@@ -221,9 +221,9 @@ module channels {
       }
       container group {
         augex:data-path "group";
-        augex:value-yang-path "no_colon";
+        augex:value-yang-path "no-colon";
         presence "Config entry.";
-        leaf no_colon {
+        leaf no-colon {
           mandatory true;
           type string {
             pattern "[^: \t\n][^:\n]*[^: \t\n]|[^:\n]";

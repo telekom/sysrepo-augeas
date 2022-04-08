@@ -23,7 +23,7 @@ module simplevars {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "to_comment_re";
+        augex:value-yang-path "to-comment-re";
         presence "Config entry.";
         leaf word {
           mandatory true;
@@ -31,7 +31,7 @@ module simplevars {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf to_comment_re {
+        leaf to-comment-re {
           type union {
             type string {
               pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";

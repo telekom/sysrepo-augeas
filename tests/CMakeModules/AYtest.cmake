@@ -35,9 +35,10 @@ endif()
 
 set(GENFILE "${YANG_GEN_DIR}/${MOD}.yang")
 set(EXPFILE "${YANG_EXP_DIR}/${MOD}.yang")
+string(REPLACE "-" "_" AUGFILE ${MOD})
 
 # generate yang file
-execute_process(COMMAND ${AUGYANG_BIN} -O ${YANG_GEN_DIR} ${MOD} RESULT_VARIABLE ret)
+execute_process(COMMAND ${AUGYANG_BIN} -O ${YANG_GEN_DIR} ${AUGFILE} RESULT_VARIABLE ret)
 if(NOT ret EQUAL 0)
     message(FATAL_ERROR "[aytest] '${MOD}' module generation failed.")
 endif()

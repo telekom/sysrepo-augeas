@@ -340,14 +340,24 @@ aym_find_aug_module(char *loadpath, char *filename)
  *
  * @param[in] name Name of the file.
  * @param[in] suffix Name of the suffix to add.
+ * @param[in] dash Setting the flag replaces '_' character with the '-'.
  * @param[in,out] filename Sufficiently large buffer which will be overwritten.
  * The output form will be "<name><suffix>".
  */
 static void
-aym_insert_filename(const char *name, const char *suffix, char *filename)
+aym_insert_filename(const char *name, const char *suffix, int dash, char *filename)
 {
-    strcpy(filename, name);
-    strcpy(&filename[strlen(filename)], suffix);
+    uint64_t i, len;
+
+    len = strlen(name);
+    if (dash) {
+        for (i = 0; i < len; i++) {
+            filename[i] = name[i] == '_' ? '-' : name[i];
+        }
+    } else {
+        strcpy(filename, name);
+    }
+    strcpy(&filename[len], suffix);
 }
 
 /**
@@ -499,7 +509,7 @@ main(int argc, char **argv)
     for (int i = 0; i < argc - optind; i++) {
         modname = argv[optind + i];
         /* parse and compile augeas module */
-        aym_insert_filename(modname, ".aug", filename);
+        aym_insert_filename(modname, ".aug", 0, filename);
         dirpath = aym_find_aug_module(loadpath, filename);
         if (!dirpath) {
             fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
@@ -534,7 +544,7 @@ main(int argc, char **argv)
             printf("%s", str);
         } else if (!quiet) {
             /* write result to the yang file */
-            aym_insert_filename(modname, ".yang", filename);
+            aym_insert_filename(modname, ".yang", 1, filename);
             aym_insert_dirpath(outdir, filename);
             file = fopen(filename, "w");
             if (!file) {

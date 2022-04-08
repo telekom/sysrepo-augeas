@@ -31,7 +31,7 @@ module darkice {
             pattern "[^\\]\n]+";
           }
         }
-        list entry_re-list {
+        list entry-re-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -39,11 +39,11 @@ module darkice {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container entry_re {
+          container entry-re {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf entry_re {
+            leaf entry-re {
               mandatory true;
               type string {
                 pattern "[A-Za-z0-9][A-Za-z0-9._-]*";
