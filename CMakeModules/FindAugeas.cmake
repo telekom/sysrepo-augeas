@@ -4,9 +4,10 @@
 #  AUGEAS_FOUND - system has Augeas
 #  AUGEAS_INCLUDE_DIRS - the Augeas include directory
 #  AUGEAS_LIBRARIES - Link these to use augeas
+#  AUGEAS_LENS_DIR - the Augeas lens directory
 #
 #  Author Michal Vasko <mvasko@cesnet.cz>
-#  Copyright (c) 2021 CESNET, z.s.p.o.
+#  Copyright (c) 2021 - 2022 CESNET, z.s.p.o.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -33,7 +34,7 @@
 #
 include(FindPackageHandleStandardArgs)
 
-if(AUGEAS_LIBRARIES AND AUGEAS_INCLUDE_DIRS)
+if(AUGEAS_LIBRARIES AND AUGEAS_INCLUDE_DIRS AND AUGEAS_LENS_DIR)
     # in cache already
     set(AUGEAS_FOUND TRUE)
 else()
@@ -64,12 +65,24 @@ else()
         ${CMAKE_INSTALL_PREFIX}/lib
     )
 
+    find_path(AUGEAS_LENS
+        NAMES
+        rx.aug
+        PATHS
+        /usr/share/augeas/lenses/dist
+        /usr/local/share/augeas/lenses/dist
+        /opt/local/share/augeas/lenses/dist
+        /sw/share/augeas/lenses/dist
+        ${CMAKE_INSTALL_PREFIX}/share/augeas/lenses/dist
+    )
+
     set(AUGEAS_INCLUDE_DIRS ${AUGEAS_INCLUDE_DIR})
     set(AUGEAS_LIBRARIES ${AUGEAS_LIBRARY})
-    mark_as_advanced(AUGEAS_INCLUDE_DIRS AUGEAS_LIBRARIES)
+    set(AUGEAS_LENS_DIR ${AUGEAS_LENS})
+    mark_as_advanced(AUGEAS_INCLUDE_DIRS AUGEAS_LIBRARIES AUGEAS_LENS_DIR)
 
     # handle the QUIETLY and REQUIRED arguments and set AUGEAS_FOUND to TRUE
     # if all listed variables are TRUE
     find_package_handle_standard_args(Augeas FOUND_VAR AUGEAS_FOUND
-        REQUIRED_VARS AUGEAS_LIBRARY AUGEAS_INCLUDE_DIR)
+        REQUIRED_VARS AUGEAS_LIBRARY AUGEAS_INCLUDE_DIR AUGEAS_LENS)
 endif()

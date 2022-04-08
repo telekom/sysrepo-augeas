@@ -91,6 +91,25 @@ test_load(void **state)
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>3</_id>\n"
+            "        <entry_env>\n"
+            "          <env_key-list>\n"
+            "            <_id>1</_id>\n"
+            "            <env_key>\n"
+            "              <env_key>MYVAR</env_key>\n"
+            "              <value>value</value>\n"
+            "            </env_key>\n"
+            "          </env_key-list>\n"
+            "          <env_key-list>\n"
+            "            <_id>2</_id>\n"
+            "            <env_key>\n"
+            "              <env_key>ANOTHERVAR</env_key>\n"
+            "              <value>\"\"</value>\n"
+            "            </env_key>\n"
+            "          </env_key-list>\n"
+            "        </entry_env>\n"
+            "      </config-entries>\n"
+            "      <config-entries>\n"
+            "        <_id>4</_id>\n"
             "        <entry_command>\n"
             "          <entry_command_kw>ExecStart</entry_command_kw>\n"
             "          <command>/usr/sbin/httpd</command>\n"
@@ -113,7 +132,7 @@ test_load(void **state)
             "        </entry_command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
-            "        <_id>4</_id>\n"
+            "        <_id>5</_id>\n"
             "        <entry_command>\n"
             "          <entry_command_kw>ExecReload</entry_command_kw>\n"
             "          <command>/usr/sbin/httpd</command>\n"
@@ -143,7 +162,7 @@ test_load(void **state)
             "        </entry_command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
-            "        <_id>5</_id>\n"
+            "        <_id>6</_id>\n"
             "        <entry_command>\n"
             "          <entry_command_kw>ExecStop</entry_command_kw>\n"
             "          <command>/bin/kill</command>\n"
@@ -166,14 +185,14 @@ test_load(void **state)
             "        </entry_command>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
-            "        <_id>6</_id>\n"
+            "        <_id>7</_id>\n"
             "        <entry_multi>\n"
             "          <entry_multi_kw>KillSignal</entry_multi_kw>\n"
             "          <value>SIGCONT</value>\n"
             "        </entry_multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
-            "        <_id>7</_id>\n"
+            "        <_id>8</_id>\n"
             "        <entry_multi>\n"
             "          <entry_multi_kw>PrivateTmp</entry_multi_kw>\n"
             "          <value>true</value>\n"
@@ -239,9 +258,9 @@ test_store_add(void **state)
             "> [Socket]\n"
             "> ListenStream=/run/www/apache.socket\n"
             "7c10\n"
-            "< EnvironmentFile=/etc/sysconfig/httpd\n"
+            "< EnvironmentFile = /etc/sysconfig/httpd\n"
             "---\n"
-            "> EnvironmentFile=/etc/sysconfig/httpd /etc/sysconfig/apache"));
+            "> EnvironmentFile = /etc/sysconfig/httpd /etc/sysconfig/apache"));
 }
 
 static void
@@ -259,7 +278,7 @@ test_store_modify(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
             "/entry_multi/entry_multi_kw", "ReadWritePaths", LYD_NEW_PATH_UPDATE, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='5']"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='6']"
             "/entry_command/arguments/args-list[_id='2']/args/sto_value", "${CHILDPID}", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -270,13 +289,13 @@ test_store_modify(void **state)
             "3a4\n"
             "> Description=Apache\n"
             "7c8\n"
-            "< EnvironmentFile=/etc/sysconfig/httpd\n"
+            "< EnvironmentFile = /etc/sysconfig/httpd\n"
             "---\n"
             "> ReadWritePaths=/etc/sysconfig/httpd\n"
-            "10c11\n"
-            "< ExecStop=/bin/kill -WINCH ${MAINPID}\n"
+            "11c12\n"
+            "< ExecStop = /bin/kill -WINCH ${MAINPID}\n"
             "---\n"
-            "> ExecStop=/bin/kill -WINCH ${CHILDPID}"));
+            "> ExecStop = /bin/kill -WINCH ${CHILDPID}"));
 }
 
 static void
@@ -289,10 +308,10 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='4']"
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='5']"
             "/entry_command/arguments/args-list[_id='2']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='6']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='7']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/config-entries[_id='2']"
             "/entry_multi/value[.='network.target']", 0, &node));
@@ -304,15 +323,15 @@ test_store_remove(void **state)
     /* diff */
     assert_int_equal(0, tdiff_files(state,
             "3c3\n"
-            "< After=network.target remote-fs.target nss-lookup.target\n"
+            "< After = network.target remote-fs.target nss-lookup.target\n"
             "---\n"
-            "> After=remote-fs.target nss-lookup.target\n"
-            "9c9\n"
-            "< ExecReload=/usr/sbin/httpd $OPTIONS -k graceful\n"
+            "> After = remote-fs.target nss-lookup.target\n"
+            "10c10\n"
+            "< ExecReload = /usr/sbin/httpd $OPTIONS -k graceful\n"
             "---\n"
-            "> ExecReload=/usr/sbin/httpd $OPTIONS graceful\n"
-            "11d10\n"
-            "< KillSignal=SIGCONT"));
+            "> ExecReload = /usr/sbin/httpd $OPTIONS graceful\n"
+            "12d11\n"
+            "< KillSignal = SIGCONT"));
 }
 
 int

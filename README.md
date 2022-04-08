@@ -31,9 +31,12 @@ This framework consists of the following components:
 ```
 $ mkdir build; cd build
 $ cmake ..
+(# make install_lens)
 $ make
 # make install
 ```
+
+Target `install_lens` installs fixed lens by replacing the ones provided by the Augeas packages. This step is not strictly required but the changes include only fixed bugs in the lenses and without them the tests may fail or it will not be possible to read/write valid values of configuration files managed by **srds_augeas**.
 
 Note that by default, these steps will **fully install** the whole suite. That means generating YANG modules for all the supported Augeas lenses, installing these modules into `sysrepo` with their current content read from the system and put into the *startup* datastore, and finally installing `srds_augeas` custom DS plugin into `sysrepo`. All this can be customized by compile-time variables mentioned in the following section.
 

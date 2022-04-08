@@ -191,13 +191,16 @@ target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_D
 target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
 target_compile_definitions(augyang PRIVATE AUGEAS_LENSES_DIR="${AUGEAS_LENSES_DIR}")
 
-# selinux (must be last)
+# selinux (must be last, linked to augeas as well)
 find_package(SELinux REQUIRED)
 target_link_libraries(augyang ${SELINUX_LIBRARIES})
 include_directories(${SELINUX_INCLUDE_DIRS})
 
 # generate files
 configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
+
+# install fixed lenses
+add_custom_target(install_lens cp ${PROJECT_SOURCE_DIR}/lens_fix/* ${AUGEAS_LENS_DIR})
 
 # generate YANG modules from Augeas lenses
 set(LENS_LIST ${SUPPORTED_LENSES})
