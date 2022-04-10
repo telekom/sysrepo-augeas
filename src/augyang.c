@@ -332,7 +332,8 @@ struct ay_ynode_root {
                                          in union-stmt. The key in the dictionary is the first label in the
                                          union and values in the dictionary are the remaining labels. */
     struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
-    const struct ay_lnode *choice;  /**< Not used. */
+    char **idents;                  /**< Array of identifiers which has the same number of nodes as in the ynode tree.
+                                         So for each ynode with index IDX, its identifier is in tree[IDX]. */
     uint32_t ref;                   /**< Not used. */
     uint32_t flags;                 /**< Not used. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
@@ -367,6 +368,14 @@ struct ay_ynode_root {
  */
 #define AY_YNODE_ROOT_VALUES(TREE) \
     ((struct ay_ynode_root *)TREE)->values
+
+/**
+ * @brief Get ay_ynode_root.idents from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_IDENTS(TREE) \
+    ((struct ay_ynode_root *)TREE)->idents
 
 /**
  * @brief Get ay_ynode_root.idcnt from ynode tree.
@@ -688,7 +697,9 @@ ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value)
 static void
 ay_ynode_tree_free(struct ay_ynode *tree)
 {
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode_root *root;
+    char **idents;
 
     if (!tree) {
         return;
@@ -703,6 +714,13 @@ ay_ynode_tree_free(struct ay_ynode *tree)
     root->labels = NULL;
     LY_ARRAY_FREE(root->values);
     root->values = NULL;
+
+    idents = AY_YNODE_ROOT_IDENTS(tree);
+    LY_ARRAY_FOR(idents, i) {
+        free(idents[i]);
+    }
+    LY_ARRAY_FREE(root->idents);
+    root->idents = NULL;
 
     LY_ARRAY_FREE(tree);
 }
@@ -2159,10 +2177,7 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
 
     buffer[0] = '\0';
     for (iter = node->child; iter; iter = iter->child) {
-        if (iter->type == YN_LEAFREF) {
-            break;
-        }
-        if (iter->next) {
+        if (iter->next || (iter->type == YN_LEAFREF)) {
             break;
         }
         if (iter->snode && (str = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
@@ -2192,7 +2207,7 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
  * @return 0 on success.
  */
 static int
-ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
+ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
 {
     int ret = 0;
     const char *str, *tmp;
@@ -2272,15 +2287,12 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
         strcat(buffer, "-ref");
         str = buffer;
     } else if (node->type == YN_USES) {
-        for (iter = ctx->tree->child; iter; iter = iter->next) {
-            if (iter->id == node->ref) {
-                break;
-            }
+        if ((tmp = AY_YNODE_ROOT_IDENTS(ctx->tree)[AY_INDEX(ctx->tree, node)])) {
+            str = tmp;
+        } else {
+            /* Resolve identifier later. */
+            str = "node";
         }
-        assert(iter);
-        ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
-        AY_CHECK_RET(ret);
-        str = buffer;
     } else if (node->type == YN_LIST) {
         if (node->parent->type == YN_ROOT) {
             tmp = ay_get_yang_module_name(ctx->mod, &len);
@@ -2386,22 +2398,22 @@ ay_get_yang_ident_(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_iden
 /**
  * @brief Detect for duplicates for the identifier.
  *
- * @param[in] ctx Current printing context.
+ * @param[in] tree Tree of ynodes.
  * @param[in] node Node for which the duplicates will be searched.
- * @param[in] ident Evaluated @p node identifier.
+ * @param[in] idents Array of identifiers located in ay_ynode_root.idents.
  * @param[out] dupl_rank Duplicate number for @p ident.
  * @param[out] dupl_count Number of all duplicates.
  * @return 0 on success.
  */
 static int
-ay_yang_ident_duplications(struct yprinter_ctx *ctx, struct ay_ynode *node, char *ident, int64_t *dupl_rank,
-        uint64_t *dupl_count)
+ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *node_ident, char **idents,
+        int64_t *dupl_rank, uint64_t *dupl_count)
 {
     int ret = 0;
     struct ay_ynode *iter;
     int64_t rnk, tmp_rnk;
     uint64_t cnt, tmp_cnt;
-    char second[AY_MAX_IDENT_SIZE];
+    char *iter_ident;
 
     rnk = -1;
     cnt = 0;
@@ -2413,15 +2425,14 @@ ay_yang_ident_duplications(struct yprinter_ctx *ctx, struct ay_ynode *node, char
             rnk = cnt;
             continue;
         } else if ((iter->type == YN_CONTAINER) && !iter->label) {
-            ret = ay_yang_ident_duplications(ctx, iter->child, ident, &tmp_rnk, &tmp_cnt);
+            ret = ay_yang_ident_duplications(tree, iter->child, node_ident, idents, &tmp_rnk, &tmp_cnt);
             AY_CHECK_RET(ret);
             rnk = rnk == -1 ? tmp_rnk : rnk;
             cnt += tmp_cnt;
         }
 
-        ret = ay_get_yang_ident_(ctx, iter, AY_IDENT_NODE_NAME, second);
-        AY_CHECK_RET(ret);
-        if (!strcmp(ident, second)) {
+        iter_ident = idents[AY_INDEX(tree, iter)];
+        if (!strcmp(node_ident, iter_ident)) {
             cnt++;
         }
     }
@@ -2433,54 +2444,9 @@ ay_yang_ident_duplications(struct yprinter_ctx *ctx, struct ay_ynode *node, char
 }
 
 /**
- * @brief Evaluate unique identifier for a yang node.
- *
- * @param[in] ctx Current printing context.
- * @param[in] node Node for which the identifier is to be derived.
- * @param[in] opt Where the identifier will be placed.
- * @param[out] ident Buffer in which the obtained identifier is written.
- * @return 0 on success.
- */
-static int
-ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt, char *ident)
-{
-    int ret = 0;
-    int64_t dupl_rank;
-    uint64_t dupl_count;
-
-    ret = ay_get_yang_ident_(ctx, node, opt, ident);
-    AY_CHECK_RET(ret);
-
-    if (opt == AY_IDENT_DATA_PATH) {
-        /* Duplicate identifiers are not resolved in the data-path. */
-        return ret;
-    } else if (node->type == YN_USES) {
-        return ret;
-    }
-    assert(node->parent);
-
-    ret = ay_yang_ident_duplications(ctx, node, ident, &dupl_rank, &dupl_count);
-    AY_CHECK_RET(ret);
-    if (!dupl_count) {
-        /* No duplicates found. */
-        return ret;
-    }
-
-    /* Make duplicate identifiers unique. */
-    if (node->type == YN_KEY) {
-        strcpy(ident, "_id");
-    } else if (dupl_rank) {
-        assert(dupl_rank > 0);
-        sprintf(ident + strlen(ident),  "%" PRId64, dupl_rank + 1);
-    }
-
-    return ret;
-}
-
-/**
  * @brief Print node identifier according to the yang language.
  *
- * @param[in] ctx Context for printing.
+ * @param[in] ctx Current printing context.
  * @param[in] node Node for which the identifier will be printed.
  * @param[in] opt Where the identifier will be placed.
  * @return 0 on success.
@@ -2488,12 +2454,143 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
 static int
 ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident_dst opt)
 {
-    int ret;
+    int ret = 0;
     char ident[AY_MAX_IDENT_SIZE];
 
-    ret = ay_get_yang_ident(ctx, node, opt, ident);
-    AY_CHECK_RET(ret);
-    ly_print(ctx->out, "%s", ident);
+    if (opt == AY_IDENT_NODE_NAME) {
+        ly_print(ctx->out, "%s", AY_YNODE_ROOT_IDENTS(ctx->tree)[AY_INDEX(ctx->tree, node)]);
+    } else {
+        ret = ay_get_yang_ident(ctx, node, opt, ident);
+        AY_CHECK_RET(ret);
+        ly_print(ctx->out, "%s", ident);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Write new identifier to array of identifiers on @p index.
+ *
+ * @param[in,out] idents Array of identifiers.
+ * @param[in] index Index to which @p new_ident will be written.
+ * @param[in] new_ident New identifier. Old one will be freed.
+ * @retrun 0 on success.
+ */
+static int
+ay_ynode_idents_write(char **idents, uint64_t index, char *new_ident)
+{
+    free(idents[index]);
+    idents[index] = strdup(new_ident);
+    return idents[index] ? 0 : AYE_MEMORY;
+}
+
+/**
+ * @brief Get top-level grouping with @p id.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] id Unique ynode number (ay_ynode.id).
+ * @return Grouping or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_grouping(struct ay_ynode *tree, uint32_t id)
+{
+    struct ay_ynode *iter;
+
+    for (iter = tree->child; iter; iter = iter->next) {
+        if ((iter->type == YN_GROUPING) && (iter->id == id)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Fill the ay_ynode_root.idents.
+ *
+ * @param[in,out] tree Context for printing.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_idents(struct yprinter_ctx *ctx)
+{
+    int ret = 0;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *tree, *iter, *uses, *gre, *parent;
+    char **idents;
+    char buffer[AY_MAX_IDENT_SIZE];
+    int64_t dupl_rank;
+    uint64_t dupl_count;
+
+    /* Resolve most of identifiers. */
+    tree = ctx->tree;
+    idents = AY_YNODE_ROOT_IDENTS(tree);
+    LY_ARRAY_FOR(tree, i) {
+        iter = &tree[i];
+        assert(iter->type != YN_REC);
+        if ((iter->type == YN_USES) || (iter->type == YN_ROOT)) {
+            idents[i] = NULL;
+            continue;
+        }
+        ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
+        AY_CHECK_RET(ret);
+        ay_ynode_idents_write(idents, AY_INDEX(tree, iter), buffer);
+        AY_CHECK_RET(ret);
+    }
+
+    /* Resolve identifiers for YN_USES nodes.
+     * It is assumed that the referenced grouping has the identifier evaluated.
+     */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        uses = &tree[i];
+        if (uses->type != YN_USES) {
+            continue;
+        }
+
+        /* Find grouping. */
+        gre = ay_ynode_get_grouping(tree, uses->ref);
+        assert(gre);
+        assert(!idents[i]);
+        /* Set new identifier for YN_USES node. */
+        ay_ynode_idents_write(idents, i, idents[AY_INDEX(tree, gre)]);
+
+        /* Update parental identifiers. */
+        for (iter = uses; iter; iter = iter->parent) {
+            parent = iter->parent;
+            if ((parent->child != iter) || ((parent->type != YN_LIST) && (parent->type != YN_GROUPING))) {
+                break;
+            }
+            ret = ay_get_yang_ident(ctx, parent, AY_IDENT_NODE_NAME, buffer);
+            AY_CHECK_RET(ret);
+            ay_ynode_idents_write(idents, AY_INDEX(tree, parent), buffer);
+            AY_CHECK_RET(ret);
+        }
+    }
+
+    /* Number the duplicate identifiers. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if (iter->type == YN_USES) {
+            continue;
+        }
+        ret = ay_yang_ident_duplications(tree, iter, idents[AY_INDEX(tree, iter)], idents, &dupl_rank, &dupl_count);
+        AY_CHECK_RET(ret);
+        if (!dupl_count) {
+            /* No duplicates found. */
+            continue;
+        }
+
+        /* Make duplicate identifiers unique. */
+        if (iter->type == YN_KEY) {
+            strcpy(buffer, "_id");
+        } else if (dupl_rank) {
+            assert(dupl_rank > 0);
+            strcpy(buffer, idents[AY_INDEX(tree, iter)]);
+            sprintf(buffer + strlen(buffer),  "%" PRId64, dupl_rank + 1);
+        }
+        ay_ynode_idents_write(idents, AY_INDEX(tree, iter), buffer);
+        AY_CHECK_RET(ret);
+    }
 
     return ret;
 }
@@ -3584,6 +3681,12 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ctx.out = out;
     ctx.space = SPACE_INDENT;
 
+    /* Create array of identifiers. */
+    LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_IDENTS(tree), LY_ARRAY_COUNT(tree), return AYE_MEMORY);
+    AY_SET_LY_ARRAY_SIZE(AY_YNODE_ROOT_IDENTS(tree), LY_ARRAY_COUNT(tree));
+    ret = ay_ynode_idents(&ctx);
+    AY_CHECK_RET(ret);
+
     modname = ay_get_yang_module_name(ctx.mod, &modname_len);
 
     ly_print(out, "module ");
@@ -3605,7 +3708,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ly_print(out, "  " AY_EXT_PREFIX ":augeas-mod-name \"%s\";\n", mod->name);
     ly_print(out, "\n");
 
-    ret = ay_print_yang_node(&ctx, tree);
+    ret = ay_print_yang_children(&ctx, tree);
 
     ly_print(out, "}\n");
     ly_out_free(out, NULL, 0);
