@@ -177,10 +177,10 @@ module systemd {
                         pattern "[^#'\" \t\n]*[^#'\" \t\n\\\\]";
                       }
                       type string {
-                        pattern "\"[^#\" \t\n]*\"";
+                        pattern "\"[^#\"\t\n]*\"";
                       }
                       type string {
-                        pattern "'[^#' \t\n]*'";
+                        pattern "'[^#'\t\n]*'";
                       }
                       type string {
                         pattern "[^#\"'\n]*[ \t]+[^#\"'\n]*";
