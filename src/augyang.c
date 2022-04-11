@@ -309,8 +309,9 @@ struct ay_ynode {
     const struct ay_lnode *choice;  /**< Pointer to the lnode with lense tag L_UNION.
                                          Set if the node is under the influence of the union operator. */
     uint32_t ref;                   /**< Containes ay_ynode.id of some other ynode. Used as reference. */
-    uint32_t flags;                 /**< [ynode flags](@ref ynodeflags) */
     uint32_t id;                    /**< Numeric identifier of ynode node. */
+    uint16_t flags;                 /**< [ynode flags](@ref ynodeflags) */
+    uint16_t min_elems;             /**< Number of minimal elements in the node of type YN_LIST. */
 };
 
 /**
@@ -904,6 +905,9 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2)
     } else if (n1->flags != n2->flags) {
         return 0;
     }
+    // } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
+    // return 0;
+    // }
 
     return 1;
 }
@@ -968,13 +972,14 @@ ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop)
 }
 
 /**
- * @brief Check if the union/choice operator (|) is bound to the @p node.
+ * @brief Check if the attribute (etc. choice, asterisk) is bound to the @p node.
  *
  * @param[in] node Node to check.
- * @return 1 if union operator affects the node otherwise 0.
+ * @param[in] attribut Searched parent lnode.
+ * @return Pointer to attribute or NULL.
  */
-static ly_bool
-ay_lnode_has_choice(const struct ay_lnode *node)
+static const struct ay_lnode *
+ay_lnode_has_attribute(const struct ay_lnode *node, enum lens_tag attribute)
 {
     struct ay_lnode *iter;
 
@@ -983,8 +988,8 @@ ay_lnode_has_choice(const struct ay_lnode *node)
     }
 
     for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-        if (iter->lens->tag == L_UNION) {
-            return 1;
+        if (iter->lens->tag == attribute) {
+            return iter;
         }
     }
 
@@ -2177,6 +2182,7 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
 
     buffer[0] = '\0';
     for (iter = node->child; iter; iter = iter->child) {
+        // if ((iter->next && !iter->choice) || (iter->type == YN_LEAFREF)) {
         if (iter->next || (iter->type == YN_LEAFREF)) {
             break;
         }
@@ -2215,6 +2221,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     struct ay_ynode *iter;
     uint64_t len = 0;
     ly_bool internal = 0;
+    ly_bool ch_tag = 0;
 
     snode = AY_SNODE_LENS(node);
     label = AY_LABEL_LENS(node);
@@ -2260,15 +2267,13 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
                 AY_CHECK_RET(ret);
                 if (!strcmp(buffer, "node")) {
                     str = "gr";
-                } else if (node->child->choice) {
-                    memmove(buffer + 3, buffer, strlen(buffer) + 1);
-                    memcpy(buffer, "ch-", 3);
-                    str = buffer;
                 } else {
+                    ch_tag = 1;
                     str = buffer;
                 }
             }
         } else {
+            ch_tag = 1;
             str = buffer;
         }
         assert(str);
@@ -2304,12 +2309,13 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             /* get identifier of node behind key */
             ret = ay_get_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME, buffer);
             AY_CHECK_RET(ret);
-            strcpy(buffer + strlen(buffer), "-list");
+            strcat(buffer, "-list");
             str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label)) && strcmp(tmp, "lns")) {
             /* label can points to L_STAR lense */
             str = tmp;
         } else if (!ay_get_yang_ident_first_descendants(ctx, node, opt, buffer) && buffer[0]) {
+            ch_tag = 1;
             strcat(buffer, "-list");
             str = buffer;
         } else {
@@ -2390,6 +2396,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     } else {
         assert((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH));
         strcpy(buffer, str);
+    }
+
+    if (ch_tag) {
+        if (((node->type == YN_GROUPING) || (node->type == YN_LIST)) && node->child && node->child->next &&
+                node->child->choice && (node->child->next->choice == node->child->choice) &&
+                ((strlen(buffer) >= 3) && strncmp(buffer, "ch-", 3))) {
+            memmove(buffer + 3, buffer, strlen(buffer) + 1);
+            memcpy(buffer, "ch-", 3);
+        }
     }
 
     return ret;
@@ -3508,6 +3523,7 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     uint32_t choice_cnt;
     struct ay_ynode *iter;
     const struct ay_lnode *last_choice;
+    char *ident;
 
     assert(node->parent);
 
@@ -3521,13 +3537,12 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
         }
     }
 
-    if (node->parent->type == YN_GROUPING) {
-        ly_print(ctx->out, "%*schoice ", ctx->space, "");
+    ident = AY_YNODE_ROOT_IDENTS(ctx->tree)[AY_INDEX(ctx->tree, node->parent)];
+    if ((strlen(ident) <= 3) || strncmp(ident, "ch-", 3)) {
+        ly_print(ctx->out, "%*schoice ch-%s", ctx->space, "", ident);
     } else {
-        ly_print(ctx->out, "%*schoice ch-", ctx->space, "");
+        ly_print(ctx->out, "%*schoice %s", ctx->space, "", ident);
     }
-    ret = ay_print_yang_ident(ctx, node->parent, AY_IDENT_NODE_NAME);
-    AY_CHECK_RET(ret);
 
     if (choice_cnt > 1) {
         ly_print(ctx->out, "%" PRIu32 "", choice_cnt);
@@ -5307,9 +5322,10 @@ ay_delete_comment(struct ay_ynode *tree)
 static void
 ay_ynode_delete_build_list(struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *node1, *node2;
-    struct ay_lnode *iter;
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_ynode *node1, *node2, *it1, *it2;
+    const struct ay_lnode *star;
+    uint64_t cmp_cnt, star_cnt;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node1 = &tree[i];
@@ -5317,49 +5333,69 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             continue;
         }
 
+        /* lns . ( sep . lns )* -> first lns can have multiple nodes, so a for loop is used. */
         for (node2 = node1->next; node2; node2 = node2->next) {
             if (!node2 || !node2->snode) {
                 continue;
-            } else if (node1->snode->lens == node2->snode->lens) {
-                break;
+            } else if (node1->snode->lens != node2->snode->lens) {
+                continue;
             }
-        }
-        if (!node2) {
-            continue;
-        }
+            /* node1 == node2 */
 
-        /* node1 == node2 */
-
-        /* node1 should not have an asterisk */
-        for (iter = node1->snode->parent; iter; iter = iter->parent) {
-            if ((iter->lens->tag == L_SUBTREE) || (iter->lens->tag == L_STAR)) {
-                break;
+            /* node1 should not have an asterisk */
+            if (ay_lnode_has_attribute(node1->snode, L_STAR)) {
+                continue;
             }
-        }
-        if (iter && (iter->lens->tag == L_STAR)) {
-            continue;
-        }
-
-        /* node2 should have an asterisk */
-        for (iter = node2->snode->parent; iter; iter = iter->parent) {
-            if ((iter->lens->tag == L_SUBTREE) || (iter->lens->tag == L_STAR)) {
-                break;
+            /* node2 should have an asterisk */
+            if (!(star = ay_lnode_has_attribute(node2->snode, L_STAR))) {
+                continue;
             }
-        }
-        if (!iter || (iter->lens->tag != L_STAR)) {
-            continue;
-        }
 
-        /* set minimal-elements for node2 */
-        if (!ay_lnode_has_maybe(node2->snode, 1)) {
-            assert(!(node2->flags & AY_YNODE_MAND_MASK));
-            node2->flags &= ~AY_YNODE_MAND_MASK;
-            node2->flags = AY_YNODE_MAND_TRUE;
-        }
+            /* Remaining nodes must fit. */
+            cmp_cnt = 1;
+            for (it1 = node1->next, it2 = node2->next; it1 && it2; it1 = it1->next, it2 = it2->next) {
+                if (star != ay_lnode_has_attribute(it2->snode, L_STAR)) {
+                    break;
+                } else if ((it1->snode && !it2->snode) || (!it1->snode && it2->snode)) {
+                    break;
+                } else if (it1->snode->lens != it2->snode->lens) {
+                    break;
+                }
+                cmp_cnt++;
+            }
 
-        /* delete node1 because it is useless */
-        ay_ynode_delete_subtree(tree, node1, 1);
-        i--;
+            /* Nodes below the star must have the same number as the ones being compared. */
+            star_cnt = 1;
+            for (it2 = node2->next; it2; it2 = it2->next) {
+                if (star != ay_lnode_has_attribute(it2->snode, L_STAR)) {
+                    break;
+                }
+                star_cnt++;
+            }
+            if (cmp_cnt != star_cnt) {
+                /* The node1 and node2 groups are very similar, but not the same.
+                 * So this is not an build pattern.
+                 */
+                continue;
+            }
+
+            /* The build pattern detected. The first lns in "lns . ( sep . lns )*" will be deleted. */
+
+            /* set minimal-elements for node2 group */
+            for (j = 0, it2 = node2; j < star_cnt; j++, it2 = it2->next) {
+                if (!ay_lnode_has_maybe(it2->snode, 1)) {
+                    it2->flags &= ~AY_YNODE_MAND_MASK;
+                    it2->flags |= AY_YNODE_MAND_TRUE;
+                    it2->min_elems++;
+                }
+            }
+            for (j = 0; j < star_cnt; j++) {
+                ay_ynode_delete_subtree(tree, node1, 1);
+            }
+
+            i--;
+            break;
+        }
     }
 }
 
@@ -5631,7 +5667,7 @@ ay_ynode_set_choice_for_value(struct ay_ynode *node)
 {
     assert((node->type == YN_VALUE) && node->value && node->parent);
 
-    if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) || (ay_lnode_has_choice(node->value)))) {
+    if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) || (ay_lnode_has_attribute(node->value, L_UNION)))) {
         if (node->next->type == YN_GROUPING) {
             assert(node->next->next->type == YN_USES);
             node->choice = node->next->next->choice;
@@ -5764,11 +5800,14 @@ ay_ynode_set_ref(struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i, j, start;
     struct ay_ynode *iti, *itj;
     ly_bool skip, children_eq, subtree_eq;
+    uint32_t root_eq_ref;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get default subtree. */
         iti = &tree[i];
-        if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
+        if ((iti->type == YN_LIST) && (iti->parent->type == YN_ROOT)) {
+            continue;
+        } else if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
             continue;
         } else if (iti->ref) {
             i += iti->descendants;
@@ -5788,6 +5827,15 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             continue;
         }
 
+        if ((iti->parent->id == iti->parent->ref) && (iti->parent->flags == AY_GROUPING_CHILDREN) && !iti->next) {
+            /* The iti is already in grouping and it is alone. If itj subtree including root is equal with iti,
+             * then itj->ref must be set to grouping and not to the iti->id.
+             */
+            root_eq_ref = iti->parent->id;
+        } else {
+            root_eq_ref = iti->id;
+        }
+
         /* Find subtrees which are the same. */
         subtree_eq = 0;
         children_eq = 0;
@@ -5799,7 +5847,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             } else if (ay_ynode_subtree_equal(iti, itj, 1)) {
                 /* Subtrees including root node are equal. */
                 subtree_eq = 1;
-                itj->ref = iti->id;
+                itj->ref = root_eq_ref;
                 j += itj->descendants;
             } else if (itj->descendants && ay_ynode_subtree_equal(iti, itj, 0)) {
                 /* Subtrees without root node are equal. */
