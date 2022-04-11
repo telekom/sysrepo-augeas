@@ -199,8 +199,10 @@ include_directories(${SELINUX_INCLUDE_DIRS})
 # generate files
 configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
 
-# install fixed lenses
-add_custom_target(install_lens cp ${PROJECT_SOURCE_DIR}/lens_fix/* ${AUGEAS_LENS_DIR})
+# install latest lenses with our patches
+add_custom_target(install_lens
+        COMMAND ${PROJECT_SOURCE_DIR}/lens_patch/update_lens.sh "${PROJECT_SOURCE_DIR}/lens_patch" "${AUGEAS_LENS_DIR}"
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 # generate YANG modules from Augeas lenses
 set(LENS_LIST ${SUPPORTED_LENSES})
