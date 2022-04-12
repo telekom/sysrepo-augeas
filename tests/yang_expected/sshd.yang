@@ -14,7 +14,7 @@ module sshd {
       container accept-env {
         augex:data-path "AcceptEnv";
         presence "Config entry.";
-        list AcceptEnv-list {
+        list accept-env-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -22,11 +22,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container AcceptEnv {
+          container accept-env {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf AcceptEnv {
+            leaf accept-env {
               mandatory true;
               type uint64;
             }
@@ -47,7 +47,7 @@ module sshd {
       container allow-groups {
         augex:data-path "AllowGroups";
         presence "Config entry.";
-        list AllowGroups-list {
+        list allow-groups-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -55,11 +55,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container AllowGroups {
+          container allow-groups {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf AllowGroups {
+            leaf allow-groups {
               mandatory true;
               type uint64;
             }
@@ -80,7 +80,7 @@ module sshd {
       container allow-users {
         augex:data-path "AllowUsers";
         presence "Config entry.";
-        list AllowUsers-list {
+        list allow-users-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -88,11 +88,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container AllowUsers {
+          container allow-users {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf AllowUsers {
+            leaf allow-users {
               mandatory true;
               type uint64;
             }
@@ -113,7 +113,7 @@ module sshd {
       container deny-groups {
         augex:data-path "DenyGroups";
         presence "Config entry.";
-        list DenyGroups-list {
+        list deny-groups-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -121,11 +121,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container DenyGroups {
+          container deny-groups {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf DenyGroups {
+            leaf deny-groups {
               mandatory true;
               type uint64;
             }
@@ -167,7 +167,7 @@ module sshd {
       container deny-users {
         augex:data-path "DenyUsers";
         presence "Config entry.";
-        list DenyUsers-list {
+        list deny-users-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -175,11 +175,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container DenyUsers {
+          container deny-users {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf DenyUsers {
+            leaf deny-users {
               mandatory true;
               type uint64;
             }
@@ -200,7 +200,7 @@ module sshd {
       container macs {
         augex:data-path "MACs";
         presence "Config entry.";
-        list MACs-list {
+        list macs-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -209,11 +209,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container MACs {
+          container macs {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf MACs {
+            leaf macs {
               mandatory true;
               type uint64;
             }
@@ -229,7 +229,7 @@ module sshd {
       container ciphers {
         augex:data-path "Ciphers";
         presence "Config entry.";
-        list Ciphers-list {
+        list ciphers-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -238,11 +238,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container Ciphers {
+          container ciphers {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf Ciphers {
+            leaf ciphers {
               mandatory true;
               type uint64;
             }
@@ -258,7 +258,7 @@ module sshd {
       container kexalgorithms {
         augex:data-path "KexAlgorithms";
         presence "Config entry.";
-        list KexAlgorithms-list {
+        list kex-algorithms-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -267,11 +267,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container KexAlgorithms {
+          container kex-algorithms {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf KexAlgorithms {
+            leaf kex-algorithms {
               mandatory true;
               type uint64;
             }
@@ -287,7 +287,7 @@ module sshd {
       container hostkeyalgorithms {
         augex:data-path "HostKeyAlgorithms";
         presence "Config entry.";
-        list HostKeyAlgorithms-list {
+        list host-key-algorithms-list {
           key "_id";
           min-elements 1;
           ordered-by user;
@@ -296,11 +296,11 @@ module sshd {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container HostKeyAlgorithms {
+          container host-key-algorithms {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf HostKeyAlgorithms {
+            leaf host-key-algorithms {
               mandatory true;
               type uint64;
             }
@@ -394,7 +394,7 @@ module sshd {
             }
           }
         }
-        container Settings {
+        container settings {
           augex:data-path "Settings";
           presence "Config entry.";
           list ch-accept-env-list {

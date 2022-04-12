@@ -39,7 +39,7 @@ module ssh {
           }
         }
       }
-      leaf ProxyCommand {
+      leaf proxy-command {
         type string {
           pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
@@ -65,12 +65,12 @@ module ssh {
         presence "Config entry.";
         uses commas-entry-list;
       }
-      container HostKeyAlgorithms {
+      container host-key-algorithms {
         augex:data-path "HostKeyAlgorithms";
         presence "Config entry.";
         uses commas-entry-list;
       }
-      container KexAlgorithms {
+      container kex-algorithms {
         augex:data-path "KexAlgorithms";
         presence "Config entry.";
         uses commas-entry-list;
@@ -276,7 +276,7 @@ module ssh {
               }
             }
           }
-          container Settings {
+          container settings {
             augex:data-path "Settings";
             presence "Config entry.";
             list ch-send-env-list {

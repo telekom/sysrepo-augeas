@@ -23,13 +23,13 @@ module star {
       }
       choice ch-config-entries {
         mandatory true;
-        leaf STAR-FIFOSIZE {
+        leaf star-fifosize {
           type string {
             pattern "[0-9x*.a-z]+";
           }
           augex:data-path "STAR_FIFOSIZE";
         }
-        leaf STAR-FIFOSIZE-MAX {
+        leaf star-fifosize-max {
           type string {
             pattern "[0-9x*.a-z]+";
           }

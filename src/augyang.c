@@ -15,6 +15,7 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1440,6 +1441,33 @@ enum ay_ident_dst {
 };
 
 /**
+ * @brief Modify string so that uppercase letters are not present and possibly separate the words with dash.
+ *
+ * @param[in,out] buffer Buffer containing identifier of node.
+ * @return 0 on success.
+ */
+static int
+ay_ident_lowercase_dash(char *buffer)
+{
+    uint64_t i;
+
+    for (i = 0; i < strlen(buffer); i++) {
+        if (!isupper(buffer[i]) && (buffer[i] != '-') && isupper(buffer[i + 1])) {
+            if (strlen(buffer) + 2 > AY_MAX_IDENT_SIZE) {
+                return AYE_IDENT_LIMIT;
+            }
+            memmove(buffer + i + 2, buffer + i + 1, strlen(buffer + i + 1) + 1);
+            buffer[i + 1] = '-';
+            i++;
+        } else if (isupper(buffer[i])) {
+            buffer[i] = tolower(buffer[i]);
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Modify the identifier to conform to the constraints of the yang identifier.
  *
  * TODO: complete for all input characters.
@@ -1453,6 +1481,7 @@ enum ay_ident_dst {
 static int
 ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool internal, char *buffer)
 {
+    int ret;
     int64_t i, j, len, stop;
 
     stop = strlen(ident);
@@ -1498,6 +1527,9 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
     }
 
     buffer[j] = '\0';
+
+    ret = ay_ident_lowercase_dash(buffer);
+    AY_CHECK_RET(ret);
 
     if (internal) {
         memmove(buffer + 1, buffer, strlen(buffer) + 1);
@@ -2038,6 +2070,7 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
 {
     int ret;
     const char *prefix, *suffix, *iter, *brop, *brcl;
+    char *buf = buffer;
 
     assert(patt && ident);
 
@@ -2099,16 +2132,16 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
 
         if (prefix) {
             /* Standardize prefix. */
-            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, buffer);
+            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, buf);
             AY_CHECK_RET(ret);
-            buffer = buffer + strlen(buffer);
+            buf = buf + strlen(buf);
         }
     }
 
     /* Standardize ident. */
-    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, buffer);
+    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, buf);
     AY_CHECK_RET(ret);
-    buffer = buffer + strlen(buffer);
+    buf = buf + strlen(buf);
 
     /* Find if ident has suffix: (...|ident|...)suffix_string */
     if (brop && brcl) {
@@ -2121,9 +2154,14 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
         }
         if (ay_ident_character_is_valid(suffix)) {
             /* Standardize suffix. */
-            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, buffer);
+            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, buf);
             AY_CHECK_RET(ret);
         }
+    }
+
+    if (opt == AY_IDENT_NODE_NAME) {
+        ret = ay_ident_lowercase_dash(buffer);
+        AY_CHECK_RET(ret);
     }
 
     return ret;
@@ -2182,7 +2220,6 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
 
     buffer[0] = '\0';
     for (iter = node->child; iter; iter = iter->child) {
-        // if ((iter->next && !iter->choice) || (iter->type == YN_LEAFREF)) {
         if (iter->next || (iter->type == YN_LEAFREF)) {
             break;
         }

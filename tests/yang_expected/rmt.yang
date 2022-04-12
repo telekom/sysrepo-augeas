@@ -23,13 +23,13 @@ module rmt {
       }
       choice ch-config-entries {
         mandatory true;
-        leaf DEBUG {
+        leaf debug {
           type string {
             pattern "[^ \t\n]+";
           }
           augex:data-path "DEBUG";
         }
-        leaf USER {
+        leaf user {
           type string {
             pattern "[^ \t\n]+";
           }
