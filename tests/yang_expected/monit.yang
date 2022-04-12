@@ -1,0 +1,74 @@
+module monit {
+  namespace "aug:monit";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Monit";
+
+  grouping value {
+    container value {
+      augex:data-path "$$";
+      augex:value-yang-path "sto-to-spc";
+      presence "Config entry.";
+      leaf word {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+      }
+      leaf sto-to-spc {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+    }
+  }
+  list monit {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container set {
+          augex:data-path "set";
+          presence "Config entry.";
+          uses value;
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "include";
+        }
+        container service {
+          augex:data-path "check";
+          presence "Config entry.";
+          list value-list {
+            key "_id";
+            min-elements 2;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            uses value;
+          }
+        }
+      }
+    }
+  }
+}

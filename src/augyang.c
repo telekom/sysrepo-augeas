@@ -2689,7 +2689,9 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if (node->flags & AY_YNODE_MAND_TRUE) {
+    if (node->min_elems) {
+        ly_print(ctx->out, "%*smin-elements %" PRIu16 ";\n", ctx->space, "", node->min_elems);
+    } else if (node->flags & AY_YNODE_MAND_TRUE) {
         ly_print(ctx->out, "%*smin-elements 1;\n", ctx->space, "");
     }
 }
@@ -3975,6 +3977,10 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     }
     if (node->flags & AY_VALUE_IN_CHOICE) {
         ly_print(ctx->out, "%*s flag: value_in_choice\n", ctx->space, "");
+    }
+
+    if (node->min_elems) {
+        ly_print(ctx->out, "%*s min_elems: %" PRIu16 "\n", ctx->space, "", node->min_elems);
     }
 }
 
@@ -5439,12 +5445,14 @@ repeat:
             if (!nodeval && (iterval->tag == L_STORE) && !node->child) {
                 iter->flags &= ~AY_YNODE_MAND_MASK;
                 iter->flags |= AY_YNODE_MAND_FALSE;
+                iter->min_elems = 0;
                 ay_ynode_delete_node(tree, node);
                 i--;
                 break;
             } else if (!iterval && (nodeval->tag == L_STORE) && !iter->child) {
                 node->flags &= ~AY_YNODE_MAND_MASK;
                 node->flags |= AY_YNODE_MAND_FALSE;
+                node->min_elems = 0;
                 ay_ynode_delete_node(tree, iter);
                 goto repeat;
             }
@@ -6072,6 +6080,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list = child;
             list->type = YN_LIST;
             list->flags |= (list->child->flags & AY_YNODE_MAND_MASK);
+            list->min_elems = list->child->min_elems;
             list->choice = choice;
 
             /* every next LIST or LEAFLIST move to wrapper */
