@@ -432,7 +432,6 @@ augds_get_label_node(const char *label, char **dyn)
 
         while ((ptr = strchr(start, '\\'))) {
             /* decode special Augeas chars by skipping '\' */
-            assert(ptr[1] == ' ');
             memmove(ptr, ptr + 1, strlen(ptr + 1));
             --len;
         }

@@ -1,0 +1,53 @@
+# start
+IdentityFile /etc/ssh/identity.asc
+
+Match final all
+   GSSAPIAuthentication yes
+
+Host suse.cz
+   ForwardAgent yes
+SendEnv LC_LANG
+
+Host targaryen
+    HostName 192.168.1.10
+    User daenerys
+    Port 7654
+    IdentityFile ~/.ssh/targaryen.key
+    LogLevel INFO
+    Compression yes
+
+Host tyrell
+    HostName 192.168.10.20
+
+Host mail.watzmann.net
+  LocalForward=11111 mail.watzmann.net:110
+
+Host martell
+    HostName 192.168.10.50
+
+Host *ell
+    user oberyn
+
+Host * !martell
+LogLevel INFO
+ForwardAgent yes
+
+Host *
+User root
+Compression yes
+ForwardAgent no
+ForwardX11Trusted yes
+
+# IdentityFile ~/.ssh/identity
+SendEnv LC_IDENTIFICATION LC_ALL LC_*
+ProxyCommand ssh -q -W %h:%p gateway.example.com
+RemoteForward [1.2.3.4]:20023 localhost:22
+RemoteForward 2221 lhost1:22
+LocalForward 3001 remotehost:3000
+Ciphers aes128-ctr,aes192-ctr
+MACs hmac-md5,hmac-sha1,umac-64@openssh.com
+HostKeyAlgorithms ssh-ed25519-cert-v01@openssh.com,ssh-ed25519,ssh-rsa-cert-v01@openssh.com,ssh-rsa
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+PubkeyAcceptedKeyTypes ssh-ed25519-cert-v01@openssh.com,ssh-ed25519,ssh-rsa-cert-v01@openssh.com,ssh-rsa
+GlobalKnownHostsFile /etc/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts2
+RekeyLimit 1G 1h
