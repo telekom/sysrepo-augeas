@@ -1,0 +1,77 @@
+module up2date {
+  namespace "aug:up2date";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Up2date";
+
+  list up2date {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "key-re";
+        presence "Config entry.";
+        leaf entry {
+          mandatory true;
+          type uint64;
+        }
+        leaf key-re {
+          mandatory true;
+          type string {
+            pattern "[^=# \t\n]+";
+          }
+        }
+        choice ch-entry {
+          container multi-entry {
+            augex:data-path "values";
+            presence "Config entry.";
+            list multi-value-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container multi-value {
+                augex:data-path "$$";
+                augex:value-yang-path "value-re";
+                presence "Config entry.";
+                leaf multi {
+                  mandatory true;
+                  type uint64;
+                }
+                leaf value-re {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
+                  }
+                }
+              }
+            }
+          }
+          leaf value {
+            type string {
+              pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
+            }
+            augex:data-path "value";
+          }
+        }
+      }
+    }
+  }
+}

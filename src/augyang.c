@@ -839,6 +839,47 @@ ay_ynode_alone_in_choice(const struct ay_ynode *node)
 }
 
 /**
+ * @brief Search upper L_CONCAT from @p start to @p stop.
+ *
+ * In other words, get first L_CONCAT under @p stop.
+ *
+ * @param[in] start The node whose parents will be searched.
+ * @param[in] stop The node at which the search should stop.
+ * @return The lnode of type L_CONCAT or NULL.
+ */
+const struct ay_lnode *
+ay_lnode_upper_concat(const struct ay_lnode *start, const struct ay_lnode *stop)
+{
+    const struct ay_lnode *iter;
+    const struct ay_lnode *concat;
+
+    if (!start || !stop) {
+        return NULL;
+    }
+
+    for (iter = start->parent; iter && iter != stop; iter = iter->parent) {
+        if (iter->lens->tag == L_CONCAT) {
+            concat = iter;
+        }
+    }
+
+    return concat;
+}
+
+/**
+ * @brief Check if two ynodes under choice have the same L_CONCAT.
+ *
+ * @param[in] first First node to check.
+ * @param[in] second Second node to check.
+ * @return 1 if they have the same upper L_CONCAT.
+ */
+static ly_bool
+ay_ynode_equal_upper_concat(const struct ay_ynode *first, const struct ay_ynode *second)
+{
+    return ay_lnode_upper_concat(first->snode, first->choice) == ay_lnode_upper_concat(second->snode, second->choice);
+}
+
+/**
  * @brief Check if lenses are equal.
  *
  * @param[in] l1 First lense.
@@ -4003,11 +4044,7 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     }
 
     if (node->flags & AY_YNODE_MAND_TRUE) {
-        if ((node->type == YN_LIST) || (node->type == YN_LEAFLIST)) {
-            ly_print(ctx->out, "%*s min-elements: 1\n", ctx->space, "");
-        } else {
-            ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
-        }
+        ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
     }
     if (node->flags & AY_CHOICE_MAND_FALSE) {
         ly_print(ctx->out, "%*s flag: choice_mand_false\n", ctx->space, "");
@@ -4659,6 +4696,28 @@ ay_ynode_rule_insert_container(struct ay_ynode *node)
 }
 
 /**
+ * @brief Merge container to list if they are the same and separated by choice.
+ *
+ * @param[in] node Node to check.
+ *
+ * @return 1 if container should be merged to list.
+ */
+static uint64_t
+ay_ynode_rule_merge_cont_to_list(struct ay_ynode *node)
+{
+    if ((node->type == YN_ROOT) || (node->parent->type == YN_ROOT)) {
+        return 0;
+    } else if (node->choice && node->next && node->next->choice && node->snode && node->next->snode &&
+            (node->choice == node->next->choice) && (node->snode->lens == node->next->snode->lens) &&
+            ((node->type == YN_LIST) || (node->next->type == YN_LIST)) &&
+            ay_ynode_subtree_equal(node, node->next, 0)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Rule for unification of containers or lists which have the same key.
  *
  * @param[in] node Node to check.
@@ -5240,7 +5299,7 @@ ay_ynode_set_mandatory(struct ay_ynode *node)
         node->flags |= AY_YNODE_MAND_FALSE;
     } else {
         node->flags &= ~AY_YNODE_MAND_MASK;
-        node->flags = AY_YNODE_MAND_TRUE;
+        node->flags |= AY_YNODE_MAND_TRUE;
     }
 }
 
@@ -5381,6 +5440,8 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             if (!node2 || !node2->snode) {
                 continue;
             } else if (node1->snode->lens != node2->snode->lens) {
+                continue;
+            } else if (!ay_ynode_equal_upper_concat(node1, node2)) {
                 continue;
             }
             /* node1 == node2 */
@@ -5533,12 +5594,95 @@ ay_ynode_delete_seq_node(struct ay_ynode *tree)
             continue;
         } else if (ay_ynode_get_repetition(node) || !ay_ynode_get_repetition(sibling)) {
             continue;
+        } else if (!ay_ynode_equal_upper_concat(node, sibling)) {
+            continue;
         }
 
         sibling->flags &= ~AY_YNODE_MAND_MASK;
-        sibling->flags = AY_YNODE_MAND_TRUE;
+        sibling->flags |= AY_YNODE_MAND_TRUE;
+        sibling->min_elems++;
         ay_ynode_delete_node(tree, node);
         i--;
+    }
+}
+
+/**
+ * @brief Merge container to list if they are the same and separated by choice.
+ *
+ * [key lns1 . lns2 ]  | [key lns1 . lns2 ]*
+ * [key lns1 . lns2 ]* | [key lns1 . lns2 ]
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_merge_cont_to_list(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_ynode *iter, *list, *deleted;
+    const struct ay_lnode *snode, *branch;
+    ly_bool empty_branch;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if (!ay_ynode_rule_merge_cont_to_list(iter)) {
+            continue;
+        }
+
+        if (iter->type == YN_LIST) {
+            list = iter;
+            deleted = iter->next;
+        } else {
+            assert(iter->next->type == YN_LIST);
+            list = iter->next;
+            deleted = iter;
+        }
+
+        list->min_elems = 1;
+        list->flags &= ~AY_YNODE_MAND_MASK;
+        list->flags |= AY_YNODE_MAND_TRUE;
+        ay_ynode_delete_subtree(tree, deleted, 1);
+    }
+
+    /* Set min-elements to 0 if L_UNION has a branch that is not in the ynode tree. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        list = &tree[i];
+        if (!list->choice || (list->type != YN_LIST) || !ay_ynode_alone_in_choice(list) ||
+                (list->choice->lens->tag != L_UNION) || !list->min_elems) {
+            continue;
+        }
+
+        /* Find empty choice branch. */
+        for (branch = iter->choice->child; branch; branch = branch->next) {
+            empty_branch = 1;
+            /* For every node in the choice branch. */
+            for (i = 0; i <= branch->descendants; i++) {
+                snode = &branch[i];
+                if (snode->lens->tag != L_SUBTREE) {
+                    continue;
+                }
+                /* Find snode in the list. */
+                for (j = 0; j <= list->descendants; j++) {
+                    iter = &list[j];
+                    if (iter->snode && (iter->snode->lens == snode->lens)) {
+                        /* The snode is found so it is not empty branch. */
+                        empty_branch = 0;
+                        break;
+                    }
+                }
+                if (!empty_branch) {
+                    /* This branch is not empty. Let's continue with another choice branch. */
+                    break;
+                }
+            }
+            if (empty_branch) {
+                /* The 'branch' is empty. Let's set min-elements to 0. */
+                break;
+            }
+        }
+        if (empty_branch) {
+            list->min_elems = 0;
+            list->flags &= ~AY_YNODE_MAND_MASK;
+        }
     }
 }
 
@@ -6467,6 +6611,10 @@ ay_ynode_transformations(struct ay_ynode **tree)
      * choice ch { container { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
     AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container));
+
+    /* [key lns1 . lns2 ]  | [key lns1 . lns2 ]*   -> list's min-elements = 1 */
+    /* [key lns1 . lns2 ]* | [key lns1 . lns2 ]    -> list's min-elements = 1 */
+    ay_ynode_merge_cont_to_list(*tree);
 
     /* [key lns1 . lns2 ]* | [key lns1 . lns3 ]*   -> [key lns1 (lns2 | lns3)]* */
     /* [key lns1 . lns2 ]  | [key lns1 . lns3 ]    -> [key lns1 (lns2 | lns3)]  */
