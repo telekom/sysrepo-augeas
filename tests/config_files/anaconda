@@ -1,0 +1,15 @@
+# this is the user interaction config file
+
+[General]
+post_install_tools_disabled=0
+
+[DatetimeSpoke]
+#the date and time spoke has been visited
+visited=1
+changed_timezone=1
+changed_ntp=0
+changed_timedate=1
+
+[KeyboardSpoke]
+# the keyboard spoke has not been visited
+visited=0

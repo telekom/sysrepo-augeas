@@ -87,7 +87,7 @@ else()
     option(ENABLE_TESTS "Build tests" OFF)
     option(ENABLE_VALGRIND_TESTS "Build tests with valgrind" OFF)
 endif()
-set(SUPPORTED_LENSES "cron dhclient dnsmasq iptables ntp ntpd pam passwd postfix_sasl_smtpd simplevars ssh sshd systemd xendconfsxp"
+set(SUPPORTED_LENSES "anaconda cron dhclient dnsmasq iptables ntp ntpd pam passwd postfix_sasl_smtpd simplevars ssh sshd systemd xendconfsxp"
         CACHE STRING "Space-separated list of Augeas lenses to be supported in sysrepo, by default all of them")
 option(INSTALL_MODULES "Install supported Augeas lens YANG modules into sysrepo" ON)
 set(YANG_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/yang/modules/augyang" CACHE STRING "Directory where to copy the generated YANG modules to")
@@ -188,6 +188,18 @@ ExternalProject_Add(augeas_ext
 add_dependencies(augyang augeas_ext)
 target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
 target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
+
+# yacc
+find_program(BISON_FOUND yacc)
+if(NOT BISON_FOUND)
+    message(FATAL_ERROR "Bison (yacc) not found!")
+endif()
+
+# flex
+find_program(FLEX_FOUND flex)
+if(NOT FLEX_FOUND)
+    message(FATAL_ERROR "Flex not found!")
+endif()
 
 # selinux (must be last, linked to augeas as well)
 find_package(SELinux REQUIRED)
