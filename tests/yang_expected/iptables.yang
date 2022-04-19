@@ -8,6 +8,12 @@ module iptables {
 
   augex:augeas-mod-name "Iptables";
 
+  grouping not {
+    leaf not {
+      type empty;
+      augex:data-path "not";
+    }
+  }
   grouping ipt-match {
     list ipt-match {
       key "_id";
@@ -150,12 +156,6 @@ module iptables {
           }
         }
       }
-    }
-  }
-  grouping not {
-    leaf not {
-      type empty;
-      augex:data-path "not";
     }
   }
   list iptables {

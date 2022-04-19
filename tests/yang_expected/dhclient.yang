@@ -8,26 +8,6 @@ module dhclient {
 
   augex:augeas-mod-name "Dhclient";
 
-  grouping ch-media {
-    choice ch-media {
-      mandatory true;
-      container media {
-        augex:data-path "media";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-      container request {
-        augex:data-path "request";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-      container require {
-        augex:data-path "require";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-    }
-  }
   grouping word {
     container word {
       augex:data-path "$$";
@@ -68,6 +48,104 @@ module dhclient {
           }
           augex:data-path "#eval";
         }
+      }
+    }
+  }
+  grouping stmt-array-list {
+    list stmt-array-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container stmt-array {
+        augex:data-path "$$";
+        augex:value-yang-path "sto-to-spc";
+        presence "Config entry.";
+        leaf stmt-array {
+          mandatory true;
+          type uint64;
+        }
+        leaf sto-to-spc {
+          mandatory true;
+          type string {
+            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+          }
+        }
+      }
+    }
+  }
+  grouping stmt-block-date {
+    leaf weekday {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "weekday";
+    }
+    leaf year {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "year";
+    }
+    leaf month {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "month";
+    }
+    leaf day {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "day";
+    }
+    leaf hour {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "hour";
+    }
+    leaf minute {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "minute";
+    }
+    leaf second {
+      mandatory true;
+      type string {
+        pattern "[0-9][0-9]*";
+      }
+      augex:data-path "second";
+    }
+  }
+  grouping ch-media {
+    choice ch-media {
+      mandatory true;
+      container media {
+        augex:data-path "media";
+        presence "Config entry.";
+        uses stmt-array-list;
+      }
+      container request {
+        augex:data-path "request";
+        presence "Config entry.";
+        uses stmt-array-list;
+      }
+      container require {
+        augex:data-path "require";
+        presence "Config entry.";
+        uses stmt-array-list;
       }
     }
   }
@@ -178,84 +256,6 @@ module dhclient {
           augex:data-path "expire";
           presence "Config entry.";
           uses stmt-block-date;
-        }
-      }
-    }
-  }
-  grouping stmt-block-date {
-    leaf weekday {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "weekday";
-    }
-    leaf year {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "year";
-    }
-    leaf month {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "month";
-    }
-    leaf day {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "day";
-    }
-    leaf hour {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "hour";
-    }
-    leaf minute {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "minute";
-    }
-    leaf second {
-      mandatory true;
-      type string {
-        pattern "[0-9][0-9]*";
-      }
-      augex:data-path "second";
-    }
-  }
-  grouping stmt-array-list {
-    list stmt-array-list {
-      key "_id";
-      min-elements 1;
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      container stmt-array {
-        augex:data-path "$$";
-        augex:value-yang-path "sto-to-spc";
-        presence "Config entry.";
-        leaf stmt-array {
-          mandatory true;
-          type uint64;
-        }
-        leaf sto-to-spc {
-          mandatory true;
-          type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
-          }
         }
       }
     }

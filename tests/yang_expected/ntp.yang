@@ -8,15 +8,6 @@ module ntp {
 
   augex:augeas-mod-name "Ntp";
 
-  grouping flag {
-    leaf-list flag {
-      type string {
-        pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
-      }
-      ordered-by user;
-      augex:data-path "flag";
-    }
-  }
   grouping command-record {
     list config-entries {
       key "_id";
@@ -91,6 +82,15 @@ module ntp {
           augex:data-path "dynamic";
         }
       }
+    }
+  }
+  grouping flag {
+    leaf-list flag {
+      type string {
+        pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
+      }
+      ordered-by user;
+      augex:data-path "flag";
     }
   }
   list ntp {

@@ -410,6 +410,8 @@ struct ay_dnode {
         const struct ay_lnode *lnode;   /**< Generic KEY or VALUE of type lnode. */
         const struct ay_lnode *lkey;    /**< KEY of the dictionary. */
         const struct ay_lnode *lval;    /**< VALUE of the KEY. */
+        struct ay_ynode *gr;            /**< Pointer to YN_GROUPING node. Used as KEY. */
+        struct ay_ynode *us;            /**< Pointer to YN_USES node. Used as VALUE. */
     };
 };
 
@@ -6460,25 +6462,118 @@ ay_ynode_delete_ynrec(struct ay_ynode *tree)
  *
  * @param[in,out] tree Tree of ynodes.
  */
-static void
+static int
 ay_ynode_groupings_ahead(struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *last;
+    int ret = 0;
+    LY_ARRAY_COUNT_TYPE i, j, k;
+    struct ay_ynode *last, *gr, *us, *iter;
+    uint32_t *sort = NULL;
+    struct ay_dnode *dict = NULL, *key;
+    uint64_t cnt, keys;
+    ly_bool inserted, key_resolv, val_resolv;
 
-    /* Move grouping. */
+    /* Find out size of 'dict' and 'sort' */
+    cnt = 0;
+    keys = 0;
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         if (tree[i].type == YN_GROUPING) {
-            ay_ynode_move_subtree_as_last_child(tree, tree, &tree[i]);
+            keys++;
+        } else if (tree[i].type == YN_USES) {
+            cnt++;
         }
     }
 
+    LY_ARRAY_CREATE_GOTO(NULL, dict, keys * 2 + cnt, ret, cleanup);
+    LY_ARRAY_CREATE_GOTO(NULL, sort, keys, ret, cleanup);
+
+    /* Fill 'dict'. Key is YN_GROUPING and values are YN_USES. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        if (tree[i].type == YN_GROUPING) {
+            gr = &tree[i];
+            inserted = 0;
+            for (j = 0; j < gr->descendants; j++) {
+                iter = &gr[j + 1];
+                if (iter->type == YN_USES) {
+                    /* Connect YN_USES to the 'gr'. */
+                    inserted = 1;
+                    ay_dnode_insert(dict, gr, iter);
+                } else if (iter->type == YN_GROUPING) {
+                    /* Skip inner YN_GROUPING. */
+                    j += iter->descendants;
+                }
+            }
+            if (!inserted) {
+                /* Insert YN_GROUPING which does not have YN_USES nodes. */
+                ay_dnode_insert(dict, gr, NULL);
+            }
+        }
+    }
+
+    /* Fill 'sort'. */
+    cnt = 0;
+    while (cnt < keys) {
+        AY_DNODE_KEY_FOR(dict, i) {
+            key = &dict[i];
+            if (!key->gr) {
+                /* This YN_GROUPING is already in 'sort'. */
+                continue;
+            }
+            key_resolv = 1;
+            /* Iterate over YN_USES. */
+            AY_DNODE_VAL_FOR(key, j) {
+                us = key[j].us;
+                if (!us) {
+                    /* YN_GROUPING does not have YN_USES. */
+                    break;
+                }
+                val_resolv = 0;
+                /* YN_USES must point to resolved YN_GROUPING. */
+                LY_ARRAY_FOR(sort, k) {
+                    if (sort[k] == us->ref) {
+                        /* YN_USES refers to resolved YN_GROUPING. */
+                        val_resolv = 1;
+                        break;
+                    }
+                }
+                if (!val_resolv) {
+                    /* YN_GROUPING cannot be resolved yet. */
+                    key_resolv = 0;
+                    break;
+                }
+            }
+            if (key_resolv) {
+                /* YN_GROUPING is resolved. */
+                sort[cnt] = key->gr->id;
+                cnt++;
+                LY_ARRAY_INCREMENT(sort);
+                key->gr = NULL;
+            }
+        }
+    }
+
+    /* Move grouping. */
+    for (i = 0; i < LY_ARRAY_COUNT(sort); i++) {
+        for (j = 1; j < LY_ARRAY_COUNT(tree); j++) {
+            if (tree[j].id == sort[i]) {
+                ay_ynode_move_subtree_as_last_child(tree, tree, &tree[j]);
+                break;
+            }
+        }
+    }
+
+    /* Move main list. */
     assert(tree->child->type == YN_LIST);
     last = ay_ynode_get_last(tree->child);
-    if (last->type == YN_LIST) {
-        return;
+    if (last->type != YN_LIST) {
+        ay_ynode_move_subtree_as_sibling(tree, last, tree->child);
     }
-    ay_ynode_move_subtree_as_sibling(tree, last, tree->child);
+
+cleanup:
+    LY_ARRAY_FREE(dict);
+    LY_ARRAY_FREE(sort);
+
+    return ret;
 }
 
 /**
@@ -6656,7 +6751,7 @@ ay_ynode_transformations(struct ay_ynode **tree)
     ay_ynode_tree_set_mandatory(*tree);
 
     /* No other groupings will not be added, so move groupings in front of config-file list. */
-    ay_ynode_groupings_ahead(*tree);
+    AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
     return ret;
 }

@@ -8,6 +8,52 @@ module ssh {
 
   augex:augeas-mod-name "Ssh";
 
+  grouping remote-fw {
+    container node {
+      augex:data-path "$$";
+      augex:value-yang-path "value-to-eol";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n/=][^ \t\n/]*";
+        }
+      }
+      leaf value-to-eol {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+    }
+  }
+  grouping commas-entry-list {
+    list commas-entry-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container commas-entry {
+        augex:data-path "$$";
+        augex:value-yang-path "value-to-comma";
+        presence "Config entry.";
+        leaf commas-entry {
+          mandatory true;
+          type uint64;
+        }
+        leaf value-to-comma {
+          mandatory true;
+          type string {
+            pattern "[^, \t\n=][^, \t\n]*";
+          }
+        }
+      }
+    }
+  }
   grouping ch-send-env {
     choice ch-send-env {
       mandatory true;
@@ -141,52 +187,6 @@ module ssh {
           type string {
             pattern "[^ \t\n=][^ \t\n]*";
           }
-        }
-      }
-    }
-  }
-  grouping commas-entry-list {
-    list commas-entry-list {
-      key "_id";
-      min-elements 1;
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      container commas-entry {
-        augex:data-path "$$";
-        augex:value-yang-path "value-to-comma";
-        presence "Config entry.";
-        leaf commas-entry {
-          mandatory true;
-          type uint64;
-        }
-        leaf value-to-comma {
-          mandatory true;
-          type string {
-            pattern "[^, \t\n=][^, \t\n]*";
-          }
-        }
-      }
-    }
-  }
-  grouping remote-fw {
-    container node {
-      augex:data-path "$$";
-      augex:value-yang-path "value-to-eol";
-      presence "Config entry.";
-      leaf label {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n/=][^ \t\n/]*";
-        }
-      }
-      leaf value-to-eol {
-        mandatory true;
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
         }
       }
     }

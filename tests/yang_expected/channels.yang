@@ -8,6 +8,34 @@ module channels {
 
   augex:augeas-mod-name "Channels";
 
+  grouping codec {
+    leaf codec {
+      type uint64;
+      augex:data-path "codec";
+    }
+  }
+  grouping ch-lang {
+    choice ch-lang {
+      case lang {
+        leaf-list lang {
+          min-elements 1;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "lang";
+        }
+        leaf codec {
+          type uint64;
+          augex:data-path "codec";
+        }
+      }
+      leaf codec2 {
+        type uint64;
+        augex:data-path "codec";
+      }
+    }
+  }
   grouping entry-list {
     list entry-list {
       key "_id";
@@ -175,34 +203,6 @@ module channels {
           augex:data-path "rid";
         }
       }
-    }
-  }
-  grouping ch-lang {
-    choice ch-lang {
-      case lang {
-        leaf-list lang {
-          min-elements 1;
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
-          ordered-by user;
-          augex:data-path "lang";
-        }
-        leaf codec {
-          type uint64;
-          augex:data-path "codec";
-        }
-      }
-      leaf codec2 {
-        type uint64;
-        augex:data-path "codec";
-      }
-    }
-  }
-  grouping codec {
-    leaf codec {
-      type uint64;
-      augex:data-path "codec";
     }
   }
   list channels {

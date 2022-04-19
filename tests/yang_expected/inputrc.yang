@@ -8,6 +8,25 @@ module inputrc {
 
   augex:augeas-mod-name "Inputrc";
 
+  grouping variable {
+    container variable {
+      augex:data-path "$$";
+      augex:value-yang-path "word";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
+        }
+      }
+      leaf word {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+      }
+    }
+  }
   grouping entry {
     container entry {
       augex:data-path "entry";
@@ -25,25 +44,6 @@ module inputrc {
           pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
         }
         augex:data-path "mapping";
-      }
-    }
-  }
-  grouping variable {
-    container variable {
-      augex:data-path "$$";
-      augex:value-yang-path "word";
-      presence "Config entry.";
-      leaf label {
-        mandatory true;
-        type string {
-          pattern "entr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|ent([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|en([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|(e[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|e|[.0-9A-Z_a-df-z-]";
-        }
-      }
-      leaf word {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
       }
     }
   }
