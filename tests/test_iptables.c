@@ -338,7 +338,7 @@ test_store_add(void **state)
             "33c36\n"
             "< --insert POSTROUTING -o eth0 -j SNAT --to-source 195.233.192.1\n"
             "---\n"
-            "> -I POSTROUTING -o eth0 -j SNAT --to-source 195.233.192.1 ! -o eth25"));
+            "> -I POSTROUTING -o eth0 -j SNAT --to-source 195.233.192.1 ! -o eth25\n"));
 }
 
 static void
@@ -373,7 +373,7 @@ test_store_modify(void **state)
             "33c33\n"
             "< --insert POSTROUTING -o eth0 -j SNAT --to-source 195.233.192.1\n"
             "---\n"
-            "> --insert POSTROUTING ! -o eth0 -j SNAT --to-source 195.233.192.1"));
+            "> --insert POSTROUTING ! -o eth0 -j SNAT --to-source 195.233.192.1\n"));
 }
 
 static void
@@ -405,7 +405,7 @@ test_store_remove(void **state)
             "< :FORWARD ACCEPT [0:0]\n"
             "< :OUTPUT ACCEPT [891:68234]\n"
             "---\n"
-            "> :OUTPUT ACCEPT [0:0]"));
+            "> :OUTPUT ACCEPT [0:0]\n"));
 }
 
 int

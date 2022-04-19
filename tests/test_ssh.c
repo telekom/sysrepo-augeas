@@ -515,12 +515,12 @@ test_store_add(void **state)
     assert_int_equal(0, tdiff_files(state,
             "8a9\n"
             "> PermitRemoteOpen :830\n"
-            "27a29\n"
+            "25a27\n"
             "> AddKeysToAgent confirm1h30m\n"
             "52c54\n"
             "< GlobalKnownHostsFile /etc/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts2\n"
             "---\n"
-            "> GlobalKnownHostsFile /etc/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts2 /root/.ssh/ssh_known_host"));
+            "> GlobalKnownHostsFile /etc/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts2 /root/.ssh/ssh_known_host\n"));
 }
 
 static void
@@ -557,7 +557,7 @@ test_store_modify(void **state)
             "53c53\n"
             "< RekeyLimit 1G 1h\n"
             "---\n"
-            "> RekeyLimit 500M 1h"));
+            "> RekeyLimit 500M 1h\n"));
 }
 
 static void
@@ -595,7 +595,7 @@ test_store_remove(void **state)
             "53c50\n"
             "< RekeyLimit 1G 1h\n"
             "---\n"
-            "> RekeyLimit 1G"));
+            "> RekeyLimit 1G\n"));
 }
 
 int

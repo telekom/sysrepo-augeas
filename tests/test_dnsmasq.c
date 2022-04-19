@@ -611,7 +611,7 @@ test_store_add(void **state)
             "---\n"
             "> server=10.1.2.3@eth1#1056\n"
             "62a64\n"
-            "> dhcp-option=some_special_option"));
+            "> dhcp-option=some_special_option\n"));
 }
 
 static void
@@ -654,7 +654,7 @@ test_store_modify(void **state)
             "91c91\n"
             "< cname=bertand,bert\n"
             "---\n"
-            "> hname=bertand,bert"));
+            "> hname=bertand,bert\n"));
 }
 
 static void
@@ -689,7 +689,7 @@ test_store_remove(void **state)
             "29c28\n"
             "< server=10.1.2.3@192.168.1.1#55\n"
             "---\n"
-            "> server=10.1.2.3@192.168.1.1"));
+            "> server=10.1.2.3@192.168.1.1\n"));
 }
 
 int

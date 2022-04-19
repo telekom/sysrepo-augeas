@@ -387,7 +387,7 @@ test_store_add(void **state)
             "19a21\n"
             "> send dhcp-lease-time 1800;\n"
             "33a36\n"
-            ">  filename my_file;"));
+            ">  filename my_file;\n"));
 }
 
 static void
@@ -432,7 +432,7 @@ test_store_modify(void **state)
             "48c47\n"
             "<   expire 2 2000/1/12 00:00:01;\n"
             "---\n"
-            ">   expire 2 2000/6/12 00:00:01;"));
+            ">   expire 2 2000/6/12 00:00:01;\n"));
 }
 
 static void
@@ -461,7 +461,7 @@ test_store_remove(void **state)
             "---\n"
             ">    request subnet-mask, broadcast-address, time-offset,\n"
             "47d46\n"
-            "<   rebind 2 2000/1/12 00:00:01;"));
+            "<   rebind 2 2000/1/12 00:00:01;\n"));
 }
 
 int

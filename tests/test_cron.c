@@ -175,7 +175,7 @@ test_store_add(void **state)
             "6a8\n"
             "> 00 */6 * 7-8 * greeter echo \"hello\"\n"
             "10a13\n"
-            "> @reboot nobody rm -rf /"));
+            "> @reboot nobody rm -rf /\n"));
 }
 
 static void
@@ -210,7 +210,7 @@ test_store_modify(void **state)
             "12c12\n"
             "< @yearly foo a command\n"
             "---\n"
-            "> @annually foo a command"));
+            "> @annually foo a command\n"));
 }
 
 static void
@@ -240,7 +240,7 @@ test_store_remove(void **state)
             "8d6\n"
             "< 30 7 * * * root test -x /etc/init.d/anacron && /usr/sbin/invoke-rc.d anacron start >/dev/null\n"
             "12d9\n"
-            "< @yearly foo a command"));
+            "< @yearly foo a command\n"));
 }
 
 int

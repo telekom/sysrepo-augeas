@@ -260,7 +260,7 @@ test_store_add(void **state)
             "7c10\n"
             "< EnvironmentFile = /etc/sysconfig/httpd\n"
             "---\n"
-            "> EnvironmentFile = /etc/sysconfig/httpd /etc/sysconfig/apache"));
+            "> EnvironmentFile = /etc/sysconfig/httpd /etc/sysconfig/apache\n"));
 }
 
 static void
@@ -295,7 +295,7 @@ test_store_modify(void **state)
             "11c12\n"
             "< ExecStop = /bin/kill -WINCH ${MAINPID}\n"
             "---\n"
-            "> ExecStop = /bin/kill -WINCH ${CHILDPID}"));
+            "> ExecStop = /bin/kill -WINCH ${CHILDPID}\n"));
 }
 
 static void
@@ -331,7 +331,7 @@ test_store_remove(void **state)
             "---\n"
             "> ExecReload = /usr/sbin/httpd $OPTIONS graceful\n"
             "12d11\n"
-            "< KillSignal = SIGCONT"));
+            "< KillSignal = SIGCONT\n"));
 }
 
 int

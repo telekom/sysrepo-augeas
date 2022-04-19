@@ -451,7 +451,7 @@ test_store_add(void **state)
             "---\n"
             "> AcceptEnv LC_IDENTIFICATION LC_ALL LC_CURRENCY\n"
             "65a67\n"
-            ">   ExposeAuthInfo no"));
+            ">   ExposeAuthInfo no\n"));
 }
 
 static void
@@ -494,7 +494,7 @@ test_store_modify(void **state)
             "66c66\n"
             "<   AllowTcpForwarding no\n"
             "---\n"
-            ">   AllowTcpForwarding yes"));
+            ">   AllowTcpForwarding yes\n"));
 }
 
 static void
@@ -528,7 +528,7 @@ test_store_remove(void **state)
             "---\n"
             "> AcceptEnv LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT\n"
             "67d65\n"
-            "<   PermitTTY no"));
+            "<   PermitTTY no\n"));
 }
 
 int

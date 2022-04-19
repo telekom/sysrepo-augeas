@@ -146,7 +146,7 @@ test_store_add(void **state)
             "> [MouseSpoke]\n"
             "> visited=1\n"
             "15a18\n"
-            "> doubleclick_delay=300ms"));
+            "> doubleclick_delay=300ms\n"));
 }
 
 static void
@@ -176,7 +176,7 @@ test_store_modify(void **state)
             "15c15\n"
             "< visited=0\n"
             "---\n"
-            "> visited=1"));
+            "> visited=1\n"));
 }
 
 static void
@@ -204,7 +204,7 @@ test_store_remove(void **state)
             "13,15d11\n"
             "< [KeyboardSpoke]\n"
             "< # the keyboard spoke has not been visited\n"
-            "< visited=0"));
+            "< visited=0\n"));
 }
 
 int

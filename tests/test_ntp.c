@@ -253,7 +253,7 @@ test_store_add(void **state)
             "11a13\n"
             "> fudge not-sure-what refid 5\n"
             "23a26\n"
-            "> enable kernel stats auth"));
+            "> enable kernel stats auth\n"));
 }
 
 static void
@@ -288,7 +288,7 @@ test_store_modify(void **state)
             "22c22\n"
             "< requestkey 25\n"
             "---\n"
-            "> requestkey 50"));
+            "> requestkey 50\n"));
 }
 
 static void
@@ -323,7 +323,7 @@ test_store_remove(void **state)
             "---\n"
             "> statistics loopstats clockstats\n"
             "21d20\n"
-            "< autokey akey"));
+            "< autokey akey\n"));
 }
 
 int

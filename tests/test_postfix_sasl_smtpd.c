@@ -110,7 +110,7 @@ test_store_add(void **state)
             "> auxprop_plugin: flask\n"
             "> auxprop_plugin: plesk2\n"
             "5a8\n"
-            "> sql_engine: old"));
+            "> sql_engine: old\n"));
 }
 
 static void
@@ -140,7 +140,7 @@ test_store_modify(void **state)
             "4c4\n"
             "< mech_list: CRAM-MD5 PLAIN LOGIN\n"
             "---\n"
-            "> mech_list: CRAM-MD5 PLAIN"));
+            "> mech_list: CRAM-MD5 PLAIN\n"));
 }
 
 static void
@@ -166,7 +166,7 @@ test_store_remove(void **state)
             "3d2\n"
             "< saslauthd_path: /private/plesk_saslauthd\n"
             "5d3\n"
-            "< sql_engine: intentionally disabled"));
+            "< sql_engine: intentionally disabled\n"));
 }
 
 int

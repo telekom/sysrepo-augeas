@@ -141,7 +141,7 @@ test_store_add(void **state)
             "2a3\n"
             "> listen on 2001::fe25:1\n"
             "15a17\n"
-            "> sensor nmea1"));
+            "> sensor nmea1\n"));
 }
 
 static void
@@ -170,7 +170,7 @@ test_store_modify(void **state)
             "18c18\n"
             "< servers 0.gentoo.pool.ntp.org weight 2\n"
             "---\n"
-            "> servers 0.local.localhost.com weight 2"));
+            "> servers 0.local.localhost.com weight 2\n"));
 }
 
 static void
@@ -196,7 +196,7 @@ test_store_remove(void **state)
             "12d11\n"
             "< sensor nmea0 correction 5 stratum 2\n"
             "19d17\n"
-            "< servers 1.gentoo.pool.ntp.org"));
+            "< servers 1.gentoo.pool.ntp.org\n"));
 }
 
 int

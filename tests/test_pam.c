@@ -152,7 +152,7 @@ test_store_add(void **state)
             "> -session  optional        common-auth\n"
             "> account  optional        pam_env.so      revoke quiet force\n"
             "6a7\n"
-            "> auth optional my_module.so"));
+            "> auth optional my_module.so\n"));
 }
 
 static void
@@ -185,7 +185,7 @@ test_store_modify(void **state)
             "< session  include         pam_systemd.so  onerr=succeed sense=allow\n"
             "---\n"
             "> account  optional        pam_acc.so      revoke force\n"
-            "> password  include         pam_systemd.so  onerr=succeed sense=allow"));
+            "> password  include         pam_systemd.so  onerr=succeed sense=allow\n"));
 }
 
 static void
@@ -213,7 +213,7 @@ test_store_remove(void **state)
             "4c3\n"
             "< account  optional        pam_env.so      revoke force\n"
             "---\n"
-            "> account  optional        pam_env.so      force"));
+            "> account  optional        pam_env.so      force\n"));
 }
 
 int

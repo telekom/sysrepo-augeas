@@ -127,9 +127,9 @@ test_store_add(void **state)
     /* diff */
     assert_int_equal(0, tdiff_files(state,
             "6a7\n"
-            "> newvar = value",
+            "> newvar = value\n",
             "7a8\n"
-            "> newvar2 = value"));
+            "> newvar2 = value\n"));
 }
 
 static void
@@ -153,7 +153,7 @@ test_store_modify(void **state)
             "4c4\n"
             "< key2 = value2\n"
             "---\n"
-            "> key2 = changed value"));
+            "> key2 = changed value\n"));
 }
 
 static void
@@ -178,7 +178,7 @@ test_store_remove(void **state)
     assert_int_equal(0, tdiff_files(state,
             "4,5d3\n"
             "< anotherkey = another value\n"
-            "< UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'",
+            "< UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'\n",
             ""));
 }
 

@@ -227,7 +227,7 @@ test_store_add(void **state)
     assert_int_equal(0, tdiff_files(state,
             "7a8,9\n"
             "> man:x:2000:200:duplicate man:/home/man:/bin/bash\n"
-            "> +"));
+            "> +\n"));
 }
 
 static void
@@ -258,7 +258,7 @@ test_store_modify(void **state)
             "10c10\n"
             "< +::::::/sbin/nologin\n"
             "---\n"
-            "> +::::THE default::/sbin/nologin"));
+            "> +::::THE default::/sbin/nologin\n"));
 }
 
 static void
@@ -280,7 +280,7 @@ test_store_remove(void **state)
     /* diff */
     assert_int_equal(0, tdiff_files(state,
             "3d2\n"
-            "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false"));
+            "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false\n"));
 }
 
 static void
@@ -304,7 +304,7 @@ test_store_move(void **state)
             "0a1\n"
             "> nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"
             "7d7\n"
-            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash"));
+            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"));
 }
 
 int
