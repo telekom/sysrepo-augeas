@@ -993,10 +993,11 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
  *
  * @param[in] node Node to check.
  * @param[in] choice_stop Stop searching if @p node is under choice.
+ * @param[in] star_stop Stop searching if @p node is under star.
  * @return 1 if maybe operator affects the node otherwise 0.
  */
 static ly_bool
-ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop)
+ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop, ly_bool star_stop)
 {
     struct ay_lnode *iter;
 
@@ -1006,6 +1007,8 @@ ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop)
 
     for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
         if (choice_stop && (iter->lens->tag == L_UNION)) {
+            return 0;
+        } else if (star_stop && (iter->lens->tag == L_STAR)) {
             return 0;
         } else if (iter->lens->tag == L_MAYBE) {
             return 1;
@@ -5296,7 +5299,7 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
 static void
 ay_ynode_set_mandatory(struct ay_ynode *node)
 {
-    if (ay_lnode_has_maybe(node->snode, 0)) {
+    if (ay_lnode_has_maybe(node->snode, 0, 1)) {
         node->flags &= ~AY_YNODE_MAND_MASK;
         node->flags |= AY_YNODE_MAND_FALSE;
     } else {
@@ -5321,7 +5324,7 @@ ay_ynode_set_flag(struct ay_ynode *tree)
         iter = &tree[i];
 
         if (iter->label && ay_lense_pattern_has_idents(iter->label->lens)) {
-            if (iter->snode && ay_lnode_has_maybe(iter->snode, 0)) {
+            if (ay_lnode_has_maybe(iter->snode, 0, 0)) {
                 iter->flags |= AY_CHOICE_MAND_FALSE;
             }
             continue;
@@ -5332,7 +5335,7 @@ ay_ynode_set_flag(struct ay_ynode *tree)
             continue;
         }
 
-        if (first->snode && ay_lnode_has_maybe(first->snode, 0)) {
+        if (ay_lnode_has_maybe(first->snode, 0, 0)) {
             first->flags |= AY_CHOICE_MAND_FALSE;
         }
     }
@@ -5354,7 +5357,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         if (!(node->flags & AY_YNODE_MAND_MASK)) {
             if ((node->type == YN_KEY) || (node->type == YN_LEAF)) {
                 ay_ynode_set_mandatory(&tree[i]);
-            } else if ((node->type == YN_LEAFLIST) && ay_lnode_has_maybe(node->snode, 0)) {
+            } else if ((node->type == YN_LEAFLIST) && ay_lnode_has_maybe(node->snode, 0, 0)) {
                 node->flags &= ~AY_YNODE_MAND_MASK;
                 node->flags |= AY_YNODE_MAND_FALSE;
             }
@@ -5489,7 +5492,7 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
 
             /* set minimal-elements for node2 group */
             for (j = 0, it2 = node2; j < star_cnt; j++, it2 = it2->next) {
-                if (!ay_lnode_has_maybe(it2->snode, 1)) {
+                if (!ay_lnode_has_maybe(it2->snode, 1, 0)) {
                     it2->flags &= ~AY_YNODE_MAND_MASK;
                     it2->flags |= AY_YNODE_MAND_TRUE;
                     it2->min_elems++;

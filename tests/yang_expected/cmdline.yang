@@ -26,6 +26,7 @@ module cmdline {
         augex:value-yang-path "no-spaces";
         presence "Config entry.";
         leaf word {
+          mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }
