@@ -1,0 +1,1 @@
+BOOT_IMAGE=/boot/vmlinuz-5.17.2-1-default root=UUID=49be951e-c3c1-4230-bc1c-6ff82a4d82e8 splash=silent mitigations=auto quiet security=apparmor
