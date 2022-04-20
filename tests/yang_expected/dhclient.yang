@@ -78,6 +78,21 @@ module dhclient {
       }
     }
   }
+  grouping ch-send {
+    choice ch-send {
+      mandatory true;
+      container send {
+        augex:data-path "send";
+        presence "Config entry.";
+        uses word;
+      }
+      container option {
+        augex:data-path "option";
+        presence "Config entry.";
+        uses word;
+      }
+    }
+  }
   grouping stmt-block-date {
     leaf weekday {
       mandatory true;
@@ -129,6 +144,31 @@ module dhclient {
       augex:data-path "second";
     }
   }
+  grouping ch-append {
+    choice ch-append {
+      mandatory true;
+      container append {
+        augex:data-path "append";
+        presence "Config entry.";
+        uses word;
+      }
+      container prepend {
+        augex:data-path "prepend";
+        presence "Config entry.";
+        uses word;
+      }
+      container default {
+        augex:data-path "default";
+        presence "Config entry.";
+        uses word;
+      }
+      container supersede {
+        augex:data-path "supersede";
+        presence "Config entry.";
+        uses word;
+      }
+    }
+  }
   grouping ch-media {
     choice ch-media {
       mandatory true;
@@ -164,35 +204,11 @@ module dhclient {
         case ch-media {
           uses ch-media;
         }
-        container send {
-          augex:data-path "send";
-          presence "Config entry.";
-          uses word;
+        case ch-send {
+          uses ch-send;
         }
-        container option {
-          augex:data-path "option";
-          presence "Config entry.";
-          uses word;
-        }
-        container append {
-          augex:data-path "append";
-          presence "Config entry.";
-          uses word;
-        }
-        container prepend {
-          augex:data-path "prepend";
-          presence "Config entry.";
-          uses word;
-        }
-        container default {
-          augex:data-path "default";
-          presence "Config entry.";
-          uses word;
-        }
-        container supersede {
-          augex:data-path "supersede";
-          presence "Config entry.";
-          uses word;
+        case ch-append {
+          uses ch-append;
         }
         leaf interface {
           type string {
@@ -323,38 +339,14 @@ module dhclient {
           }
           augex:data-path "reject";
         }
-        container append {
-          augex:data-path "append";
-          presence "Config entry.";
-          uses word;
-        }
-        container prepend {
-          augex:data-path "prepend";
-          presence "Config entry.";
-          uses word;
-        }
-        container default {
-          augex:data-path "default";
-          presence "Config entry.";
-          uses word;
-        }
-        container supersede {
-          augex:data-path "supersede";
-          presence "Config entry.";
-          uses word;
+        case ch-append {
+          uses ch-append;
         }
         case ch-media {
           uses ch-media;
         }
-        container send {
-          augex:data-path "send";
-          presence "Config entry.";
-          uses word;
-        }
-        container option {
-          augex:data-path "option";
-          presence "Config entry.";
-          uses word;
+        case ch-send {
+          uses ch-send;
         }
         container interface {
           augex:data-path "interface";

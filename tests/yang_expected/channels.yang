@@ -8,12 +8,6 @@ module channels {
 
   augex:augeas-mod-name "Channels";
 
-  grouping codec {
-    leaf codec {
-      type uint64;
-      augex:data-path "codec";
-    }
-  }
   grouping ch-lang {
     choice ch-lang {
       case lang {
@@ -93,7 +87,10 @@ module channels {
             mandatory true;
             type uint64;
           }
-          uses codec;
+          leaf codec {
+            type uint64;
+            augex:data-path "codec";
+          }
         }
         container vpid-pcr {
           augex:data-path "vpid_pcr";
@@ -103,7 +100,10 @@ module channels {
             mandatory true;
             type uint64;
           }
-          uses codec;
+          leaf codec {
+            type uint64;
+            augex:data-path "codec";
+          }
         }
         list apid-list {
           key "_id";

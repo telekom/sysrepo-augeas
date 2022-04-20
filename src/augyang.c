@@ -264,6 +264,7 @@ enum yang_type {
 #define AY_VALUE_IN_CHOICE      0x08    /**< YN_VALUE of node must be in choice statement. */
 #define AY_GROUPING_CHILDREN    0x10    /**< The ay_ynode.ref only affects children. */
 #define AY_CONFIG_FALSE         0x20    /**< Print 'config false' for this node. */
+#define AY_GROUPING_REDUCTION   0x40    /**< Grouping is reduced due to node name collisions. */
 /** @} ynodeflags */
 
 /**
@@ -753,6 +754,7 @@ ay_ynode_copy_data(struct ay_ynode *dst, struct ay_ynode *src)
     dst->choice = src->choice;
     dst->ref = src->ref;
     dst->flags = src->flags;
+    dst->min_elems = src->min_elems;
 }
 
 /**
@@ -793,6 +795,22 @@ ay_ynode_get_first_in_choice(const struct ay_ynode *parent, const struct ay_lnod
     }
 
     return NULL;
+}
+
+/**
+ * @brief Get the previous ynode.
+ *
+ * @param[in] node Input node.
+ * @return Previous node or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_prev(struct ay_ynode *node)
+{
+    struct ay_ynode *prev;
+
+    assert(node->parent);
+    for (prev = node->parent->child; (prev != node) && (prev->next != node); prev = prev->next) {}
+    return prev == node ? NULL : prev;
 }
 
 /**
@@ -2333,11 +2351,12 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         AY_CHECK_RET(ret);
 
         if (!buffer[0]) {
+            /* Try snode from ex-parent. */
             str = ay_get_lense_name(ctx->mod, snode);
             if (!str) {
                 ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
                 AY_CHECK_RET(ret);
-                if (!strcmp(buffer, "node")) {
+                if (!strcmp(buffer, "node") || !strcmp(buffer, "config-entries")) {
                     str = "gr";
                 } else {
                     ch_tag = 1;
@@ -2483,6 +2502,27 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
 }
 
 /**
+ * @brief Get top-level grouping with @p id.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] id Unique ynode number (ay_ynode.id).
+ * @return Grouping or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_grouping(struct ay_ynode *tree, uint32_t id)
+{
+    struct ay_ynode *iter;
+
+    for (iter = tree->child; iter; iter = iter->next) {
+        if ((iter->type == YN_GROUPING) && (iter->id == id)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Detect for duplicates for the identifier.
  *
  * @param[in] tree Tree of ynodes.
@@ -2500,11 +2540,13 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     int64_t rnk, tmp_rnk;
     uint64_t cnt, tmp_cnt;
 
+    assert(dupl_count);
+
     rnk = -1;
     cnt = 0;
 
     for (iter = node->parent->child; iter; iter = iter->next) {
-        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || (iter->type == YN_USES)) {
+        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
             continue;
         } else if (iter == node) {
             rnk = cnt;
@@ -2521,7 +2563,9 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
         }
     }
 
-    *dupl_rank = rnk;
+    if (dupl_rank) {
+        *dupl_rank = rnk;
+    }
     *dupl_count = cnt;
 
     return ret;
@@ -2540,8 +2584,12 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ide
 {
     int ret = 0;
     char ident[AY_MAX_IDENT_SIZE];
+    struct ay_ynode *grouping;
 
-    if (opt == AY_IDENT_NODE_NAME) {
+    if ((opt == AY_IDENT_NODE_NAME) && (node->type == YN_USES)) {
+        grouping = ay_ynode_get_grouping(ctx->tree, node->ref);
+        ly_print(ctx->out, "%s", grouping->ident);
+    } else if (opt == AY_IDENT_NODE_NAME) {
         ly_print(ctx->out, "%s", node->ident);
     } else {
         ret = ay_get_yang_ident(ctx, node, opt, ident);
@@ -2562,35 +2610,15 @@ ay_print_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ide
 static int
 ay_ynode_ident_write(char **old, char *new)
 {
-    if (*old && (strlen(*old) >= strlen(new))) {
+    assert(new && new[0]);
+    if (*old && new && (strlen(*old) >= strlen(new))) {
         strcpy(*old, new);
         return 0;
     } else {
         free(*old);
         *old = strdup(new);
-        return old ? 0 : AYE_MEMORY;
+        return *old ? 0 : AYE_MEMORY;
     }
-}
-
-/**
- * @brief Get top-level grouping with @p id.
- *
- * @param[in] tree Tree of ynodes.
- * @param[in] id Unique ynode number (ay_ynode.id).
- * @return Grouping or NULL.
- */
-static struct ay_ynode *
-ay_ynode_get_grouping(struct ay_ynode *tree, uint32_t id)
-{
-    struct ay_ynode *iter;
-
-    for (iter = tree->child; iter; iter = iter->next) {
-        if ((iter->type == YN_GROUPING) && (iter->id == id)) {
-            return iter;
-        }
-    }
-
-    return NULL;
 }
 
 /**
@@ -2615,7 +2643,6 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
         iter = &tree[i];
         assert(iter->type != YN_REC);
         if ((iter->type == YN_USES) || (iter->type == YN_ROOT)) {
-            iter->ident = NULL;
             continue;
         }
         ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
@@ -2636,9 +2663,8 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
         /* Find grouping. */
         gre = ay_ynode_get_grouping(tree, uses->ref);
         assert(gre);
-        assert(!uses->ident);
         /* Set new identifier for YN_USES node. */
-        ay_ynode_ident_write(&uses->ident, gre->ident);
+        ay_ynode_ident_write(&(uses->ident), gre->ident);
 
         /* Update parental identifiers. */
         for (iter = uses; iter; iter = iter->parent) {
@@ -2673,6 +2699,8 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
             assert(dupl_rank > 0);
             strcpy(buffer, iter->ident);
             sprintf(buffer + strlen(buffer),  "%" PRId64, dupl_rank + 1);
+        } else {
+            strcpy(buffer, iter->ident);
         }
         ay_ynode_ident_write(&iter->ident, buffer);
         AY_CHECK_RET(ret);
@@ -5976,7 +6004,6 @@ ay_ynode_set_ref(struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i, j, start;
     struct ay_ynode *iti, *itj;
     ly_bool skip, children_eq, subtree_eq;
-    uint32_t root_eq_ref;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get default subtree. */
@@ -6003,15 +6030,6 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             continue;
         }
 
-        if ((iti->parent->id == iti->parent->ref) && (iti->parent->flags == AY_GROUPING_CHILDREN) && !iti->next) {
-            /* The iti is already in grouping and it is alone. If itj subtree including root is equal with iti,
-             * then itj->ref must be set to grouping and not to the iti->id.
-             */
-            root_eq_ref = iti->parent->id;
-        } else {
-            root_eq_ref = iti->id;
-        }
-
         /* Find subtrees which are the same. */
         subtree_eq = 0;
         children_eq = 0;
@@ -6023,9 +6041,9 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             } else if (ay_ynode_subtree_equal(iti, itj, 1)) {
                 /* Subtrees including root node are equal. */
                 subtree_eq = 1;
-                itj->ref = root_eq_ref;
+                itj->ref = iti->id;
                 j += itj->descendants;
-            } else if (itj->descendants && ay_ynode_subtree_equal(iti, itj, 0)) {
+            } else if (iti->child && iti->child->next && itj->descendants && ay_ynode_subtree_equal(iti, itj, 0)) {
                 /* Subtrees without root node are equal. */
                 children_eq = 1;
                 itj->ref = iti->id;
@@ -6087,8 +6105,8 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
         } else {
             ay_ynode_insert_wrapper(tree, iti);
             grouping = iti;
-            grouping->snode = NULL;
             iti++;
+            grouping->snode = grouping->parent->snode;
         }
         grouping->type = YN_GROUPING;
 
@@ -6562,6 +6580,153 @@ cleanup:
 }
 
 /**
+ * @brief Detect the need to move a node from grouping and
+ * count how many nodes eventually need to be added to the tree.
+ *
+ * See ay_ynode_grouping_reduction().
+ *
+ * @param[in,out] Tree of ynodes. Only flags can be modified.
+ * @return Number of nodes that must be inserted if grouping reduction is applied.
+ */
+static uint64_t
+ay_ynode_grouping_reduction_count(struct ay_ynode *tree)
+{
+    int ret;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *gr, *uses;
+    uint64_t new_nodes, dupl_count;
+
+    /* For each top-level grouping, set gr->ref and gr->flags. */
+    for (gr = tree->child; gr->type == YN_GROUPING; gr = gr->next) {
+        if (gr->child->next) {
+            /* Identifier collision can occur only for groupings whose content was created due to subtrees match
+             * including root node. If there is only a subtree body in grouping, then collisions have no way
+             * of occuring. See ::ay_ynode_set_ref().
+             */
+            continue;
+        }
+        assert(!gr->ref);
+        gr->ref = 0;
+        /* Find YN_USES which refers to this grouping. */
+        for (i = AY_INDEX(tree, gr->next) + 1; i < LY_ARRAY_COUNT(tree); i++) {
+            uses = &tree[i];
+            if ((uses->type != YN_USES) || (uses->ref != gr->id)) {
+                continue;
+            }
+            /* Temporarily store number of YN_USES which references this grouping. */
+            gr->ref++;
+            if (gr->flags & AY_GROUPING_REDUCTION) {
+                /* Flag is already set. Move to next YN_USES. */
+                continue;
+            }
+            /* Explore all siblings of this YN_USES. */
+            ret = ay_yang_ident_duplications(tree, uses, gr->child->ident, NULL, &dupl_count);
+            assert(!ret);
+            if (dupl_count) {
+                /* Name collision found. Grouping must be reduced. */
+                gr->flags |= AY_GROUPING_REDUCTION;
+            }
+        }
+    }
+
+    /* Calculate how many new nodes must be inserted into the tree due to the reductions in groupings. */
+    new_nodes = 0;
+    for (gr = tree->child; gr->type == YN_GROUPING; gr = gr->next) {
+        if (gr->flags & AY_GROUPING_REDUCTION) {
+            new_nodes += gr->ref - 1;
+            gr->ref = 0;
+        }
+    }
+
+    return new_nodes;
+}
+
+/**
+ * @brief Extract top-level node in grouping and wrap corresponding uses-stmt.
+ *
+ * It is applied only for groupings which has AY_GROUPING_REDUCTION flag set.
+ *
+ * @param[in,out] Tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_grouping_reduction(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *gr, *uses, *prev, *new, *parent;
+    struct ay_ynode data = {0};
+    uint32_t ref;
+
+    /* For each top-level grouping. */
+    for (gr = tree->child; gr->type == YN_GROUPING; gr = gr->next) {
+        if (!(gr->flags & AY_GROUPING_REDUCTION)) {
+            continue;
+        }
+        ay_ynode_copy_data(&data, gr->child);
+        /* Delete node from grouping. */
+        free(gr->child->ident);
+        ay_ynode_delete_node(tree, gr->child);
+
+        ref = 0;
+        if ((gr->descendants == 1) && (gr->child->type == YN_USES)) {
+            /* Grouping has only YN_USES node, so corresponding YN_USES node must switch to new grouping. */
+            ref = gr->child->ref;
+            free(gr->child->ident);
+            ay_ynode_delete_node(tree, gr->child);
+        } else {
+            /* Nothing special. */
+            ref = gr->id;
+        }
+
+        /* Find YN_USES which refers to this grouping. */
+        for (i = AY_INDEX(tree, gr->next) + 1; i < LY_ARRAY_COUNT(tree); i++) {
+            uses = &tree[i];
+            if ((uses->type != YN_USES) || (uses->ref != gr->id)) {
+                continue;
+            }
+
+            /* Insert new node. (The node that was deleted in grouping.) */
+            parent = uses->parent;
+            prev = ay_ynode_get_prev(uses);
+            if (prev) {
+                ay_ynode_insert_sibling(tree, prev);
+                new = prev->next;
+            } else {
+                ay_ynode_insert_child(tree, parent);
+                new = parent->child;
+            }
+            ay_ynode_copy_data(new, &data);
+            ay_ynode_move_subtree_as_child(tree, new, new->next);
+            uses = new->child;
+            new->choice = uses->choice;
+
+            if (!ref) {
+                /* YN_USES node is deleted because grouping was deleted too. */
+                free(uses->ident);
+                ay_ynode_delete_node(tree, uses);
+                i = AY_INDEX(tree, new);
+            } else {
+                /* YN_USES node has reference to new grouping or still the same. */
+                uses->ref = ref;
+                i = AY_INDEX(tree, uses);
+            }
+        }
+    }
+
+    /* Remove grouping if has no children. */
+    for (i = 1; (tree[i].type == YN_GROUPING) && (i < LY_ARRAY_COUNT(tree)); i += tree[i].descendants + 1) {
+        gr = &tree[i];
+        if (gr->descendants == 0) {
+            free(gr->ident);
+            ay_ynode_delete_node(tree, gr);
+            i--;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Set ay_ynode.type for all nodes.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -6649,17 +6814,29 @@ ay_ynode_trans_insert1(struct ay_ynode **tree, uint64_t (*rule)(struct ay_ynode 
  * @reutrn 0 on success.
  */
 static int
-ay_ynode_transformations_ident(struct module *mod, struct ay_ynode *tree)
+ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
 {
     int ret;
     struct yprinter_ctx ctx;
+    uint64_t reduction_count;
 
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
-    ctx.tree = tree;
 
+    /* Set identifier for every ynode. */
+    ctx.tree = *tree;
     ret = ay_ynode_idents(&ctx);
     AY_CHECK_RET(ret);
+
+    reduction_count = ay_ynode_grouping_reduction_count(*tree);
+    if (reduction_count) {
+        /* Apply grouping reduction. */
+        ay_ynode_trans_insert2(tree, reduction_count, ay_ynode_grouping_reduction);
+        /* Reset identifiers. */
+        ctx.tree = *tree;
+        ret = ay_ynode_idents(&ctx);
+        AY_CHECK_RET(ret);
+    }
 
     return 0;
 }
@@ -6763,7 +6940,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
     /* Transformations based on ynode identifier. */
-    ay_ynode_transformations_ident(mod, *tree);
+    ay_ynode_transformations_ident(mod, tree);
 
     return ret;
 }

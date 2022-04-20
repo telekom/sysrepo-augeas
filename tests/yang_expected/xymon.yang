@@ -1,0 +1,327 @@
+module xymon {
+  namespace "aug:xymon";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Xymon";
+
+  grouping ch-include {
+    choice ch-include {
+      mandatory true;
+      leaf include {
+        type string {
+          pattern "[^ \t][^\n]+";
+        }
+        augex:data-path "include";
+      }
+      leaf dispinclude {
+        type string {
+          pattern "[^ \t][^\n]+";
+        }
+        augex:data-path "dispinclude";
+      }
+      leaf netinclude {
+        type string {
+          pattern "[^ \t][^\n]+";
+        }
+        augex:data-path "netinclude";
+      }
+      leaf directory {
+        type string {
+          pattern "[^ \t][^\n]+";
+        }
+        augex:data-path "directory";
+      }
+    }
+  }
+  grouping host {
+    container host {
+      augex:data-path "host";
+      presence "Config entry.";
+      leaf ip {
+        mandatory true;
+        type string {
+          pattern "(((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:)))";
+        }
+        augex:data-path "ip";
+      }
+      leaf fqdn {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "fqdn";
+      }
+      leaf-list tag {
+        type string {
+          pattern "[^ \n\t]+";
+        }
+        ordered-by user;
+        augex:data-path "tag";
+      }
+    }
+  }
+  grouping title {
+    leaf title {
+      mandatory true;
+      type string {
+        pattern "[^ \t][^\n]+";
+      }
+      augex:data-path "title";
+    }
+  }
+  grouping group {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case host {
+          uses host;
+        }
+        case title {
+          uses title;
+        }
+      }
+    }
+  }
+  grouping page {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case title {
+          uses title;
+        }
+        case ch-include {
+          uses ch-include;
+        }
+        case host {
+          uses host;
+        }
+      }
+    }
+  }
+  grouping ch-group {
+    choice ch-group {
+      mandatory true;
+      container group {
+        augex:data-path "group";
+        augex:value-yang-path "value-to-eol";
+        presence "Config entry.";
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+        }
+        uses group;
+      }
+      container group-compress {
+        augex:data-path "group-compress";
+        augex:value-yang-path "value-to-eol";
+        presence "Config entry.";
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+        }
+        uses group;
+      }
+      container group-sorted {
+        augex:data-path "group-sorted";
+        augex:value-yang-path "value-to-eol";
+        presence "Config entry.";
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+        }
+        uses group;
+      }
+      container group-only {
+        augex:data-path "group-only";
+        augex:value-yang-path "value-to-eol";
+        presence "Config entry.";
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+        }
+        leaf-list col {
+          min-elements 1;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "col";
+        }
+        uses group;
+      }
+    }
+  }
+  grouping page2 {
+    leaf pagetitle {
+      mandatory true;
+      type string {
+        pattern "[^ \t][^\n]+";
+      }
+      augex:data-path "pagetitle";
+    }
+    uses page;
+    list ch-group-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses ch-group;
+    }
+  }
+  list xymon {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case ch-include {
+          uses ch-include;
+        }
+        case host {
+          uses host;
+        }
+        case title {
+          uses title;
+        }
+        container ospage {
+          augex:data-path "ospage";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          leaf ospagetitle {
+            mandatory true;
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "ospagetitle";
+          }
+        }
+      }
+    }
+    list ch-group-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses ch-group;
+    }
+    list config-entries2 {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries2 {
+        mandatory true;
+        container page {
+          augex:data-path "page";
+          augex:value-yang-path "page-name";
+          presence "Config entry.";
+          leaf page-name {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          uses page2;
+        }
+        container subpage {
+          augex:data-path "subpage";
+          augex:value-yang-path "page-name";
+          presence "Config entry.";
+          leaf page-name {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          uses page2;
+        }
+        container subparent {
+          augex:data-path "subparent";
+          augex:value-yang-path "page-name";
+          presence "Config entry.";
+          leaf page-name {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          leaf parent {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "parent";
+          }
+          leaf pagetitle {
+            mandatory true;
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "pagetitle";
+          }
+          uses page;
+          list ch-group-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            uses ch-group;
+          }
+        }
+      }
+    }
+  }
+}

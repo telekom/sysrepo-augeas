@@ -8,12 +8,6 @@ module iptables {
 
   augex:augeas-mod-name "Iptables";
 
-  grouping not {
-    leaf not {
-      type empty;
-      augex:data-path "not";
-    }
-  }
   grouping ipt-match {
     list ipt-match {
       key "_id";
@@ -35,7 +29,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         container source {
           augex:data-path "source";
@@ -47,7 +44,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         container destination {
           augex:data-path "destination";
@@ -59,7 +59,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         leaf jump {
           type string {
@@ -83,7 +86,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         container out-interface {
           augex:data-path "out-interface";
@@ -95,7 +101,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         container fragment {
           augex:data-path "fragment";
@@ -107,7 +116,10 @@ module iptables {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
           }
-          uses not;
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
         }
         leaf match {
           type string {
