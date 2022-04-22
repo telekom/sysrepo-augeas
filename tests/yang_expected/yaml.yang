@@ -1,4 +1,5 @@
 module yaml {
+  yang-version 1.1;
   namespace "aug:yaml";
   prefix aug;
 

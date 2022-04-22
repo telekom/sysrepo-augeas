@@ -580,9 +580,9 @@ ay_lense_get_root(struct module *mod)
  * @param[out] len Length of the name.
  */
 static void
-ay_get_filename(char *path, char **name, uint64_t *len)
+ay_get_filename(const char *path, const char **name, uint64_t *len)
 {
-    char *iter;
+    const char *iter;
 
     if ((*name = strrchr(path, '/'))) {
         *name = *name + 1;
@@ -1061,7 +1061,7 @@ ay_lnode_has_attribute(const struct ay_lnode *node, enum lens_tag attribute)
 static void
 ay_print_lens_node_header(struct ly_out *out, struct lens *lens, int space, const char *lens_tag)
 {
-    char *filename;
+    const char *filename;
     uint64_t len;
     uint16_t first_line, first_column;
 
@@ -1410,10 +1410,10 @@ ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *
  * @param[out] namelen Length of module name.
  * @return Module name.
  */
-static char *
+static const char *
 ay_get_yang_module_name(struct module *mod, size_t *namelen)
 {
-    char *name, *path;
+    const char *name, *path;
 
     path = mod->bindings->value->info->filename->str;
     ay_get_filename(path, &name, namelen);
@@ -2973,6 +2973,12 @@ ay_get_yang_type_by_lense_name(const char *modname, const char *ident)
             ret = "uint64";
         } else if (!strcmp("relinteger", ident) || !strcmp("relinteger_noplus", ident)) {
             ret = "int64";
+        } else if (!strcmp("ip", ident)) {
+            ret = "inet:ip-address-no-zone";
+        } else if (!strcmp("ipv4", ident)) {
+            ret = "inet:ipv4-address-no-zone";
+        } else if (!strcmp("ipv6", ident)) {
+            ret = "inet:ipv6-address-no-zone";
         }
         /* !strcmp("reldecimal", ident) || !strcmp("decimal", ident) -> decimal64 but what fraction-digits stmt? */
     }
@@ -2992,7 +2998,7 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
 {
     int ret = 0;
     const char *ident = NULL, *type;
-    char *filename = NULL;
+    const char *filename = NULL;
     size_t len = 0;
 
     assert(reg);
@@ -3769,6 +3775,68 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Check if 'import ietf-inet-types' must be printed.
+ *
+ * @param[in] reg Lense to check.
+ * @return 1 if import must be printed.
+ */
+static ly_bool
+ay_print_yang_import_inet_types(struct lens *reg)
+{
+    const char *ident, *filename, *path;
+    uint64_t len;
+
+    if (reg && ((reg->tag == L_KEY) || (reg->tag == L_STORE))) {
+        path = reg->regexp->info->filename->str;
+        ay_get_filename(path, &filename, &len);
+        if (!strncmp("rx", filename, len)) {
+            ident = ay_get_lense_name_by_modname("Rx", reg);
+            if (ident &&
+                    (!strcmp(ident, "ip") ||
+                    !strcmp(ident, "ipv4") ||
+                    !strcmp(ident, "ipv6"))) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Print yang import statements.
+ *
+ * @param[in,out] out Output handler for printing.
+ * @param[in] tree Tree of ynodes.
+ */
+static void
+ay_print_yang_imports(struct ly_out *out, struct ay_ynode *tree)
+{
+    struct ay_ynode *iter;
+    LY_ARRAY_COUNT_TYPE i;
+
+    ly_print(out, "  import augeas-extension {\n");
+    ly_print(out, "    prefix " AY_EXT_PREFIX ";\n");
+    ly_print(out, "  }\n");
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+
+        /* Find out if ietf-inet-types needs to be imported. */
+        if (ay_print_yang_import_inet_types(AY_LABEL_LENS(iter)) ||
+                ay_print_yang_import_inet_types(AY_VALUE_LENS(iter))) {
+            ly_print(out, "  import ietf-inet-types {\n");
+            ly_print(out, "    prefix inet;\n");
+            ly_print(out, "    reference\n");
+            ly_print(out, "      \"RFC 6991: Common YANG Data Types\";\n");
+            ly_print(out, "  }\n");
+            break;
+        }
+    }
+    ly_print(out, "\n");
+}
+
+/**
  * @brief Print ynode tree in yang format.
  *
  * @param[in] mod Module in which the tree is located.
@@ -3783,7 +3851,8 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     int ret;
     struct yprinter_ctx ctx;
     struct ly_out *out;
-    char *str, *modname;
+    const char *modname;
+    char *str;
     size_t i, modname_len;
 
     if (ly_out_new_memory(&str, 0, &out)) {
@@ -3804,6 +3873,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
         ly_print(out, "%c", modname[i] == '_' ? '-' : modname[i]);
     }
     ly_print(out, " {\n");
+    ly_print(out, "  yang-version 1.1;\n");
 
     ly_print(out, "  namespace \"aug:");
     for (i = 0; i < modname_len; i++) {
@@ -3812,9 +3882,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ly_print(out, "\";\n");
 
     ly_print(out, "  prefix aug;\n\n");
-    ly_print(out, "  import augeas-extension {\n");
-    ly_print(out, "    prefix " AY_EXT_PREFIX ";\n");
-    ly_print(out, "  }\n\n");
+    ay_print_yang_imports(out, tree);
     ly_print(out, "  " AY_EXT_PREFIX ":augeas-mod-name \"%s\";\n", mod->name);
     ly_print(out, "\n");
 

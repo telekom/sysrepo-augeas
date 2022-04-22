@@ -1,4 +1,5 @@
 module desktop {
+  yang-version 1.1;
   namespace "aug:desktop";
   prefix aug;
 

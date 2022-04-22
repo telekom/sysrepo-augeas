@@ -1,4 +1,5 @@
 module up2date {
+  yang-version 1.1;
   namespace "aug:up2date";
   prefix aug;
 

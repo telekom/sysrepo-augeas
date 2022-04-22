@@ -1,4 +1,5 @@
 module channels {
+  yang-version 1.1;
   namespace "aug:channels";
   prefix aug;
 

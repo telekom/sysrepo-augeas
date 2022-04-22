@@ -1,4 +1,5 @@
 module ssh {
+  yang-version 1.1;
   namespace "aug:ssh";
   prefix aug;
 

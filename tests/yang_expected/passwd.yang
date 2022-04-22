@@ -1,4 +1,5 @@
 module passwd {
+  yang-version 1.1;
   namespace "aug:passwd";
   prefix aug;
 
