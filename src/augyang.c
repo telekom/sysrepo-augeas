@@ -170,6 +170,16 @@
  */
 #define AY_MAX_IDENT_SIZE 64
 
+/**
+ * @brief Check if @p STR can be written to the @p BUFFER.
+ *
+ * @param[in,out] BUFFER Array of characters.
+ * @param[in] STR String to write.
+ * @return AYE_IDENT_LIMIT on error.
+ */
+#define AY_CHECK_MAX_IDENT_SIZE(BUFFER, STR) \
+    AY_CHECK_COND(strlen(BUFFER) + strlen(STR) + 1 > AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+
 /* error codes */
 
 #define AYE_MEMORY 1
@@ -1506,9 +1516,7 @@ ay_ident_lowercase_dash(char *buffer)
 
     for (i = 0; i < strlen(buffer); i++) {
         if (!isupper(buffer[i]) && (buffer[i] != '-') && isupper(buffer[i + 1])) {
-            if (strlen(buffer) + 2 > AY_MAX_IDENT_SIZE) {
-                return AYE_IDENT_LIMIT;
-            }
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "_");
             memmove(buffer + i + 2, buffer + i + 1, strlen(buffer + i + 1) + 1);
             buffer[i + 1] = '-';
             i++;
@@ -1547,6 +1555,7 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             j--;
             break;
         case ' ':
+            AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
             break;
         case '+':
@@ -1570,6 +1579,7 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             if (j == 0) {
                 j--;
             } else {
+                AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 buffer[j] = '-';
             }
             break;
@@ -1579,12 +1589,14 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
         }
     }
 
+    AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
     buffer[j] = '\0';
 
     ret = ay_ident_lowercase_dash(buffer);
     AY_CHECK_RET(ret);
 
     if (internal) {
+        AY_CHECK_MAX_IDENT_SIZE(buffer, "_");
         memmove(buffer + 1, buffer, strlen(buffer) + 1);
         buffer[0] = '_';
     }
@@ -1852,11 +1864,13 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
  * @param[in] ident Pointer to the identifier.
  * @param[in] ident_len Number of characters in @p ident.
  * @param[in] opt Where the identifier will be placed.
+ * @param[in] bufend Buffer end address.
  * @param[out] buffer Buffer in which a valid identifier will be written.
  * @return 0 on success.
  */
 static int
-ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, enum ay_ident_dst opt, char *buffer)
+ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, enum ay_ident_dst opt,
+        char *bufend, char *buffer)
 {
     int64_t i, j, stop;
 
@@ -1869,6 +1883,7 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
             } else if (j == 0) {
                 j--;
             } else {
+                AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
                 buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
             }
             break;
@@ -1885,15 +1900,17 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
             if (j == 0) {
                 j--;
             } else {
+                AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
                 buffer[j] = '-';
             }
             break;
         default:
-            AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
             buffer[j] = ident[i];
         }
     }
 
+    AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
     buffer[j] = '\0';
 
     return 0;
@@ -2123,7 +2140,10 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
 {
     int ret;
     const char *prefix, *suffix, *iter, *brop, *brcl;
+    void *bufend;
     char *buf = buffer;
+
+    bufend = &buffer[AY_MAX_IDENT_SIZE];
 
     assert(patt && ident);
 
@@ -2185,14 +2205,14 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
 
         if (prefix) {
             /* Standardize prefix. */
-            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, buf);
+            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, bufend, buf);
             AY_CHECK_RET(ret);
             buf = buf + strlen(buf);
         }
     }
 
     /* Standardize ident. */
-    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, buf);
+    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, bufend, buf);
     AY_CHECK_RET(ret);
     buf = buf + strlen(buf);
 
@@ -2207,7 +2227,7 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
         }
         if (ay_ident_character_is_valid(suffix)) {
             /* Standardize suffix. */
-            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, buf);
+            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, bufend, buf);
             AY_CHECK_RET(ret);
         }
     }
@@ -2380,6 +2400,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, iter->child, opt, buffer);
         AY_CHECK_RET(ret);
         internal = 1;
+        AY_CHECK_MAX_IDENT_SIZE(buffer, "-ref");
         strcat(buffer, "-ref");
         str = buffer;
     } else if (node->type == YN_USES) {
@@ -2392,6 +2413,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     } else if (node->type == YN_LIST) {
         if (node->parent->type == YN_ROOT) {
             tmp = ay_get_yang_module_name(ctx->mod, &len);
+            AY_CHECK_COND(len + 1 > AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             strncpy(buffer, tmp, len);
             buffer[len] = '\0';
             len = 0;
@@ -2400,6 +2422,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             /* get identifier of node behind key */
             ret = ay_get_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME, buffer);
             AY_CHECK_RET(ret);
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label)) && strcmp(tmp, "lns")) {
@@ -2407,6 +2430,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = tmp;
         } else if (!ay_get_yang_ident_first_descendants(ctx, node, opt, buffer) && buffer[0]) {
             ch_tag = 1;
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
         } else {
@@ -2493,6 +2517,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         if (((node->type == YN_GROUPING) || (node->type == YN_LIST)) && node->child && node->child->next &&
                 node->child->choice && (node->child->next->choice == node->child->choice) &&
                 ((strlen(buffer) >= 3) && strncmp(buffer, "ch-", 3))) {
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "ch-");
             memmove(buffer + 3, buffer, strlen(buffer) + 1);
             memcpy(buffer, "ch-", 3);
         }
@@ -2698,6 +2723,7 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
         } else if (dupl_rank) {
             assert(dupl_rank > 0);
             strcpy(buffer, iter->ident);
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "X");
             sprintf(buffer + strlen(buffer),  "%" PRId64, dupl_rank + 1);
         } else {
             strcpy(buffer, iter->ident);
