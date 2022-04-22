@@ -860,7 +860,7 @@ const struct ay_lnode *
 ay_lnode_upper_concat(const struct ay_lnode *start, const struct ay_lnode *stop)
 {
     const struct ay_lnode *iter;
-    const struct ay_lnode *concat;
+    const struct ay_lnode *concat = NULL;
 
     if (!start || !stop) {
         return NULL;
