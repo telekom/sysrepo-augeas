@@ -2105,15 +2105,13 @@ augds_yang2aug_diff_r(augeas *aug, const struct lyd_node *diff_node, const char 
     if ((cur_op != AUGDS_OP_DELETE) && (cur_op != AUGDS_OP_MOVE) && (diff_node->schema->nodetype == LYS_CONTAINER)) {
         schild = lysc_node_child(diff_node->schema);
         augds_node_get_type(schild, &type2, &dpath2, NULL);
-        if (!dpath2 && (schild->nodetype == LYS_LEAF) && (schild->flags & LYS_MAND_TRUE) &&
-                (lyd_child(diff_node)->schema == schild)) {
+        if (!dpath2 && (schild->nodetype == LYS_LEAF) && (lyd_child(diff_node)->schema == schild)) {
             /* postpone applying this op until the child is being processed */
             mand_child = 1;
         }
     }
 
-    if ((diff_node->schema->nodetype == LYS_LEAF) && (diff_node->schema->flags & LYS_MAND_TRUE) && !data_path &&
-            (lyd_parent(diff_node)->schema->nodetype == LYS_CONTAINER) &&
+    if ((diff_node->schema->nodetype == LYS_LEAF) && !data_path && (lyd_parent(diff_node)->schema->nodetype == LYS_CONTAINER) &&
             (lysc_node_child(lyd_parent(diff_node)->schema) == diff_node->schema)) {
         /* this is the mandatory child leaf checked before, use the parent container for Augeas path */
         diff_path_node = lyd_parent(diff_node);
