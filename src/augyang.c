@@ -2548,6 +2548,45 @@ ay_ynode_get_grouping(struct ay_ynode *tree, uint32_t id)
 }
 
 /**
+ * @brief Iterating 'sibling' nodes in such a way as to detect duplicate identifiers.
+ *
+ * @param[in] root Parent node whose direct descendants will iterate.
+ * If set to NULL, then the root is initialized from @p iter.
+ * @param[in] iter Current position of iterator.
+ * If set to NULL, then the iterator is initialized to the @p root child.
+ * @return Initialized root, initialized iterator, next position of iterator or NULL.
+ */
+static struct ay_ynode *
+ay_yang_ident_iter(struct ay_ynode *root, struct ay_ynode *iter)
+{
+    struct ay_ynode *ret;
+
+    if (!root) {
+        iter = iter->parent;
+        while (iter && (iter->type == YN_CONTAINER) && !iter->label) {
+            iter = iter->parent;
+        }
+        return iter;
+    } else if (!iter) {
+        ret = root->child;
+    } else if (!iter->next) {
+        for (iter = iter->parent; (iter != root) && !iter->next; iter = iter->parent) {}
+        ret = iter != root ? iter->next : NULL;
+    } else if ((iter->type == YN_CONTAINER) && !iter->label) {
+        ret = iter;
+    } else {
+        ret = iter->next;
+    }
+
+    if (ret && (ret->type == YN_CONTAINER) && !ret->label) {
+        for (iter = ret->child; iter && (iter->type == YN_CONTAINER) && !iter->label; iter = iter->child) {}
+        ret = iter;
+    }
+
+    return ret;
+}
+
+/**
  * @brief Detect for duplicates for the identifier.
  *
  * @param[in] tree Tree of ynodes.
@@ -2561,7 +2600,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
         uint64_t *dupl_count)
 {
     int ret = 0;
-    struct ay_ynode *iter;
+    struct ay_ynode *iter, *root, *gr;
     int64_t rnk, tmp_rnk;
     uint64_t cnt, tmp_cnt;
 
@@ -2570,14 +2609,20 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     rnk = -1;
     cnt = 0;
 
-    for (iter = node->parent->child; iter; iter = iter->next) {
+    if ((node->type == YN_CONTAINER) && !node->label) {
+        goto end;
+    }
+
+    root = ay_yang_ident_iter(NULL, node);
+    for (iter = ay_yang_ident_iter(root, NULL); iter; iter = ay_yang_ident_iter(root, iter)) {
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
             continue;
         } else if (iter == node) {
             rnk = cnt;
             continue;
-        } else if ((iter->type == YN_CONTAINER) && !iter->label) {
-            ret = ay_yang_ident_duplications(tree, iter->child, node_ident, &tmp_rnk, &tmp_cnt);
+        } else if (iter->type == YN_USES) {
+            gr = ay_ynode_get_grouping(tree, iter->ref);
+            ret = ay_yang_ident_duplications(tree, gr->child, node_ident, &tmp_rnk, &tmp_cnt);
             AY_CHECK_RET(ret);
             rnk = rnk == -1 ? tmp_rnk : rnk;
             cnt += tmp_cnt;
@@ -2587,6 +2632,8 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
             cnt++;
         }
     }
+
+end:
 
     if (dupl_rank) {
         *dupl_rank = rnk;
@@ -2707,9 +2754,6 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
     /* Number the duplicate identifiers. */
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iter = &tree[i];
-        if (iter->type == YN_USES) {
-            continue;
-        }
         ret = ay_yang_ident_duplications(tree, iter, iter->ident, &dupl_rank, &dupl_count);
         AY_CHECK_RET(ret);
         if (!dupl_count) {
@@ -6059,6 +6103,8 @@ ay_ynode_insert_container(struct ay_ynode *tree)
         for (iter = first->next; iter; iter = iter->next) {
             if (ay_ynode_rule_insert_container(iter)) {
                 cnt++;
+            } else {
+                break;
             }
         }
 
