@@ -249,6 +249,7 @@ enum yang_type {
     YN_LEAFLIST,        /**< Yang statement "leaf-list". */
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
+    YN_CASE,            /**< Yang statement "case" in choice-stmt. */
     YN_KEY,             /**< The node is the key in the yang "list" or first node in special container. */
     YN_VALUE,           /**< Yang statement "leaf". The node was generated to store the augeas node value. */
     YN_USES,            /**< Yang statement "uses". */
@@ -2474,6 +2475,9 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else {
             str = "label";
         }
+    } else if (node->type == YN_CASE) {
+        ay_get_yang_ident(ctx, node->child, opt, buffer);
+        str = buffer;
     } else if (node->type == YN_VALUE) {
         if ((tmp = ay_get_lense_name(ctx->mod, value))) {
             str = tmp;
@@ -2563,7 +2567,7 @@ ay_yang_ident_iter(struct ay_ynode *root, struct ay_ynode *iter)
 
     if (!root) {
         iter = iter->parent;
-        while (iter && (iter->type == YN_CONTAINER) && !iter->label) {
+        while (iter && (iter->type == YN_CASE)) {
             iter = iter->parent;
         }
         return iter;
@@ -2572,14 +2576,14 @@ ay_yang_ident_iter(struct ay_ynode *root, struct ay_ynode *iter)
     } else if (!iter->next) {
         for (iter = iter->parent; (iter != root) && !iter->next; iter = iter->parent) {}
         ret = iter != root ? iter->next : NULL;
-    } else if ((iter->type == YN_CONTAINER) && !iter->label) {
+    } else if (iter->type == YN_CASE) {
         ret = iter;
     } else {
         ret = iter->next;
     }
 
-    if (ret && (ret->type == YN_CONTAINER) && !ret->label) {
-        for (iter = ret->child; iter && (iter->type == YN_CONTAINER) && !iter->label; iter = iter->child) {}
+    if (ret && (ret->type == YN_CASE)) {
+        for (iter = ret->child; iter && (iter->type == YN_CASE); iter = iter->child) {}
         ret = iter;
     }
 
@@ -2609,7 +2613,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     rnk = -1;
     cnt = 0;
 
-    if ((node->type == YN_CONTAINER) && !node->label) {
+    if (node->type == YN_CASE) {
         goto end;
     }
 
@@ -2828,7 +2832,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
 
-    if ((node->type == YN_CONTAINER) && !label) {
+    if (node->type == YN_CASE) {
         return ret;
     } else if ((node->type == YN_LIST) || (node->type == YN_KEY) || (node->type == YN_VALUE)) {
         return ret;
@@ -3647,6 +3651,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
     case YN_CONTAINER:
         ret = ay_print_yang_container(ctx, node);
         break;
+    case YN_CASE:
+        /* Handling in ay_print_yang_node_in_choice(). */
+        return 1;
     case YN_KEY:
         ret = ay_print_yang_leaf_key(ctx, node);
         break;
@@ -3742,10 +3749,13 @@ ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*scase ", ctx->space, "");
     if (node->child) {
+        assert(node->type == YN_CASE);
         ret = ay_print_yang_ident(ctx, node->child, AY_IDENT_NODE_NAME);
     } else {
+        assert(node->type == YN_USES);
         ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     }
+    ay_print_yang_nesting_begin2(ctx, node->id);
 
     return ret;
 }
@@ -3763,17 +3773,17 @@ ay_print_yang_node_in_choice(struct yprinter_ctx *ctx, struct ay_ynode *node, ly
 {
     int ret;
 
-    if (((node->type == YN_CONTAINER) && !node->label) || (node->type == YN_USES)) {
+    if ((node->type == YN_CASE) || (node->type == YN_USES)) {
         if (!alone) {
             ret = ay_print_yang_case(ctx, node);
-            ay_print_yang_nesting_begin2(ctx, node->id);
             AY_CHECK_RET(ret);
         }
 
-        if ((node->type == YN_CONTAINER) && !node->label) {
+        if (node->type == YN_CASE) {
             /* Ignore container, print only children of container. */
             ret = ay_print_yang_children(ctx, node);
         } else {
+            assert(node->type == YN_USES);
             /* Print the node under case-stmt. */
             ret = ay_print_yang_node_(ctx, node);
         }
@@ -4161,6 +4171,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     case YN_CONTAINER:
         ly_print(ctx->out, "%*s ynode_type: YN_CONTAINER", ctx->space, "");
+        break;
+    case YN_CASE:
+        ly_print(ctx->out, "%*s ynode_type: YN_CASE", ctx->space, "");
         break;
     case YN_KEY:
         ly_print(ctx->out, "%*s ynode_type: YN_KEY", ctx->space, "");
@@ -4803,13 +4816,13 @@ ay_ynode_rule_cont_key(struct ay_ynode *node)
 }
 
 /**
- * @brief Rule for inserting container which must wrap some nodes due to the choice statement.
+ * @brief Rule for inserting YN_CASE node which must wrap some nodes due to the choice statement.
  *
  * @param[in] node Node to check.
  * @return 1 if container should be inserted. Also the function returns 1 only for the first node in the wrap.
  */
 static uint64_t
-ay_ynode_rule_insert_container(struct ay_ynode *node)
+ay_ynode_rule_insert_case(struct ay_ynode *node)
 {
     const struct ay_lnode *lter, *conc1, *conc2;
     enum lens_tag tag;
@@ -6081,48 +6094,44 @@ ay_insert_cont_key(struct ay_ynode *tree)
 }
 
 /**
- * @brief Insert container which groups nodes under one case-stmt.
+ * @brief Insert YN_CASE node which groups nodes under one case-stmt.
  *
  * @param[in,out] tree Tree of ynodes.
  * @return 0.
  */
 static int
-ay_ynode_insert_container(struct ay_ynode *tree)
+ay_ynode_insert_case(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *first, *cont, *iter;
+    struct ay_ynode *first, *cas, *iter;
     uint64_t j, cnt;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         first = &tree[i];
-        if (!ay_ynode_rule_insert_container(first)) {
+        if (!ay_ynode_rule_insert_case(first)) {
             continue;
         }
 
         cnt = 1;
         for (iter = first->next; iter; iter = iter->next) {
-            if (ay_ynode_rule_insert_container(iter)) {
+            if (ay_ynode_rule_insert_case(iter)) {
                 cnt++;
             } else {
                 break;
             }
         }
 
-        if ((first->type != YN_CONTAINER) || ((first->type == YN_CONTAINER) && first->label)) {
-            ay_ynode_insert_wrapper(tree, first);
-            cont = first;
-            first = cont->child;
-            cont->type = YN_CONTAINER;
-            cont->choice = first->choice;
-            cont->flags |= first->flags & AY_CHOICE_MAND_FALSE;
-            first->choice = NULL;
-        } else {
-            cont = first;
-        }
+        ay_ynode_insert_wrapper(tree, first);
+        cas = first;
+        first = cas->child;
+        cas->type = YN_CASE;
+        cas->choice = first->choice;
+        cas->flags |= first->flags & AY_CHOICE_MAND_FALSE;
+        first->choice = NULL;
 
         for (j = 0; j < cnt; j++) {
-            cont->next->choice = NULL;
-            ay_ynode_move_subtree_as_last_child(tree, cont, cont->next);
+            cas->next->choice = NULL;
+            ay_ynode_move_subtree_as_last_child(tree, cas, cas->next);
         }
         i++;
     }
@@ -7029,9 +7038,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_trans_insert2(tree, 1, ay_insert_list_files));
 
     /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
-     * choice ch { container { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
+     * choice ch { case { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_container, ay_ynode_insert_container));
+    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_case, ay_ynode_insert_case));
 
     /* [key lns1 . lns2 ]  | [key lns1 . lns2 ]*   -> list's min-elements = 1 */
     /* [key lns1 . lns2 ]* | [key lns1 . lns2 ]    -> list's min-elements = 1 */
@@ -7080,7 +7089,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
     /* Transformations based on ynode identifier. */
-    ay_ynode_transformations_ident(mod, tree);
+    AY_CHECK_RV(ay_ynode_transformations_ident(mod, tree));
 
     return ret;
 }
