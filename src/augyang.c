@@ -2296,6 +2296,8 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
     for (iter = node->child; iter; iter = iter->child) {
         if (iter->next || (iter->type == YN_LEAFREF)) {
             break;
+        } else if (iter->type == YN_CASE) {
+            continue;
         }
         if (iter->snode && (str = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
             strcpy(buffer, str);
@@ -2437,6 +2439,10 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else {
             str = "config-entries";
         }
+    } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME) && !node->label) {
+        ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
+        AY_CHECK_RET(ret);
+        str = buffer;
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
         if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
             str = ay_ynode_find_ident_in_pattern(node);
@@ -2701,10 +2707,11 @@ ay_ynode_ident_write(char **old, char *new)
  * @brief Set ay_ynode.ident for every ynode in the tree.
  *
  * @param[in,out] tree Context for printing.
+ * @param[in] solve_duplicates Flag for call ay_yang_ident_duplications().
  * @return 0 on success.
  */
 static int
-ay_ynode_idents(struct yprinter_ctx *ctx)
+ay_ynode_idents(struct yprinter_ctx *ctx, ly_bool solve_duplicates)
 {
     int ret = 0;
     LY_ARRAY_COUNT_TYPE i;
@@ -2721,8 +2728,13 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
         if ((iter->type == YN_USES) || (iter->type == YN_ROOT)) {
             continue;
         }
-        ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
-        AY_CHECK_RET(ret);
+
+        if ((iter->type == YN_CONTAINER) && !iter->label) {
+            strcpy(buffer, "case");
+        } else {
+            ret = ay_get_yang_ident(ctx, iter, AY_IDENT_NODE_NAME, buffer);
+            AY_CHECK_RET(ret);
+        }
         ay_ynode_ident_write(&iter->ident, buffer);
         AY_CHECK_RET(ret);
     }
@@ -2747,12 +2759,18 @@ ay_ynode_idents(struct yprinter_ctx *ctx)
             parent = iter->parent;
             if ((parent->child != iter) || ((parent->type != YN_LIST) && (parent->type != YN_GROUPING))) {
                 break;
+            } else if ((parent->type == YN_CONTAINER) && !parent->label) {
+                continue;
             }
             ret = ay_get_yang_ident(ctx, parent, AY_IDENT_NODE_NAME, buffer);
             AY_CHECK_RET(ret);
             ay_ynode_ident_write(&parent->ident, buffer);
             AY_CHECK_RET(ret);
         }
+    }
+
+    if (!solve_duplicates) {
+        return 0;
     }
 
     /* Number the duplicate identifiers. */
@@ -3586,8 +3604,9 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_presence(struct yprinter_ctx *ctx, struct ay_ynode *cont)
 {
-    (void) cont;
-    ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
+    if (cont->label) {
+        ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
+    }
 }
 
 /**
@@ -5031,6 +5050,48 @@ ay_ynode_rule_create_groupings_toplevel(struct ay_ynode *node)
         return 1;
     } else {
         return 0;
+    }
+}
+
+/**
+ * @brief Rule decide how many containers will be inserted to the choice at most.
+ *
+ * The rule runs only for the first node in the choice.
+ *
+ * @param[in] node Node to check.
+ * @return Number of nodes that can be insterted for choice.
+ */
+static uint64_t
+ay_ynode_rule_insert_container_in_choice(struct ay_ynode *node)
+{
+    uint64_t ret;
+    struct ay_ynode *first, *iter;
+    ly_bool case_presence;
+
+    if (!node->choice) {
+        return 0;
+    }
+    first = ay_ynode_get_first_in_choice(node->parent, node->choice);
+    if (node != first) {
+        return 0;
+    }
+
+    ret = 0;
+    case_presence = 0;
+    for (iter = first; iter; iter = iter->next) {
+        if (iter->choice != node->choice) {
+            break;
+        } else if (iter->type == YN_CASE) {
+            /* At least one case must be present. */
+            case_presence = 1;
+        }
+        ret++;
+    }
+
+    if (!case_presence) {
+        return 0;
+    } else {
+        return ret;
     }
 }
 
@@ -6876,6 +6937,64 @@ ay_ynode_grouping_reduction(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Insert containers to the choice or change type from YN_CASE to container.
+ *
+ * This prevents duplicate nodes.
+ *
+ * @param[in,out] Tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_insert_container_in_choice(struct ay_ynode *tree)
+{
+    int ret = 0;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *cas, *iter, *first;
+    const struct ay_lnode *choice;
+    uint64_t dupl_count;
+    ly_bool insert_cont;
+
+    /* Find YN_CASE node. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        cas = &tree[i];
+        if (cas->type != YN_CASE) {
+            continue;
+        }
+
+        /* Check if some YN_CASE node has name collision. */
+        insert_cont = 0;
+        for (iter = cas->child; iter; iter = iter->next) {
+            ay_yang_ident_duplications(tree, iter, iter->ident, NULL, &dupl_count);
+            if (dupl_count) {
+                /* Name collision. */
+                insert_cont = 1;
+                break;
+            }
+        }
+        if (!insert_cont) {
+            continue;
+        }
+
+        /* Let's insert containers for better readability. */
+        first = ay_ynode_get_first_in_choice(cas->parent, cas->choice);
+        choice = cas->choice;
+        for (iter = first; iter && (iter->choice == choice); iter = iter->next) {
+            if (iter->type == YN_CASE) {
+                /* For YN_CASE node just change type. */
+                iter->type = YN_CONTAINER;
+            } else {
+                /* Insert container. */
+                ay_ynode_insert_wrapper(tree, iter);
+                iter->type = YN_CONTAINER;
+                iter->choice = iter->child->choice;
+            }
+        }
+    }
+
+    return ret;
+}
+
+/**
  * @brief Set ay_ynode.type for all nodes.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -6950,7 +7069,7 @@ ay_ynode_trans_ident_insert2(struct yprinter_ctx *ctx, uint32_t items_count, int
 
     if (items_count) {
         AY_CHECK_RV(ay_ynode_trans_insert2(&ctx->tree, items_count, insert));
-        ret = ay_ynode_idents(ctx);
+        ret = ay_ynode_idents(ctx, 1);
     }
 
     return ret;
@@ -6977,6 +7096,26 @@ ay_ynode_trans_insert1(struct ay_ynode **tree, uint64_t (*rule)(struct ay_ynode 
 }
 
 /**
+ * @brief Wrapper for calling some insert function.
+ *
+ * @param[in,out] ctx Context containing tree of ynodes and default vaules.
+ * @param[in] rule Callback function with which to determine the total number of inserted nodes. This callback is
+ * called for each node and the number of nodes to be inserted for that node is returned. Finally, all intermediate
+ * results are summed.
+ * @param[in] insert Callback function which inserts some nodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_trans_ident_insert1(struct yprinter_ctx *ctx, uint64_t (*rule)(struct ay_ynode *),
+        int (*insert)(struct ay_ynode *))
+{
+    uint64_t counter;
+
+    ay_ynode_summary(ctx->tree, rule, &counter);
+    return ay_ynode_trans_ident_insert2(ctx, counter, insert);
+}
+
+/**
  * @brief Transformations based on ynode identifier.
  *
  * @param[in] mod Augeas module.
@@ -6994,11 +7133,17 @@ ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
 
     /* Set identifier for every ynode. */
     ctx.tree = *tree;
-    ret = ay_ynode_idents(&ctx);
+    ret = ay_ynode_idents(&ctx, 0);
     AY_CHECK_RET(ret);
+
+    AY_CHECK_RV(ay_ynode_trans_ident_insert1(&ctx,
+            ay_ynode_rule_insert_container_in_choice, ay_ynode_insert_container_in_choice));
 
     AY_CHECK_RV(ay_ynode_trans_ident_insert2(&ctx,
             ay_ynode_grouping_reduction_count(ctx.tree), ay_ynode_grouping_reduction));
+
+    ret = ay_ynode_idents(&ctx, 1);
+    AY_CHECK_RET(ret);
 
     *tree = ctx.tree;
 

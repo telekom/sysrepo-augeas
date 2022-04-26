@@ -1,0 +1,144 @@
+module pg-hba {
+  yang-version 1.1;
+  namespace "aug:pg-hba";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Pg_Hba";
+
+  grouping method {
+    container method {
+      augex:data-path "method";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z][A-Za-z0-9]+";
+        }
+      }
+      list option-list {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        container option {
+          augex:data-path "option";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          choice ch-option {
+            leaf value {
+              type string {
+                pattern "[^\"' \t\n]+";
+              }
+              augex:data-path "value";
+            }
+            leaf value2 {
+              type string {
+                pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+              }
+              augex:data-path "value";
+            }
+          }
+        }
+      }
+    }
+  }
+  list pg-hba {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf entries {
+          mandatory true;
+          type uint64;
+        }
+        choice ch-record {
+          mandatory true;
+          container case {
+            leaf type {
+              mandatory true;
+              type string {
+                pattern "local";
+              }
+              augex:data-path "type";
+            }
+            leaf-list database {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "database";
+            }
+            leaf-list user {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "user";
+            }
+            uses method;
+          }
+          container case2 {
+            leaf type {
+              mandatory true;
+              type string {
+                pattern "((host)|(hostssl))|(hostnossl)";
+              }
+              augex:data-path "type";
+            }
+            leaf-list database {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "database";
+            }
+            leaf-list user {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "user";
+            }
+            leaf address {
+              mandatory true;
+              type string {
+                pattern "([0-9a-fA-F:.]+(/[0-9]+|[ \t]+[0-9.]+))|(\\.?[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)";
+              }
+              augex:data-path "address";
+            }
+            uses method;
+          }
+        }
+      }
+    }
+  }
+}

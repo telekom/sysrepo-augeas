@@ -42,6 +42,19 @@ module yaml {
       }
     }
   }
+  grouping repo-list {
+    list repo-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses repo;
+    }
+  }
   list yaml {
     key "config-file";
     leaf config-file {
@@ -69,17 +82,7 @@ module yaml {
         container sequence {
           augex:data-path "@sequence";
           presence "Config entry.";
-          list repo-list {
-            key "_id";
-            min-elements 1;
-            ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            uses repo;
-          }
+          uses repo-list;
         }
         container entry {
           augex:data-path "$$";
@@ -98,7 +101,7 @@ module yaml {
           }
           choice ch-entry {
             mandatory true;
-            case inherit {
+            container case {
               container inherit {
                 augex:data-path "$$";
                 augex:value-yang-path "val";
@@ -127,16 +130,8 @@ module yaml {
                 uses repo;
               }
             }
-            list repo-list2 {
-              key "_id";
-              min-elements 1;
-              ordered-by user;
-              leaf _id {
-                type uint64;
-                description
-                  "Implicitly generated list key to maintain the order of the augeas data.";
-              }
-              uses repo;
+            container case2 {
+              uses repo-list;
             }
           }
         }

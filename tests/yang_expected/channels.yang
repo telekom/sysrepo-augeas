@@ -11,7 +11,7 @@ module channels {
 
   grouping ch-lang {
     choice ch-lang {
-      case lang {
+      container case {
         leaf-list lang {
           min-elements 1;
           type string {
@@ -25,9 +25,11 @@ module channels {
           augex:data-path "codec";
         }
       }
-      leaf codec2 {
-        type uint64;
-        augex:data-path "codec";
+      container case2 {
+        leaf codec {
+          type uint64;
+          augex:data-path "codec";
+        }
       }
     }
   }
