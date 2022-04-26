@@ -6938,6 +6938,27 @@ ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, int (*inser
 /**
  * @brief Wrapper for calling some insert function.
  *
+ * @param[in,out] ctx Context containing tree of ynodes and default vaules.
+ * @param[in] items_count Number of nodes to be inserted.
+ * @param[in] insert Callback function which inserts some nodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_trans_ident_insert2(struct yprinter_ctx *ctx, uint32_t items_count, int (*insert)(struct ay_ynode *))
+{
+    int ret = 0;
+
+    if (items_count) {
+        AY_CHECK_RV(ay_ynode_trans_insert2(&ctx->tree, items_count, insert));
+        ret = ay_ynode_idents(ctx);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Wrapper for calling some insert function.
+ *
  * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
  * The insertion result will be applied.
  * @param[in] rule Callback function with which to determine the total number of inserted nodes. This callback is
@@ -6967,7 +6988,6 @@ ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
 {
     int ret;
     struct yprinter_ctx ctx;
-    uint64_t reduction_count;
 
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
@@ -6977,15 +6997,10 @@ ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
     ret = ay_ynode_idents(&ctx);
     AY_CHECK_RET(ret);
 
-    reduction_count = ay_ynode_grouping_reduction_count(*tree);
-    if (reduction_count) {
-        /* Apply grouping reduction. */
-        ay_ynode_trans_insert2(tree, reduction_count, ay_ynode_grouping_reduction);
-        /* Reset identifiers. */
-        ctx.tree = *tree;
-        ret = ay_ynode_idents(&ctx);
-        AY_CHECK_RET(ret);
-    }
+    AY_CHECK_RV(ay_ynode_trans_ident_insert2(&ctx,
+            ay_ynode_grouping_reduction_count(ctx.tree), ay_ynode_grouping_reduction));
+
+    *tree = ctx.tree;
 
     return 0;
 }
