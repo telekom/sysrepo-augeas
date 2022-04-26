@@ -79,6 +79,7 @@ module pg-hba {
         choice ch-record {
           mandatory true;
           container case {
+            presence "Config entry.";
             leaf type {
               mandatory true;
               type string {
@@ -105,6 +106,7 @@ module pg-hba {
             uses method;
           }
           container case2 {
+            presence "Config entry.";
             leaf type {
               mandatory true;
               type string {

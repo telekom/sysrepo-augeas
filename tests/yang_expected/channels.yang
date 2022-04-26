@@ -12,6 +12,7 @@ module channels {
   grouping ch-lang {
     choice ch-lang {
       container case {
+        presence "Config entry.";
         leaf-list lang {
           min-elements 1;
           type string {
@@ -26,6 +27,7 @@ module channels {
         }
       }
       container case2 {
+        presence "Config entry.";
         leaf codec {
           type uint64;
           augex:data-path "codec";

@@ -3604,9 +3604,8 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_presence(struct yprinter_ctx *ctx, struct ay_ynode *cont)
 {
-    if (cont->label) {
-        ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
-    }
+    (void)cont;
+    ly_print(ctx->out, "%*spresence \"Config entry.\";\n", ctx->space, "");
 }
 
 /**
