@@ -62,7 +62,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
 # sources
 #
 set(SRDS_AUGEAS_SRC
-    ${PROJECT_SOURCE_DIR}/plugins/srds_augeas.c)
+    ${PROJECT_SOURCE_DIR}/plugins/srds_augeas.c
+    ${PROJECT_SOURCE_DIR}/plugins/srdsa_init.c
+    ${PROJECT_SOURCE_DIR}/plugins/srdsa_load.c
+    ${PROJECT_SOURCE_DIR}/plugins/srdsa_store.c
+    ${PROJECT_SOURCE_DIR}/plugins/srdsa_common.c)
 
 set(AY_STARTUP_SRC
     ${PROJECT_SOURCE_DIR}/plugins/ay_startup.c)

@@ -19,6 +19,10 @@
 /* augeas SR DS plugin */
 #define AUG_TEST_INPUT_FILES AUG_CONFIG_FILES_DIR "/cmdline"
 #include "srds_augeas.c"
+#include "srdsa_init.c"
+#include "srdsa_load.c"
+#include "srdsa_store.c"
+#include "srdsa_common.c"
 
 #include <assert.h>
 #include <dlfcn.h>

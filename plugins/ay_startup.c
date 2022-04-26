@@ -16,6 +16,10 @@
 
 /* augeas SR DS plugin */
 #include "srds_augeas.c"
+#include "srdsa_init.c"
+#include "srdsa_load.c"
+#include "srdsa_store.c"
+#include "srdsa_common.c"
 
 #include "plg_config.h"
 
