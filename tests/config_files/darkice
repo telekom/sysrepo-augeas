@@ -1,0 +1,9 @@
+# this is a comment
+
+[general]
+duration        = 0
+bufferSecs      = 5         # size of internal slip buffer, in seconds
+
+[icecast2-0]
+bitrateMode=cbr
+format=vorbis
