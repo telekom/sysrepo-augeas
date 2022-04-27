@@ -859,16 +859,14 @@ ay_ynode_alone_in_choice(const struct ay_ynode *node)
 }
 
 /**
- * @brief Search upper L_CONCAT from @p start to @p stop.
- *
- * In other words, get first L_CONCAT under @p stop.
+ * @brief Get the last L_CONCAT from @p start to @p stop.
  *
  * @param[in] start The node whose parents will be searched.
  * @param[in] stop The node at which the search should stop.
  * @return The lnode of type L_CONCAT or NULL.
  */
 const struct ay_lnode *
-ay_lnode_upper_concat(const struct ay_lnode *start, const struct ay_lnode *stop)
+ay_lnode_get_last_concat(const struct ay_lnode *start, const struct ay_lnode *stop)
 {
     const struct ay_lnode *iter;
     const struct ay_lnode *concat = NULL;
@@ -894,9 +892,14 @@ ay_lnode_upper_concat(const struct ay_lnode *start, const struct ay_lnode *stop)
  * @return 1 if they have the same upper L_CONCAT.
  */
 static ly_bool
-ay_ynode_equal_upper_concat(const struct ay_ynode *first, const struct ay_ynode *second)
+ay_ynode_equal_some_concat(const struct ay_ynode *first, const struct ay_ynode *second)
 {
-    return ay_lnode_upper_concat(first->snode, first->choice) == ay_lnode_upper_concat(second->snode, second->choice);
+    const struct ay_lnode *con1, *con2;
+
+    con1 = ay_lnode_get_last_concat(first->snode, first->choice);
+    con2 = ay_lnode_get_last_concat(second->snode, second->choice);
+
+    return con1 && con2 && (con1->lens == con2->lens);
 }
 
 /**
@@ -2638,7 +2641,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
             cnt += tmp_cnt;
         }
 
-        if (!strcmp(node_ident, iter->ident)) {
+        if (iter->ident && !strcmp(node_ident, iter->ident)) {
             cnt++;
         }
     }
@@ -4223,6 +4226,10 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         ly_print(ctx->out, "%*s choice_id: %p\n", ctx->space, "", node->choice);
     }
 
+    if (node->ident) {
+        ly_print(ctx->out, "%*s yang_ident: %s\n", ctx->space, "", node->ident);
+    }
+
     if (node->ref) {
         ly_print(ctx->out, "%*s ref_id: %" PRIu32 "\n", ctx->space, "", node->ref);
     }
@@ -4842,41 +4849,15 @@ ay_ynode_rule_cont_key(struct ay_ynode *node)
 static uint64_t
 ay_ynode_rule_insert_case(struct ay_ynode *node)
 {
-    const struct ay_lnode *lter, *conc1, *conc2;
-    enum lens_tag tag;
-
-    if (!node->choice || !node->snode || !node->next || !node->next->snode || !node->next->choice) {
+    if (!node->choice || !node->next || !node->next->choice) {
         return 0;
     } else if (node->choice != node->next->choice) {
         return 0;
+    } else if (ay_ynode_equal_some_concat(node, node->next)) {
+        return 1;
+    } else {
+        return 0;
     }
-
-    /* L_CONCAT must be between L_SUBTREE and L_UNION */
-    conc1 = NULL;
-    for (lter = node->snode->parent; lter; lter = lter->parent) {
-        tag = lter->lens->tag;
-        if (tag == L_SUBTREE) {
-            break;
-        } else if (node->choice == lter) {
-            break;
-        } else if (tag == L_CONCAT) {
-            conc1 = lter;
-        }
-    }
-
-    conc2 = NULL;
-    for (lter = node->next->snode->parent; lter; lter = lter->parent) {
-        tag = lter->lens->tag;
-        if (tag == L_SUBTREE) {
-            break;
-        } else if (node->choice == lter) {
-            break;
-        } else if (tag == L_CONCAT) {
-            conc2 = lter;
-        }
-    }
-
-    return conc1 && conc2 && (conc1 == conc2);
 }
 
 /**
@@ -5563,6 +5544,53 @@ ay_ynode_set_flag(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Reset choice for ynodes.
+ *
+ * The lnode tree contains nodes that are not important to the ynode tree. They may even be misleading and lead
+ * to bugs. For example, ay_ynode.choice may incorrectly point to a L_UNION consisting of L_DEL nodes. But it should
+ * point to L_UNION, just like its ynode sibling. This function resets choice by sibling if certain conditions are met.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_reset_choice(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *first, *iter;
+    const struct ay_lnode *ln;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        first = &tree[i];
+        /* Start at first child. */
+        if (!first->parent || (first->parent->child != first)) {
+            continue;
+        }
+        /* Iterate over siblings. */
+        for (iter = first; iter; iter = iter->next) {
+            if (!iter->next) {
+                break;
+            } else if (!iter->choice || !iter->next->choice) {
+                continue;
+            }
+
+            /* Reset if one choice is a descendant of another. */
+            for (ln = iter->choice; ln && iter->parent->snode; ln = ln->parent) {
+                if (ln->lens == iter->next->choice->lens) {
+                    iter->choice = iter->next->choice;
+                    break;
+                }
+            }
+            for (ln = iter->next->choice; ln && iter->parent->snode; ln = ln->parent) {
+                if (ln->lens == iter->choice->lens) {
+                    iter->next->choice = iter->choice;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief Set ynode.mandatory for all nodes.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -5666,8 +5694,6 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             if (!node2 || !node2->snode) {
                 continue;
             } else if (node1->snode->lens != node2->snode->lens) {
-                continue;
-            } else if (!ay_ynode_equal_upper_concat(node1, node2)) {
                 continue;
             }
             /* node1 == node2 */
@@ -5819,8 +5845,6 @@ ay_ynode_delete_seq_node(struct ay_ynode *tree)
         } else if (node->child || sibling->child) {
             continue;
         } else if (ay_ynode_get_repetition(node) || !ay_ynode_get_repetition(sibling)) {
-            continue;
-        } else if (!ay_ynode_equal_upper_concat(node, sibling)) {
             continue;
         }
 
@@ -7185,6 +7209,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     ay_delete_type_unknown(*tree);
 
     ay_ynode_set_flag(*tree);
+
+    /* Unite choice for siblings. */
+    ay_ynode_reset_choice(*tree);
 
     /* [ (key lns1 | key lns2) lns3 ]    -> node { type union { pattern lns1; pattern lns2; }}
      * store to YN_ROOT.labels
