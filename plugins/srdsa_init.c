@@ -57,7 +57,7 @@ augds_free_info_node(struct augnode *augnode)
 /**
  * @brief Get pattern to match Augeas labels for this node.
  *
- * @param[in] auginfo Base auginfo structure with the compiled pattern cache.
+ * @param[in] auginfo Base auginfo structure with the compiled uint64 pattern cache.
  * @param[in] node YANG node with the pattern.
  * @return Compiled pattern.
  */
@@ -131,8 +131,8 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
         struct augnode **augnodes, uint32_t *augnode_count)
 {
     const struct lysc_node *node = NULL, *node2;
-    enum augds_ext_node_type node_type;
-    const char *data_path, *value_path;
+    enum augds_ext_node_type node_type, node_type2;
+    const char *data_path, *value_path, *case_data_path;
     struct augnode *anode;
     void *mem;
     int r;
@@ -179,6 +179,16 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
         if (node_type == AUGDS_EXT_NODE_LABEL) {
             /* get the pattern */
             anode->pcode = augds_init_auginfo_get_pattern(auginfo, node);
+        } else if ((node_type == AUGDS_EXT_NODE_NONE) && node->parent && (node->parent->nodetype == LYS_CASE)) {
+            /* extra caution, may work for other nodes, too */
+            assert(node->nodetype == LYS_CONTAINER);
+
+            /* store the data-path and compiled pattern to use for matching when deciding whether to create this node
+             * and hence select the case, just assume the first child for now */
+            augds_node_get_type(lysc_node_child(node), &node_type2, &case_data_path, NULL);
+            assert(node_type2 == AUGDS_EXT_NODE_VALUE);
+            anode->case_data_path = case_data_path;
+            anode->pcode = augds_init_auginfo_get_pattern(auginfo, lysc_node_child(node));
         }
 
         /* fill augnode children, recursively */

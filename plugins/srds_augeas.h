@@ -71,6 +71,7 @@ struct auginfo {
         struct augnode {
             const char *data_path;          /**< data-path of the augeas-extension in the schema node */
             const char *value_path;         /**< value-yang-path of the augeas-extension in the schema node */
+            const char *case_data_path;     /**< data-path whose value must match pattern in pcode for this node to be created */
             const struct lysc_node *schema; /**< schema node */
             const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */
             const pcre2_code *pcode;        /**< optional compiled PCRE2 pattern of the schema pattern matching Augeas labels */

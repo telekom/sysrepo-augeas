@@ -1,0 +1,14 @@
+# TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+
+local   all         all                               ident sameuser
+# IPv4 local connections:
+host    all         all         127.0.0.1/32          md5
+# Remote connections by hostname:
+host    all         all         foo.example.com       md5
+# Remote connections by suffix of hostname/fqdn:
+host    all         all         .example.com          md5
+# IPv6 local connections:
+host    all         all         ::1/128               md5
+
+host all all .dev.example.com gss include_realm=0 krb_realm=EXAMPLE.COM map=somemap
+host all all .dev.example.com ldap ldapserver=auth.example.com ldaptls=1 ldapprefix="uid=" ldapsuffix=",ou=people,dc=example,dc=com"

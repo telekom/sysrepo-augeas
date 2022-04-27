@@ -39,29 +39,6 @@
 #include <sysrepo/plugins_datastore.h>
 
 /**
- * @brief Get last path segment (node) from a path.
- *
- * @param[in] path Augeas data-path.
- * @param[in] skip_special_chars Whether to skip special characters at the beginning of the node.
- * @return Last node.
- */
-static const char *
-augds_get_path_node(const char *path, int skip_special_chars)
-{
-    const char *ptr;
-
-    /* get last path segment */
-    ptr = strrchr(path, '/');
-    ptr = ptr ? ptr + 1 : path;
-
-    if (skip_special_chars && (!strncmp(ptr, "$$", 2) || !strncmp(ptr, "##", 2))) {
-        ptr += 2;
-    }
-
-    return ptr;
-}
-
-/**
  * @brief Learn whether a leaf type is/includes empty.
  *
  * @param[in] schema Schema node of the leaf to check.
@@ -228,14 +205,14 @@ augds_pattern_label_match(const pcre2_code *pcode, const char *label_node, int *
  *
  * @param[in] augnode Augnode structure of the leafref.
  * @param[in] parent YANG data parent of the leafref.
- * @param[out] ext_node_match Data path of the recursive Augeas label to match.
+ * @param[out] data_path_match Data path of the recursive Augeas label to match.
  * @param[out] augnode_list Augnode of the leafref target parent list.
  * @param[out] list_parent Parent YANG data node of the leafref target parent list.
  * @return SR error code.
  */
 static int
 augds_aug2yang_augnode_leafref_parent(const struct augnode *augnode, const struct lyd_node *parent,
-        const char **ext_node_match, struct augnode **augnode_list, struct lyd_node **list_parent)
+        const char **data_path_match, struct augnode **augnode_list, struct lyd_node **list_parent)
 {
     int rc = SR_ERR_OK;
     const struct lysc_node_leaf *sleaf;
@@ -271,7 +248,7 @@ augds_aug2yang_augnode_leafref_parent(const struct augnode *augnode, const struc
         if (an->schema == lref_list->schema) {
             /* assume the first child is the recursive node */
             assert(an->child && an->child[0].data_path);
-            *ext_node_match = augds_get_path_node(an->child[0].data_path, 0);
+            *data_path_match = an->child[0].data_path;
             *augnode_list = an;
             break;
         }
@@ -383,15 +360,13 @@ augds_aug2yang_augnode_labels_r(augeas *aug, struct augnode *augnodes, uint32_t 
     int rc = SR_ERR_OK, j, m;
     uint32_t i;
     uint64_t local_idx, *idx_p;
-    const char *value, *value2, *ext_node, *label_node;
+    const char *value, *value2, *label_node;
     char *label, *label_node_d = NULL, *pos_str = NULL, idx_str[22];
     enum augds_ext_node_type node_type;
     struct lyd_node *new_node, *parent2;
 
     for (i = 0; i < augnode_count; ++i) {
         if (augnodes[i].data_path) {
-            ext_node = augds_get_path_node(augnodes[i].data_path, 0);
-
             /* handle all matching labels */
             for (j = 0; j < label_count; ++j) {
                 label = label_matches[j];
@@ -400,7 +375,7 @@ augds_aug2yang_augnode_labels_r(augeas *aug, struct augnode *augnodes, uint32_t 
                 }
 
                 label_node = augds_get_label_node(label, &label_node_d);
-                if (!augds_ext_label_node_equal(ext_node, label_node, &node_type)) {
+                if (!augds_ext_label_node_equal(augnodes[i].data_path, label_node, &node_type)) {
                     /* not a match */
                     goto next_iter;
                 }
@@ -532,6 +507,36 @@ next_iter:
                 goto cleanup;
             }
         } else {
+            if (augnodes[i].case_data_path) {
+                assert(augnodes[i].pcode);
+
+                /* only the first label can and must match? */
+                if (!label_count || !label_matches[0]) {
+                    continue;
+                }
+                label_node = augds_get_label_node(label_matches[0], &label_node_d);
+                m = augds_ext_label_node_equal(augnodes[i].case_data_path, label_node, &node_type);
+                free(label_node_d);
+                label_node_d = NULL;
+                if (!m) {
+                    /* not the expected label */
+                    continue;
+                }
+
+                /* value must match the pattern */
+                assert(node_type == AUGDS_EXT_NODE_VALUE);
+                if (aug_get(aug, label_matches[0], &value) != 1) {
+                    AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+                }
+                if ((rc = augds_pattern_label_match(augnodes[i].pcode, value, &m))) {
+                    goto cleanup;
+                }
+                if (!m) {
+                    /* not a matching value */
+                    continue;
+                }
+            }
+
             /* create a container */
             assert(augnodes[i].schema->nodetype == LYS_CONTAINER);
             if ((rc = augds_aug2yang_augnode_create_node(augnodes[i].schema, NULL, parent, first, &new_node))) {
