@@ -1,0 +1,19 @@
+[devfsrules_jail_unhide_usb_printer_and_scanner=30]
+add include $devfsrules_hide_all
+add include $devfsrules_unhide_basic
+add include $devfsrules_unhide_login
+add path 'ulpt*' mode 0660 group printscan unhide
+add path 'unlpt*' mode 0660 group printscan unhide
+add path 'ugen2.8' mode 0660 group printscan unhide
+add path usb unhide
+add path usbctl unhide
+add path 'usb/2.8.0' mode 0660 group printscan unhide
+
+[devfsrules_jail_unhide_usb_scanner_only=30]
+add include $devfsrules_hide_all
+add include $devfsrules_unhide_basic
+add include $devfsrules_unhide_login
+add path 'ugen2.8' mode 0660 group scan unhide  # Scanner
+add path usb unhide
+add path usbctl unhide
+add path 'usb/2.8.0' mode 0660 group scan unhide
