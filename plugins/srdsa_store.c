@@ -704,6 +704,81 @@ augds_store_diff_path_next_idx(const char *aug_path, char **aug_path2)
 }
 
 /**
+ * @brief Process path for it to be ready for use in Augeas API.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in,out] aug_path Path to process, is updated.
+ * @param[out] path_d Dynamic path if @p aug_path had to be changed.
+ * @return SR error code.
+ */
+static int
+augds_store_diff_apply_prepare_path(augeas *aug, const char **aug_path, char **path_d)
+{
+    int rc = SR_ERR_OK, j = 0;
+    const char *val;
+    uint32_t i;
+
+    *path_d = NULL;
+
+    if (!*aug_path) {
+        /* nothing to do */
+        goto cleanup;
+    }
+
+    /* relative paths starting with numbers are not interpreted properly, use full absolute path instead */
+    if (isdigit((*aug_path)[0])) {
+        if (aug_get(aug, "/augeas/context", &val) != 1) {
+            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+        }
+        *path_d = malloc(strlen(val) + 1 + strlen(*aug_path) + 1);
+        if (!*path_d) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
+        j = sprintf(*path_d, "%s/", val);
+    }
+
+    /* encode special characters */
+    for (i = 0; (*aug_path)[i]; ++i) {
+        switch ((*aug_path)[i]) {
+        case ',':
+            /* alloc memory */
+            if (!j) {
+                *path_d = malloc(strlen(*aug_path) + 2);
+            } else {
+                *path_d = realloc(*path_d, strlen(*path_d) + 2);
+            }
+            if (!*path_d) {
+                AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
+            }
+
+            if (!j && i) {
+                /* copy path start */
+                memcpy(*path_d, *aug_path, i);
+                j = i;
+            }
+
+            /* encode char */
+            (*path_d)[j++] = '\\';
+            (*path_d)[j++] = (*aug_path)[i];
+            break;
+        default:
+            if (j) {
+                /* copy char */
+                (*path_d)[j++] = (*aug_path)[i];
+            }
+            break;
+        }
+    }
+    if (*path_d) {
+        (*path_d)[j] = '\0';
+        *aug_path = *path_d;
+    }
+
+cleanup:
+    return rc;
+}
+
+/**
  * @brief Apply single diff node on Augeas data.
  *
  * @param[in] aug Augeas context.
@@ -722,7 +797,6 @@ augds_store_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_path,
 {
     int rc = SR_ERR_OK;
     char *aug_label = NULL, *aug_path2 = NULL, *anchor_d = NULL, *path_d = NULL;
-    const char *val;
 
     if (applied_r) {
         *applied_r = 0;
@@ -733,24 +807,12 @@ augds_store_diff_apply(augeas *aug, enum augds_diff_op op, const char *aug_path,
         goto cleanup;
     }
 
-    /* relative paths starting with numbers are not interpreted properly, use full absolute path instead */
-    if (isdigit(aug_path[0])) {
-        if (aug_get(aug, "/augeas/context", &val) != 1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-        }
-        if (asprintf(&path_d, "%s/%s", val, aug_path) == -1) {
-            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
-        }
-        aug_path = path_d;
+    /* process paths */
+    if ((rc = augds_store_diff_apply_prepare_path(aug, &aug_path, &path_d))) {
+        goto cleanup;
     }
-    if (aug_path_anchor && isdigit(aug_path_anchor[0])) {
-        if (aug_get(aug, "/augeas/context", &val) != 1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-        }
-        if (asprintf(&anchor_d, "%s/%s", val, aug_path_anchor) == -1) {
-            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
-        }
-        aug_path_anchor = anchor_d;
+    if ((rc = augds_store_diff_apply_prepare_path(aug, &aug_path_anchor, &anchor_d))) {
+        goto cleanup;
     }
 
     switch (op) {
