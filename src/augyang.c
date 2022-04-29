@@ -885,24 +885,6 @@ ay_lnode_get_last_concat(const struct ay_lnode *start, const struct ay_lnode *st
 }
 
 /**
- * @brief Check if two ynodes under choice have the same L_CONCAT.
- *
- * @param[in] first First node to check.
- * @param[in] second Second node to check.
- * @return 1 if they have the same upper L_CONCAT.
- */
-static ly_bool
-ay_ynode_equal_some_concat(const struct ay_ynode *first, const struct ay_ynode *second)
-{
-    const struct ay_lnode *con1, *con2;
-
-    con1 = ay_lnode_get_last_concat(first->snode, first->choice);
-    con2 = ay_lnode_get_last_concat(second->snode, second->choice);
-
-    return con1 && con2 && (con1->lens == con2->lens);
-}
-
-/**
  * @brief Check if lenses are equal.
  *
  * @param[in] l1 First lense.
@@ -4859,15 +4841,36 @@ ay_ynode_rule_cont_key(struct ay_ynode *node)
 static uint64_t
 ay_ynode_rule_insert_case(struct ay_ynode *node)
 {
+    const struct ay_lnode *it1, *it2, *con1, *con2, *stop;
+
     if (!node->choice || !node->next || !node->next->choice) {
         return 0;
     } else if (node->choice != node->next->choice) {
         return 0;
-    } else if (ay_ynode_equal_some_concat(node, node->next)) {
-        return 1;
-    } else {
+    } else if (!node->snode || !node->next->snode) {
         return 0;
     }
+
+    /* Find common choice. */
+    stop = node->choice->parent;
+    for (it1 = node->snode; it1 != stop; it1 = it1->parent) {
+        if (it1->lens->tag != L_UNION) {
+            continue;
+        }
+        for (it2 = node->snode; it2 != stop; it2 = it2->parent) {
+            if (it1 == it2) {
+                /* Find common concat. */
+                con1 = ay_lnode_get_last_concat(node->snode, it1);
+                con2 = ay_lnode_get_last_concat(node->next->snode, it1);
+                if (con1 && con2 && (con1 == con2)) {
+                    return 1;
+                }
+            }
+        }
+        break;
+    }
+
+    return 0;
 }
 
 /**
