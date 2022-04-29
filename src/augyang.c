@@ -2616,6 +2616,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     struct ay_ynode *iter, *root, *gr;
     int64_t rnk, tmp_rnk;
     uint64_t cnt, tmp_cnt;
+    const char *ch1, *ch2;
 
     assert(dupl_count);
 
@@ -2623,6 +2624,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     cnt = 0;
 
     if (node->type == YN_CASE) {
+        rnk = 0;
         goto end;
     }
 
@@ -2633,6 +2635,8 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
         } else if (iter == node) {
             rnk = cnt;
             continue;
+        } else if (!iter->ident) {
+            continue;
         } else if (iter->type == YN_USES) {
             gr = ay_ynode_get_grouping(tree, iter->ref);
             ret = ay_yang_ident_duplications(tree, gr->child, node_ident, &tmp_rnk, &tmp_cnt);
@@ -2641,7 +2645,13 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
             cnt += tmp_cnt;
         }
 
-        if (iter->ident && !strcmp(node_ident, iter->ident)) {
+        /* Compare until non-numeric character. */
+        for (ch1 = iter->ident, ch2 = node_ident; *ch1 && *ch2; ch1++, ch2++) {
+            if (isdigit(*ch1) || isdigit(*ch2) || (*ch1 != *ch2)) {
+                break;
+            }
+        }
+        if ((isdigit(*ch1) && !*ch2) || (!*ch1 && !*ch2)) {
             cnt++;
         }
     }
