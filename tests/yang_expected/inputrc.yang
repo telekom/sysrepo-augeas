@@ -28,26 +28,6 @@ module inputrc {
       }
     }
   }
-  grouping entry {
-    container entry {
-      augex:data-path "entry";
-      augex:value-yang-path "value";
-      presence "Config entry.";
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[^\" \t\n]+";
-        }
-      }
-      leaf mapping {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
-        }
-        augex:data-path "mapping";
-      }
-    }
-  }
   list inputrc {
     key "config-file";
     leaf config-file {
@@ -101,8 +81,23 @@ module inputrc {
                 case variable {
                   uses variable;
                 }
-                case entry {
-                  uses entry;
+                container entry {
+                  augex:data-path "entry";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[^\" \t\n]+";
+                    }
+                  }
+                  leaf mapping {
+                    mandatory true;
+                    type string {
+                      pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+                    }
+                    augex:data-path "mapping";
+                  }
                 }
               }
             }
@@ -129,8 +124,23 @@ module inputrc {
                   case variable {
                     uses variable;
                   }
-                  case entry {
-                    uses entry;
+                  container entry {
+                    augex:data-path "entry";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type string {
+                        pattern "[^\" \t\n]+";
+                      }
+                    }
+                    leaf mapping {
+                      mandatory true;
+                      type string {
+                        pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+                      }
+                      augex:data-path "mapping";
+                    }
                   }
                 }
               }
@@ -140,8 +150,23 @@ module inputrc {
         case variable {
           uses variable;
         }
-        case entry {
-          uses entry;
+        container entry {
+          augex:data-path "entry";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\" \t\n]+";
+            }
+          }
+          leaf mapping {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+            }
+            augex:data-path "mapping";
+          }
         }
       }
     }

@@ -9,325 +9,334 @@ module sshd {
 
   augex:augeas-mod-name "Sshd";
 
-  grouping ch-accept-env {
-    choice ch-accept-env {
-      mandatory true;
-      container accept-env {
-        augex:data-path "AcceptEnv";
-        presence "Config entry.";
-        list accept-env-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container accept-env {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf accept-env {
-              mandatory true;
+  grouping gr {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container accept-env {
+          augex:data-path "AcceptEnv";
+          presence "Config entry.";
+          list accept-env-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
               type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "[^\"' \t\n=]+";
-                }
-                type string {
-                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+            container accept-env {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf accept-env {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n=]+";
+                  }
+                  type string {
+                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+                  }
                 }
               }
             }
           }
         }
-      }
-      container allow-groups {
-        augex:data-path "AllowGroups";
-        presence "Config entry.";
-        list allow-groups-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container allow-groups {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf allow-groups {
-              mandatory true;
+        container allow-groups {
+          augex:data-path "AllowGroups";
+          presence "Config entry.";
+          list allow-groups-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
               type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "[^\"' \t\n=]+";
-                }
-                type string {
-                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+            container allow-groups {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf allow-groups {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n=]+";
+                  }
+                  type string {
+                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+                  }
                 }
               }
             }
           }
         }
-      }
-      container allow-users {
-        augex:data-path "AllowUsers";
-        presence "Config entry.";
-        list allow-users-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container allow-users {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf allow-users {
-              mandatory true;
+        container allow-users {
+          augex:data-path "AllowUsers";
+          presence "Config entry.";
+          list allow-users-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
               type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "[^\"' \t\n=]+";
-                }
-                type string {
-                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+            container allow-users {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf allow-users {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n=]+";
+                  }
+                  type string {
+                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+                  }
                 }
               }
             }
           }
         }
-      }
-      container deny-groups {
-        augex:data-path "DenyGroups";
-        presence "Config entry.";
-        list deny-groups-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container deny-groups {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf deny-groups {
-              mandatory true;
+        container deny-groups {
+          augex:data-path "DenyGroups";
+          presence "Config entry.";
+          list deny-groups-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
               type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "[^\"' \t\n=]+";
-                }
-                type string {
-                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+            container deny-groups {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf deny-groups {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n=]+";
+                  }
+                  type string {
+                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+                  }
                 }
               }
             }
           }
         }
-      }
-      container subsystem {
-        augex:data-path "Subsystem";
-        presence "Config entry.";
-        container subsystemvalue {
+        container subsystem {
+          augex:data-path "Subsystem";
+          presence "Config entry.";
+          container subsystemvalue {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf label {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9\\-]+";
+              }
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n=](.*[^ \t\n=])?";
+              }
+            }
+          }
+        }
+        container deny-users {
+          augex:data-path "DenyUsers";
+          presence "Config entry.";
+          list deny-users-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container deny-users {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf deny-users {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n=]+";
+                  }
+                  type string {
+                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
+                  }
+                }
+              }
+            }
+          }
+        }
+        container macs {
+          augex:data-path "MACs";
+          presence "Config entry.";
+          list macs-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container macs {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf macs {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^, \t\n=]+";
+                }
+              }
+            }
+          }
+        }
+        container ciphers {
+          augex:data-path "Ciphers";
+          presence "Config entry.";
+          list ciphers-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container ciphers {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf ciphers {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^, \t\n=]+";
+                }
+              }
+            }
+          }
+        }
+        container kexalgorithms {
+          augex:data-path "KexAlgorithms";
+          presence "Config entry.";
+          list kex-algorithms-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container kex-algorithms {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf kex-algorithms {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^, \t\n=]+";
+                }
+              }
+            }
+          }
+        }
+        container hostkeyalgorithms {
+          augex:data-path "HostKeyAlgorithms";
+          presence "Config entry.";
+          list host-key-algorithms-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container host-key-algorithms {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf host-key-algorithms {
+                mandatory true;
+                type uint64;
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^, \t\n=]+";
+                }
+              }
+            }
+          }
+        }
+        container other-entry {
           augex:data-path "$$";
           augex:value-yang-path "value";
           presence "Config entry.";
-          leaf label {
+          leaf key-re {
             mandatory true;
             type string {
-              pattern "[A-Za-z0-9\\-]+";
+              pattern "[Aa][Cc][Cc][Ee][Pp][Tt][Ee][Nn](([Vv][0-9A-Za-z]|[0-9A-UW-Za-uw-z])[0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp][Tt][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Aa][Cc][Cc]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Aa][Ll][Ll][Oo][Ww]([Gg][Rr][Oo][Uu][Pp](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Gg][Rr][Oo][Uu]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Gg][Rr][Oo]([0-9A-TV-Za-tv-z][0-9A-Za-z]*|())|[Gg][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Uu][Ss][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Uu][Ss][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Uu][Ss]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Uu]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[0-9A-FH-TV-Za-fh-tv-z][0-9A-Za-z]*|())|[Aa][Ll][Ll][Oo]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Aa][Ll][Ll]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Aa][Cc]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Cc][Ii][Pp]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Cc][Ii]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo][Uu][Pp](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo][Uu]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo]([0-9A-TV-Za-tv-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy]([0-9A-FH-TV-Za-fh-tv-z][0-9A-Za-z]*|())|[Dd][Ee][Nn]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Dd][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee][Yy]([Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[0-9B-Zb-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Kk][Ee][Xx]([0-9B-Zb-z][0-9A-Za-z]*|())|[Kk][Ee]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Mm][Aa][Tt][Cc](([Hh][0-9A-Za-z]|[0-9A-GI-Za-gi-z])[0-9A-Za-z]*|())|[Mm][Aa][Tt]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Cc](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Mm][Aa]([0-9ABD-SU-Zabd-su-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss][Tt][Ee](([Mm][0-9A-Za-z]|[0-9A-LN-Za-ln-z])[0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Ss][Uu][Bb]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Ss][Uu]([0-9AC-Zac-z][0-9A-Za-z]*|())|([Ss][0-9A-TV-Za-tv-z]|[Mm][0-9B-Zb-z]|[Kk][0-9A-DF-Za-df-z]|[Hh][0-9A-NP-Za-np-z]|[Dd][0-9A-DF-Za-df-z]|[Cc][0-9A-HJ-Za-hj-z]|[Aa][0-9ABD-KM-Zabd-km-z]|[0-9BE-GIJLN-RT-Zbe-gijln-rt-z][0-9A-Za-z])[0-9A-Za-z]*|[Ss]|[Mm]|[Kk]|[Hh]|[Dd]|[Cc]|[Aa]|[0-9BE-GIJLN-RT-Zbe-gijln-rt-z]";
             }
           }
           leaf value {
             mandatory true;
             type string {
-              pattern "[^ \t\n=](.*[^ \t\n=])?";
+              pattern "[^ \t\n=]+([ \t=]+[^ \t\n=]+)*";
             }
-          }
-        }
-      }
-      container deny-users {
-        augex:data-path "DenyUsers";
-        presence "Config entry.";
-        list deny-users-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container deny-users {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf deny-users {
-              mandatory true;
-              type uint64;
-            }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "[^\"' \t\n=]+";
-                }
-                type string {
-                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                }
-              }
-            }
-          }
-        }
-      }
-      container macs {
-        augex:data-path "MACs";
-        presence "Config entry.";
-        list macs-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container macs {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf macs {
-              mandatory true;
-              type uint64;
-            }
-            leaf value {
-              mandatory true;
-              type string {
-                pattern "[^, \t\n=]+";
-              }
-            }
-          }
-        }
-      }
-      container ciphers {
-        augex:data-path "Ciphers";
-        presence "Config entry.";
-        list ciphers-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container ciphers {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf ciphers {
-              mandatory true;
-              type uint64;
-            }
-            leaf value {
-              mandatory true;
-              type string {
-                pattern "[^, \t\n=]+";
-              }
-            }
-          }
-        }
-      }
-      container kexalgorithms {
-        augex:data-path "KexAlgorithms";
-        presence "Config entry.";
-        list kex-algorithms-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container kex-algorithms {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf kex-algorithms {
-              mandatory true;
-              type uint64;
-            }
-            leaf value {
-              mandatory true;
-              type string {
-                pattern "[^, \t\n=]+";
-              }
-            }
-          }
-        }
-      }
-      container hostkeyalgorithms {
-        augex:data-path "HostKeyAlgorithms";
-        presence "Config entry.";
-        list host-key-algorithms-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container host-key-algorithms {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf host-key-algorithms {
-              mandatory true;
-              type uint64;
-            }
-            leaf value {
-              mandatory true;
-              type string {
-                pattern "[^, \t\n=]+";
-              }
-            }
-          }
-        }
-      }
-      container other-entry {
-        augex:data-path "$$";
-        augex:value-yang-path "value";
-        presence "Config entry.";
-        leaf key-re {
-          mandatory true;
-          type string {
-            pattern "[Aa][Cc][Cc][Ee][Pp][Tt][Ee][Nn](([Vv][0-9A-Za-z]|[0-9A-UW-Za-uw-z])[0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp][Tt][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee][Pp]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Cc][Cc][Ee]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Aa][Cc][Cc]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Aa][Ll][Ll][Oo][Ww]([Gg][Rr][Oo][Uu][Pp](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Gg][Rr][Oo][Uu]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Gg][Rr][Oo]([0-9A-TV-Za-tv-z][0-9A-Za-z]*|())|[Gg][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Uu][Ss][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Uu][Ss][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Uu][Ss]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Uu]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[0-9A-FH-TV-Za-fh-tv-z][0-9A-Za-z]*|())|[Aa][Ll][Ll][Oo]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Aa][Ll][Ll]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Aa][Cc]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Cc][Ii][Pp]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Cc][Ii]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo][Uu][Pp](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo][Uu]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr][Oo]([0-9A-TV-Za-tv-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu][Ss]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Uu]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy][Gg]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Dd][Ee][Nn][Yy]([0-9A-FH-TV-Za-fh-tv-z][0-9A-Za-z]*|())|[Dd][Ee][Nn]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Dd][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee][Yy]([Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[0-9B-Zb-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Kk][Ee][Xx]([0-9B-Zb-z][0-9A-Za-z]*|())|[Kk][Ee]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Mm][Aa][Tt][Cc](([Hh][0-9A-Za-z]|[0-9A-GI-Za-gi-z])[0-9A-Za-z]*|())|[Mm][Aa][Tt]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Cc](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Mm][Aa]([0-9ABD-SU-Zabd-su-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss][Tt][Ee](([Mm][0-9A-Za-z]|[0-9A-LN-Za-ln-z])[0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss][Yy]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Ss][Uu][Bb][Ss]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Ss][Uu][Bb]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Ss][Uu]([0-9AC-Zac-z][0-9A-Za-z]*|())|([Ss][0-9A-TV-Za-tv-z]|[Mm][0-9B-Zb-z]|[Kk][0-9A-DF-Za-df-z]|[Hh][0-9A-NP-Za-np-z]|[Dd][0-9A-DF-Za-df-z]|[Cc][0-9A-HJ-Za-hj-z]|[Aa][0-9ABD-KM-Zabd-km-z]|[0-9BE-GIJLN-RT-Zbe-gijln-rt-z][0-9A-Za-z])[0-9A-Za-z]*|[Ss]|[Mm]|[Kk]|[Hh]|[Dd]|[Cc]|[Aa]|[0-9BE-GIJLN-RT-Zbe-gijln-rt-z]";
-          }
-        }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n=]+([ \t=]+[^ \t\n=]+)*";
           }
         }
       }
@@ -338,16 +347,7 @@ module sshd {
     leaf config-file {
       type string;
     }
-    list ch-accept-env-list {
-      key "_id";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      uses ch-accept-env;
-    }
+    uses gr;
     list match-list {
       key "_id";
       ordered-by user;
@@ -398,17 +398,7 @@ module sshd {
         container settings {
           augex:data-path "Settings";
           presence "Config entry.";
-          list ch-accept-env-list {
-            key "_id";
-            min-elements 1;
-            ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            uses ch-accept-env;
-          }
+          uses gr;
         }
       }
     }

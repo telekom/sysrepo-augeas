@@ -29,7 +29,6 @@ module dhclient {
         }
         case code {
           leaf code {
-            mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
             }
@@ -76,21 +75,6 @@ module dhclient {
             pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
           }
         }
-      }
-    }
-  }
-  grouping ch-send {
-    choice ch-send {
-      mandatory true;
-      container send {
-        augex:data-path "send";
-        presence "Config entry.";
-        uses word;
-      }
-      container option {
-        augex:data-path "option";
-        presence "Config entry.";
-        uses word;
       }
     }
   }
@@ -145,51 +129,6 @@ module dhclient {
       augex:data-path "second";
     }
   }
-  grouping ch-append {
-    choice ch-append {
-      mandatory true;
-      container append {
-        augex:data-path "append";
-        presence "Config entry.";
-        uses word;
-      }
-      container prepend {
-        augex:data-path "prepend";
-        presence "Config entry.";
-        uses word;
-      }
-      container default {
-        augex:data-path "default";
-        presence "Config entry.";
-        uses word;
-      }
-      container supersede {
-        augex:data-path "supersede";
-        presence "Config entry.";
-        uses word;
-      }
-    }
-  }
-  grouping ch-media {
-    choice ch-media {
-      mandatory true;
-      container media {
-        augex:data-path "media";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-      container request {
-        augex:data-path "request";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-      container require {
-        augex:data-path "require";
-        presence "Config entry.";
-        uses stmt-array-list;
-      }
-    }
-  }
   grouping stmt-block {
     list config-entries {
       key "_id";
@@ -202,14 +141,50 @@ module dhclient {
       }
       choice ch-config-entries {
         mandatory true;
-        case ch-media {
-          uses ch-media;
+        container media {
+          augex:data-path "media";
+          presence "Config entry.";
+          uses stmt-array-list;
         }
-        case ch-send {
-          uses ch-send;
+        container request {
+          augex:data-path "request";
+          presence "Config entry.";
+          uses stmt-array-list;
         }
-        case ch-append {
-          uses ch-append;
+        container require {
+          augex:data-path "require";
+          presence "Config entry.";
+          uses stmt-array-list;
+        }
+        container send {
+          augex:data-path "send";
+          presence "Config entry.";
+          uses word;
+        }
+        container option {
+          augex:data-path "option";
+          presence "Config entry.";
+          uses word;
+        }
+        container append {
+          augex:data-path "append";
+          presence "Config entry.";
+          uses word;
+        }
+        container prepend {
+          augex:data-path "prepend";
+          presence "Config entry.";
+          uses word;
+        }
+        container default {
+          augex:data-path "default";
+          presence "Config entry.";
+          uses word;
+        }
+        container supersede {
+          augex:data-path "supersede";
+          presence "Config entry.";
+          uses word;
         }
         leaf interface {
           type string {
@@ -340,14 +315,50 @@ module dhclient {
           }
           augex:data-path "reject";
         }
-        case ch-append {
-          uses ch-append;
+        container append {
+          augex:data-path "append";
+          presence "Config entry.";
+          uses word;
         }
-        case ch-media {
-          uses ch-media;
+        container prepend {
+          augex:data-path "prepend";
+          presence "Config entry.";
+          uses word;
         }
-        case ch-send {
-          uses ch-send;
+        container default {
+          augex:data-path "default";
+          presence "Config entry.";
+          uses word;
+        }
+        container supersede {
+          augex:data-path "supersede";
+          presence "Config entry.";
+          uses word;
+        }
+        container media {
+          augex:data-path "media";
+          presence "Config entry.";
+          uses stmt-array-list;
+        }
+        container request {
+          augex:data-path "request";
+          presence "Config entry.";
+          uses stmt-array-list;
+        }
+        container require {
+          augex:data-path "require";
+          presence "Config entry.";
+          uses stmt-array-list;
+        }
+        container send {
+          augex:data-path "send";
+          presence "Config entry.";
+          uses word;
+        }
+        container option {
+          augex:data-path "option";
+          presence "Config entry.";
+          uses word;
         }
         container interface {
           augex:data-path "interface";

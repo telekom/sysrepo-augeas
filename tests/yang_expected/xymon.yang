@@ -14,67 +14,25 @@ module xymon {
 
   augex:augeas-mod-name "Xymon";
 
-  grouping ch-include {
-    choice ch-include {
-      mandatory true;
-      leaf include {
-        type string {
-          pattern "[^ \t][^\n]+";
-        }
-        augex:data-path "include";
-      }
-      leaf dispinclude {
-        type string {
-          pattern "[^ \t][^\n]+";
-        }
-        augex:data-path "dispinclude";
-      }
-      leaf netinclude {
-        type string {
-          pattern "[^ \t][^\n]+";
-        }
-        augex:data-path "netinclude";
-      }
-      leaf directory {
-        type string {
-          pattern "[^ \t][^\n]+";
-        }
-        augex:data-path "directory";
-      }
-    }
-  }
   grouping host {
-    container host {
-      augex:data-path "host";
-      presence "Config entry.";
-      leaf ip {
-        mandatory true;
-        type inet:ip-address-no-zone;
-        augex:data-path "ip";
-      }
-      leaf fqdn {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z0-9_.-]+";
-        }
-        augex:data-path "fqdn";
-      }
-      leaf-list tag {
-        type string {
-          pattern "[^ \n\t]+";
-        }
-        ordered-by user;
-        augex:data-path "tag";
-      }
+    leaf ip {
+      mandatory true;
+      type inet:ip-address-no-zone;
+      augex:data-path "ip";
     }
-  }
-  grouping title {
-    leaf title {
+    leaf fqdn {
       mandatory true;
       type string {
-        pattern "[^ \t][^\n]+";
+        pattern "[A-Za-z0-9_.-]+";
       }
-      augex:data-path "title";
+      augex:data-path "fqdn";
+    }
+    leaf-list tag {
+      type string {
+        pattern "[^ \n\t]+";
+      }
+      ordered-by user;
+      augex:data-path "tag";
     }
   }
   grouping group {
@@ -88,11 +46,16 @@ module xymon {
       }
       choice ch-config-entries {
         mandatory true;
-        case host {
+        container host {
+          augex:data-path "host";
+          presence "Config entry.";
           uses host;
         }
-        case title {
-          uses title;
+        leaf title {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "title";
         }
       }
     }
@@ -108,13 +71,39 @@ module xymon {
       }
       choice ch-config-entries {
         mandatory true;
-        case title {
-          uses title;
+        leaf title {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "title";
         }
-        case ch-include {
-          uses ch-include;
+        leaf include {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "include";
         }
-        case host {
+        leaf dispinclude {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "dispinclude";
+        }
+        leaf netinclude {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "netinclude";
+        }
+        leaf directory {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "directory";
+        }
+        container host {
+          augex:data-path "host";
+          presence "Config entry.";
           uses host;
         }
       }
@@ -183,7 +172,6 @@ module xymon {
   }
   grouping page2 {
     leaf pagetitle {
-      mandatory true;
       type string {
         pattern "[^ \t][^\n]+";
       }
@@ -216,14 +204,40 @@ module xymon {
       }
       choice ch-config-entries {
         mandatory true;
-        case ch-include {
-          uses ch-include;
+        leaf include {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "include";
         }
-        case host {
+        leaf dispinclude {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "dispinclude";
+        }
+        leaf netinclude {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "netinclude";
+        }
+        leaf directory {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "directory";
+        }
+        container host {
+          augex:data-path "host";
+          presence "Config entry.";
           uses host;
         }
-        case title {
-          uses title;
+        leaf title {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "title";
         }
         container ospage {
           augex:data-path "ospage";
@@ -307,7 +321,6 @@ module xymon {
             augex:data-path "parent";
           }
           leaf pagetitle {
-            mandatory true;
             type string {
               pattern "[^ \t][^\n]+";
             }

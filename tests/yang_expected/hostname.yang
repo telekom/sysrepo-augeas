@@ -15,7 +15,6 @@ module hostname {
       type string;
     }
     leaf hostname {
-      mandatory true;
       type string {
         pattern "[A-Za-z0-9_.-]+";
       }

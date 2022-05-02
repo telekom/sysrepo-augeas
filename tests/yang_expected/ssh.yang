@@ -282,7 +282,6 @@ module ssh {
             presence "Config entry.";
             list ch-send-env-list {
               key "_id";
-              min-elements 1;
               ordered-by user;
               leaf _id {
                 type uint64;

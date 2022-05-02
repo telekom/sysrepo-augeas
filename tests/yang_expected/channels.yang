@@ -14,7 +14,6 @@ module channels {
       container case {
         presence "Config entry.";
         leaf-list lang {
-          min-elements 1;
           type string {
             pattern "[A-Za-z0-9_.-]+";
           }

@@ -9,49 +9,35 @@ module pg-hba {
 
   augex:augeas-mod-name "Pg_Hba";
 
-  grouping method {
-    container method {
-      augex:data-path "method";
-      augex:value-yang-path "value";
-      presence "Config entry.";
-      leaf value {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z][A-Za-z0-9]+";
-        }
+  grouping option-list {
+    list option-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      list option-list {
-        key "_id";
-        ordered-by user;
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key to maintain the order of the augeas data.";
+      container option {
+        augex:data-path "option";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
         }
-        container option {
-          augex:data-path "option";
-          augex:value-yang-path "word";
-          presence "Config entry.";
-          leaf word {
-            mandatory true;
+        leaf value {
+          type union {
             type string {
-              pattern "[A-Za-z0-9_.-]+";
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
             }
           }
-          choice ch-option {
-            leaf value {
-              type string {
-                pattern "[^\"' \t\n]+";
-              }
-              augex:data-path "value";
-            }
-            leaf value2 {
-              type string {
-                pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-              }
-              augex:data-path "value";
-            }
-          }
+          augex:data-path "value";
         }
       }
     }
@@ -103,7 +89,18 @@ module pg-hba {
               ordered-by user;
               augex:data-path "user";
             }
-            uses method;
+            container method {
+              augex:data-path "method";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z][A-Za-z0-9]+";
+                }
+              }
+              uses option-list;
+            }
           }
           container case2 {
             presence "Config entry.";
@@ -137,7 +134,18 @@ module pg-hba {
               }
               augex:data-path "address";
             }
-            uses method;
+            container method {
+              augex:data-path "method";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z][A-Za-z0-9]+";
+                }
+              }
+              uses option-list;
+            }
           }
         }
       }
