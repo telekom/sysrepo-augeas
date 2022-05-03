@@ -130,7 +130,7 @@ static int
 augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *mod, struct augnode *parent,
         struct augnode **augnodes, uint32_t *augnode_count)
 {
-    const struct lysc_node *node = NULL, *node2;
+    const struct lysc_node *node = NULL, *node2, *child;
     enum augds_ext_node_type node_type, node_type2;
     const char *data_path, *value_path, *case_data_path;
     struct augnode *anode;
@@ -184,11 +184,27 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
             assert(node->nodetype == LYS_CONTAINER);
 
             /* store the data-path and compiled pattern to use for matching when deciding whether to create this node
-             * and hence select the case, just assume the first child for now */
-            augds_node_get_type(lysc_node_child(node), &node_type2, &case_data_path, NULL);
-            assert(node_type2 == AUGDS_EXT_NODE_VALUE);
-            anode->case_data_path = case_data_path;
-            anode->pcode = augds_init_auginfo_get_pattern(auginfo, lysc_node_child(node));
+             * and hence select the case */
+            child = lysc_node_child(node);
+            if (child->nodetype == LYS_LIST) {
+                /* skip the implicit list */
+                child = lysc_node_child(child)->next;
+            }
+            if (child->nodetype == LYS_CONTAINER) {
+                augds_node_get_type(child, &node_type2, &case_data_path, NULL);
+                assert(case_data_path);
+
+                /* use the first mandatory child pattern, which is technically the value */
+                child = lysc_node_child(child);
+                assert(child->flags & LYS_MAND_TRUE);
+                anode->pcode = augds_init_auginfo_get_pattern(auginfo, child);
+            } else {
+                assert(child->nodetype & LYD_NODE_TERM);
+                augds_node_get_type(child, &node_type2, &case_data_path, NULL);
+                assert(node_type2 == AUGDS_EXT_NODE_VALUE);
+                anode->case_data_path = case_data_path;
+                anode->pcode = augds_init_auginfo_get_pattern(auginfo, child);
+            }
         }
 
         /* fill augnode children, recursively */
