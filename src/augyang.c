@@ -2780,7 +2780,7 @@ ay_ynode_idents(struct yprinter_ctx *ctx, ly_bool solve_duplicates)
 
         /* Make duplicate identifiers unique. */
         if (iter->type == YN_KEY) {
-            strcpy(buffer, "_id");
+            strcpy(buffer, "id");
         } else if (dupl_rank) {
             assert(dupl_rank > 0);
             strcpy(buffer, iter->ident);

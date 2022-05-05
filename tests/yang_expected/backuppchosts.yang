@@ -25,7 +25,7 @@ module backuppchosts {
       container record {
         augex:data-path "$$";
         presence "Config entry.";
-        leaf _id {
+        leaf id {
           mandatory true;
           type uint64;
         }
