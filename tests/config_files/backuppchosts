@@ -1,0 +1,3 @@
+host        dhcp    user      moreUsers
+hostname1     0     user1     anotheruser,athirduser
+hostname2     1     user2     stillanotheruser
