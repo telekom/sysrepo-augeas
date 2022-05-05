@@ -91,7 +91,7 @@ else()
     option(ENABLE_TESTS "Build tests" OFF)
     option(ENABLE_VALGRIND_TESTS "Build tests with valgrind" OFF)
 endif()
-set(SUPPORTED_LENSES "anaconda ceph cmdline cpanel cron darkice devfsrules device-map dhclient dnsmasq ethers grubenv iptables ntp ntpd pam passwd pg-hba postfix_sasl_smtpd simplevars ssh sshd systemd xendconfsxp"
+set(SUPPORTED_LENSES "anaconda ceph cmdline cpanel cron darkice devfsrules device_map dhclient dnsmasq ethers grubenv iptables ntp ntpd pam passwd pg_hba postfix_sasl_smtpd simplevars ssh sshd systemd xendconfsxp"
         CACHE STRING "Space-separated list of Augeas lenses to be supported in sysrepo, by default all of them")
 option(INSTALL_MODULES "Install supported Augeas lens YANG modules into sysrepo" ON)
 set(YANG_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/yang/modules/augyang" CACHE STRING "Directory where to copy the generated YANG modules to")
@@ -219,9 +219,14 @@ add_custom_target(install_lens
         COMMAND ${PROJECT_SOURCE_DIR}/lens_patch/update_lens.sh "${PROJECT_SOURCE_DIR}/lens_patch" "${AUGEAS_LENS_DIR}"
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# generate YANG modules from Augeas lenses
+# generate correct lists of lenses and YANG modules
 set(LENS_LIST ${SUPPORTED_LENSES})
 separate_arguments(LENS_LIST)
+string(REPLACE "_" "-" SUPPORTED_YANG_LIST ${SUPPORTED_LENSES})
+set(YANG_LIST ${SUPPORTED_YANG_LIST})
+separate_arguments(YANG_LIST)
+
+# generate YANG modules from Augeas lenses
 add_custom_command(TARGET augyang
         POST_BUILD
         COMMAND $<TARGET_FILE:augyang> ${LENS_LIST}
@@ -233,17 +238,17 @@ add_custom_command(TARGET augyang
 #
 
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/modules/" DESTINATION ${YANG_MODULE_DIR})
-foreach(LENS IN LISTS LENS_LIST)
-    list(APPEND YANG_LENS_LIST ${CMAKE_CURRENT_BINARY_DIR}/${LENS}.yang)
+foreach(YANG IN LISTS YANG_LIST)
+    list(APPEND YANG_FILES_LIST ${CMAKE_CURRENT_BINARY_DIR}/${YANG}.yang)
 endforeach()
-install(FILES ${YANG_LENS_LIST} DESTINATION ${YANG_MODULE_DIR})
+install(FILES ${YANG_FILES_LIST} DESTINATION ${YANG_MODULE_DIR})
 
 if(INSTALL_MODULES)
     install(CODE "
-        message(STATUS \"Install Augeas YANG modules: ${SUPPORTED_LENSES}\")
+        message(STATUS \"Install Augeas YANG modules: ${SUPPORTED_YANG_LIST}\")
         set(ENV{YANG_DIR} \"${YANG_MODULE_DIR}\")
         set(ENV{BINARY_DIR} \"${CMAKE_CURRENT_BINARY_DIR}\")
-        execute_process(COMMAND \"${PROJECT_SOURCE_DIR}/scripts/install_modules.sh\" ${LENS_LIST} RESULT_VARIABLE EXEC_RET)
+        execute_process(COMMAND \"${PROJECT_SOURCE_DIR}/scripts/install_modules.sh\" ${YANG_LIST} RESULT_VARIABLE EXEC_RET)
         if(NOT EXEC_RET EQUAL \"0\")
             message(FATAL_ERROR \" scripts/install_modules.sh failed: \${EXEC_RET}\")
         endif()
