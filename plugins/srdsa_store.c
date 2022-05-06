@@ -1115,6 +1115,56 @@ cleanup:
     return rc;
 }
 
+/**
+ * @brief Generate Augeas path for an anchor. Handle situation when there are changes in YANG data that
+ * are yet to be performed in Augeas data that would result in moved index.
+ *
+ * @param[in] anchor YANG data anchor.
+ * @param[in] aug_before Whether the anchor is before the YANG data node.
+ * @param[in] parent_path Augeas path of the YANG data diff parent.
+ * @param[in] diff_data After-diff data tree.
+ * @param[in] aug_path Augeas path of the YANG data diff node.
+ * @param[out] aug_anchor_path Generated path of the Augeas data anchor.
+ * @return SR error code.
+ */
+static int
+augds_store_diff_insert_anchor_path(const struct lyd_node *anchor, int aug_before, const char *parent_path,
+        struct lyd_node *diff_data, const char *aug_path, char **aug_anchor_path)
+{
+    int rc = SR_ERR_OK;
+    char *label1 = NULL, *label2 = NULL;
+    const char *dpath;
+    enum augds_ext_node_type type;
+
+    augds_node_get_type(anchor->schema, &type, &dpath, NULL);
+    if ((rc = augds_store_path(anchor, parent_path, dpath, type, diff_data, aug_anchor_path))) {
+        goto cleanup;
+    }
+
+    if (aug_before) {
+        /* the anchor is before the new node so its index may be wrong */
+        if ((rc = augds_store_diff_path_label(aug_path, &label1))) {
+            goto cleanup;
+        }
+        if ((rc = augds_store_diff_path_label(*aug_anchor_path, &label2))) {
+            goto cleanup;
+        }
+        if (!strcmp(label1, label2)) {
+            /* labels are the same meaning the generated index is one higher than it should */
+            free(*aug_anchor_path);
+            *aug_anchor_path = strdup(aug_path);
+            if (!*aug_anchor_path) {
+                AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+            }
+        }
+    }
+
+cleanup:
+    free(label1);
+    free(label2);
+    return rc;
+}
+
 int
 augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *parent_path, enum augds_diff_op parent_op,
         struct lyd_node *diff_data)
@@ -1199,8 +1249,8 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
 
         if (anchor) {
             /* generate Augeas path for the anchor */
-            augds_node_get_type(anchor->schema, &type2, &dpath2, NULL);
-            if ((rc = augds_store_path(anchor, parent_path, dpath2, type2, diff_data, &aug_anchor_path))) {
+            if ((rc = augds_store_diff_insert_anchor_path(anchor, aug_before, parent_path, diff_data, aug_path,
+                    &aug_anchor_path))) {
                 goto cleanup;
             }
         }
@@ -1240,7 +1290,7 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
         }
         break;
     case AUGDS_OP_MOVE:
-        /* parent node is the user-ord list, was already applied (moved) in data */
+        /* parent node is the user-ord list, was already applied (moved) in YANG data */
 
         /* generate Augeas path and value for the diff node */
         if ((rc = augds_store_path(diff_path_node, parent_path, data_path, node_type, diff_data, &aug_path))) {
@@ -1262,8 +1312,8 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
         assert(anchor);
 
         /* generate Augeas path for the anchor */
-        augds_node_get_type(anchor->schema, &type2, &dpath2, NULL);
-        if ((rc = augds_store_path(anchor, parent_path, dpath2, type2, diff_data, &aug_anchor_path))) {
+        if ((rc = augds_store_diff_insert_anchor_path(anchor, aug_before, parent_path, diff_data, aug_path,
+                &aug_anchor_path))) {
             goto cleanup;
         }
 
