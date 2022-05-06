@@ -135,6 +135,7 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
     const char *data_path, *value_path, *case_data_path;
     struct augnode *anode;
     void *mem;
+    uint32_t i, j;
     int r;
 
     while ((node = lys_getnext(node, parent ? parent->schema : NULL, mod ? mod->compiled : NULL, 0))) {
@@ -174,7 +175,6 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
         anode->value_path = value_path;
         anode->schema = node;
         anode->schema2 = node2;
-        anode->parent = parent;
 
         if (node_type == AUGDS_EXT_NODE_LABEL) {
             /* get the pattern */
@@ -210,6 +210,13 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
         /* fill augnode children, recursively */
         if ((r = augds_init_auginfo_siblings_r(auginfo, mod, anode, &anode->child, &anode->child_count))) {
             return r;
+        }
+    }
+
+    /* set all children parents after we have them all */
+    for (i = 0; i < *augnode_count; ++i) {
+        for (j = 0; j < (*augnodes)[i].child_count; ++j) {
+            (*augnodes)[i].child[j].parent = &(*augnodes)[i];
         }
     }
 
