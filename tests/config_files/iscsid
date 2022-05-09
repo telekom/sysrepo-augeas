@@ -1,0 +1,21 @@
+# Address of iSNS server
+isns.address = 127.0.0.1
+isns.port = 3260
+
+# *************
+# CHAP Settings
+# *************
+
+# To enable CHAP authentication set node.session.auth.authmethod
+# to CHAP. The default is None.
+node.session.auth.authmethod = CHAP
+
+node.session.auth.username = someuser1
+node.session.auth.password = somep$31#$^&7!
+
+discovery.sendtargets.auth.authmethod = CHAP
+
+# To set a discovery session CHAP username and password for the initiator
+# authentication by the target(s), uncomment the following lines:
+discovery.sendtargets.auth.username = someuser3
+discovery.sendtargets.auth.password = _09+7)(,./?;'p[]

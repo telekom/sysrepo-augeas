@@ -40,7 +40,7 @@ endforeach()
 set(tests test_passwd test_simplevars test_postfix_sasl_smtpd test_dhclient test_ntpd test_ntp test_cron test_dnsmasq
     test_iptables test_pam test_xendconfsxp test_systemd test_sshd test_ssh test_anaconda test_ceph test_cmdline
     test_cpanel test_darkice test_pg_hba test_devfsrules test_device_map test_ethers test_grubenv test_backuppchosts
-    test_gtkbookmarks test_hostname test_hosts test_inittab test_inputrc test_iproute2)
+    test_gtkbookmarks test_hostname test_hosts test_inittab test_inputrc test_iproute2 test_iscsid)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/plugins)
 include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})
