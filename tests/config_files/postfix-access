@@ -1,0 +1,4 @@
+127.0.0.1  DISCARD param1 param2
+   param3
+#ok no more comments
+user@ REJECT
