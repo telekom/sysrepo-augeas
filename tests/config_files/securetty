@@ -1,0 +1,7 @@
+# some comment
+
+tty0
+# X11 display
+:0.0
+
+console  # allow root from console
