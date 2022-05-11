@@ -1,0 +1,7 @@
+default:\
+        :chlim#64:raflags#0:rltime#1800:rtime#0:retrans#0:\
+        :pinfoflags="la":vltime#2592000:pltime#604800:mtu#0:
+ef0:\
+	:addr="2001:db8:ffff:1000::":\
+	:prefixlen#64:\
+	:tc=default:
