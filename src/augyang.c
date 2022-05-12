@@ -277,6 +277,8 @@ enum yang_type {
 #define AY_GROUPING_CHILDREN    0x040   /**< The ay_ynode.ref only affects children. */
 #define AY_CONFIG_FALSE         0x080   /**< Print 'config false' for this node. */
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
+#define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
+#define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
 /** @} ynodeflags */
 
 /**
@@ -929,6 +931,28 @@ ay_ynode_next_choice_group(struct ay_ynode *node)
     }
 
     return NULL;
+}
+
+/**
+ * @brief Check if node is the only one in the choice.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if @p node is alone.
+ */
+static ly_bool
+ay_ynode_alone_in_choice(struct ay_ynode *node)
+{
+    if (!node->choice) {
+        return 0;
+    } else if (node != ay_ynode_get_first_in_choice(node->parent, node->choice)) {
+        return 0;
+    } else if (!node->next) {
+        return 1;
+    } else if (node->next->choice == node->choice) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 /**
@@ -4317,14 +4341,39 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         ly_print(ctx->out, "%*s ref_id: %" PRIu32 "\n", ctx->space, "", node->ref);
     }
 
-    if (node->flags & AY_YNODE_MAND_TRUE) {
-        ly_print(ctx->out, "%*s mandatory: true\n", ctx->space, "");
-    }
-    if (node->flags & AY_CHOICE_MAND_FALSE) {
-        ly_print(ctx->out, "%*s flag: choice_mand_false\n", ctx->space, "");
-    }
-    if (node->flags & AY_VALUE_IN_CHOICE) {
-        ly_print(ctx->out, "%*s flag: value_in_choice\n", ctx->space, "");
+    if (node->flags) {
+        ly_print(ctx->out, "%*s flags:", ctx->space, "");
+        if (node->flags & AY_YNODE_MAND_TRUE) {
+            ly_print(ctx->out, " mand_true");
+        }
+        if (node->flags & AY_YNODE_MAND_FALSE) {
+            ly_print(ctx->out, " mand_false");
+        }
+        if (node->flags & AY_CHILDREN_MAND_FALSE) {
+            ly_print(ctx->out, " children_mand_false");
+        }
+        if (node->flags & AY_CHOICE_MAND_FALSE) {
+            ly_print(ctx->out, " choice_mand_false");
+        }
+        if (node->flags & AY_VALUE_IN_CHOICE) {
+            ly_print(ctx->out, " value_in_choice");
+        }
+        if (node->flags & AY_GROUPING_CHILDREN) {
+            ly_print(ctx->out, " gr_children");
+        }
+        if (node->flags & AY_CONFIG_FALSE) {
+            ly_print(ctx->out, " conf_false");
+        }
+        if (node->flags & AY_GROUPING_REDUCTION) {
+            ly_print(ctx->out, " gr_reduction");
+        }
+        if (node->flags & AY_HINT_MAND_TRUE) {
+            ly_print(ctx->out, " hint_mand_true");
+        }
+        if (node->flags & AY_HINT_MAND_FALSE) {
+            ly_print(ctx->out, " hint_mand_false");
+        }
+        ly_print(ctx->out, "\n");
     }
 
     if (node->min_elems) {
@@ -5187,45 +5236,53 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
  * @brief Delete node from the tree.
  *
  * Children of deleted node are moved up in the tree level. Member ay_ynode.choice is set on children.
- * Under certain conditions, the node is not deleted, but instead is cast to a container,
- * which is later overwritten in case-stmt.
+ * Under certain conditions, the node is not deleted, but instead is cast to a YN_CASE.
  *
  * @param[in,out] tree Tree of ynodes.
  * @param[in] node The ynode to be deleted.
- * @return 0 if node was deleted or 1 if node changed type to YN_CONTAINER.
+ * @return 0 if node was deleted or 1 if node changed type to YN_CASE.
  */
 static ly_bool
 ay_ynode_delete_node(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter, *parent;
     uint32_t index;
-    ly_bool cast_cont;
+    ly_bool cast_case;
 
-    if (node->choice && node->child && node->child->next) {
-        /* Choice setting for children. */
-        /* Cast @p node to container if all children have choice set. */
-        cast_cont = 0;
-        for (iter = node->child; iter; iter = iter->next) {
-            if (!iter->choice) {
-                cast_cont = 1;
-            }
-        }
-        if (cast_cont) {
-            /* Just cast to container (case-stmt). */
-            node->type = YN_CONTAINER;
-            node->snode = node->label = node->value = NULL;
-            node->ref = node->flags = 0;
-            return 1;
-        } else {
-            /* Set children choice. */
+    if (node->type != YN_CASE) {
+        if (node->choice && node->child && node->child->next) {
+            /* Choice setting for children. */
+            /* Cast @p node to YN_CASE if not all children have choice set. */
+            cast_case = 0;
             for (iter = node->child; iter; iter = iter->next) {
-                iter->choice = node->choice;
+                if (!iter->choice) {
+                    cast_case = 1;
+                }
             }
+            if (cast_case) {
+                node->type = YN_CASE;
+                node->snode = node->label = node->value = NULL;
+                node->ref = node->flags = 0;
+                return 1;
+            } else {
+                /* Set children choice. */
+                for (iter = node->child; iter; iter = iter->next) {
+                    iter->choice = node->choice;
+                }
+                /* Delete @p node. */
+            }
+        } else if (node->choice && node->child) {
+            node->child->choice = node->choice;
             /* Delete @p node. */
         }
-    } else if (node->choice && node->child) {
-        node->child->choice = node->choice;
-        /* Delete @p node. */
+    } else {
+        assert(ay_ynode_alone_in_choice(node));
+    }
+
+    if (node->flags & AY_CHILDREN_MAND_FALSE) {
+        for (iter = node->child; iter; iter = iter->next) {
+            iter->flags |= AY_HINT_MAND_FALSE;
+        }
     }
 
     /* Delete @p node. */
@@ -5762,8 +5819,10 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         }
 
         if (node->flags & AY_CHILDREN_MAND_FALSE) {
-            for (j = (node->type == YN_CASE) ? 1 : 0; j < node->descendants; j++) {
-                node[j + 1].flags |= AY_YNODE_MAND_FALSE;
+            iter->flags = AY_YNODE_MAND_FALSE;
+            for (j = 0; j < node->descendants; j++) {
+                iter = node + j + 1;
+                iter->flags |= AY_HINT_MAND_FALSE;
             }
         } else if ((node->type == YN_LEAF) && node->label && ay_lense_pattern_has_idents(node->label->lens)) {
             if (ay_lnode_has_maybe(node->snode, 0, 0)) {
@@ -5789,11 +5848,8 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->min_elems = 0;
             }
         } else if (node->type == YN_KEY) {
-            if (ay_lnode_has_maybe(node->label, 0, 0)) {
-                node->flags |= AY_YNODE_MAND_FALSE;
-            } else {
-                node->flags |= AY_YNODE_MAND_TRUE;
-            }
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags |= AY_YNODE_MAND_TRUE;
         } else if (node->type == YN_CONTAINER) {
             node->flags |= AY_YNODE_MAND_FALSE;
         } else {
@@ -5804,9 +5860,18 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
         }
+
+        /* Exception due to merge_cases. */
+        if ((node->type != YN_KEY) && (node->flags & AY_YNODE_MAND_TRUE) &&
+                !(node->flags & AY_HINT_MAND_TRUE) && (node->flags & AY_HINT_MAND_FALSE)) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags |= AY_YNODE_MAND_FALSE;
+        }
     }
 
     ay_ynode_mandatory_empty_branch(tree);
+
+    /* TODO: in YN_CASE node should be at least one node with mandatory true (if choice is mandatory true). */
 }
 
 /**
@@ -6195,39 +6260,50 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     first1 = br1->type == YN_CASE ? br1->child : br1;
     first2 = br2->type == YN_CASE ? br2->child : br2;
 
+    first1->flags |= first2->flags;
+    first1->flags |= AY_HINT_MAND_TRUE;
+    first1->min_elems = first1->min_elems < first2->min_elems ? first1->min_elems : first2->min_elems;
+
     /* Merge nodes inside first node. */
     if (first1->child && !first2->child) {
         /* Merge values. */
-        if (first1->value && first2->value) {
+        if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
             ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            /* All children in first1 are not mandatory. */
+            first1->flags |= AY_CHILDREN_MAND_FALSE;
         } else if (first1->value && !first2->value) {
             first1->flags |= AY_VALUE_MAND_FALSE;
+            first1->flags |= AY_CHILDREN_MAND_FALSE;
         } else if (!first1->value && first2->value) {
             first1->value = first2->value;
             first1->flags |= AY_VALUE_IN_CHOICE;
         }
-
-        /* All children in first1 are not mandatory. */
-        first1->flags |= AY_CHILDREN_MAND_FALSE;
     } else if (!first1->child && first2->child) {
         /* Merge values. */
-        if (first1->value && first2->value) {
+        if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
             ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            first1->flags |= AY_CHILDREN_MAND_FALSE;
         } else if (first1->value && !first2->value) {
             first1->flags |= AY_VALUE_IN_CHOICE;
         } else if (!first1->value && first2->value) {
             first1->value = first2->value;
             first1->flags |= AY_VALUE_MAND_FALSE;
+            first1->flags |= AY_CHILDREN_MAND_FALSE;
         }
 
-        /* Temporarily wrap first2 children. */
-        ay_ynode_insert_parent(tree, first2->child);
-        /* Set first1 new children. */
-        ay_ynode_move_subtree_as_child(tree, first1, first2->child);
-        /* Delete temporary wrapping node. */
-        ay_ynode_delete_node(tree, first1->child);
-        /* All children in first1 are not mandatory. */
-        first1->flags |= AY_CHILDREN_MAND_FALSE;
+        first1->type = YN_CONTAINER;
+
+        if (first2->child->next) {
+            /* Temporarily wrap first2 children. */
+            ay_ynode_insert_parent(tree, first2->child);
+            /* Set first1 new children. */
+            ay_ynode_move_subtree_as_child(tree, first1, first2->child);
+            /* Delete temporary wrapping node. */
+            ay_ynode_delete_node(tree, first1->child);
+        } else {
+            /* Set first1 new children. */
+            ay_ynode_move_subtree_as_child(tree, first1, first2->child);
+        }
 
         /* Set the pointers to the correct values. */
         for (iter = br1->next; iter && (iter->id != br2_id); iter = iter->next) {}
@@ -6240,7 +6316,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
          */
 
         /* Merge values. */
-        if (first1->value && first2->value) {
+        if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
             ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
         } else if (first1->value && !first2->value) {
             first1->flags |= AY_VALUE_MAND_FALSE;
@@ -6254,15 +6330,22 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
         /* Pack nodes behind first2 to the case. */
         br2_case = first2->next;
-        ay_ynode_insert_parent_for_rest(tree, br2_case);
-        br2_case->type = YN_CASE;
+        assert(first2->next);
+        if (first2->next->next) {
+            /* YN_CASE must be added. */
+            ay_ynode_insert_parent_for_rest(tree, br2_case);
+            br2_case->type = YN_CASE;
+        }
         br2_case->choice = AY_YNODE_ROOT_LTREE(tree);
 
         /* Pack nodes behind first1 to the case. */
+        assert(first1->next);
         br1_case = first1->next;
-        ay_ynode_insert_parent_for_rest(tree, br1_case);
-        br2_case++;
-        br1_case->type = YN_CASE;
+        if (first1->next->next) {
+            ay_ynode_insert_parent_for_rest(tree, br1_case);
+            br2_case++;
+            br1_case->type = YN_CASE;
+        }
         br1_case->choice = AY_YNODE_ROOT_LTREE(tree);
 
         /* Join br1_case and br2_case to the choice. */
@@ -6274,14 +6357,18 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
         br2_case = first2->next;
         /* Temporarily wrap nodes behind first2. */
         ay_ynode_insert_parent_for_rest(tree, br2_case);
-        /* Set br1 new children. */
-        ay_ynode_move_subtree_as_child(tree, br1, br2_case);
-        /* Delete temporary wrapping node. */
-        ay_ynode_delete_node(tree, first1->child->next);
-        /* br1 is now YN_CASE because has at least two children. */
+        /* br1 must be YN_CASE because has at least two children */
+        ay_ynode_insert_wrapper(tree, br1);
+        br2_case++;
         br1->type = YN_CASE;
         /* All children except the first are not mandatory. */
         br1->flags |= AY_CHILDREN_MAND_FALSE;
+        br1->choice = br1->child->choice;
+        br1->child->choice = NULL;
+        /* Set br1 new children. */
+        ay_ynode_move_subtree_as_sibling(tree, br1->child, br2_case);
+        /* Delete temporary wrapping node. */
+        ay_ynode_delete_node(tree, br1->child->next);
     }
 
     /* Delete branch br2. */
@@ -6339,6 +6426,10 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
                 break;
             }
             if (match) {
+                if (ay_ynode_alone_in_choice(chn1) && (chn1->type == YN_CASE)) {
+                    /* YN_CASE is useless. */
+                    ay_ynode_delete_node(tree, chn1);
+                }
                 /* Repeat comparing because chn1 can be modified. */
                 continue;
             }
