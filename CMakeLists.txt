@@ -91,7 +91,7 @@ else()
     option(ENABLE_TESTS "Build tests" OFF)
     option(ENABLE_VALGRIND_TESTS "Build tests with valgrind" OFF)
 endif()
-set(SUPPORTED_LENSES "anaconda backuppchosts ceph cmdline cpanel cron darkice devfsrules device_map dhclient dnsmasq ethers gtkbookmarks grubenv hostname hosts inittab inputrc iproute2 iptables iscsid login_defs monit ntp ntpd pam passwd pg_hba postfix_access postfix_sasl_smtpd qpid rmt rtadvd securetty simplelines simplevars smbusers ssh sshd star systemd up2date xendconfsxp"
+set(SUPPORTED_LENSES "anaconda backuppchosts ceph cmdline cpanel cron darkice devfsrules device_map dhclient dnsmasq ethers gtkbookmarks grubenv hostname hosts inittab inputrc iproute2 iptables iscsid login_defs monit ntp ntpd pam passwd pg_hba postfix_access postfix_sasl_smtpd qpid rmt rtadvd securetty simplelines simplevars smbusers ssh sshd star systemd up2date vmware_config xendconfsxp"
         CACHE STRING "Space-separated list of Augeas lenses to be supported in sysrepo, by default all of them")
 option(INSTALL_MODULES "Install supported Augeas lens YANG modules into sysrepo" ON)
 set(YANG_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/yang/modules/augyang" CACHE STRING "Directory where to copy the generated YANG modules to")
