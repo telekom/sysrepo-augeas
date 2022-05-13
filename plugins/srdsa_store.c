@@ -574,6 +574,25 @@ cleanup:
 }
 
 /**
+ * @brief Check whether a node is a user-ordered list.
+ *
+ * @param[in] node Node to examine.
+ * @return Whether it is a user-ord list or not.
+ */
+static int
+augds_store_is_userord_list(const struct lyd_node *node)
+{
+    if (!node) {
+        return 0;
+    }
+
+    if ((node->schema->nodetype == LYS_LIST) && lysc_is_userordered(node->schema)) {
+        return 1;
+    }
+    return 0;
+}
+
+/**
  * @brief Get Augeas anchor for a diff node in YANG data.
  *
  * @param[in] diff_data_node Diff node from diff data.
@@ -589,7 +608,7 @@ augds_store_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anch
 
     assert(lyd_parent(diff_data_node));
 
-    if (lysc_is_userordered(lyd_parent(diff_data_node)->schema)) {
+    if (augds_store_is_userord_list(lyd_parent(diff_data_node))) {
         /* nodes with data-paths are nested in the user-ordered lists */
         diff_data_node = lyd_parent(diff_data_node);
         anchor_child = 1;
@@ -609,7 +628,7 @@ augds_store_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anch
         }
     }
 
-    if (diff_data_node->prev->next && (!anchor_child || (diff_data_node->prev->schema == diff_data_node->schema))) {
+    if (diff_data_node->prev->next && (!anchor_child || augds_store_is_userord_list(diff_data_node->prev))) {
         /* previous instance */
         *anchor = anchor_child ? lyd_child_no_keys(diff_data_node->prev) : diff_data_node->prev;
         *aug_before = 0;
@@ -628,7 +647,7 @@ augds_store_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anch
         }
     }
 
-    if (diff_data_node->next && (!anchor_child || (diff_data_node->next->schema == diff_data_node->schema))) {
+    if (diff_data_node->next && (!anchor_child || augds_store_is_userord_list(diff_data_node->next))) {
         /* next instance */
         *anchor = anchor_child ? lyd_child_no_keys(diff_data_node->next) : diff_data_node->next;
         *aug_before = 1;

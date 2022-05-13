@@ -1,0 +1,24 @@
+#atest comment
+
+title test title
+page page1 'This is a test page'
+1.1.1.1 testhost.localdomain # test1 test2 http:443 ldaps=testhost.localdomain http://testhost.localdomain
+2.2.2.2 testhost2.local.domain # COMMENT:stuff apache=wow
+#test comment
+
+page newpage
+1.1.1.1  testhost.localdomain # test1 test2 http:443 ldaps=testhost.localdomain http://testhost.localdomain
+2.2.2.2     testhost2.local.domain # COMMENT:stuff apache=wow
+
+title test title
+group group1
+3.3.3.3 host1 #
+4.4.4.4 host2 #
+
+group-sorted group2
+5.5.5.5 host3 # conn
+6.6.6.6 host4 # ssh
+
+subparent page1 page2 This is after page 1
+10.0.0.1 router1.loni.org #
+10.0.0.2 sw1.localdomain #
