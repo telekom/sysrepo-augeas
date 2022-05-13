@@ -6596,29 +6596,29 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
     struct ay_ynode *parent, *child, *list, *iter;
     const struct ay_lnode *choice, *star;
 
-    for (i = 0; i < tree->descendants; i++) {
-        parent = &tree[i + 1];
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        parent = &tree[i];
 
-        for (child = parent->child; child; child = child->next) {
-            if ((child->type != YN_LIST) && (child->type != YN_LEAFLIST) && (child->type != YN_REC)) {
+        for (iter = parent->child; iter; iter = iter->next) {
+            if ((iter->type != YN_LIST) && (iter->type != YN_LEAFLIST) && (iter->type != YN_REC)) {
                 continue;
-            } else if ((child->type == YN_LEAFLIST) && !child->choice) {
+            } else if ((iter->type == YN_LEAFLIST) && !iter->choice) {
                 continue;
-            } else if ((child->type == YN_REC) && (child->parent->type == YN_LIST) &&
-                    (child->parent->parent->type != YN_ROOT)) {
+            } else if ((iter->type == YN_REC) && (parent->type == YN_LIST) &&
+                    (parent->parent->type != YN_ROOT)) {
                 continue;
             }
 
-            star = ay_ynode_get_repetition(child);
+            star = ay_ynode_get_repetition(iter);
             if (!star) {
                 continue;
             }
 
-            choice = child->choice;
+            choice = iter->choice;
 
             /* wrapper is list to maintain the order of the augeas data */
-            ay_ynode_insert_wrapper(tree, child);
-            list = child;
+            ay_ynode_insert_wrapper(tree, iter);
+            list = iter;
             list->type = YN_LIST;
             list->min_elems = list->child->min_elems;
             list->choice = choice;
@@ -6635,9 +6635,9 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             }
 
             /* for every child in wrapper set type to container */
-            for (iter = list->child; iter; iter = iter->next) {
-                if (iter->type != YN_REC) {
-                    iter->type = YN_CONTAINER;
+            for (child = list->child; child; child = child->next) {
+                if (child->type != YN_REC) {
+                    child->type = YN_CONTAINER;
                 }
             }
 
