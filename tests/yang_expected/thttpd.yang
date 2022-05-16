@@ -1,0 +1,112 @@
+module thttpd {
+  yang-version 1.1;
+  namespace "aug:thttpd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Thttpd";
+
+  list thttpd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf port {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "port";
+        }
+        leaf dir {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "dir";
+        }
+        leaf data-dir {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "data-dir";
+        }
+        leaf user {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "user";
+        }
+        leaf cgipat {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "cgipat";
+        }
+        leaf throttles {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "throttles";
+        }
+        leaf host {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "host";
+        }
+        leaf logfile {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "logfile";
+        }
+        leaf pidfile {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "pidfile";
+        }
+        leaf charset {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "charset";
+        }
+        leaf p3p {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "p3p";
+        }
+        leaf max-age {
+          type string {
+            pattern "[^\n# \t]*";
+          }
+          augex:data-path "max-age";
+        }
+        container flagline {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf flagentry {
+            mandatory true;
+            type string {
+              pattern "(no){0,1}(chroot|symlinks|vhost|globalpasswd)";
+            }
+          }
+        }
+      }
+    }
+  }
+}

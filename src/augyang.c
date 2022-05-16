@@ -847,7 +847,7 @@ ay_ynode_inner_nodes(const struct ay_ynode *root)
         assert(iter->label == root->label);
         iter = iter->next;
     }
-    if (iter->type == YN_VALUE) {
+    if (iter && (iter->type == YN_VALUE)) {
         assert(iter->value == root->value);
         iter = iter->next;
     }
@@ -2025,11 +2025,15 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
 static ly_bool
 ay_ident_character_is_valid(const char *ch)
 {
-    if (((*ch < 65) && (*ch != 45) && (*ch != 32)) || ((*ch > 90) && (*ch != 95) && (*ch < 97)) || (*ch > 122)) {
-        return 0;
-    } else {
-        /* [_- A-Za-z] */
+    if (((*ch >= 65) && (*ch <= 90)) || /* A-Z */
+            ((*ch >= 97) && (*ch <= 122)) || /* a-z */
+            (*ch == '_') ||
+            (*ch == '-') ||
+            (*ch == ' ') ||
+            ((*ch >= 48) && (*ch <= 57))) { /* 0-9 */
         return 1;
+    } else {
+        return 0;
     }
 }
 
