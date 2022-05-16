@@ -1,0 +1,219 @@
+module resolv {
+  yang-version 1.1;
+  namespace "aug:resolv";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Resolv";
+
+  list resolv {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf nameserver {
+          type inet:ip-address-no-zone;
+          augex:data-path "nameserver";
+        }
+        leaf domain {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "domain";
+        }
+        container search {
+          augex:data-path "search";
+          presence "Config entry.";
+          leaf-list domain {
+            min-elements 1;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            ordered-by user;
+            augex:data-path "domain";
+          }
+        }
+        container sortlist {
+          augex:data-path "sortlist";
+          presence "Config entry.";
+          list ipaddr-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container ipaddr {
+              augex:data-path "ipaddr";
+              augex:value-yang-path "ip";
+              presence "Config entry.";
+              leaf ip {
+                mandatory true;
+                type inet:ip-address-no-zone;
+              }
+              leaf netmask {
+                type inet:ip-address-no-zone;
+                augex:data-path "netmask";
+              }
+            }
+          }
+        }
+        container options {
+          augex:data-path "options";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf ndots {
+                type uint64;
+                augex:data-path "ndots";
+              }
+              leaf timeout {
+                type uint64;
+                augex:data-path "timeout";
+              }
+              leaf attempts {
+                type uint64;
+                augex:data-path "attempts";
+              }
+              leaf debug {
+                type empty;
+                augex:data-path "debug";
+              }
+              leaf rotate {
+                type empty;
+                augex:data-path "rotate";
+              }
+              leaf no-check-names {
+                type empty;
+                augex:data-path "no-check-names";
+              }
+              leaf inet6 {
+                type empty;
+                augex:data-path "inet6";
+              }
+              leaf ip6-bytestring {
+                type empty;
+                augex:data-path "ip6-bytestring";
+              }
+              leaf edns0 {
+                type empty;
+                augex:data-path "edns0";
+              }
+              leaf single-request {
+                type empty;
+                augex:data-path "single-request";
+              }
+              leaf single-request-reopen {
+                type empty;
+                augex:data-path "single-request-reopen";
+              }
+              leaf no-tld-query {
+                type empty;
+                augex:data-path "no-tld-query";
+              }
+              leaf use-vc {
+                type empty;
+                augex:data-path "use-vc";
+              }
+              leaf no-reload {
+                type empty;
+                augex:data-path "no-reload";
+              }
+              container ip6-dotint {
+                augex:data-path "ip6-dotint";
+                presence "Config entry.";
+                leaf negate {
+                  type empty;
+                  augex:data-path "negate";
+                }
+              }
+            }
+          }
+        }
+        container lookup {
+          augex:data-path "lookup";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf bind {
+                type empty;
+                augex:data-path "bind";
+              }
+              leaf file {
+                type empty;
+                augex:data-path "file";
+              }
+              leaf yp {
+                type empty;
+                augex:data-path "yp";
+              }
+            }
+          }
+        }
+        container family {
+          augex:data-path "family";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf inet4 {
+                type empty;
+                augex:data-path "inet4";
+              }
+              leaf inet6 {
+                type empty;
+                augex:data-path "inet6";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

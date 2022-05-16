@@ -4902,12 +4902,13 @@ ay_ynode_get_repetition(struct ay_ynode *node)
 static ly_bool
 ay_ynode_rule_list(struct ay_ynode *node)
 {
-    ly_bool has_value;
+    ly_bool has_value, has_idents;
     struct lens *label;
 
     label = AY_LABEL_LENS(node);
     has_value = label && ((label->tag == L_KEY) || (label->tag == L_SEQ)) && node->value;
-    return (node->child || has_value) && label && ay_ynode_get_repetition(node);
+    has_idents = ay_lense_pattern_has_idents(label);
+    return (node->child || has_value || has_idents) && label && ay_ynode_get_repetition(node);
 }
 
 /**
