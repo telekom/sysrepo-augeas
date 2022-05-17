@@ -1044,7 +1044,7 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2)
         return 0;
     } else if (!alone1 && !alone2 && ((!n1->choice && n2->choice) || (n1->choice && !n2->choice))) {
         return 0;
-    } else if (n1->ref != n2->ref) {
+    } else if ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) {
         return 0;
     } else if (n1->flags != n2->flags) {
         return 0;
@@ -4329,12 +4329,12 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
 
     ly_print(ctx->out, " (id: %" PRIu32 ")\n", node->id);
 
-    if (node->type == YN_REC) {
-        ly_print(ctx->out, "%*s snode_id: %p\n", ctx->space, "", node->snode);
-    }
-
     if (node->choice) {
         ly_print(ctx->out, "%*s choice_id: %p\n", ctx->space, "", node->choice);
+    }
+
+    if (node->type == YN_REC) {
+        ly_print(ctx->out, "%*s snode_id: %p\n", ctx->space, "", node->snode);
     }
 
     if (node->ident) {
@@ -5723,7 +5723,7 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i, j, k;
     struct ay_ynode *list, *child, *iter, *start;
-    struct ay_lnode *branch, *snode, *label;
+    const struct ay_lnode *choice, *branch, *snode, *label, *stop;
     ly_bool empty_branch;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
@@ -5736,50 +5736,71 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
         if (!start || (start->choice == AY_YNODE_ROOT_LTREE(tree))) {
             continue;
         }
+        /* Set stop */
+        stop = NULL;
+        for (iter = list->parent; iter; iter = iter->parent) {
+            if (iter->snode) {
+                stop = iter->snode;
+                break;
+            }
+        }
 
         /* For every choice group in list. */
         for (child = start; child; child = ay_ynode_next_choice_group(child)) {
-            /* Find empty choice branch. */
-            for (branch = child->choice->child; branch; branch = branch->next) {
-                empty_branch = 1;
-                /* For every node in the choice branch. */
-                for (j = 0; j <= branch->descendants; j++) {
-                    snode = &branch[j];
-                    if (snode->lens->tag != L_SUBTREE) {
-                        continue;
-                    }
-
-                    /* Get label for snode. */
-                    label = NULL;
-                    for (k = 1; k <= snode->descendants; k++) {
-                        if (snode[k].lens->tag == L_SUBTREE) {
-                            k += snode[k].descendants;
-                        } else if (AY_TAG_IS_LABEL(snode[k].lens->tag)) {
-                            label = &snode[k];
-                            break;
-                        }
-                    }
-                    if (snode && !label) {
-                        /* The snode without label -> this branch is empty. */
-                        break;
-                    }
-
-                    /* Find snode in the list. */
-                    for (k = 0; k <= list->descendants; k++) {
-                        iter = &list[k];
-                        if (iter->label && ay_lnode_lense_equal(label->lens, iter->label->lens)) {
-                            /* The snode is found so it is not empty branch. */
+            /* Every possible choice towards the parents. */
+            for (choice = child->choice; choice && (choice != stop); choice = choice->parent) {
+                if (choice->lens->tag != L_UNION) {
+                    continue;
+                }
+                /* Find empty choice branch. */
+                for (branch = choice->child; branch; branch = branch->next) {
+                    empty_branch = 1;
+                    /* For every node in the choice branch. */
+                    for (j = 0; j <= branch->descendants; j++) {
+                        snode = &branch[j];
+                        if (child->choice == snode) {
+                            /* This branch is already processed. */
                             empty_branch = 0;
                             break;
+                        } else if (snode->lens->tag != L_SUBTREE) {
+                            continue;
+                        }
+
+                        /* Get label for snode. */
+                        label = NULL;
+                        for (k = 1; k <= snode->descendants; k++) {
+                            if (snode[k].lens->tag == L_SUBTREE) {
+                                k += snode[k].descendants;
+                            } else if (AY_TAG_IS_LABEL(snode[k].lens->tag)) {
+                                label = &snode[k];
+                                break;
+                            }
+                        }
+                        if (snode && !label) {
+                            /* The snode without label -> this branch is empty. */
+                            break;
+                        }
+
+                        /* Find snode in the list. */
+                        for (k = 0; k <= list->descendants; k++) {
+                            iter = &list[k];
+                            if (iter->label && ay_lnode_lense_equal(label->lens, iter->label->lens)) {
+                                /* The snode is found so it is not empty branch. */
+                                empty_branch = 0;
+                                break;
+                            }
+                        }
+                        if (!empty_branch) {
+                            /* This branch is not empty. Let's continue with another choice branch. */
+                            break;
                         }
                     }
-                    if (!empty_branch) {
-                        /* This branch is not empty. Let's continue with another choice branch. */
+                    if (empty_branch) {
+                        /* The 'branch' is empty. Let's set min-elements to 0. */
                         break;
                     }
                 }
                 if (empty_branch) {
-                    /* The 'branch' is empty. Let's set min-elements to 0. */
                     break;
                 }
             }
@@ -5991,7 +6012,7 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
             /* Nodes below the star must have the same number as the ones being compared. */
             star_cnt = 1;
             for (it2 = node2->next; it2; it2 = it2->next) {
-                if (!it2->label) {
+                if ((it2->type != YN_REC) && !it2->label) {
                     continue;
                 } else if (star != ay_lnode_has_attribute(it2->snode, L_STAR)) {
                     break;
@@ -6475,8 +6496,8 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 
         skip = 0;
         /* Skip if subtree contains leafref because it can break recursive form. */
-        for (j = 0; j < iti->descendants; j++) {
-            if (iti[j + 1].type == YN_LEAFREF) {
+        for (itj = iti->child; itj; itj = itj->next) {
+            if (itj->type == YN_LEAFREF) {
                 skip = 1;
                 break;
             }
@@ -6722,9 +6743,9 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                 list->choice = NULL;
             }
 
-            /* every next LIST or LEAFLIST move to wrapper */
+            /* every next LIST or LEAFLIST or YN_REC move to wrapper */
             while (list->next && (choice == list->next->choice) &&
-                    ((list->next->type == YN_LIST) || (list->next->type == YN_LEAFLIST)) &&
+                    ((list->next->type == YN_LIST) || (list->next->type == YN_LEAFLIST) || (list->next->type == YN_REC)) &&
                     (list->min_elems == list->next->min_elems) &&
                     (star == ay_ynode_get_repetition(list->next))) {
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
