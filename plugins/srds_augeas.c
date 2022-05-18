@@ -482,6 +482,7 @@ SRPLG_DATASTORE = {
     .recover_cb = srpds_aug_recover,
     .load_cb = srpds_aug_load,
     .running_load_cached_cb = NULL,
+    .running_update_cached_cb = NULL,
     .running_flush_cached_cb = NULL,
     .copy_cb = srpds_aug_copy,
     .update_differ_cb = srpds_aug_update_differ,
