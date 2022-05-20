@@ -9,6 +9,135 @@ module toml {
 
   augex:augeas-mod-name "Toml";
 
+  grouping ch-string {
+    choice ch-string {
+      mandatory true;
+      leaf string {
+        type string {
+          pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+        }
+        augex:data-path "string";
+      }
+      leaf string-multi {
+        type string {
+          pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+        }
+        augex:data-path "string_multi";
+      }
+      leaf string-literal {
+        type string {
+          pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
+        }
+        augex:data-path "string_literal";
+      }
+      leaf integer {
+        type string {
+          pattern "((([+-]?[0-9_]+)|(0x[A-Za-z0-9]+))|(0o[0-7]+))|(0b[01]+)";
+        }
+        augex:data-path "integer";
+      }
+      leaf float {
+        type string {
+          pattern "(((((([+-]?)([0-9_]+))((\\.)([0-9_]+)))|((([+-]?)([0-9_]+))(([Ee])(([+-]?)([0-9_]+)))))|(((([+-]?)([0-9_]+))((\\.)([0-9_]+)))(([Ee])(([+-]?)([0-9_]+)))))|(([+-]?)(inf)))|(([+-]?)(nan))";
+        }
+        augex:data-path "float";
+      }
+      leaf bool {
+        type string {
+          pattern "true|false";
+        }
+        augex:data-path "bool";
+      }
+      leaf datetime {
+        type string {
+          pattern "(([0-9]{4}-[0-9]{2}-[0-9]{2})([T ]))([0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*)";
+        }
+        augex:data-path "datetime";
+      }
+      leaf date {
+        type string {
+          pattern "[0-9]{4}-[0-9]{2}-[0-9]{2}";
+        }
+        augex:data-path "date";
+      }
+      leaf time {
+        type string {
+          pattern "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*";
+        }
+        augex:data-path "time";
+      }
+      container array-norec {
+        augex:data-path "array";
+        presence "Config entry.";
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf string {
+              type string {
+                pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+              }
+              augex:data-path "string";
+            }
+            leaf string-multi {
+              type string {
+                pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+              }
+              augex:data-path "string_multi";
+            }
+            leaf string-literal {
+              type string {
+                pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
+              }
+              augex:data-path "string_literal";
+            }
+            leaf integer {
+              type string {
+                pattern "((([+-]?[0-9_]+)|(0x[A-Za-z0-9]+))|(0o[0-7]+))|(0b[01]+)";
+              }
+              augex:data-path "integer";
+            }
+            leaf float {
+              type string {
+                pattern "(((((([+-]?)([0-9_]+))((\\.)([0-9_]+)))|((([+-]?)([0-9_]+))(([Ee])(([+-]?)([0-9_]+)))))|(((([+-]?)([0-9_]+))((\\.)([0-9_]+)))(([Ee])(([+-]?)([0-9_]+)))))|(([+-]?)(inf)))|(([+-]?)(nan))";
+              }
+              augex:data-path "float";
+            }
+            leaf bool {
+              type string {
+                pattern "true|false";
+              }
+              augex:data-path "bool";
+            }
+            leaf datetime {
+              type string {
+                pattern "(([0-9]{4}-[0-9]{2}-[0-9]{2})([T ]))([0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*)";
+              }
+              augex:data-path "datetime";
+            }
+            leaf date {
+              type string {
+                pattern "[0-9]{4}-[0-9]{2}-[0-9]{2}";
+              }
+              augex:data-path "date";
+            }
+            leaf time {
+              type string {
+                pattern "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*";
+              }
+              augex:data-path "time";
+            }
+          }
+        }
+      }
+    }
+  }
   grouping entry-list {
     list entry-list {
       key "_id";
@@ -84,90 +213,18 @@ module toml {
             }
             augex:data-path "time";
           }
-          list array-list {
-            key "_r-id";
-            config false;
-            leaf _r-id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the recursive augeas data.";
-            }
-            container array {
-              augex:data-path "array";
-              presence "Config entry.";
-              list config-entries {
-                key "_id";
-                ordered-by user;
-                leaf _id {
-                  type uint64;
-                  description
-                    "Implicitly generated list key to maintain the order of the augeas data.";
-                }
-                choice ch-config-entries {
-                  mandatory true;
-                  leaf string {
-                    type string {
-                      pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string";
-                  }
-                  leaf string-multi {
-                    type string {
-                      pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string_multi";
-                  }
-                  leaf string-literal {
-                    type string {
-                      pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string_literal";
-                  }
-                  leaf integer {
-                    type string {
-                      pattern "((([+-]?[0-9_]+)|(0x[A-Za-z0-9]+))|(0o[0-7]+))|(0b[01]+)";
-                    }
-                    augex:data-path "integer";
-                  }
-                  leaf float {
-                    type string {
-                      pattern "(((((([+-]?)([0-9_]+))((\\.)([0-9_]+)))|((([+-]?)([0-9_]+))(([Ee])(([+-]?)([0-9_]+)))))|(((([+-]?)([0-9_]+))((\\.)([0-9_]+)))(([Ee])(([+-]?)([0-9_]+)))))|(([+-]?)(inf)))|(([+-]?)(nan))";
-                    }
-                    augex:data-path "float";
-                  }
-                  leaf bool {
-                    type string {
-                      pattern "true|false";
-                    }
-                    augex:data-path "bool";
-                  }
-                  leaf datetime {
-                    type string {
-                      pattern "(([0-9]{4}-[0-9]{2}-[0-9]{2})([T ]))([0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*)";
-                    }
-                    augex:data-path "datetime";
-                  }
-                  leaf date {
-                    type string {
-                      pattern "[0-9]{4}-[0-9]{2}-[0-9]{2}";
-                    }
-                    augex:data-path "date";
-                  }
-                  leaf time {
-                    type string {
-                      pattern "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*";
-                    }
-                    augex:data-path "time";
-                  }
-                  leaf _array-ref {
-                    type leafref {
-                      path "../../../../array-list/_r-id";
-                    }
-                    description
-                      "Implicitly generated leaf to maintain recursive augeas data.";
-                  }
-                }
+          container array-rec {
+            augex:data-path "array";
+            presence "Config entry.";
+            list ch-string-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
               }
+              uses ch-string;
             }
           }
           container inline-table {
@@ -191,133 +248,7 @@ module toml {
                     pattern "[A-Za-z0-9_.-]+";
                   }
                 }
-                choice ch-entry {
-                  mandatory true;
-                  leaf string {
-                    type string {
-                      pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string";
-                  }
-                  leaf string-multi {
-                    type string {
-                      pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string_multi";
-                  }
-                  leaf string-literal {
-                    type string {
-                      pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
-                    }
-                    augex:data-path "string_literal";
-                  }
-                  leaf integer {
-                    type string {
-                      pattern "((([+-]?[0-9_]+)|(0x[A-Za-z0-9]+))|(0o[0-7]+))|(0b[01]+)";
-                    }
-                    augex:data-path "integer";
-                  }
-                  leaf float {
-                    type string {
-                      pattern "(((((([+-]?)([0-9_]+))((\\.)([0-9_]+)))|((([+-]?)([0-9_]+))(([Ee])(([+-]?)([0-9_]+)))))|(((([+-]?)([0-9_]+))((\\.)([0-9_]+)))(([Ee])(([+-]?)([0-9_]+)))))|(([+-]?)(inf)))|(([+-]?)(nan))";
-                    }
-                    augex:data-path "float";
-                  }
-                  leaf bool {
-                    type string {
-                      pattern "true|false";
-                    }
-                    augex:data-path "bool";
-                  }
-                  leaf datetime {
-                    type string {
-                      pattern "(([0-9]{4}-[0-9]{2}-[0-9]{2})([T ]))([0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*)";
-                    }
-                    augex:data-path "datetime";
-                  }
-                  leaf date {
-                    type string {
-                      pattern "[0-9]{4}-[0-9]{2}-[0-9]{2}";
-                    }
-                    augex:data-path "date";
-                  }
-                  leaf time {
-                    type string {
-                      pattern "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*";
-                    }
-                    augex:data-path "time";
-                  }
-                  container array-norec {
-                    augex:data-path "array";
-                    presence "Config entry.";
-                    list config-entries {
-                      key "_id";
-                      ordered-by user;
-                      leaf _id {
-                        type uint64;
-                        description
-                          "Implicitly generated list key to maintain the order of the augeas data.";
-                      }
-                      choice ch-config-entries {
-                        mandatory true;
-                        leaf string {
-                          type string {
-                            pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                          }
-                          augex:data-path "string";
-                        }
-                        leaf string-multi {
-                          type string {
-                            pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                          }
-                          augex:data-path "string_multi";
-                        }
-                        leaf string-literal {
-                          type string {
-                            pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
-                          }
-                          augex:data-path "string_literal";
-                        }
-                        leaf integer {
-                          type string {
-                            pattern "((([+-]?[0-9_]+)|(0x[A-Za-z0-9]+))|(0o[0-7]+))|(0b[01]+)";
-                          }
-                          augex:data-path "integer";
-                        }
-                        leaf float {
-                          type string {
-                            pattern "(((((([+-]?)([0-9_]+))((\\.)([0-9_]+)))|((([+-]?)([0-9_]+))(([Ee])(([+-]?)([0-9_]+)))))|(((([+-]?)([0-9_]+))((\\.)([0-9_]+)))(([Ee])(([+-]?)([0-9_]+)))))|(([+-]?)(inf)))|(([+-]?)(nan))";
-                          }
-                          augex:data-path "float";
-                        }
-                        leaf bool {
-                          type string {
-                            pattern "true|false";
-                          }
-                          augex:data-path "bool";
-                        }
-                        leaf datetime {
-                          type string {
-                            pattern "(([0-9]{4}-[0-9]{2}-[0-9]{2})([T ]))([0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*)";
-                          }
-                          augex:data-path "datetime";
-                        }
-                        leaf date {
-                          type string {
-                            pattern "[0-9]{4}-[0-9]{2}-[0-9]{2}";
-                          }
-                          augex:data-path "date";
-                        }
-                        leaf time {
-                          type string {
-                            pattern "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?[A-Z]*";
-                          }
-                          augex:data-path "time";
-                        }
-                      }
-                    }
-                  }
-                }
+                uses ch-string;
               }
             }
           }
