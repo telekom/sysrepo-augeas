@@ -1015,13 +1015,10 @@ ay_lnode_lense_equal(struct lens *l1, struct lens *l2)
 
     switch (l1->tag) {
     case L_STORE:
-        return l1->regexp == l2->regexp;
-    case L_VALUE:
-        return l1->string == l2->string;
     case L_KEY:
-        return l1->regexp == l2->regexp;
+        return (l1->regexp == l2->regexp) || !strcmp(l1->regexp->pattern->str, l2->regexp->pattern->str);
+    case L_VALUE:
     case L_LABEL:
-        return l1->string == l2->string;
     case L_SEQ:
         return (l1->string->str == l2->string->str) || !strcmp(l1->string->str, l2->string->str);
     default:
