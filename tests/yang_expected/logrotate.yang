@@ -1,0 +1,557 @@
+module logrotate {
+  yang-version 1.1;
+  namespace "aug:logrotate";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Logrotate";
+
+  grouping create {
+    leaf mode {
+      type int64;
+      augex:data-path "mode";
+    }
+    leaf owner {
+      type string {
+        pattern "[^,#= \n\t{}]+";
+      }
+      augex:data-path "owner";
+    }
+    leaf group {
+      type string {
+        pattern "[^,#= \n\t{}]+";
+      }
+      augex:data-path "group";
+    }
+  }
+  grouping su {
+    leaf owner {
+      type string {
+        pattern "[^,#= \n\t{}]+";
+      }
+      augex:data-path "owner";
+    }
+    leaf group {
+      type string {
+        pattern "[^,#= \n\t{}]+";
+      }
+      augex:data-path "group";
+    }
+  }
+  list logrotate {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf schedule {
+          type string {
+            pattern "hourly|daily|weekly|monthly|yearly";
+          }
+          augex:data-path "schedule";
+        }
+        leaf rotate {
+          type int64;
+          augex:data-path "rotate";
+        }
+        container create {
+          augex:data-path "create";
+          presence "Config entry.";
+          uses create;
+        }
+        leaf nocreate {
+          type empty;
+          augex:data-path "nocreate";
+        }
+        container su {
+          augex:data-path "su";
+          presence "Config entry.";
+          uses su;
+        }
+        leaf include {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "include";
+        }
+        leaf missingok {
+          type string {
+            pattern "(no)?missingok";
+          }
+          augex:data-path "missingok";
+        }
+        leaf compress {
+          type string {
+            pattern "(no)?compress";
+          }
+          augex:data-path "compress";
+        }
+        leaf delaycompress {
+          type string {
+            pattern "(no)?delaycompress";
+          }
+          augex:data-path "delaycompress";
+        }
+        leaf ifempty {
+          type string {
+            pattern "(not)?ifempty";
+          }
+          augex:data-path "ifempty";
+        }
+        leaf sharedscripts {
+          type string {
+            pattern "(no)?sharedscripts";
+          }
+          augex:data-path "sharedscripts";
+        }
+        leaf size {
+          type string {
+            pattern "([-+]?[0-9]+)([kMG]?)";
+          }
+          augex:data-path "size";
+        }
+        container tabooext {
+          augex:data-path "tabooext";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            type string {
+              pattern "\\+";
+            }
+          }
+          leaf-list list-item {
+            min-elements 1;
+            type string {
+              pattern "[^/+,# \n\t{}]+";
+            }
+            ordered-by user;
+            augex:data-path "$$";
+          }
+        }
+        leaf olddir {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "olddir";
+        }
+        leaf noolddir {
+          type empty;
+          augex:data-path "noolddir";
+        }
+        leaf mail {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "mail";
+        }
+        leaf mailfirst {
+          type empty;
+          augex:data-path "mailfirst";
+        }
+        leaf maillast {
+          type empty;
+          augex:data-path "maillast";
+        }
+        leaf nomail {
+          type empty;
+          augex:data-path "nomail";
+        }
+        leaf errors {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "errors";
+        }
+        leaf extension {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "extension";
+        }
+        leaf dateext {
+          type string {
+            pattern "(no)?dateext";
+          }
+          augex:data-path "dateext";
+        }
+        leaf dateformat {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "dateformat";
+        }
+        leaf dateyesterday {
+          type empty;
+          augex:data-path "dateyesterday";
+        }
+        leaf compresscmd {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "compresscmd";
+        }
+        leaf uncompresscmd {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "uncompresscmd";
+        }
+        leaf compressext {
+          type string {
+            pattern "[^,#= \n\t{}]+";
+          }
+          augex:data-path "compressext";
+        }
+        container compressoptions {
+          augex:data-path "compressoptions";
+          presence "Config entry.";
+          leaf-list list-item {
+            min-elements 1;
+            type string {
+              pattern "[^/+,# \n\t{}]+";
+            }
+            ordered-by user;
+            augex:data-path "$$";
+          }
+        }
+        leaf copy {
+          type string {
+            pattern "(no)?copy";
+          }
+          augex:data-path "copy";
+        }
+        leaf copytruncate {
+          type string {
+            pattern "(no)?copytruncate";
+          }
+          augex:data-path "copytruncate";
+        }
+        leaf maxage {
+          type int64;
+          augex:data-path "maxage";
+        }
+        leaf minsize {
+          type string {
+            pattern "([-+]?[0-9]+)([kMG]?)";
+          }
+          augex:data-path "minsize";
+        }
+        leaf maxsize {
+          type string {
+            pattern "([-+]?[0-9]+)([kMG]?)";
+          }
+          augex:data-path "maxsize";
+        }
+        leaf shred {
+          type string {
+            pattern "(no)?shred";
+          }
+          augex:data-path "shred";
+        }
+        leaf shredcycles {
+          type int64;
+          augex:data-path "shredcycles";
+        }
+        leaf start {
+          type int64;
+          augex:data-path "start";
+        }
+        container rule {
+          augex:data-path "rule";
+          presence "Config entry.";
+          leaf-list file {
+            min-elements 1;
+            type string {
+              pattern "/[^\"',#= \n\t{}]+";
+            }
+            ordered-by user;
+            augex:data-path "file";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              leaf schedule {
+                type string {
+                  pattern "hourly|daily|weekly|monthly|yearly";
+                }
+                augex:data-path "schedule";
+              }
+              leaf rotate {
+                type int64;
+                augex:data-path "rotate";
+              }
+              container create {
+                augex:data-path "create";
+                presence "Config entry.";
+                uses create;
+              }
+              leaf nocreate {
+                type empty;
+                augex:data-path "nocreate";
+              }
+              container su {
+                augex:data-path "su";
+                presence "Config entry.";
+                uses su;
+              }
+              leaf include {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "include";
+              }
+              leaf missingok {
+                type string {
+                  pattern "(no)?missingok";
+                }
+                augex:data-path "missingok";
+              }
+              leaf compress {
+                type string {
+                  pattern "(no)?compress";
+                }
+                augex:data-path "compress";
+              }
+              leaf delaycompress {
+                type string {
+                  pattern "(no)?delaycompress";
+                }
+                augex:data-path "delaycompress";
+              }
+              leaf ifempty {
+                type string {
+                  pattern "(not)?ifempty";
+                }
+                augex:data-path "ifempty";
+              }
+              leaf sharedscripts {
+                type string {
+                  pattern "(no)?sharedscripts";
+                }
+                augex:data-path "sharedscripts";
+              }
+              leaf size {
+                type string {
+                  pattern "([-+]?[0-9]+)([kMG]?)";
+                }
+                augex:data-path "size";
+              }
+              container tabooext {
+                augex:data-path "tabooext";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  type string {
+                    pattern "\\+";
+                  }
+                }
+                leaf-list list-item {
+                  min-elements 1;
+                  type string {
+                    pattern "[^/+,# \n\t{}]+";
+                  }
+                  ordered-by user;
+                  augex:data-path "$$";
+                }
+              }
+              leaf olddir {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "olddir";
+              }
+              leaf noolddir {
+                type empty;
+                augex:data-path "noolddir";
+              }
+              leaf mail {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "mail";
+              }
+              leaf mailfirst {
+                type empty;
+                augex:data-path "mailfirst";
+              }
+              leaf maillast {
+                type empty;
+                augex:data-path "maillast";
+              }
+              leaf nomail {
+                type empty;
+                augex:data-path "nomail";
+              }
+              leaf errors {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "errors";
+              }
+              leaf extension {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "extension";
+              }
+              leaf dateext {
+                type string {
+                  pattern "(no)?dateext";
+                }
+                augex:data-path "dateext";
+              }
+              leaf dateformat {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "dateformat";
+              }
+              leaf dateyesterday {
+                type empty;
+                augex:data-path "dateyesterday";
+              }
+              leaf compresscmd {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "compresscmd";
+              }
+              leaf uncompresscmd {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "uncompresscmd";
+              }
+              leaf compressext {
+                type string {
+                  pattern "[^,#= \n\t{}]+";
+                }
+                augex:data-path "compressext";
+              }
+              container compressoptions {
+                augex:data-path "compressoptions";
+                presence "Config entry.";
+                leaf-list list-item {
+                  min-elements 1;
+                  type string {
+                    pattern "[^/+,# \n\t{}]+";
+                  }
+                  ordered-by user;
+                  augex:data-path "$$";
+                }
+              }
+              leaf copy {
+                type string {
+                  pattern "(no)?copy";
+                }
+                augex:data-path "copy";
+              }
+              leaf copytruncate {
+                type string {
+                  pattern "(no)?copytruncate";
+                }
+                augex:data-path "copytruncate";
+              }
+              leaf maxage {
+                type int64;
+                augex:data-path "maxage";
+              }
+              leaf minsize {
+                type string {
+                  pattern "([-+]?[0-9]+)([kMG]?)";
+                }
+                augex:data-path "minsize";
+              }
+              leaf maxsize {
+                type string {
+                  pattern "([-+]?[0-9]+)([kMG]?)";
+                }
+                augex:data-path "maxsize";
+              }
+              leaf shred {
+                type string {
+                  pattern "(no)?shred";
+                }
+                augex:data-path "shred";
+              }
+              leaf shredcycles {
+                type int64;
+                augex:data-path "shredcycles";
+              }
+              leaf start {
+                type int64;
+                augex:data-path "start";
+              }
+              leaf prerotate {
+                type union {
+                  type string {
+                    length 0;
+                  }
+                  type empty;
+                  type string {
+                    pattern "((([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|())(((\n)(([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|()))*)){0,1}";
+                  }
+                }
+                augex:data-path "prerotate";
+              }
+              leaf postrotate {
+                type union {
+                  type string {
+                    length 0;
+                  }
+                  type empty;
+                  type string {
+                    pattern "((([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|())(((\n)(([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|()))*)){0,1}";
+                  }
+                }
+                augex:data-path "postrotate";
+              }
+              leaf firstaction {
+                type union {
+                  type string {
+                    length 0;
+                  }
+                  type empty;
+                  type string {
+                    pattern "((([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|())(((\n)(([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|()))*)){0,1}";
+                  }
+                }
+                augex:data-path "firstaction";
+              }
+              leaf lastaction {
+                type union {
+                  type string {
+                    length 0;
+                  }
+                  type empty;
+                  type string {
+                    pattern "((([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|())(((\n)(([\t ][\t ]*e|e)ndscript[\t ][\t ]*[^\t\n ].*|([\t ][\t ]*e|e)ndscript[^\t\n ].*|([\t ][\t ]*e|e)ndscrip([^\nt].*|())|([\t ][\t ]*e|e)ndscri([^\np].*|())|([\t ][\t ]*e|e)ndscr([^\ni].*|())|([\t ][\t ]*e|e)ndsc([^\nr].*|())|([\t ][\t ]*e|e)nds([^\nc].*|())|([\t ][\t ]*e|e)nd([^\ns].*|())|([\t ][\t ]*e|e)n([^\nd].*|())|([\t ][\t ]*e|e)([^\nn].*|())|[\t ][\t ]*([^\t\n e].*|())|[^\t\n e].*|()))*)){0,1}";
+                  }
+                }
+                augex:data-path "lastaction";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -611,6 +611,24 @@ ay_get_filename(const char *path, const char **name, uint64_t *len)
 }
 
 /**
+ * @brief Remove character from string.
+ *
+ * @param[in,out] str Pointer to string.
+ * @param[in] rem Pointer to character in @p str to be removed.
+ */
+void
+ay_string_remove_character(char *str, const char *rem)
+{
+    uint64_t idx, len;
+
+    assert(str && rem && (rem >= str));
+    len = strlen(str);
+    idx = rem - str;
+    assert(idx < len);
+    memmove(&str[idx], &str[idx + 1], len - idx);
+}
+
+/**
  * @brief Go through all the lenses and set various counters.
  *
  * @param[in] lens Main lense where to start.
@@ -1962,20 +1980,16 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
  * @brief Get identifier from lense->regexp->pattern in a suitable form for YANG.
  *
  * @param[in] ident Pointer to the identifier.
- * @param[in] ident_len Number of characters in @p ident.
  * @param[in] opt Where the identifier will be placed.
- * @param[in] bufend Buffer end address.
  * @param[out] buffer Buffer in which a valid identifier will be written.
  * @return 0 on success.
  */
 static int
-ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, enum ay_ident_dst opt,
-        char *bufend, char *buffer)
+ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt, char *buffer)
 {
-    int64_t i, j, stop;
+    int64_t i, j;
 
-    stop = ident_len;
-    for (i = 0, j = 0; i < stop; i++, j++) {
+    for (i = 0, j = 0; ident[i] != '\0'; i++, j++) {
         switch (ident[i]) {
         case ' ':
             if (j && (buffer[j - 1] == '-')) {
@@ -1983,7 +1997,7 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
             } else if (j == 0) {
                 j--;
             } else {
-                AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
+                AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
             }
             break;
@@ -2000,17 +2014,17 @@ ay_get_ident_from_pattern_standardized(const char *ident, uint64_t ident_len, en
             if (j == 0) {
                 j--;
             } else {
-                AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
+                AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 buffer[j] = '-';
             }
             break;
         default:
-            AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
+            AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             buffer[j] = ident[i];
         }
     }
 
-    AY_CHECK_COND(&buffer[j] >= bufend, AYE_IDENT_LIMIT);
+    AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
     buffer[j] = '\0';
 
     return 0;
@@ -2073,31 +2087,12 @@ ay_lense_pattern_is_label(struct lens *lens)
  * @return Pointer to next identifier.
  */
 const char *
-ay_lense_pattern_next_ident(const char *patt)
+ay_lense_pattern_next_union(const char *patt)
 {
     const char *ret;
 
     ret = strchr(patt, '|');
     return ret ? ret + 1 : NULL;
-}
-
-/**
- * @brief Get length of current identifier in the pattern.
- *
- * @param[in] patt Pointer to identifier located in the lense pattern.
- * @return Length of identifier.
- */
-static uint64_t
-ay_lense_pattern_ident_length(const char *patt)
-{
-    const char *next;
-
-    if (!patt) {
-        return 0;
-    }
-
-    next = ay_lense_pattern_next_ident(patt);
-    return next ? (uint64_t)((next - 1) - patt) : strlen(patt);
 }
 
 /**
@@ -2147,13 +2142,13 @@ ay_lense_pattern_idents_count(struct lens *lens)
     }
 
     ret = 1;
-    patt = ay_lense_pattern_next_ident(lens->regexp->pattern->str);
+    patt = ay_lense_pattern_next_union(lens->regexp->pattern->str);
     if (!patt) {
         return ret;
     }
 
     ret = 2;
-    for (patt = ay_lense_pattern_next_ident(patt); patt; patt = ay_lense_pattern_next_ident(patt)) {
+    for (patt = ay_lense_pattern_next_union(patt); patt; patt = ay_lense_pattern_next_union(patt)) {
         ++ret;
     }
 
@@ -2191,155 +2186,236 @@ ay_ynode_splitted_seq_index(struct ay_ynode *node)
 }
 
 /**
+ * @brief Get main union token from pattern (lens.regexp.pattern.str).
+ *
+ * Pattern must be for example in form: name1 | name2 | (pref1|pref2)name3 | name4(post1|post2)
+ * Then the tokens are: name1, name2, (pref1|pref2)name3, name4(post1|post2)
+ * If pattern is for example in form: name1 | name2) | name3 | name4
+ * Then the tokens are: name1, name2
+ * (Tokens name3 and name4 are not accessible by index)
+ *
+ * @param[in] patt Pattern string from lens.regexp.pattern.str.
+ * @param[in] idx Index of the requested token.
+ * @param[out] token_len Token length. It ends at '|' or ')'.
+ * @return Pointer to token in @p patt on index @p idx or NULL.
+ */
+static const char *
+ay_pattern_union_token(const char *patt, uint64_t idx, uint64_t *token_len)
+{
+    char ch;
+    uint64_t par, cnt;
+    const char *ret, *iter, *start, *stop;
+
+    assert(patt && token_len);
+
+    start = patt;
+    stop = NULL;
+    par = 0;
+    cnt = 0;
+    for (iter = patt; *iter; iter++) {
+        ch = *iter;
+        if (ch == '(') {
+            par++;
+        } else if (ch == ')') {
+            if (!par) {
+                /* Interpret as the end of input. */
+                stop = iter;
+                break;
+            }
+            par--;
+        } else if (!par && (ch == '|')) {
+            if (cnt == idx) {
+                /* Token on index 'idx' has been read. */
+                stop = iter;
+                break;
+            } else if ((cnt + 1) == idx) {
+                /* The beginning of the token is found. */
+                start = iter + 1;
+            }
+            cnt++;
+        }
+    }
+    assert(*start != '\0');
+
+    if (cnt != idx) {
+        /* Token not found. */
+        *token_len = 0;
+        return NULL;
+    }
+    if (!stop) {
+        assert(*iter == '\0');
+        stop = iter;
+    }
+    assert(stop > start);
+    *token_len = (uint64_t)(stop - start);
+
+    if ((start == patt) && (idx != 0)) {
+        /* Token not found. */
+        ret = NULL;
+    } else {
+        ret = start;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Duplicate pattern and remove all unnecessary parentheses.
+ *
+ * Examples of unnecessary parentheses: (abc) -> abc, (abc)|(efg) -> abc|efg, ((abc)|(efg))|hij -> abc|efg|hij
+ *
+ * @param[in] patt Pattern string from lens.regexp.pattern.str.
+ * @return New allocated pattern string without parentheses or NULL in case of memory error.
+ */
+char *
+ay_pattern_remove_parentheses(const char *patt)
+{
+    uint64_t i, j, len, par_removed, par;
+    char *buf;
+    const char *ptoken;
+
+    buf = strdup(patt);
+    if (!buf) {
+        return NULL;
+    }
+
+    do {
+        par_removed = 0;
+        for (i = 0; (ptoken = ay_pattern_union_token(buf, i, &len)); i++) {
+            if ((ptoken[0] == '(') && (ptoken[len - 1] == ')')) {
+                par = 1;
+                for (j = 1; (j < len) && (par != 0); j++) {
+                    if (ptoken[j] == '(') {
+                        par++;
+                    } else if (ptoken[j] == ')') {
+                        par--;
+                    }
+                }
+                if (j == len) {
+                    /* remove parentheses */
+                    ay_string_remove_character(buf, &ptoken[len - 1]);
+                    ay_string_remove_character(buf, ptoken);
+                    par_removed = 1;
+                }
+            }
+        }
+    } while (par_removed);
+
+    return buf;
+}
+
+/**
+ * @brief Get identifier from union token located in pattern.
+ *
+ * @p ptoken must be in form:
+ * a) (prefix1 | prefix2 | ... ) some_name,
+ * b) Expecting: some_name (postfix1 | postfix2 | ...)
+ *
+ * @param[in] ptoken Union pattern token. See ay_pattern_union_token().
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] idx Index to the requested identifier.
+ * @param[out] buffer Buffer of sufficient size in which the identifier will be written.
+ * @return AYE_IDENT_NOT_FOUND, AYE_IDENT_LIMIT or 0 on success.
+ */
+static int
+ay_pattern_identifier(const char *ptoken, uint64_t ptoken_len, uint64_t idx, char *buffer)
+{
+    const char *iter, *start, *stop, *prefix, *name, *postfix, *par;
+    uint64_t len1, len2;
+
+    stop = ptoken + ptoken_len;
+    assert((*stop == '\0') || (*stop == '|'));
+
+    start = ptoken;
+
+    buffer[0] = '\0';
+    if (*start == '(') {
+        /* Expecting: (prefix1 | prefix2 | ... ) some_name */
+        prefix = ay_pattern_union_token(start + 1, idx, &len1);
+        if (!prefix) {
+            return AYE_IDENT_NOT_FOUND;
+        }
+        for (iter = start; *iter && (*iter != ')'); iter++) {}
+        assert(*iter);
+        name = iter + 1;
+        assert(stop > name);
+        AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, prefix, len1);
+        len2 = stop - name;
+        AY_CHECK_COND((len1 + len2) >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, name, len2);
+    } else {
+        /* Expecting: some_name (postfix1 | postfix2 | ...) */
+        name = start;
+        par = (const char *)memchr(start, '(', stop - start);
+        if (par) {
+            len1 = par - name;
+            AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            strncat(buffer, name, len1);
+            assert(*par == '(');
+            postfix = ay_pattern_union_token(par + 1, idx, &len2);
+            if (!postfix) {
+                return AYE_IDENT_NOT_FOUND;
+            }
+            AY_CHECK_COND((len1 + len2) >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            strncat(buffer, postfix, len2);
+        } else if (idx == 0) {
+            len1 = stop - name;
+            AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            strncat(buffer, name, len1);
+        } else {
+            return AYE_IDENT_NOT_FOUND;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief For given ynode find his identifier somewhere in the lense pattern (containing sequence of identifiers).
  *
  * @param[in] node Node for which the identifier is being searched.
- * @return Pointer to part in the pattern where identifier starts.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Array with sufficient memory space in which the identifier will be written.
+ * @return 0 on success.
  */
-static const char *
-ay_ynode_find_ident_in_pattern(struct ay_ynode *node)
+static int
+ay_ynode_get_ident_from_pattern(struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
 {
-    uint64_t item_idx, node_idx;
+    int ret;
+    uint64_t node_idx, idx_cnt, i, j, len;
     struct lens *label;
-    const char *patt;
+    const char *pattern, *ptoken;
+    char *patt;
 
     label = AY_LABEL_LENS(node);
-    if (!label || (label->tag != L_KEY)) {
-        return NULL;
-    } else if (*label->regexp->pattern->str == '\0') {
-        return NULL;
-    } else if (!node->parent) {
-        return NULL;
-    }
+    assert(label && (label->tag == L_KEY) && node->parent);
+    pattern = label->regexp->pattern->str;
 
     /* find out which identifier index to look for in the pattern */
     node_idx = ay_ynode_splitted_seq_index(node);
 
-    /* find position of identifier index */
-    item_idx = 0;
-    for (patt = label->regexp->pattern->str; patt; patt = ay_lense_pattern_next_ident(patt)) {
-        if (item_idx != node_idx) {
-            ++item_idx;
-        } else {
-            break;
-        }
-    }
-    assert(item_idx == node_idx);
-
-    return patt;
-}
-
-/**
- * @brief Store standardized @p ident located in @p patt to @p buffer.
- *
- * @param[in] patt Lense pattern.
- * @param[in] ident Identifier from @p patt to standardize.
- * @param[in] ident_len Length of @p ident.
- * @param[in] opt Where the identifier will be placed.
- * @param[out] buffer Buffer in which a valid identifier will be written.
- * @return 0 on success.
- */
-static int
-ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_len, enum ay_ident_dst opt, char *buffer)
-{
-    int ret;
-    const char *prefix, *suffix, *iter, *brop, *brcl;
-    void *bufend;
-    char *buf = buffer;
-
-    bufend = &buffer[AY_MAX_IDENT_SIZE];
-
-    assert(patt && ident);
-
-    /* skip opening bracket */
-    for (iter = ident; iter < (ident + ident_len); iter++) {
-        if (*ident == '(') {
-            ident_len--;
-            ident++;
-        } else {
-            break;
-        }
-    }
-    /* close bracket delimits ident */
-    for (iter = ident; iter < (ident + ident_len); iter++) {
-        if (*iter == ')') {
-            ident_len = iter - ident;
-            break;
-        }
+    patt = ay_pattern_remove_parentheses(pattern);
+    if (!patt) {
+        return AYE_MEMORY;
     }
 
-    /* Find if ident has prefix: prefix_string(...|ident|...) */
-    /* find ')' */
-    brcl = NULL;
-    for (iter = ident; *iter; iter++) {
-        if (*iter == '(') {
-            /* Pattern is too complex or prefix is not available. */
-            break;
-        } else if (*iter == ')') {
-            brcl = iter;
-            break;
-        }
-    }
-    /* find '(' */
-    brop = NULL;
-    for (iter = ident; iter != (patt - 1); iter--) {
-        if (*iter == ')') {
-            /* Pattern is too complex or prefix is not available. */
-            break;
-        } else if (*iter == '(') {
-            brop = iter;
-            break;
-        }
-    }
-    if (brop && brcl) {
-        /* ident is in "( )" */
-
-        /* Find prefix. */
-        prefix = NULL;
-        for (iter = brop - 1; iter != (patt - 1); iter--) {
-            if (ay_ident_character_is_valid(iter)) {
-                prefix = iter;
-                continue;
-            } else if (*iter == '|') {
-                prefix = (iter + 1) != brop ? iter + 1 : NULL;
-            } else {
-                break;
+    idx_cnt = 0;
+    for (i = 0; (ptoken = ay_pattern_union_token(patt, i, &len)); i++) {
+        for (j = 0; !(ret = ay_pattern_identifier(ptoken, len, j, buffer)); j++) {
+            if (idx_cnt == node_idx) {
+                goto stop;
             }
+            idx_cnt++;
         }
-
-        if (prefix) {
-            /* Standardize prefix. */
-            ret = ay_get_ident_from_pattern_standardized(prefix, brop - prefix, opt, bufend, buf);
-            AY_CHECK_RET(ret);
-            buf = buf + strlen(buf);
-        }
+        AY_CHECK_GOTO(ret == AYE_IDENT_LIMIT, end);
     }
+stop:
+    assert(idx_cnt == node_idx);
+    ret = ay_get_ident_from_pattern_standardized(buffer, opt, buffer);
 
-    /* Standardize ident. */
-    ret = ay_get_ident_from_pattern_standardized(ident, ident_len, opt, bufend, buf);
-    AY_CHECK_RET(ret);
-    buf = buf + strlen(buf);
-
-    /* Find if ident has suffix: (...|ident|...)suffix_string */
-    if (brop && brcl) {
-        /* Find suffix. */
-        suffix = (brcl + 1);
-        for (iter = suffix; *iter; iter++) {
-            if (!ay_ident_character_is_valid(iter)) {
-                break;
-            }
-        }
-        if (ay_ident_character_is_valid(suffix)) {
-            /* Standardize suffix. */
-            ret = ay_get_ident_from_pattern_standardized(suffix, iter - suffix, opt, bufend, buf);
-            AY_CHECK_RET(ret);
-        }
-    }
-
-    if (opt == AY_IDENT_NODE_NAME) {
-        ret = ay_ident_lowercase_dash(buffer);
-        AY_CHECK_RET(ret);
-    }
+end:
+    free(patt);
 
     return ret;
 }
@@ -2348,16 +2424,17 @@ ay_get_ident_from_pattern(const char *patt, const char *ident, uint64_t ident_le
  * @brief Get identifier of the ynode from the label lense.
  *
  * @param[in] node Node to process.
- * @param[out] len Length of the identifier. It is set only if the identifier is somewhere in the L_KEY pattern.
- * @return Exact identifier, location of identifier in the pattern or NULL. If the function returns location of
- * identifier in the pattern then @p len is set. The identifier should be adjusted in this case because it contains
- * invalid characters.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Identifier can be written to the @p buffer and in this case return value points to @p buffer.
+ * @param[out] erc Error code is 0 on success.
+ * @return Exact identifier, pointer to @p buffer or NULL.
  */
 static const char *
-ay_get_yang_ident_from_label(struct ay_ynode *node, uint64_t *len)
+ay_get_yang_ident_from_label(struct ay_ynode *node, enum ay_ident_dst opt, char *buffer, int *erc)
 {
     struct lens *label;
-    const char *ret;
+
+    *erc = 0;
 
     label = AY_LABEL_LENS(node);
     if (!label) {
@@ -2369,9 +2446,8 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, uint64_t *len)
     } else if (ay_lense_pattern_is_label(label)) {
         return label->regexp->pattern->str;
     } else if (ay_lense_pattern_has_idents(label)) {
-        ret = ay_ynode_find_ident_in_pattern(node);
-        *len = ay_lense_pattern_ident_length(ret);
-        return ret;
+        *erc = ay_ynode_get_ident_from_pattern(node, opt, buffer);
+        return buffer;
     } else {
         return NULL;
     }
@@ -2548,13 +2624,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         str = buffer;
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
         if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
-            str = ay_ynode_find_ident_in_pattern(node);
-            len = ay_lense_pattern_ident_length(str);
+            ret = ay_ynode_get_ident_from_pattern(node, opt, buffer);
+            AY_CHECK_RET(ret);
+            str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, &len))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+            AY_CHECK_RET(ret);
             str = tmp;
         } else if (!node->label) {
             ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
@@ -2564,7 +2642,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, &len))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+            AY_CHECK_RET(ret);
             str = tmp;
         } else {
             str = "$$";
@@ -2574,10 +2653,12 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, node->child->next, AY_IDENT_NODE_NAME, buffer);
         return ret;
     } else if (node->type == YN_KEY) {
-        if ((tmp = ay_get_yang_ident_from_label(node, &len)) && (label->tag != L_SEQ) &&
+        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret)) && (label->tag != L_SEQ) &&
                 value && (tmp = ay_get_lense_name(ctx->mod, value))) {
+            AY_CHECK_RET(ret);
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, &len))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+            AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
             str = tmp;
@@ -2594,7 +2675,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "value";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_NODE_NAME)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, &len))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+            AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
             str = tmp;
@@ -2604,7 +2686,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, &len))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+            AY_CHECK_RET(ret);
             str = tmp;
         } else {
             str = "$$";
@@ -2617,9 +2700,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         return AYE_IDENT_NOT_FOUND;
     }
 
-    if (len) {
-        ret = ay_get_ident_from_pattern(label->regexp->pattern->str, str, len, opt, buffer);
-    } else if ((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH)) {
+    if ((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH)) {
         ret = ay_get_ident_standardized(str, opt, internal, buffer);
     } else {
         assert((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH));
@@ -5676,8 +5757,8 @@ static void
 ay_ynode_reset_choice(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *first, *iter;
-    const struct ay_lnode *ln;
+    struct ay_ynode *first, *node, *iter;
+    const struct ay_lnode *ln, *old_choice;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         first = &tree[i];
@@ -5686,23 +5767,33 @@ ay_ynode_reset_choice(struct ay_ynode *tree)
             continue;
         }
         /* Iterate over siblings. */
-        for (iter = first; iter; iter = iter->next) {
-            if (!iter->next) {
+        for (node = first; node; node = node->next) {
+            if (!node->next) {
                 break;
-            } else if (!iter->choice || !iter->next->choice) {
+            } else if (!node->choice || !node->next->choice) {
                 continue;
             }
 
             /* Reset if one choice is a descendant of another. */
-            for (ln = iter->choice; ln && iter->parent->snode; ln = ln->parent) {
-                if (ln->lens == iter->next->choice->lens) {
-                    iter->choice = iter->next->choice;
+            for (ln = node->choice; ln && node->parent->snode; ln = ln->parent) {
+                if (ln->lens == node->next->choice->lens) {
+                    /* Reset the choice for all nodes in choice group. */
+                    old_choice = node->choice;
+                    iter = ay_ynode_get_first_in_choice(node->parent, node->choice);
+                    for ( ; iter && (iter->choice == old_choice); iter = iter->next) {
+                        iter->choice = node->next->choice;
+                    }
                     break;
                 }
             }
-            for (ln = iter->next->choice; ln && iter->parent->snode; ln = ln->parent) {
-                if (ln->lens == iter->choice->lens) {
-                    iter->next->choice = iter->choice;
+            /* A similar case. */
+            for (ln = node->next->choice; ln && node->parent->snode; ln = ln->parent) {
+                if (ln->lens == node->choice->lens) {
+                    /* Reset the choice for all nodes in choice group. */
+                    old_choice = node->next->choice;
+                    for (iter = node->next; iter && (iter->choice == old_choice); iter = iter->next) {
+                        iter->choice = node->choice;
+                    }
                     break;
                 }
             }
