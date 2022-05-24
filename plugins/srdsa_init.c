@@ -193,6 +193,7 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
             if (child->nodetype == LYS_CONTAINER) {
                 augds_node_get_type(child, &node_type2, &case_data_path, NULL);
                 assert(case_data_path);
+                anode->case_data_path = case_data_path;
 
                 /* use the first mandatory child pattern, which is technically the value */
                 child = lysc_node_child(child);
@@ -202,6 +203,7 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
                 assert(child->nodetype & LYD_NODE_TERM);
                 augds_node_get_type(child, &node_type2, &case_data_path, NULL);
                 assert(node_type2 == AUGDS_EXT_NODE_VALUE);
+
                 anode->case_data_path = case_data_path;
                 anode->pcode = augds_init_auginfo_get_pattern(auginfo, child);
             }
