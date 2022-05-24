@@ -1,0 +1,175 @@
+module httpd {
+  yang-version 1.1;
+  namespace "aug:httpd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Httpd";
+
+  grouping directive {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        leaf arg {
+          type union {
+            type string {
+              pattern "([^{\"' \t\n]|\\\\.)([^ \t\n]|\\\\.)*[^ \t\n\\\\]|[^{\"' \t\n\\\\]";
+            }
+            type string {
+              pattern "(((\")((([^\"\\\n])|(\\\\(.|\n)))*))(\"))|(((')((([^'\\\n])|(\\\\(.|\n)))*))('))";
+            }
+          }
+          augex:data-path "arg";
+        }
+        container arg-wordlist {
+          augex:data-path "wordlist";
+          presence "Config entry.";
+          leaf-list arg {
+            min-elements 1;
+            type string {
+              pattern "(((([^\\ '\"},\t\n]|[^ '\"},\t\n]+[^\\ '\"},\t\n]))+)|(((\")((([^\"\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\n])|(\\\\(.|\n)))*))('))";
+            }
+            ordered-by user;
+            augex:data-path "arg";
+          }
+        }
+      }
+    }
+    choice ch-directive {
+      leaf arg {
+        type union {
+          type string {
+            pattern "([^{\"' \t\n]|\\\\.)([^ \t\n]|\\\\.)*[^ \t\n\\\\]|[^{\"' \t\n\\\\]";
+          }
+          type string {
+            pattern "(((\")((([^\"\\\n])|(\\\\(.|\n)))*))(\"))|(((')((([^'\\\n])|(\\\\(.|\n)))*))('))";
+          }
+          type string {
+            pattern "((\")(((([^ \t\"\\\n]|[^\"\\\n]+[^ \t\"\\\n]))|(\\\\(.|\n)))*))(([^ \t\"\\\n]|[^\"\\\n]+[^ \t\"\\\n]))";
+          }
+        }
+        augex:data-path "arg";
+      }
+      container arg-wordlist {
+        augex:data-path "wordlist";
+        presence "Config entry.";
+        leaf-list arg {
+          min-elements 1;
+          type string {
+            pattern "(((([^\\ '\"},\t\n]|[^ '\"},\t\n]+[^\\ '\"},\t\n]))+)|(((\")((([^\"\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\n])|(\\\\(.|\n)))*))('))";
+          }
+          ordered-by user;
+          augex:data-path "arg";
+        }
+      }
+    }
+  }
+  list httpd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        list node-list {
+          key "_r-id";
+          config false;
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          container node {
+            augex:data-path "$$";
+            presence "Config entry.";
+            leaf label {
+              mandatory true;
+              type string {
+                pattern "per((l[.0-9_a-z-]|[.0-9_a-km-z-])[.0-9_a-z-]*|())|pe([.0-9_a-qs-z-][.0-9_a-z-]*|())|(p[.0-9_a-df-z-]|[a-oq-z][.0-9_a-z-])[.0-9_a-z-]*|p|[a-oq-z]";
+              }
+            }
+            leaf-list arg {
+              type string {
+                pattern "((((([^\\ '\"\t\n>]|[^ '\"\t\n>]+[^\\ \t\n>])|\\\\\"|\\\\'|\\\\ )+)|([<>=]?=))|(((\")((([^\"\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\n])|(\\\\(.|\n)))*))('))";
+              }
+              ordered-by user;
+              augex:data-path "arg";
+            }
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-config-entries {
+                mandatory true;
+                leaf _node-ref {
+                  type leafref {
+                    path "../../../../node-list/_r-id";
+                  }
+                  description
+                    "Implicitly generated leaf to maintain recursive augeas data.";
+                }
+                container directive {
+                  augex:data-path "directive";
+                  augex:value-yang-path "word";
+                  presence "Config entry.";
+                  leaf word {
+                    mandatory true;
+                    type string {
+                      pattern "[a-z][a-z0-9._-]*";
+                    }
+                  }
+                  uses directive;
+                }
+                leaf perl {
+                  type string {
+                    pattern "[^<]*";
+                  }
+                  augex:data-path "Perl";
+                }
+              }
+            }
+          }
+        }
+        leaf perl {
+          type string {
+            pattern "[^<]*";
+          }
+          augex:data-path "Perl";
+        }
+        container directive {
+          augex:data-path "directive";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[a-z][a-z0-9._-]*";
+            }
+          }
+          uses directive;
+        }
+      }
+    }
+  }
+}

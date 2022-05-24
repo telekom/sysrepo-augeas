@@ -5696,10 +5696,6 @@ ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
     uint32_t subtree_size;
     struct ay_ynode node;
 
-    if (dst == src) {
-        return;
-    }
-
     subtree_size = tree[src].descendants + 1;
     for (uint32_t i = 0; i < subtree_size; i++) {
         node = tree[src];
@@ -7515,12 +7511,6 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
-    /* lns . (sep . lns)*   -> lns*
-     * TODO:
-     * (sep . lns)* . lns   -> lns*
-     */
-    ay_ynode_delete_build_list(*tree);
-
     /* delete unnecessary nodes */
     ay_delete_comment(*tree);
 
@@ -7528,6 +7518,12 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     ay_ynode_set_type(*tree);
 
     ay_delete_type_unknown(*tree);
+
+    /* lns . (sep . lns)*   -> lns*
+     * TODO:
+     * (sep . lns)* . lns   -> lns*
+     */
+    ay_ynode_delete_build_list(*tree);
 
     /* Unite choice for siblings. */
     ay_ynode_reset_choice(*tree);
