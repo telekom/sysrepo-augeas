@@ -510,11 +510,18 @@ next_iter:
             if (augnodes[i].case_data_path) {
                 assert(augnodes[i].pcode);
 
-                /* only the first label can and must match? */
-                if (!label_count || !label_matches[0]) {
+                /* only the first valid label can and must match */
+                label = NULL;
+                for (j = 0; j < label_count; ++j) {
+                    if (label_matches[j]) {
+                        label = label_matches[j];
+                        break;
+                    }
+                }
+                if (!label) {
                     continue;
                 }
-                label_node = augds_get_label_node(label_matches[0], &label_node_d);
+                label_node = augds_get_label_node(label, &label_node_d);
                 m = augds_ext_label_node_equal(augnodes[i].case_data_path, label_node, &node_type);
                 free(label_node_d);
                 label_node_d = NULL;
@@ -525,7 +532,7 @@ next_iter:
 
                 /* value must match the pattern */
                 assert(node_type == AUGDS_EXT_NODE_VALUE);
-                if (aug_get(aug, label_matches[0], &value) != 1) {
+                if (aug_get(aug, label, &value) != 1) {
                     AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
                 }
                 if ((rc = augds_pattern_label_match(augnodes[i].pcode, value, &m))) {
