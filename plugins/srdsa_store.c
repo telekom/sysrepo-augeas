@@ -302,7 +302,7 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
         }
         sprintf(path + len, "/%s", LYD_NAME(data_node));
     } else {
-        /* assume parent has data-path */
+        /* assume the node has data-path */
         path = lyd_path(data_node, LYD_PATH_STD_NO_LAST_PRED, NULL, 0);
         if (!path) {
             AUG_LOG_ERRMEM_GOTO(rc, cleanup);
@@ -323,9 +323,13 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
             break;
         }
 
-        if (aug_label && lyd_child(node) && strcmp(lyd_get_value(lyd_child(node)), aug_label)) {
-            /* different Augeas label */
-            continue;
+        if (aug_label) {
+            /* check for different Augeas label */
+            if ((node->schema->nodetype == LYS_CONTAINER) && lyd_child(node) && strcmp(lyd_get_value(lyd_child(node)), aug_label)) {
+                continue;
+            } else if ((node->schema->nodetype & LYD_NODE_TERM) && strcmp(lyd_get_value(node), aug_label)) {
+                continue;
+            }
         }
 
         ++(*aug_index);
