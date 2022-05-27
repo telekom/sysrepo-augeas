@@ -148,6 +148,10 @@ module resolv {
                 type empty;
                 augex:data-path "no-reload";
               }
+              leaf trust-ad {
+                type empty;
+                augex:data-path "trust-ad";
+              }
               container ip6-dotint {
                 augex:data-path "ip6-dotint";
                 presence "Config entry.";

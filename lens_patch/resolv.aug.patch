@@ -1,0 +1,11 @@
+--- resolv_orig.aug	2022-05-27 08:40:52.955396228 +0200
++++ resolv_new.aug	2022-05-27 08:41:17.763477108 +0200
+@@ -109,7 +109,7 @@
+                         | Build.flag ("debug"|"rotate"|"no-check-names"
+                                      |"inet6"|"ip6-bytestring"|"edns0"
+                                      |"single-request"|"single-request-reopen"
+-                                     |"no-tld-query"|"use-vc"|"no-reload")
++                                     |"no-tld-query"|"use-vc"|"no-reload"|"trust-ad")
+                         | ip6_dotint
+ 
+             in Build.key_value_line_comment

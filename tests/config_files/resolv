@@ -1,0 +1,16 @@
+# Sample resolv.conf
+; With multiple comment styles
+nameserver 192.168.0.3  # and EOL comments
+nameserver ff02::1
+domain mynet.com  # and EOL comments
+search mynet.com anotherorg.net
+
+# A sortlist now
+sortlist 130.155.160.0/255.255.240.0 130.155.0.0
+
+options ndots:3 debug timeout:2
+options no-ip6-dotint single-request-reopen # and EOL comments
+options edns0 trust-ad
+
+lookup file bind
+family inet6 inet4
