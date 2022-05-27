@@ -48,6 +48,7 @@ augds_free_info_node(struct augnode *augnode)
 {
     uint32_t i;
 
+    free(augnode->pcodes);
     for (i = 0; i < augnode->child_count; ++i) {
         augds_free_info_node(&augnode->child[i]);
     }
@@ -55,21 +56,53 @@ augds_free_info_node(struct augnode *augnode)
 }
 
 /**
+ * @brief Add a new pcode pointer to an array.
+ *
+ * @param[in] pcode pcode to add.
+ * @param[in,out] pcodes Array of pcodes to add to.
+ * @param[in,out] pcode_count Count of @p pcodes.
+ * @return SR error value.
+ */
+static int
+augds_init_auginfo_add_pcode(const pcre2_code *pcode, const pcre2_code ***pcodes, uint32_t *pcode_count)
+{
+    void *mem;
+
+    mem = realloc(*pcodes, (*pcode_count + 1) * sizeof **pcodes);
+    if (!mem) {
+        AUG_LOG_ERRMEM_RET;
+    }
+    *pcodes = mem;
+
+    (*pcodes)[*pcode_count] = pcode;
+    ++(*pcode_count);
+    return SR_ERR_OK;
+}
+
+/**
  * @brief Get pattern to match Augeas labels for this node.
  *
  * @param[in] auginfo Base auginfo structure with the compiled uint64 pattern cache.
  * @param[in] node YANG node with the pattern.
- * @return Compiled pattern.
+ * @param[out] pcodes Array of pointers to compiled patterns.
+ * @param[out] pcode_count Number of @p pcodes.
+ * @return SR error code.
  */
-static const pcre2_code *
-augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *node)
+static int
+augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *node, const pcre2_code ***pcodes,
+        uint32_t *pcode_count)
 {
     const struct lysc_type *type;
     const struct lysc_type_str *stype;
+    const struct lysc_type_union *utype;
     const char *pattern;
-    int err_code;
+    int err_code, rc;
     uint32_t compile_opts;
     PCRE2_SIZE err_offset;
+    LY_ARRAY_COUNT_TYPE u, v;
+
+    *pcodes = NULL;
+    *pcode_count = 0;
 
     /* get the type */
     if (node->nodetype & LYD_NODE_INNER) {
@@ -83,8 +116,11 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
     if (type->basetype == LY_TYPE_STRING) {
         /* use the compiled pattern by libyang */
         stype = (const struct lysc_type_str *)type;
-        assert(LY_ARRAY_COUNT(stype->patterns) == 1);
-        return stype->patterns[0]->code;
+        LY_ARRAY_FOR(stype->patterns, u) {
+            if ((rc = augds_init_auginfo_add_pcode(stype->patterns[u]->code, pcodes, pcode_count))) {
+                return rc;
+            }
+        }
     } else if (type->basetype == LY_TYPE_UINT64) {
         /* use the pattern compiled ourselves */
         if (!auginfo->pcode_uint64) {
@@ -106,14 +142,34 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
 
                 SRPLG_LOG_ERR(srpds_name, "Regular expression \"%s\" is not valid (\"%s\": %s).", pattern,
                         pattern + err_offset, (const char *)err_msg);
-                return NULL;
+                return SR_ERR_INTERNAL;
             }
         }
-        return auginfo->pcode_uint64;
+
+        if ((rc = augds_init_auginfo_add_pcode(auginfo->pcode_uint64, pcodes, pcode_count))) {
+            return rc;
+        }
+    } else if (type->basetype == LY_TYPE_UNION) {
+        /* use patterns from all the string types */
+        utype = (const struct lysc_type_union *)type;
+        LY_ARRAY_FOR(utype->types, v) {
+            type = utype->types[v];
+            if (type->basetype == LY_TYPE_STRING) {
+                stype = (const struct lysc_type_str *)type;
+                LY_ARRAY_FOR(stype->patterns, u) {
+                    if ((rc = augds_init_auginfo_add_pcode(stype->patterns[u]->code, pcodes, pcode_count))) {
+                        return rc;
+                    }
+                }
+            } else {
+                AUG_LOG_ERRINT_RET;
+            }
+        }
+    } else {
+        AUG_LOG_ERRINT_RET;
     }
 
-    AUG_LOG_ERRINT;
-    return NULL;
+    return SR_ERR_OK;
 }
 
 /**
@@ -178,14 +234,17 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
 
         if (node_type == AUGDS_EXT_NODE_LABEL) {
             /* get the pattern */
-            anode->pcode = augds_init_auginfo_get_pattern(auginfo, node);
+            augds_init_auginfo_get_pattern(auginfo, node, &anode->pcodes, &anode->pcode_count);
         } else if ((node_type == AUGDS_EXT_NODE_NONE) && node->parent && (node->parent->nodetype == LYS_CASE)) {
             /* extra caution, may work for other nodes, too */
-            assert(node->nodetype == LYS_CONTAINER);
+            assert(node->nodetype & (LYS_CONTAINER | LYS_LIST));
 
             /* store the data-path and compiled pattern to use for matching when deciding whether to create this node
              * and hence select the case */
             child = lysc_node_child(node);
+            while (lysc_is_key(child)) {
+                child = child->next;
+            }
             if (child->nodetype == LYS_LIST) {
                 /* skip the implicit list */
                 child = lysc_node_child(child)->next;
@@ -198,14 +257,14 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
                 /* use the first mandatory child pattern, which is technically the value */
                 child = lysc_node_child(child);
                 assert(child->flags & LYS_MAND_TRUE);
-                anode->pcode = augds_init_auginfo_get_pattern(auginfo, child);
+                augds_init_auginfo_get_pattern(auginfo, child, &anode->pcodes, &anode->pcode_count);
             } else {
                 assert(child->nodetype & LYD_NODE_TERM);
                 augds_node_get_type(child, &node_type2, &case_data_path, NULL);
                 assert(node_type2 == AUGDS_EXT_NODE_VALUE);
 
                 anode->case_data_path = case_data_path;
-                anode->pcode = augds_init_auginfo_get_pattern(auginfo, child);
+                augds_init_auginfo_get_pattern(auginfo, child, &anode->pcodes, &anode->pcode_count);
             }
         }
 

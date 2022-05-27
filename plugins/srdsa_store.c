@@ -748,8 +748,8 @@ augds_store_diff_apply_prepare_path(augeas *aug, const char **aug_path, char **p
         goto cleanup;
     }
 
-    /* relative paths starting with numbers are not interpreted properly, use full absolute path instead */
-    if (isdigit((*aug_path)[0])) {
+    /* relative paths starting with numbers or '$' are not interpreted properly, use full absolute path instead */
+    if (isdigit((*aug_path)[0]) || ((*aug_path)[0] == '$')) {
         if (aug_get(aug, "/augeas/context", &val) != 1) {
             AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
         }

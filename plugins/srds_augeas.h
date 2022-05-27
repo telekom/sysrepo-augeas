@@ -74,7 +74,8 @@ struct auginfo {
             const char *case_data_path;     /**< data-path whose value must match pattern in pcode for this node to be created */
             const struct lysc_node *schema; /**< schema node */
             const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */
-            const pcre2_code *pcode;        /**< optional compiled PCRE2 pattern of the schema pattern matching Augeas labels */
+            const pcre2_code **pcodes;      /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
+            uint32_t pcode_count;           /**< count of pcodes */
             uint64_t next_idx;              /**< index to be used for the next list instance, if applicable */
             struct augnode *child;          /**< array of children of this node */
             uint32_t child_count;           /**< number of children */

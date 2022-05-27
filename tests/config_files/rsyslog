@@ -1,0 +1,22 @@
+# rsyslog v5 configuration file
+
+$ModLoad imuxsock # provides support for local system logging (e.g. via logger command)
+$ModLoad imklog   # provides kernel logging support (previously done by rklogd)
+module(load="immark" markmessageperiod="60" fakeoption="bar") #provides --MARK-- message capability
+
+timezone(id="CET" offset="+01:00")
+
+$UDPServerRun 514
+$InputTCPServerRun 514
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$ActionFileEnableSync on
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+authpriv.*                                              /var/log/secure
+*.emerg                                                 *
+*.*    @2.7.4.1
+*.*    @@2.7.4.1
+*.emerg :omusrmsg:*
+*.emerg :omusrmsg:foo,bar
+*.emerg | /dev/xconsole

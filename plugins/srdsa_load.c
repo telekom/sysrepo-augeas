@@ -157,44 +157,47 @@ augds_ext_label_node_equal(const char *ext_node, const char *label_node, enum au
 }
 
 /**
- * @brief CHeck whether an Augeas label matches a compiled pattern.
+ * @brief Check whether an Augeas label matches at least one compiled pattern.
  *
- * @param[in] pcode Compiled PCRE2 pattern.
+ * @param[in] pcodes Compiled PCRE2 patterns.
+ * @param[in] pcode_count Count of @p pcodes.
  * @param[in] label_node Augeas label node to match.
  * @param[out] match Set if pattern matches the label.
  * @return SR error code.
  */
 static int
-augds_pattern_label_match(const pcre2_code *pcode, const char *label_node, int *match)
+augds_pattern_label_match(const pcre2_code **pcodes, uint32_t pcode_count, const char *label_node, int *match)
 {
     pcre2_match_data *match_data;
-    uint32_t match_opts;
+    uint32_t match_opts, i;
     int r;
 
     *match = 0;
 
-    match_data = pcre2_match_data_create_from_pattern(pcode, NULL);
-    if (!match_data) {
-        AUG_LOG_ERRMEM_RET;
-    }
+    for (i = 0; i < pcode_count; ++i) {
+        match_data = pcre2_match_data_create_from_pattern(pcodes[i], NULL);
+        if (!match_data) {
+            AUG_LOG_ERRMEM_RET;
+        }
 
-    match_opts = PCRE2_ANCHORED;
+        match_opts = PCRE2_ANCHORED;
 #ifdef PCRE2_ENDANCHORED
-    /* PCRE2_ENDANCHORED was added in PCRE2 version 10.30 */
-    match_opts |= PCRE2_ENDANCHORED;
+        /* PCRE2_ENDANCHORED was added in PCRE2 version 10.30 */
+        match_opts |= PCRE2_ENDANCHORED;
 #endif
 
-    /* evaluate */
-    r = pcre2_match(pcode, (PCRE2_SPTR)label_node, PCRE2_ZERO_TERMINATED, 0, match_opts, match_data, NULL);
-    pcre2_match_data_free(match_data);
-    if ((r != PCRE2_ERROR_NOMATCH) && (r < 0)) {
-        PCRE2_UCHAR pcre2_errmsg[AUG_PCRE2_MSG_LIMIT] = {0};
-        pcre2_get_error_message(r, pcre2_errmsg, AUG_PCRE2_MSG_LIMIT);
+        /* evaluate */
+        r = pcre2_match(pcodes[i], (PCRE2_SPTR)label_node, PCRE2_ZERO_TERMINATED, 0, match_opts, match_data, NULL);
+        pcre2_match_data_free(match_data);
+        if ((r != PCRE2_ERROR_NOMATCH) && (r < 0)) {
+            PCRE2_UCHAR pcre2_errmsg[AUG_PCRE2_MSG_LIMIT] = {0};
+            pcre2_get_error_message(r, pcre2_errmsg, AUG_PCRE2_MSG_LIMIT);
 
-        SRPLG_LOG_ERR(srpds_name, "PCRE2 match error (%s).", (const char *)pcre2_errmsg);
-        return SR_ERR_SYS;
-    } else if (r == 1) {
-        *match = 1;
+            SRPLG_LOG_ERR(srpds_name, "PCRE2 match error (%s).", (const char *)pcre2_errmsg);
+            return SR_ERR_SYS;
+        } else if (r == 1) {
+            *match = 1;
+        }
     }
 
     return SR_ERR_OK;
@@ -393,7 +396,7 @@ augds_aug2yang_augnode_labels_r(augeas *aug, struct augnode *augnodes, uint32_t 
                     break;
                 case AUGDS_EXT_NODE_LABEL:
                     /* make sure it matches the label */
-                    if ((rc = augds_pattern_label_match(augnodes[i].pcode, label_node, &m))) {
+                    if ((rc = augds_pattern_label_match(augnodes[i].pcodes, augnodes[i].pcode_count, label_node, &m))) {
                         goto cleanup;
                     }
                     if (!m) {
@@ -508,7 +511,7 @@ next_iter:
             }
         } else {
             if (augnodes[i].case_data_path) {
-                assert(augnodes[i].pcode);
+                assert(augnodes[i].pcodes);
 
                 /* only the first valid label can and must match */
                 label = NULL;
@@ -535,7 +538,7 @@ next_iter:
                 if (aug_get(aug, label, &value) != 1) {
                     AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
                 }
-                if ((rc = augds_pattern_label_match(augnodes[i].pcode, value, &m))) {
+                if ((rc = augds_pattern_label_match(augnodes[i].pcodes, augnodes[i].pcode_count, value, &m))) {
                     goto cleanup;
                 }
                 if (!m) {
