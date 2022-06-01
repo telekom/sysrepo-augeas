@@ -28,12 +28,6 @@ module dnsmasq {
           augex:data-path "address";
           augex:value-yang-path "sto-no-slash";
           presence "Config entry.";
-          leaf sto-no-slash {
-            mandatory true;
-            type string {
-              pattern "[^/ \t\n]+";
-            }
-          }
           leaf-list domain {
             min-elements 1;
             type string {
@@ -42,22 +36,28 @@ module dnsmasq {
             ordered-by user;
             augex:data-path "domain";
           }
+          leaf sto-no-slash {
+            mandatory true;
+            type string {
+              pattern "[^/ \t\n]+";
+            }
+          }
         }
         container server {
           augex:data-path "server";
           augex:value-yang-path "value";
           presence "Config entry.";
-          leaf value {
-            type string {
-              pattern "#|([^#@/ \t\n]+)";
-            }
-          }
           leaf-list domain {
             type string {
               pattern "[^/ \t\n]+";
             }
             ordered-by user;
             augex:data-path "domain";
+          }
+          leaf value {
+            type string {
+              pattern "#|([^#@/ \t\n]+)";
+            }
           }
           leaf port {
             type uint64;

@@ -802,6 +802,10 @@ ay_ynode_get_last(struct ay_ynode *node)
 {
     struct ay_ynode *last;
 
+    if (!node) {
+        return NULL;
+    }
+
     for (last = node; last->next; last = last->next) {}
     return last;
 }
@@ -976,6 +980,27 @@ ay_ynode_alone_in_choice(struct ay_ynode *node)
 }
 
 /**
+ * @brief Find YN_VALUE node of @p node.
+ *
+ * @param[in] node Parent node in which is YN_VALUE node.
+ * @return The YN_VALUE node placed as a child.
+ */
+static struct ay_ynode *
+ay_ynode_get_value_node(struct ay_ynode *node)
+{
+    struct ay_ynode *iter;
+
+    for (iter = node->child; iter; iter = iter->next) {
+        if ((iter->type == YN_VALUE) && (iter->label == node->label) && (iter->value == node->value)) {
+            break;
+        }
+    }
+    assert(iter);
+
+    return iter;
+}
+
+/**
  * @brief Get the last L_CONCAT from @p start to @p stop.
  *
  * @param[in] start The node whose parents will be searched.
@@ -1033,10 +1058,11 @@ ay_lnode_lense_equal(struct lens *l1, struct lens *l2)
  *
  * @param[in] n1 First lense.
  * @param[in] n2 Second lense.
+ * @param[in] ignore_choice Flag will cause the 'choice' to be ignored for comparison.
  * @return 1 for equal.
  */
 static ly_bool
-ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2)
+ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ignore_choice)
 {
     ly_bool alone1, alone2;
 
@@ -1059,7 +1085,7 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2)
         return 0;
     } else if ((!n1->snode && n2->snode) || (n1->snode && !n2->snode)) {
         return 0;
-    } else if (!alone1 && !alone2 && ((!n1->choice && n2->choice) || (n1->choice && !n2->choice))) {
+    } else if (!ignore_choice && !alone1 && !alone2 && ((!n1->choice && n2->choice) || (n1->choice && !n2->choice))) {
         return 0;
     } else if ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) {
         return 0;
@@ -1088,7 +1114,7 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
     uint64_t inner_cnt;
 
     if (compare_roots) {
-        if (!ay_ynode_equal(tree1, tree2)) {
+        if (!ay_ynode_equal(tree1, tree2, 1)) {
             return 0;
         }
         if (tree1->descendants != tree2->descendants) {
@@ -1097,7 +1123,7 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
         for (i = 0; i < tree1->descendants; i++) {
             node1 = &tree1[i + 1];
             node2 = &tree2[i + 1];
-            if (!ay_ynode_equal(node1, node2)) {
+            if (!ay_ynode_equal(node1, node2, 0)) {
                 return 0;
             }
         }
@@ -1111,7 +1137,7 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
         for (i = 0; i < inner_cnt; i++) {
             node1 = &inner1[i];
             node2 = &inner2[i];
-            if (!ay_ynode_equal(node1, node2)) {
+            if (!ay_ynode_equal(node1, node2, 0)) {
                 return 0;
             }
         }
@@ -1165,7 +1191,7 @@ ay_lnode_has_attribute(const struct ay_lnode *node, enum lens_tag attribute)
     struct ay_lnode *iter;
 
     if (!node) {
-        return 0;
+        return NULL;
     }
 
     for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
@@ -1174,7 +1200,7 @@ ay_lnode_has_attribute(const struct ay_lnode *node, enum lens_tag attribute)
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 /**
@@ -2692,8 +2718,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "$$";
         }
     } else if ((node->type == YN_LEAF) && (opt == AY_IDENT_VALUE_YPATH)) {
-        assert(node->next && (node->next->type == YN_VALUE));
-        ret = ay_get_yang_ident(ctx, node->next, AY_IDENT_NODE_NAME, buffer);
+        ret = ay_get_yang_ident(ctx, node, AY_IDENT_NODE_NAME, buffer);
         return ret;
     } else {
         return AYE_IDENT_NOT_FOUND;
@@ -3055,16 +3080,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
 
-    valnode = NULL;
-    if ((node->type == YN_CONTAINER) && ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(label))) {
-        valnode = node->child;
-    } else if (node->type == YN_CONTAINER) {
-        valnode = node->child->next;
-    } else {
-        assert(node->type == YN_LEAF);
-        valnode = node->next;
-    }
-    assert(valnode);
+    valnode = ay_ynode_get_value_node(node);
     ret = ay_print_yang_ident(ctx, valnode, AY_IDENT_VALUE_YPATH);
     ly_print(ctx->out, "\";\n");
 
@@ -5916,7 +5932,8 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         node = &tree[i];
 
         /* setting AY_CHOICE_MAND_FALSE */
-        if (node == ay_ynode_get_first_in_choice(node->parent, node->choice)) {
+        if ((node == ay_ynode_get_first_in_choice(node->parent, node->choice)) &&
+                !ay_ynode_alone_in_choice(node)) {
             maybe = 1;
             for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
                 lnode = iter->choice == AY_YNODE_ROOT_LTREE(tree) ? iter->snode : iter->choice;
@@ -5937,13 +5954,14 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 iter->flags |= AY_HINT_MAND_FALSE;
             }
         } else if ((node->type == YN_LEAF) && node->label && ay_lense_pattern_has_idents(node->label->lens)) {
-            if (ay_lnode_has_maybe(node->snode, 0, 0)) {
+            if (ay_lnode_has_maybe(node->snode, 0, 0) && !ay_ynode_alone_in_choice(node)) {
                 node->flags |= AY_CHOICE_MAND_FALSE;
             } else {
                 node->flags |= AY_YNODE_MAND_FALSE;
             }
-        } else if (node->choice && (node->type != YN_CASE) &&
+        } else if (node->choice && (node->type != YN_CASE) && (node->type != YN_LIST) &&
                 !(ay_ynode_get_first_in_choice(node->parent, node->choice)->flags & AY_CHOICE_MAND_FALSE)) {
+            /* The mandatory true information is useless because choice is mandatory true. */
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && (node->flags & AY_VALUE_MAND_FALSE)) {
             node->flags |= AY_YNODE_MAND_FALSE;
@@ -5951,7 +5969,6 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if (node->type == YN_LIST) {
             if (ay_lnode_has_maybe(node->label, 0, 0)) {
-                node->flags |= AY_YNODE_MAND_FALSE;
                 node->min_elems = 0;
             }
         } else if (node->type == YN_LEAFLIST) {
@@ -6029,20 +6046,121 @@ ay_delete_comment(struct ay_ynode *tree)
 }
 
 /**
- * @brief Delete choice for top-nodes.
+ * @brief Match build list pattern.
  *
- * Delete "lns . ( sep . lns )*" pattern (TODO bilateral). This pattern is located in Build module (build.aug).
- * The first 'lns' is useless.
+ * lns . (sep . lns)*
+ *
+ * @param[in] node1 First node to compare (first lns).
+ * @param[in] node2 Second node to compare (second lns which is under star).
+ * @param[in] list_check Set flag will cause that list's condition not to be compared.
+ * @return 1 if pattern was found.
+ */
+static ly_bool
+ay_ynode_build_list_match(struct ay_ynode *node1, struct ay_ynode *node2, ly_bool list_check)
+{
+    if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
+        assert(node1->snode && node2->snode);
+        if (node1->snode->lens != node2->snode->lens) {
+            return 0;
+        }
+        assert((node1->type == YN_REC) && (node2->type == YN_REC));
+    } else if (!node2->label || !node2->snode) {
+        return 0;
+    } else if (list_check && (node2->type != YN_LIST) && (node2->type != YN_LEAFLIST)) {
+        return 0;
+    } else if (list_check &&
+            ((node1->type == YN_LIST) || (node1->type == YN_LEAFLIST)) &&
+            ((ay_lnode_has_attribute(node1->snode, L_STAR) == ay_lnode_has_attribute(node2->snode, L_STAR)) ||
+            (node1->choice == node2->choice))) {
+        return 0;
+    } else if (!ay_lnode_lense_equal(node1->label->lens, node2->label->lens)) {
+        return 0;
+    } else if ((node1->value && !node2->value) || (!node1->value && node2->value)) {
+        return 0;
+    } else if (node1->value && node2->value &&
+            !ay_lnode_lense_equal(node1->value->lens, node2->value->lens)) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief The order of the siblings nodes will be reversed.
+ *
+ * Each 'next' pointer will be set to its predecessor.
+ * Each 'child' pointer will be set to its last child.
+ * The order of the nodes stored in memory does not change. Only the pointer settings change.
  *
  * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_ynode_delete_build_list(struct ay_ynode *tree)
+ay_ynode_siblings_reverse(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter, *parent, *last_new, *last_old, *prev;
+
+    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        parent = &tree[i];
+
+        last_old = ay_ynode_get_last(parent->child);
+        if (!last_old) {
+            continue;
+        }
+        parent->child = last_old;
+        last_new = parent + 1;
+        prev = NULL;
+        for (iter = last_new; iter != last_old; iter += iter->descendants + 1) {
+            iter->next = prev;
+            prev = iter;
+        }
+        last_old->next = prev;
+    }
+}
+
+/**
+ * @brief The order of the siblings nodes will be set to its original form.
+ *
+ * Each 'next' pointer will be set to its successor.
+ * Each 'child' pointer will be set to its first child.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_siblings_reverse_back(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *parent, *iter, *next_iter;
+    uint64_t sum, next_sum;
+
+    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        parent = &tree[i];
+        if (parent->child) {
+            parent->child = parent + 1;
+            for (iter = parent + 1, sum = 0; iter; iter = next_iter, sum = next_sum) {
+                next_sum = sum + iter->descendants + 1;
+                next_iter = next_sum < parent->descendants ? iter + iter->descendants + 1 : NULL;
+                iter->next = next_iter;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Delete choice for top-nodes.
+ *
+ * Delete "lns . ( sep . lns )*" pattern. This pattern is located in Build module (build.aug).
+ * The first 'lns' is useless.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] reverse Flag must be set to 1 if siblings pointers (next) are set in reverse order.
+ */
+static void
+ay_ynode_delete_build_list_(struct ay_ynode *tree, ly_bool reverse)
 {
     LY_ARRAY_COUNT_TYPE i, j;
-    struct ay_ynode *node1, *node2, *it1, *it2;
-    const struct ay_lnode *star;
-    uint64_t cmp_cnt, star_cnt;
+    struct ay_ynode *node1, *node2, *it1, *it2, *prev1, *prev2;
+    uint64_t cmp_cnt;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node1 = &tree[i];
@@ -6054,58 +6172,21 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
 
         /* lns . ( sep . lns )* -> first lns can have multiple nodes, so a for loop is used. */
         for (node2 = node1->next; node2; node2 = node2->next) {
-            if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
-                assert(node1->snode && node2->snode);
-                if (node1->snode->lens != node2->snode->lens) {
-                    continue;
-                }
-                assert((node1->type == YN_REC) && (node2->type == YN_REC));
-            } else if (!node2->label || !node2->snode) {
-                continue;
-            } else if (!ay_lnode_lense_equal(node1->label->lens, node2->label->lens)) {
+            if (!ay_ynode_build_list_match(node1, node2, 1)) {
                 continue;
             }
             /* node1 == node2 */
 
-            /* node1 should not have an asterisk */
-            if (ay_lnode_has_attribute(node1->snode, L_STAR)) {
-                continue;
-            }
-            /* node2 should have an asterisk */
-            if (!(star = ay_lnode_has_attribute(node2->snode, L_STAR))) {
-                continue;
-            }
-
             /* Remaining nodes must fit. */
             cmp_cnt = 1;
-            for (it1 = node1->next, it2 = node2->next; it1 && it2; it1 = it1->next, it2 = it2->next) {
-                if (star != ay_lnode_has_attribute(it2->snode, L_STAR)) {
-                    break;
-                } else if ((it1->type == YN_REC) || (it2->type == YN_REC)) {
-                    assert(it1->snode && it2->snode);
-                    if (it1->snode->lens != it2->snode->lens) {
-                        break;
-                    }
-                    assert((it1->type == YN_REC) && (it2->type == YN_REC));
-                } else if (!it2->label) {
-                    continue;
-                } else if (!ay_lnode_lense_equal(it1->label->lens, it2->label->lens)) {
+            for (it1 = node1->next, it2 = node2->next; it2 && (it1 != node2); it1 = it1->next, it2 = it2->next) {
+                if (ay_ynode_build_list_match(it1, it2, 1)) {
+                    cmp_cnt++;
+                } else {
                     break;
                 }
-                cmp_cnt++;
             }
-
-            /* Nodes below the star must have the same number as the ones being compared. */
-            star_cnt = 1;
-            for (it2 = node2->next; it2; it2 = it2->next) {
-                if ((it2->type != YN_REC) && !it2->label) {
-                    continue;
-                } else if (star != ay_lnode_has_attribute(it2->snode, L_STAR)) {
-                    break;
-                }
-                star_cnt++;
-            }
-            if (cmp_cnt != star_cnt) {
+            if (it1 != node2) {
                 /* The node1 and node2 groups are very similar, but not the same.
                  * So this is not an build pattern.
                  */
@@ -6114,17 +6195,60 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
 
             /* The build pattern detected. The first lns in "lns . ( sep . lns )*" will be deleted. */
             /* set minimal-elements for leader of node2 group */
-            for (it2 = node2, j = 0; it2 && (j < star_cnt); it2 = it2->next, j++) {
-                it2->min_elems++;
+            for (it1 = node1, it2 = node2, j = 0; j < cmp_cnt; it1 = it1->next, it2 = it2->next, j++) {
+                if (ay_ynode_build_list_match(it1, it2, 1) && (it1->type != YN_LIST) && (it1->type != YN_LEAFLIST)) {
+                    it2->min_elems++;
+                }
             }
-            for (j = 0; j < star_cnt; j++) {
-                ay_ynode_delete_subtree(tree, node1);
+            prev1 = ay_ynode_get_prev(node1);
+            prev2 = ay_ynode_get_prev(node2);
+            if (prev1 && ay_ynode_build_list_match(prev1, prev2, 0) && (prev1->type == prev2->type)) {
+                /* Search again due to 'lns . (sep . lns) . (sep . lns)*' pattern.
+                 * First lns should be deleted too.
+                 */
+                for (j = 1; j < cmp_cnt; j++) {
+                    prev1 = ay_ynode_get_prev(prev1);
+                }
+                i = AY_INDEX(tree, prev1);
+            }
+
+            if (reverse) {
+                for (j = 0; j < cmp_cnt; j++) {
+                    ay_ynode_delete_subtree(tree, prev2);
+                }
+                /* The ay_ynode_delete_subtree() function set 'next' and 'child' pointers in the original form.
+                 * Which is not desirable and the 'next' and 'child' pointers must be set back to the reversed order.
+                 */
+                ay_ynode_siblings_reverse(tree);
+            } else {
+                for (j = 0; j < cmp_cnt; j++) {
+                    ay_ynode_delete_subtree(tree, node1);
+                }
             }
 
             i--;
             break;
         }
     }
+}
+
+/**
+ * @brief Main function for deleting build list pattern.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_delete_build_list(struct ay_ynode *tree)
+{
+    ay_ynode_delete_build_list_(tree, 0);
+
+    /* Let's change 'next' and 'child' pointers to browse siblings in reverse order
+     * to match pattern (sep . lns)* . lns.
+     */
+    ay_ynode_siblings_reverse(tree);
+    ay_ynode_delete_build_list_(tree, 1);
+    /* Now the pointers return to their original form and everything is as usual. */
+    ay_ynode_siblings_reverse_back(tree);
 }
 
 /**
@@ -6193,6 +6317,93 @@ ay_ynode_set_choice_for_value(struct ay_ynode *node)
 }
 
 /**
+ * @brief Place YN_VALUE node close to the parent.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] node Parent node of YN_VALUE.
+ * @return Pointer to YN_VALUE but is empty.
+ */
+static struct ay_ynode *
+ay_ynode_place_value_as_usual(struct ay_ynode *tree, struct ay_ynode *node)
+{
+    if (node->snode && node->child && (node->child->type == YN_KEY)) {
+        /* Insert value behind key. */
+        ay_ynode_insert_sibling(tree, node->child);
+        return node->child->next;
+    } else {
+        /* Insert value as first child. Key is label or pattern_has_idents. */
+        ay_ynode_insert_child(tree, node);
+        return node->child;
+    }
+}
+
+/**
+ * @brief The YN_VALUE will be placed somewhere as a child of @p node.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] node Parent node of YN_VALUE.
+ * @return Pointer to YN_VALUE node.
+ */
+static struct ay_ynode *
+ay_ynode_place_value(struct ay_ynode *tree, struct ay_ynode *node)
+{
+    const struct ay_lnode *iterl, *choice, *choice_wanted;
+    struct ay_ynode *itery, *dst, *value;
+
+    assert(node->value);
+
+    if (!node->snode) {
+        return ay_ynode_place_value_as_usual(tree, node);
+    }
+
+    /* Find L_SUBTREE before 'value' */
+    assert(node->snode < node->value);
+    dst = NULL;
+    for (iterl = node->value; (iterl != node->snode) && !dst; iterl--) {
+        if (iterl->lens->tag != L_SUBTREE) {
+            continue;
+        }
+        for (itery = node->child; itery; itery = itery->next) {
+            if (itery->snode && (iterl->lens == itery->snode->lens)) {
+                dst = itery;
+                break;
+            }
+        }
+    }
+    if (!dst) {
+        return ay_ynode_place_value_as_usual(tree, node);
+    }
+    /* An unusual place for value is found. */
+
+    ay_ynode_insert_sibling(tree, dst);
+    value = dst->next;
+
+    /* Set the correct choice if any. */
+
+    if (dst->choice) {
+        choice_wanted = dst->choice;
+    } else if (value->next && value->next->choice) {
+        choice_wanted = value->next->choice;
+    } else {
+        /* The choice is NULL. */
+        return value;
+    }
+
+    /* Check if 'value' is under 'choice_wanted'. */
+    choice = NULL;
+    for (iterl = node->value; iterl != node->snode; iterl = iterl->parent) {
+        if (choice_wanted == iterl) {
+            /* Yes, it is under choice. */
+            choice = choice_wanted;
+            break;
+        }
+    }
+    value->choice = choice;
+
+    return value;
+}
+
+/**
  * @brief Insert node key (YN_KEY).
  *
  * Also node with 'store' pattern can be generated too.
@@ -6219,8 +6430,7 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
             if (node->descendants == 0) {
                 node->type = YN_LEAF;
             } else if (node->value) {
-                ay_ynode_insert_child(tree, node);
-                value = node->child;
+                value = ay_ynode_place_value(tree, node);
                 value->type = YN_VALUE;
                 value->label = node->label;
                 value->value = node->value;
@@ -6235,7 +6445,6 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
                 key->type = YN_KEY;
                 key->label = node->label;
                 key->value = node->value;
-                key->snode = node->snode;
             } else {
                 assert(count == 2);
                 ay_ynode_insert_child(tree, node);
@@ -6243,10 +6452,8 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
                 key->type = YN_KEY;
                 key->label = node->label;
                 key->value = node->value;
-                key->snode = node->snode;
 
-                ay_ynode_insert_sibling(tree, key);
-                value = key->next;
+                value = ay_ynode_place_value(tree, node);
                 value->type = YN_VALUE;
                 value->label = node->label;
                 value->value = node->value;
@@ -6448,7 +6655,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
             ay_ynode_insert_parent_for_rest(tree, br2_case);
             br2_case->type = YN_CASE;
         }
-        br2_case->choice = AY_YNODE_ROOT_LTREE(tree);
+        br2_case->choice = br1->choice;
 
         /* Pack nodes behind first1 to the case. */
         assert(first1->next);
@@ -6458,7 +6665,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
             br2_case++;
             br1_case->type = YN_CASE;
         }
-        br1_case->choice = AY_YNODE_ROOT_LTREE(tree);
+        br1_case->choice = br1->choice;
 
         /* Join br1_case and br2_case to the choice. */
         ay_ynode_move_subtree_as_sibling(tree, br1_case, br2_case);
@@ -6825,9 +7032,6 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list->type = YN_LIST;
             list->min_elems = list->child->min_elems;
             list->choice = choice;
-            if (list == ay_ynode_get_first_in_choice(parent, choice)) {
-                list->choice = NULL;
-            }
 
             /* every next LIST or LEAFLIST or YN_REC move to wrapper */
             while (list->next && (choice == list->next->choice) &&
@@ -6835,6 +7039,12 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                     (list->min_elems == list->next->min_elems) &&
                     (star == ay_ynode_get_repetition(list->next))) {
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
+            }
+
+            if ((list == ay_ynode_get_first_in_choice(parent, choice)) &&
+                    (!list->next || (list->choice != list->next->choice))) {
+                /* The list is now alone in choice. */
+                list->choice = NULL;
             }
 
             /* for every child in wrapper set type to container */
@@ -7522,7 +7732,6 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     ay_delete_type_unknown(*tree);
 
     /* lns . (sep . lns)*   -> lns*
-     * TODO:
      * (sep . lns)* . lns   -> lns*
      */
     ay_ynode_delete_build_list(*tree);

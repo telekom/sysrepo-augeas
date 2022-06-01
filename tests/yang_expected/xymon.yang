@@ -152,12 +152,6 @@ module xymon {
         augex:data-path "group-only";
         augex:value-yang-path "value-to-eol";
         presence "Config entry.";
-        leaf value-to-eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t][^\n]+";
-          }
-        }
         leaf-list col {
           min-elements 1;
           type string {
@@ -165,6 +159,12 @@ module xymon {
           }
           ordered-by user;
           augex:data-path "col";
+        }
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
         }
         uses group;
       }
@@ -307,18 +307,18 @@ module xymon {
           augex:data-path "subparent";
           augex:value-yang-path "page-name";
           presence "Config entry.";
-          leaf page-name {
-            mandatory true;
-            type string {
-              pattern "[A-Za-z0-9_.-]+";
-            }
-          }
           leaf parent {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+";
             }
             augex:data-path "parent";
+          }
+          leaf page-name {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
           }
           leaf pagetitle {
             type string {

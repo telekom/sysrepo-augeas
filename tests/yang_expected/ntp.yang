@@ -222,12 +222,6 @@ module ntp {
           augex:data-path "restrict";
           augex:value-yang-path "value";
           presence "Config entry.";
-          leaf value {
-            mandatory true;
-            type string {
-              pattern "[^,# \n\t-][^,# \n\t]*";
-            }
-          }
           choice ch-restrict-record {
             leaf ipv6 {
               type empty;
@@ -236,6 +230,12 @@ module ntp {
             leaf ipv4 {
               type empty;
               augex:data-path "ipv4";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^,# \n\t-][^,# \n\t]*";
             }
           }
           leaf-list action {

@@ -24,45 +24,45 @@ module iptables {
           augex:data-path "protocol";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         container source {
           augex:data-path "source";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         container destination {
           augex:data-path "destination";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         leaf jump {
@@ -81,45 +81,45 @@ module iptables {
           augex:data-path "in-interface";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         container out-interface {
           augex:data-path "out-interface";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         container fragment {
           augex:data-path "fragment";
           augex:value-yang-path "value";
           presence "Config entry.";
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             mandatory true;
             type string {
               pattern "(![ \t]*)?[^ \t\n!-][^ \t\n]*";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
         leaf match {
@@ -158,14 +158,14 @@ module iptables {
               pattern "destinatio((n[0-9A-Za-z-]|[0-9A-Za-mo-z-])[0-9A-Za-z-]*|())|destinati([0-9A-Za-np-z-][0-9A-Za-z-]*|())|destinat([0-9A-Za-hj-z-][0-9A-Za-z-]*|())|destina([0-9A-Za-su-z-][0-9A-Za-z-]*|())|destin([0-9A-Zb-z-][0-9A-Za-z-]*|())|desti([0-9A-Za-mo-z-][0-9A-Za-z-]*|())|dest([0-9A-Za-hj-z-][0-9A-Za-z-]*|())|des([0-9A-Za-su-z-][0-9A-Za-z-]*|())|de([0-9A-Za-rt-z-][0-9A-Za-z-]*|())|fragmen((t[0-9A-Za-z-]|[0-9A-Za-su-z-])[0-9A-Za-z-]*|())|fragme([0-9A-Za-mo-z-][0-9A-Za-z-]*|())|fragm([0-9A-Za-df-z-][0-9A-Za-z-]*|())|frag([0-9A-Za-ln-z-][0-9A-Za-z-]*|())|fra([0-9A-Za-fh-z-][0-9A-Za-z-]*|())|fr([0-9A-Zb-z-][0-9A-Za-z-]*|())|got((o[0-9A-Za-z-]|[0-9A-Za-np-z-])[0-9A-Za-z-]*|())|go([0-9A-Za-su-z-][0-9A-Za-z-]*|())|in-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|())|in-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|())|in-interf([0-9A-Zb-z-][0-9A-Za-z-]*|())|in-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|())|in-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|())|in-int([0-9A-Za-df-z-][0-9A-Za-z-]*|())|in-in([0-9A-Za-su-z-][0-9A-Za-z-]*|())|in-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|())|in-([0-9A-Za-hj-z-][0-9A-Za-z-]*|())|in([0-9A-Za-z][0-9A-Za-z-]*|())|jum((p[0-9A-Za-z-]|[0-9A-Za-oq-z-])[0-9A-Za-z-]*|())|ju([0-9A-Za-ln-z-][0-9A-Za-z-]*|())|matc((h[0-9A-Za-z-]|[0-9A-Za-gi-z-])[0-9A-Za-z-]*|())|mat([0-9A-Zabd-z-][0-9A-Za-z-]*|())|ma([0-9A-Za-su-z-][0-9A-Za-z-]*|())|out-interfac((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|())|out-interfa([0-9A-Zabd-z-][0-9A-Za-z-]*|())|out-interf([0-9A-Zb-z-][0-9A-Za-z-]*|())|out-inter([0-9A-Za-eg-z-][0-9A-Za-z-]*|())|out-inte([0-9A-Za-qs-z-][0-9A-Za-z-]*|())|out-int([0-9A-Za-df-z-][0-9A-Za-z-]*|())|out-in([0-9A-Za-su-z-][0-9A-Za-z-]*|())|out-i([0-9A-Za-mo-z-][0-9A-Za-z-]*|())|out-([0-9A-Za-hj-z-][0-9A-Za-z-]*|())|out([0-9A-Za-z][0-9A-Za-z-]*|())|ou([0-9A-Za-su-z-][0-9A-Za-z-]*|())|protoco((l[0-9A-Za-z-]|[0-9A-Za-km-z-])[0-9A-Za-z-]*|())|protoc([0-9A-Za-np-z-][0-9A-Za-z-]*|())|proto([0-9A-Zabd-z-][0-9A-Za-z-]*|())|prot([0-9A-Za-np-z-][0-9A-Za-z-]*|())|pro([0-9A-Za-su-z-][0-9A-Za-z-]*|())|pr([0-9A-Za-np-z-][0-9A-Za-z-]*|())|sourc((e[0-9A-Za-z-]|[0-9A-Za-df-z-])[0-9A-Za-z-]*|())|sour([0-9A-Zabd-z-][0-9A-Za-z-]*|())|sou([0-9A-Za-qs-z-][0-9A-Za-z-]*|())|so([0-9A-Za-tv-z-][0-9A-Za-z-]*|())|tcp-flag((s[0-9A-Za-z-]|[0-9A-Za-rt-z-])[0-9A-Za-z-]*|())|tcp-fla([0-9A-Za-fh-z-][0-9A-Za-z-]*|())|tcp-fl([0-9A-Zb-z-][0-9A-Za-z-]*|())|tcp-f([0-9A-Za-km-z-][0-9A-Za-z-]*|())|tcp-([0-9A-Za-eg-z-][0-9A-Za-z-]*|())|tcp([0-9A-Za-z][0-9A-Za-z-]*|())|(tc[0-9A-Za-oq-z-]|(t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|tc|t[0-9A-Zabd-z-]|s[0-9A-Za-np-z-]|p[0-9A-Za-qs-z-]|o[0-9A-Za-tv-z-]|m[0-9A-Zb-z-]|j[0-9A-Za-tv-z-]|i[0-9A-Za-mo-z-]|g[0-9A-Za-np-z-]|f[0-9A-Za-qs-z-]|d[0-9A-Za-df-z-]|[A-Za-cehklnqru-z-][0-9A-Za-z-]";
             }
           }
+          leaf not {
+            type empty;
+            augex:data-path "not";
+          }
           leaf value {
             type string {
               pattern "([^\" \t\n!-][^ \t\n]*)|\"([^\"\\\n]|\\\\.)*\"";
             }
-          }
-          leaf not {
-            type empty;
-            augex:data-path "not";
           }
         }
       }
