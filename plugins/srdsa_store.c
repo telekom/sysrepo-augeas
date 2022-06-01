@@ -648,6 +648,22 @@ augds_store_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anch
         /* next instance */
         *anchor = anchor_child ? lyd_child_no_keys(diff_data_node->next) : diff_data_node->next;
         *aug_before = 1;
+
+        /* check the anchor */
+        augds_node_get_type((*anchor)->schema, &node_type, NULL, NULL);
+        switch (node_type) {
+        case AUGDS_EXT_NODE_VALUE:
+        case AUGDS_EXT_NODE_LABEL:
+            /* fine */
+            break;
+        case AUGDS_EXT_NODE_NONE:
+        case AUGDS_EXT_NODE_REC_LIST:
+        case AUGDS_EXT_NODE_REC_LREF:
+            /* not suitable */
+            *anchor = NULL;
+            *aug_before = 0;
+            break;
+        }
     } else {
         /* the only instance */
         *anchor = NULL;
