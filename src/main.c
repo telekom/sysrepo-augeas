@@ -3,6 +3,8 @@
  * @author Adam Piecek <piecek@cesnet.cz>
  * @brief Main code for augyang executable file.
  *
+ * @copyright
+ * Copyright (c) 2021 Deutsche Telekom AG.
  * Copyright (c) 2021 CESNET, z.s.p.o.
  *
  * This source code is licensed under BSD 3-Clause License (the "License").
