@@ -1,0 +1,460 @@
+module ldif {
+  yang-version 1.1;
+  namespace "aug:ldif";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Ldif";
+
+  grouping include {
+    leaf include {
+      type string {
+        pattern "[^ \t\n][^\n]*";
+      }
+      augex:data-path "include";
+    }
+  }
+  grouping attr-val-spec {
+    leaf-list option {
+      type string {
+        pattern "[a-zA-Z0-9-]+";
+      }
+      ordered-by user;
+      augex:data-path "@option";
+    }
+    choice ch-attr-val-spec {
+      mandatory true;
+      leaf value {
+        type string {
+          pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+        }
+      }
+      leaf base64 {
+        type string {
+          pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+        }
+        augex:data-path "@base64";
+      }
+      leaf url {
+        type string {
+          pattern "([^ \t\n][^\n]*)(((\n[ \t]+)([^ \t\n][^\n]*))*)";
+        }
+        augex:data-path "@url";
+      }
+    }
+  }
+  grouping option {
+    leaf-list option {
+      type string {
+        pattern "[a-zA-Z0-9-]+";
+      }
+      ordered-by user;
+      augex:data-path "@option";
+    }
+    list attr-val-spec-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container attr-val-spec {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf attr-type {
+          mandatory true;
+          type string {
+            pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+          }
+        }
+        uses attr-val-spec;
+      }
+    }
+  }
+  list ldif {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    choice ch-ldif {
+      mandatory true;
+      list sep-record {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        uses include;
+      }
+      container ldif-content {
+        augex:data-path "@content";
+        presence "Config entry.";
+        list sep-record {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+        leaf version {
+          type uint64;
+          augex:data-path "version";
+        }
+        list sep-record2 {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+        list ldif-attrval-record-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container ldif-attrval-record {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf record {
+              mandatory true;
+              type uint64;
+            }
+            choice ch-ldif-attrval-record {
+              mandatory true;
+              leaf value {
+                type string {
+                  pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+                }
+              }
+              leaf base64 {
+                type string {
+                  pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+                }
+                augex:data-path "@base64";
+              }
+            }
+            list attr-val-spec-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container attr-val-spec {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf attr-type {
+                  mandatory true;
+                  type string {
+                    pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+                  }
+                }
+                uses attr-val-spec;
+              }
+            }
+          }
+        }
+        list sep-record3 {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+      }
+      container ldif-changes {
+        augex:data-path "@changes";
+        presence "Config entry.";
+        list sep-record {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+        leaf version {
+          type uint64;
+          augex:data-path "version";
+        }
+        list sep-record2 {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+        list ldif-change-record-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container ldif-change-record {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf record {
+              mandatory true;
+              type uint64;
+            }
+            choice ch-ldif-change-record {
+              mandatory true;
+              leaf value {
+                type string {
+                  pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+                }
+              }
+              leaf base64 {
+                type string {
+                  pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+                }
+                augex:data-path "@base64";
+              }
+            }
+            list change-control-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container change-control {
+                augex:data-path "control";
+                augex:value-yang-path "ldapoid-re";
+                presence "Config entry.";
+                leaf ldapoid-re {
+                  mandatory true;
+                  type string {
+                    pattern "[0-9][0-9\\.]*";
+                  }
+                }
+                leaf criticality {
+                  type string {
+                    pattern "true|false";
+                  }
+                  augex:data-path "criticality";
+                }
+                container value {
+                  augex:data-path "value";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  choice ch-value {
+                    mandatory true;
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+                      }
+                    }
+                    leaf base64 {
+                      type string {
+                        pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+                      }
+                      augex:data-path "@base64";
+                    }
+                    leaf url {
+                      type string {
+                        pattern "([^ \t\n][^\n]*)(((\n[ \t]+)([^ \t\n][^\n]*))*)";
+                      }
+                      augex:data-path "@url";
+                    }
+                  }
+                }
+              }
+            }
+            leaf change-type {
+              type union {
+                type string {
+                  pattern "add";
+                }
+                type string {
+                  pattern "delete";
+                }
+                type string {
+                  pattern "modify";
+                }
+                type string {
+                  pattern "modr?dn";
+                }
+              }
+              augex:data-path "changeType";
+            }
+            choice ch-ldif-change-record2 {
+              list attr-val-spec-list {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container attr-val-spec {
+                  augex:data-path "$$";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf attr-type {
+                    mandatory true;
+                    type string {
+                      pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+                    }
+                  }
+                  uses attr-val-spec;
+                }
+              }
+              list config-entries {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  container add {
+                    augex:data-path "add";
+                    augex:value-yang-path "attr-type";
+                    presence "Config entry.";
+                    leaf attr-type {
+                      mandatory true;
+                      type string {
+                        pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+                      }
+                    }
+                    uses option;
+                  }
+                  container delete {
+                    augex:data-path "delete";
+                    augex:value-yang-path "attr-type";
+                    presence "Config entry.";
+                    leaf attr-type {
+                      mandatory true;
+                      type string {
+                        pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+                      }
+                    }
+                    uses option;
+                  }
+                  container replace {
+                    augex:data-path "replace";
+                    augex:value-yang-path "attr-type";
+                    presence "Config entry.";
+                    leaf attr-type {
+                      mandatory true;
+                      type string {
+                        pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
+                      }
+                    }
+                    uses option;
+                  }
+                }
+              }
+              list config-entries2 {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries2 {
+                  mandatory true;
+                  container newrdn {
+                    augex:data-path "newrdn";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    choice ch-newrdn {
+                      mandatory true;
+                      leaf value {
+                        type string {
+                          pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+                        }
+                      }
+                      leaf base64 {
+                        type string {
+                          pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+                        }
+                        augex:data-path "@base64";
+                      }
+                    }
+                  }
+                  container newsuperior {
+                    augex:data-path "newsuperior";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    choice ch-newsuperior {
+                      mandatory true;
+                      leaf value {
+                        type string {
+                          pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+                        }
+                      }
+                      leaf base64 {
+                        type string {
+                          pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+                        }
+                        augex:data-path "@base64";
+                      }
+                    }
+                  }
+                  leaf deleteoldrdn {
+                    type string {
+                      pattern "0|1";
+                    }
+                    augex:data-path "deleteoldrdn";
+                  }
+                }
+              }
+            }
+          }
+        }
+        list sep-record3 {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses include;
+        }
+      }
+    }
+  }
+}
