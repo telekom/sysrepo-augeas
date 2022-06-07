@@ -811,6 +811,29 @@ ay_ynode_get_last(struct ay_ynode *node)
 }
 
 /**
+ * @brief Find node of type @p type in the @p subtree.
+ *
+ * @param[in] subtree Subtree of ynodes in which the @p type will be searched.
+ * @param[in] type Type to search.
+ * @return Node of type @p type or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_subtree_contains_type(struct ay_ynode *subtree, enum yang_type type)
+{
+    struct ay_ynode *iter;
+    LY_ARRAY_COUNT_TYPE i;
+
+    for (i = 0; i < subtree->descendants; i++) {
+        iter = &subtree[i + 1];
+        if (iter->type == type) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Get common 'choice' lnode of @p node1 and @p node2.
  *
  * @param[in] node1 First node.
@@ -1136,6 +1159,28 @@ ay_ynode_common_concat(struct ay_ynode *node1, struct ay_ynode *node2, const str
     } else {
         return 0;
     }
+}
+
+/**
+ * @brief Check if @p subtree contains some recursive node.
+ *
+ * @param[in] subtree Subtree of ynodes in which the recursive node will be searched.
+ * @return 1 if subtree contains recursive node.
+ */
+static ly_bool
+ay_ynode_subtree_contains_rec(struct ay_ynode *subtree)
+{
+    uint64_t i;
+    struct ay_ynode *iter;
+
+    for (i = 0; i < subtree->descendants; i++) {
+        iter = &subtree[i + 1];
+        if ((iter->type == YN_REC) || (iter->type == YN_LEAFREF)) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 /**
@@ -3167,7 +3212,6 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if ((node->type == YN_LEAF) && label && ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(label))) {
         return ret;
     }
-    assert(node->child && (node->child->type != YN_USES));
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
 
@@ -5223,7 +5267,7 @@ static uint64_t
 ay_ynode_rule_node_split(struct ay_ynode *node)
 {
     struct lens *label;
-    uint64_t count, values;
+    uint64_t count;
 
     label = AY_LABEL_LENS(node);
 
@@ -5234,12 +5278,8 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
     }
 
     if ((count = ay_lense_pattern_idents_count(label)) && (count > 1)) {
-        values = node->value ? count - 1 : 0;
-        /* For first identifier in pattern (0), for every other identifiers in pattern (+n),
-         * One grouping node and YN_USES node for every identifier in pattern.
-         * Finally insert new values nodes (+n).
-         */
-        return (count - 1) + 1 + count + values;
+        /* +2 for YN_GROUPING and YN_USES node in @p node. */
+        return (count - 1) * node->descendants + 2 + (count - 1);
     } else {
         return 0;
     }
@@ -5275,9 +5315,10 @@ ay_ynode_rule_ordered_entries(const struct ay_lnode *tree)
 static uint64_t
 ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i, j;
-    const struct ay_ynode *rec_ext, *iter;
-    uint64_t ret = 0, rec_int_count;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter;
+    const struct ay_ynode *rec_ext;
+    uint64_t ret = 0, rec_int_count, copied;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         rec_ext = &tree[i];
@@ -5285,14 +5326,52 @@ ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
             continue;
         }
         rec_int_count = 0;
-        for (j = 0; j < rec_ext->descendants; j++) {
-            iter = &rec_ext[j + 1];
-            if (iter->type == YN_REC) {
+        copied = 0;
+        for (iter = rec_ext->child; iter; iter = iter->next) {
+            if (ay_ynode_subtree_contains_rec(iter)) {
                 rec_int_count++;
+            } else {
+                copied += iter->descendants + 1;
             }
         }
-        ret += rec_ext->descendants * (rec_int_count + 1);
+        ret += copied * (rec_int_count + 1);
     }
+
+    return ret;
+}
+
+/**
+ * @brief Rule decide how many nodes will be inserted for node which contains multiple keys (labels).
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return Number of nodes to insert.
+ */
+static uint64_t
+ay_ynode_rule_more_keys_for_node(struct ay_ynode *tree)
+{
+    uint64_t ret, i, j;
+    struct ay_dnode *labels;
+    struct ay_ynode *node;
+
+    labels = AY_YNODE_ROOT_LABELS(tree);
+    if (!LY_ARRAY_COUNT(labels)) {
+        return 0;
+    }
+
+    ret = 0;
+    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
+        if (!node->label || !node->snode) {
+            continue;
+        }
+        AY_DNODE_KEY_FOR(labels, j) {
+            if (node->label == labels[j].lkey) {
+                ret += (node->descendants * labels[j].values_count) + labels[j].values_count;
+                break;
+            }
+        }
+    }
+    assert(ret);
 
     return ret;
 }
@@ -5804,6 +5883,8 @@ ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
 /**
  * @brief Copy subtree to another place.
  *
+ * Only ay_ynode_copy_subtree_* functions should call this function.
+ *
  * @param[in] dst Index of the place where the subtree is copied. Gaps are inserted on this index.
  * @param[in] src Index to the root of subtree.
  */
@@ -5817,9 +5898,11 @@ ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
     for (uint32_t i = 0; i < subtree_size; i++) {
         node = tree[src];
         ay_ynode_insert_gap(tree, dst);
-        src = src > dst ? src + 1 : src;
+        src = src >= dst ? src + 1 : src;
         ay_ynode_copy_data(&tree[dst], &node);
+        tree[dst].descendants = node.descendants;
         dst++;
+        src++;
     }
 }
 
@@ -5851,6 +5934,27 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
     } else {
         ay_ynode_copy_subtree(tree, AY_INDEX(tree, dst + 1), AY_INDEX(tree, src));
     }
+    ay_ynode_tree_correction(tree);
+}
+
+/**
+ * @brief Copy subtree @p src and insert it as sibling of @p dst.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] dst Node whose sibling will be copied @p src.
+ * @param[in] src Root of some subtree.
+ */
+static void
+ay_ynode_copy_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
+{
+    struct ay_ynode *iter;
+    uint32_t subtree_size;
+
+    subtree_size = src->descendants + 1;
+    for (iter = dst->parent; iter; iter = iter->parent) {
+        iter->descendants += subtree_size;
+    }
+    ay_ynode_copy_subtree(tree, AY_INDEX(tree, dst + dst->descendants + 1), AY_INDEX(tree, src));
     ay_ynode_tree_correction(tree);
 }
 
@@ -6392,6 +6496,168 @@ ay_insert_list_files(struct ay_ynode *tree)
     ay_ynode_insert_parent(tree, &tree[1]);
     list = &tree[1];
     list->type = YN_LIST;
+
+    return 0;
+}
+
+/**
+ * @brief For @p node iterate to parental @p choice node and return branch.
+ *
+ * @param[in] node Node to start the search.
+ * @param[in] choice Parent node where the search ends.
+ * @return Child of @p choice in whose subtree @p node is located.
+ */
+static const struct ay_lnode *
+ay_lnode_choice_branch(const struct ay_lnode *node, const struct ay_lnode *choice)
+{
+    const struct ay_lnode *iter, *prev;
+
+    for (prev = node, iter = node->parent; iter && (iter != choice); iter = iter->parent) {
+        prev = iter;
+    }
+    assert(iter);
+
+    return prev;
+}
+
+/**
+ * @brief Insert new nodes and create the right form of ay_ynode_more_keys_for_node() transformation.
+ *
+ * Note: instead of the augeas 'key' statement, there can of course be a 'label' statement. It doeas not matter.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] main_key The main key from the dictionary.
+ * @param[in] node Node that contains @p main_key as its label.
+ * @param[in] choice The common L_UNION node under which is each key.
+ * The '|' in ([key lns1 | key lns2 | key lns3 | ...]).
+ */
+static void
+ay_ynode_more_keys_for_node_insert_nodes(struct ay_ynode *tree, struct ay_dnode *main_key, struct ay_ynode *node,
+        const struct ay_lnode *choice)
+{
+    LY_ARRAY_COUNT_TYPE i, j, k;
+    struct ay_dnode *key;
+    struct ay_ynode *sibl, *child;
+    const struct ay_lnode *iter, *branch;
+
+    /* Insert new siblings for @p node and each of them later will have a corresponding key from dictionary. */
+    for (i = 0; i < main_key->values_count; i++) {
+        ay_ynode_insert_sibling(tree, node);
+    }
+    /* @p node must have choice because of pattern: [ key lns1 | key lns2 ... ] */
+    node->choice = !node->choice ? choice : node->choice;
+    /* Set corresponding key from dictionary and set common choice. */
+    for (i = 0; i < main_key->values_count; i++) {
+        key = main_key + i + 1;
+        sibl = (node->next + i);
+        sibl->label = key->lval;
+        sibl->type = YN_CONTAINER;
+        sibl->choice = node->choice;
+    }
+
+    /* The key can have a set of nodes. For example: [ key lns1 [node1] [node2] | key lns2 [node3] ... ]
+     *                                                  ^__________^_______^       ^_________^
+     * Such a set of nodes must be found and assigned to the corresponding sibling node:
+     * [ key lns1 [node1] [node2] | key lns2 [node3] ... ] -> [ key lns1 [node1] [node2] ] | [ key lns2 [node3] ] ...
+     * ^_________________________________________________^    ^__________________________^   ^__________________^
+     *                        ^@p node                                ^first_sibling                ^second
+     * All set of nodes are incorrectly located in @p node and must be moved to the corresponding sibling node.
+     */
+    AY_DNODE_VAL_FOR(main_key, i) {
+        key = &main_key[i];
+        /* Assume that all keys are under the same choice. */
+        assert(choice == ay_ynode_common_choice(main_key->lkey, key->lval, choice));
+        branch = ay_lnode_choice_branch(key->lval, choice);
+        /* Find set of nodes for 'key'. */
+        for (j = 0; j <= branch->descendants; j++) {
+            iter = &branch[j];
+            if (iter->lens->tag != L_SUBTREE) {
+                continue;
+            }
+            /* The 'key' may not have some subtree because maybe the subtree was deleted (it is some comment node).
+             * So the subtree must be found in @p node.
+             */
+            /* Find set of nodes in @p node. */
+            for (child = node->child; child; child = child->next) {
+                if (child->snode != iter) {
+                    continue;
+                }
+                /* The 'key' will contain set of nodes. */
+                /* Get the corresponding sibling of @p node (where 'key' is assigned). */
+                for (k = 1, sibl = node->next; k < i; k++, sibl = sibl->next) {}
+                /* Move subtree. */
+                ay_ynode_move_subtree_as_last_child(tree, sibl, child);
+                break;
+            }
+        }
+    }
+
+    /* One more thing. The @p node could originally have the form:
+     * [ (key lns1 | key lns2 ...) . [basic_nodes] ]
+     * These basic nodes must be copied because each must contain them, so it must look like:
+     * -> [ key lns1 [basic_nodes] ] | [ key lns2 . [basic_nodes] ]
+     */
+    for (child = node->child; child; child = child->next) {
+        if (child->choice == choice) {
+            /* Ignore because this is node belonging to @p node. */
+            continue;
+        }
+        /* Copy the 'basic_nodes' to the corresponding siblings of @p node. */
+        for (i = 0, sibl = node->next; i < main_key->values_count; i++, sibl = sibl->next) {
+            ay_ynode_copy_subtree_as_last_child(tree, sibl, child);
+        }
+    }
+}
+
+/**
+ * @brief Split node containing multiple keys.
+ *
+ * [ key lns1 | key lns2 ... ] -> [ key lns1 ] | [ key lns2 ] ...
+ * More details are int the ay_ynode_more_keys_for_node_insert_nodes().
+ *
+ * @param[in,out] Tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_more_keys_for_node(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_dnode *labels, *main_key;
+    const struct ay_lnode *choice, *iter;
+    struct ay_ynode *ynode;
+
+    labels = AY_YNODE_ROOT_LABELS(tree);
+
+    if (!LY_ARRAY_COUNT(labels)) {
+        return 0;
+    }
+
+    AY_DNODE_KEY_FOR(labels, i) {
+        main_key = &labels[i];
+
+        /* Get node which contains 'main_key'. */
+        ynode = NULL;
+        for (j = 0; j < LY_ARRAY_COUNT(tree); j++) {
+            if (tree[j].label == main_key->lkey) {
+                ynode = &tree[j];
+                break;
+            }
+        }
+        assert(ynode && ynode->snode && (ynode->snode->lens->tag == L_SUBTREE) && (ynode->snode < ynode->label));
+
+        /* Get choice of 'main_key'. */
+        choice = NULL;
+        for (iter = main_key->lkey->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
+            if (iter->lens->tag == L_UNION) {
+                choice = iter;
+                break;
+            }
+        }
+        assert(choice);
+
+        /* Apply transformation. */
+        ay_ynode_more_keys_for_node_insert_nodes(tree, main_key, ynode, choice);
+    }
 
     return 0;
 }
@@ -7125,6 +7391,7 @@ ay_ynode_node_split(struct ay_ynode *tree)
 {
     uint64_t idents_count, i, j, grouping_id;
     struct ay_ynode *node, *node_new, *grouping, *inner_nodes, *last;
+    ly_bool rec_form;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
@@ -7144,11 +7411,12 @@ ay_ynode_node_split(struct ay_ynode *tree)
 
         grouping_id = 0;
         inner_nodes = ay_ynode_inner_nodes(node);
+        rec_form = ay_ynode_subtree_contains_type(node, YN_LEAFREF) ? 1 : 0;
         if (inner_nodes && (inner_nodes->type == YN_USES)) {
             grouping_id = inner_nodes->ref;
         } else if (inner_nodes && (inner_nodes->type == YN_GROUPING)) {
             grouping_id = inner_nodes->id;
-        } else if (inner_nodes) {
+        } else if (inner_nodes && !rec_form) {
             /* Create grouping. */
             ay_ynode_insert_parent_for_rest(tree, inner_nodes);
             grouping = inner_nodes;
@@ -7163,19 +7431,23 @@ ay_ynode_node_split(struct ay_ynode *tree)
 
         /* Split node. */
         for (j = 0; j < (idents_count - 1); j++) {
-            /* insert new node */
-            ay_ynode_insert_sibling(tree, node);
-            node_new = node->next;
-            ay_ynode_copy_data(node_new, node);
-            if (node->child && (node->child->type == YN_VALUE)) {
-                ay_ynode_insert_child(tree, node_new);
-                ay_ynode_copy_data(node_new->child, node->child);
-            }
-            if (grouping_id) {
-                /* Insert YN_USES node. */
-                last = ay_ynode_insert_child_last(tree, node_new);
-                last->type = YN_USES;
-                last->ref = grouping_id;
+            if (rec_form) {
+                ay_ynode_copy_subtree_as_sibling(tree, node, node);
+            } else {
+                /* insert new node */
+                ay_ynode_insert_sibling(tree, node);
+                node_new = node->next;
+                ay_ynode_copy_data(node_new, node);
+                if (node->child && (node->child->type == YN_VALUE)) {
+                    ay_ynode_insert_child(tree, node_new);
+                    ay_ynode_copy_data(node_new->child, node->child);
+                }
+                if (grouping_id) {
+                    /* Insert YN_USES node. */
+                    last = ay_ynode_insert_child_last(tree, node_new);
+                    last->type = YN_USES;
+                    last->ref = grouping_id;
+                }
             }
         }
     }
@@ -7298,6 +7570,7 @@ ay_ynode_lrec_internal(struct ay_ynode *lrec_ext, const struct ay_ynode *lrec_in
 static void
 ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, struct ay_ynode **lrec_internal)
 {
+    uint64_t desc;
     struct ay_ynode *listord, *iter, *iter2;
 
     if ((*lrec_internal)->parent->type != YN_LIST) {
@@ -7316,13 +7589,21 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
     for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
             iter && (iter->choice == branch->choice) && (iter != branch);
             iter = iter->next) {
+        if (ay_ynode_subtree_contains_rec(iter)) {
+            continue;
+        }
         ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
     }
     /* Copy siblings after branch into listord. */
     for (iter = branch->next;
             iter && (iter->choice == branch->choice);
             iter = iter->next) {
+        if (ay_ynode_subtree_contains_rec(iter)) {
+            continue;
+        }
+        desc = iter->descendants;
         ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
+        iter += desc + 1;
     }
 
     /* Set some choice id. */
@@ -7355,7 +7636,7 @@ static int
 ay_ynode_recursive_form(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *lrec_external, *lrec_internal, *iter, *branch, *listrec;
+    struct ay_ynode *lrec_external, *lrec_internal, *iter, *branch, *prev_branch, *listrec;
 
     for (i = 0; i < tree->descendants; i++) {
         lrec_external = &tree[i + 1];
@@ -7363,6 +7644,8 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
             continue;
         }
         lrec_internal = NULL;
+        listrec = NULL;
+        prev_branch = NULL;
         while ((lrec_internal = ay_ynode_lrec_internal(lrec_external, lrec_internal))) {
 
             /* Change lrec_internal to leafref. */
@@ -7374,19 +7657,36 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
             branch = iter;
             ay_ynode_lrec_insert_listord(tree, iter, &lrec_internal);
 
-            /* Insert listrec. */
-            if (branch->type == YN_LIST) {
+            if (!listrec && (branch->type == YN_LIST)) {
+                /* Some list is present. */
                 listrec = branch;
-            } else {
+                listrec->snode = lrec_external->snode;
+                listrec->flags |= AY_CONFIG_FALSE;
+                lrec_internal->ref = listrec->id;
+            } else if (!listrec) {
+                /* Create listrec. */
                 ay_ynode_insert_wrapper(tree, branch);
                 lrec_internal++;
                 listrec = branch;
                 listrec->type = YN_LIST;
                 listrec->choice = listrec->child->choice;
+                listrec->snode = lrec_external->snode;
+                listrec->flags |= AY_CONFIG_FALSE;
+                lrec_internal->ref = listrec->id;
+            } else if (prev_branch == branch) {
+                /* More lrec_internals in one branch. */
+                lrec_internal->ref = listrec->id;
+            } else {
+                /* Move branch into listrec. */
+                lrec_internal->ref = listrec->id;
+                ay_ynode_move_subtree_as_last_child(tree, listrec, branch);
             }
-            listrec->snode = lrec_external->snode;
-            listrec->flags |= AY_CONFIG_FALSE;
-            lrec_internal->ref = listrec->id;
+            prev_branch = branch;
+        }
+
+        /* Set common choice. */
+        for (iter = listrec->child; iter; iter = iter->next) {
+            iter->choice = listrec->choice;
         }
     }
 
@@ -7939,6 +8239,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
      * store to YN_ROOT.values
      */
     ay_ynode_set_lv(*tree);
+
+    /* [ key lns1 | key lns2 ... ] -> [ key lns1 ] | [ key lns2 ] ... */
+    AY_CHECK_RV(ay_ynode_trans_insert2(tree, ay_ynode_rule_more_keys_for_node(*tree), ay_ynode_more_keys_for_node));
 
     /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
      * choice ch { case { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }

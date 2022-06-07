@@ -1,0 +1,610 @@
+module nginx {
+  yang-version 1.1;
+  namespace "aug:nginx";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Nginx";
+
+  grouping simple {
+    leaf mask {
+      type uint64;
+      augex:data-path "mask";
+    }
+    leaf value {
+      type string {
+        pattern "[^ \t\n;#]([^\";#]|\"[^\"]*\\\")*";
+      }
+    }
+  }
+  grouping server {
+    leaf address {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z0-9_.:/-]+";
+      }
+      augex:data-path "@address";
+    }
+    list word-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container word {
+        augex:data-path "$$";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf id {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.:-]+";
+          }
+        }
+        leaf word {
+          type string {
+            pattern "[A-Za-z0-9_.:-]+";
+          }
+        }
+      }
+    }
+  }
+  list nginx {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container simple {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+            }
+          }
+          uses simple;
+        }
+        container server {
+          augex:data-path "@server";
+          presence "Config entry.";
+          uses server;
+        }
+        list http-list {
+          key "_r-id";
+          config false;
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          choice ch-http-list {
+            mandatory true;
+            container http {
+              augex:data-path "http";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container events {
+              augex:data-path "events";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container server {
+              augex:data-path "server";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container mail {
+              augex:data-path "mail";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container stream {
+              augex:data-path "stream";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container if {
+              augex:data-path "if";
+              presence "Config entry.";
+              leaf cond {
+                type string {
+                  pattern "\\(([^ \t\n{]|[ \t\n][^{])*\\)";
+                }
+                augex:data-path "#cond";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container location {
+              augex:data-path "location";
+              presence "Config entry.";
+              leaf comp {
+                type string {
+                  pattern "=|~|~\\*|\\^~";
+                }
+                augex:data-path "#comp";
+              }
+              leaf uri {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#uri";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container geo {
+              augex:data-path "geo";
+              presence "Config entry.";
+              leaf address {
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#address";
+              }
+              leaf geo {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#geo";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container map {
+              augex:data-path "map";
+              presence "Config entry.";
+              leaf source {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#source";
+              }
+              leaf variable {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#variable";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container split-clients {
+              augex:data-path "split_clients";
+              presence "Config entry.";
+              leaf string {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#string";
+              }
+              leaf variable {
+                mandatory true;
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#variable";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+            container upstream {
+              augex:data-path "upstream";
+              presence "Config entry.";
+              leaf name {
+                type string {
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                }
+                augex:data-path "#name";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _http-ref {
+                    type leafref {
+                      path "../../../../http-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container simple {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf label {
+                      mandatory true;
+                      type string {
+                        pattern "event((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|even([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|eve([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|ev([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ge((o[.0-:A-Z_a-z-]|[.0-:A-Z_a-np-z-])[.0-:A-Z_a-z-]*|())|htt((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-oq-z-])[.0-:A-Z_a-z-]*|())|ht([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|locatio((n[.0-:A-Z_a-z-]|[.0-:A-Z_a-mo-z-])[.0-:A-Z_a-z-]*|())|locati([.0-:A-Z_a-np-z-][.0-:A-Z_a-z-]*|())|locat([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|loca([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|loc([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|lo([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|mai((l[.0-:A-Z_a-z-]|[.0-:A-Z_a-km-z-])[.0-:A-Z_a-z-]*|())|ma((p[.0-:A-Z_a-z-]|[.0-:A-Z_a-hj-oq-z-])[.0-:A-Z_a-z-]*|())|serve((r[.0-:A-Z_a-z-]|[.0-:A-Z_a-qs-z-])[.0-:A-Z_a-z-]*|())|serv([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|ser([.0-:A-Z_a-uw-z-][.0-:A-Z_a-z-]*|())|split_client((s[.0-:A-Z_a-z-]|[.0-:A-Z_a-rt-z-])[.0-:A-Z_a-z-]*|())|split_clien([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|split_clie([.0-:A-Z_a-mo-z-][.0-:A-Z_a-z-]*|())|split_cli([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|split_cl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|split_c([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|split_([.0-:A-Z_abd-z-][.0-:A-Z_a-z-]*|())|split([.0-:A-Za-z-][.0-:A-Z_a-z-]*|())|spli([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|spl([.0-:A-Z_a-hj-z-][.0-:A-Z_a-z-]*|())|strea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|stre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|str([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|st([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|sp([.0-:A-Z_a-km-z-][.0-:A-Z_a-z-]*|())|se([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|upstrea((m[.0-:A-Z_a-z-]|[.0-:A-Z_a-ln-z-])[.0-:A-Z_a-z-]*|())|upstre([.0-:A-Z_b-z-][.0-:A-Z_a-z-]*|())|upstr([.0-:A-Z_a-df-z-][.0-:A-Z_a-z-]*|())|upst([.0-:A-Z_a-qs-z-][.0-:A-Z_a-z-]*|())|ups([.0-:A-Z_a-su-z-][.0-:A-Z_a-z-]*|())|up([.0-:A-Z_a-rt-z-][.0-:A-Z_a-z-]*|())|(u[.0-:A-Z_a-oq-z-]|s[.0-:A-Z_a-df-oq-su-z-]|m[.0-:A-Z_b-z-]|l[.0-:A-Z_a-np-z-]|i(f[.0-:A-Z_a-z-]|[.0-:A-Z_a-eg-z-])|h[.0-:A-Z_a-su-z-]|g[.0-:A-Z_a-df-z-]|e[.0-:A-Z_a-uw-z-]|[.0-:A-Z_a-dfjkn-rtv-z-][.0-:A-Z_a-z-])[.0-:A-Z_a-z-]*|u|s|m|l|i|h|g|e|[.0-:A-Z_a-dfjkn-rtv-z-]";
+                      }
+                    }
+                    uses simple;
+                  }
+                  container server {
+                    augex:data-path "@server";
+                    presence "Config entry.";
+                    uses server;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
