@@ -353,7 +353,9 @@ struct ay_ynode_root {
                                          union and values in the dictionary are the remaining labels. */
     struct ay_dnode *values;        /**< Dictionary for values of type lnode. See ynode.labels. */
     char *choice;                   /**< Not used. */
-    char *ident;                    /**< Not used. */
+    struct ay_transl *patt_table;   /**< The ay_transl data in LY_ARRAY. Contains a link to lens.regexp.pattern.str
+                                         in the form '(pref1|pref2)name1|name2|name3(suf1|suf2)|...' and its parsed
+                                         names (pref1name1, pref2name1, name2, name3suf1, name3suf2, ...). */
     uint32_t ref;                   /**< Not used. */
     uint32_t flags;                 /**< Not used. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
@@ -388,6 +390,14 @@ struct ay_ynode_root {
  */
 #define AY_YNODE_ROOT_VALUES(TREE) \
     ((struct ay_ynode_root *)TREE)->values
+
+/**
+ * @brief Get ay_ynode_root.patt_table from ynode tree.
+ *
+ * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
+ */
+#define AY_YNODE_ROOT_PATT_TABLE(TREE) \
+    ((struct ay_ynode_root *)TREE)->patt_table
 
 /**
  * @brief Get ay_ynode_root.idcnt from ynode tree.
@@ -507,7 +517,6 @@ struct lprinter_ctx {
 struct yprinter_ctx {
     struct augeas *aug;     /**< Augeas context. */
     struct module *mod;     /**< Current Augeas module. */
-    struct ay_transl *table;/**< TODO comment */
     struct ay_ynode *tree;  /**< Pointer to the Sized array. */
     uint64_t vercode;       /**< Verbose options from API to debugging. */
     struct ly_out *out;     /**< Output to which it is printed. */
@@ -803,6 +812,8 @@ ay_ynode_tree_free(struct ay_ynode *tree)
     root->labels = NULL;
     LY_ARRAY_FREE(root->values);
     root->values = NULL;
+    ay_transl_table_free(root->patt_table);
+    root->patt_table = NULL;
 
     LY_ARRAY_FOR(tree, i) {
         free(tree[i].ident);
@@ -816,17 +827,37 @@ ay_ynode_tree_free(struct ay_ynode *tree)
  *
  * @param[in] tree Tree of ynodes.
  * @param[in] rule Callback function returns number of nodes that can be inserted.
- * @param[out] cnt Counter how many times the @p rule returned 1.
+ * @return Sum of @p rule return values.
  */
-static void
-ay_ynode_summary(struct ay_ynode *tree, uint64_t (*rule)(struct ay_ynode *), uint64_t *cnt)
+static uint32_t
+ay_ynode_summary(const struct ay_ynode *tree, uint32_t (*rule)(const struct ay_ynode *))
 {
+    uint32_t ret;
     LY_ARRAY_COUNT_TYPE i;
 
-    *cnt = 0;
+    ret = 0;
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        *cnt = *cnt + rule(&tree[i]);
+        ret += rule(&tree[i]);
     }
+
+    return ret;
+}
+
+/**
+ * @copydoc ay_ynode_summary()
+ */
+static uint32_t
+ay_ynode_summary2(const struct ay_ynode *tree, uint32_t (*rule)(const struct ay_ynode *, const struct ay_ynode *))
+{
+    uint32_t ret;
+    LY_ARRAY_COUNT_TYPE i;
+
+    ret = 0;
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        ret += rule(tree, &tree[i]);
+    }
+
+    return ret;
 }
 
 /**
@@ -1204,7 +1235,7 @@ ay_lnode_get_last_concat(const struct ay_lnode *start, const struct ay_lnode *st
  * @return Common last L_CONCAT or NULL.
  */
 static ly_bool
-ay_ynode_common_concat(struct ay_ynode *node1, struct ay_ynode *node2, const struct ay_lnode *stop)
+ay_ynode_common_concat(const struct ay_ynode *node1, const struct ay_ynode *node2, const struct ay_lnode *stop)
 {
     const struct ay_lnode *con1, *con2;
 
@@ -2339,30 +2370,39 @@ ay_lense_pattern_next_union(const char *patt)
  * @brief Check if lense pattern does not have a fairly regular expression,
  * but rather a sequence of identifiers separated by '|'.
  *
+ * @param[in] tree Tree of ynodes. If set to NULL then the whole pattern in @p lens will be checked.
+ * Otherwise ay_ynode_root.patt_table will be used which should be faster.
  * @param[in] lens Lense to check.
- * @return 1 if lense contains identifiers in his pattern.
+ * @return non-zero/(ay_transl *) if lense contains identifiers in his pattern. Otherwise NULL.
  */
-static ly_bool
-ay_lense_pattern_has_idents(struct lens *lens)
+static struct ay_transl *
+ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens)
 {
-    const char *patt;
+    const char *iter, *patt;
 
     if (!lens || (lens->tag != L_KEY)) {
-        return 0;
+        return NULL;
     }
 
-    for (patt = lens->regexp->pattern->str; *patt != '\0'; patt++) {
-        if ((*patt == '|') || (*patt == '(') || (*patt == ')')) {
+    patt = lens->regexp->pattern->str;
+
+    if (tree) {
+        return ay_transl_find(AY_YNODE_ROOT_PATT_TABLE(tree), patt);
+    }
+
+    for (iter = patt; *iter != '\0'; iter++) {
+        if ((*iter == '|') || (*iter == '(') || (*iter == ')')) {
             continue;
-        } else if (*patt == '\n') {
+        } else if (*iter == '\n') {
             /* TODO pattern is probably written wrong -> bugfix lense? */
             continue;
-        } else if (!ay_ident_character_is_valid(patt)) {
-            return 0;
+        } else if (!ay_ident_character_is_valid(iter)) {
+            return NULL;
         }
     }
 
-    return 1;
+    /* Success - return some non-NULL address. */
+    return (struct ay_transl *)patt;
 }
 
 /**
@@ -2393,17 +2433,22 @@ ay_pattern_idents_count(const char *patt)
 /**
  * @brief Count number of identifiers in the lense pattern.
  *
+ * @param[in] tree Tree of ynodes.
  * @param[in] lens Lense to check his pattern.
  * @return Number of identifiers.
  */
 static uint64_t
-ay_lense_pattern_idents_count(struct lens *lens)
+ay_lense_pattern_idents_count(const struct ay_ynode *tree, const struct lens *lens)
 {
-    if (!lens || (lens->tag != L_KEY) || !ay_lense_pattern_has_idents(lens)) {
+    struct ay_transl *tran;
+
+    if ((tran = ay_lense_pattern_has_idents(tree, lens))) {
+        return LY_ARRAY_COUNT(tran->substr);
+    } else if (lens->tag == L_KEY) {
+        return 1;
+    } else {
         return 0;
     }
-
-    return ay_pattern_idents_count(lens->regexp->pattern->str);
 }
 
 /**
@@ -2416,7 +2461,7 @@ ay_lense_pattern_idents_count(struct lens *lens)
  * @return Index of splitted node in the sequence of splitted nodes.
  */
 static uint64_t
-ay_ynode_splitted_seq_index(struct ay_ynode *node)
+ay_ynode_splitted_seq_index(const struct ay_ynode *node)
 {
     struct ay_ynode *iter;
     struct lens *nodelab, *iterlab;
@@ -2690,17 +2735,26 @@ clean:
     return 0;
 }
 
-// TODO comment
-static int
-ay_ynode_get_ident_from_transl_table(struct ay_ynode *node, struct ay_transl *table, enum ay_ident_dst opt,
+/**
+ * @brief Get identifier stored in translation table.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] node Node for which the identifier is to be found.
+ * @param[in] opt Where the identifier will be placed.
+ * @param[out] buffer Array with sufficient memory space in which the identifier will be written.
+ * @return 1 if identifier is successfully found and standardized.
+ */
+static int 
+ay_ynode_get_ident_from_transl_table(const struct ay_ynode *tree, const struct ay_ynode *node, enum ay_ident_dst opt,
         char *buffer)
 {
     int ret;
     uint64_t node_idx;
     const char *pattern, *ident;
     struct lens *label;
-    struct ay_transl *tran;
+    struct ay_transl *table, *tran;
 
+    table = AY_YNODE_ROOT_PATT_TABLE(tree);
     label = AY_LABEL_LENS(node);
     assert(label && (label->tag == L_KEY) && node->parent);
     pattern = label->regexp->pattern->str;
@@ -2718,15 +2772,15 @@ ay_ynode_get_ident_from_transl_table(struct ay_ynode *node, struct ay_transl *ta
 /**
  * @brief Get identifier of the ynode from the label lense.
  *
+ * @param[in] tree Tree of ynodes.
  * @param[in] node Node to process.
- * TODO comment
  * @param[in] opt Where the identifier will be placed.
  * @param[out] buffer Identifier can be written to the @p buffer and in this case return value points to @p buffer.
  * @param[out] erc Error code is 0 on success.
  * @return Exact identifier, pointer to @p buffer or NULL.
  */
 static const char *
-ay_get_yang_ident_from_label(struct ay_ynode *node, struct ay_transl *table, enum ay_ident_dst opt, char *buffer,
+ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer,
         int *erc)
 {
     struct lens *label;
@@ -2742,8 +2796,8 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, struct ay_transl *table, enu
         return label->string->str;
     } else if (ay_lense_pattern_is_label(label)) {
         return label->regexp->pattern->str;
-    } else if (ay_lense_pattern_has_idents(label)) {
-        *erc = ay_ynode_get_ident_from_transl_table(node, table, opt, buffer);
+    } else if (ay_lense_pattern_has_idents(tree, label)) {
+        *erc = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
         return buffer;
     } else {
         return NULL;
@@ -2807,11 +2861,12 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     int ret = 0;
     const char *str, *tmp;
     struct lens *label, *value, *snode;
-    struct ay_ynode *iter;
+    struct ay_ynode *tree, *iter;
     uint64_t len = 0;
     ly_bool internal = 0;
     ly_bool ch_tag = 0;
 
+    tree = ctx->tree;
     snode = AY_SNODE_LENS(node);
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
@@ -2920,15 +2975,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         AY_CHECK_RET(ret);
         str = buffer;
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
-        if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
-            ret = ay_ynode_get_ident_from_transl_table(node, ctx->table, opt, buffer);
+        if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(tree, label)) {
+            ret = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if (!node->label) {
@@ -2939,7 +2994,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -2950,11 +3005,11 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, node->child->next, AY_IDENT_NODE_NAME, buffer);
         return ret;
     } else if (node->type == YN_KEY) {
-        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret)) && (label->tag != L_SEQ) &&
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret)) && (label->tag != L_SEQ) &&
                 value && (tmp = ay_get_lense_name(ctx->mod, value))) {
             AY_CHECK_RET(ret);
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
@@ -2972,7 +3027,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "value";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_NODE_NAME)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
@@ -2983,7 +3038,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -3290,7 +3345,7 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
 
-    if ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(label)) {
+    if ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(NULL, label)) {
         ret = ay_print_yang_ident(ctx, node, AY_IDENT_DATA_PATH);
     } else {
         assert((label->tag == L_SEQ) || (label->tag == L_KEY));
@@ -3324,7 +3379,8 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
         return ret;
     } else if (!value) {
         return ret;
-    } else if ((node->type == YN_LEAF) && label && ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(label))) {
+    } else if ((node->type == YN_LEAF) && label &&
+            ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(NULL, label))) {
         return ret;
     }
 
@@ -3659,10 +3715,10 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (node->type == YN_VALUE) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if (ay_lense_pattern_has_idents(label) && value) {
+    } else if (ay_lense_pattern_has_idents(NULL, label) && value) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if ((node->type == YN_LEAF) && ay_lense_pattern_has_idents(label) && !value) {
+    } else if ((node->type == YN_LEAF) && ay_lense_pattern_has_idents(NULL, label) && !value) {
         ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         return ret;
     } else if (label && (label->tag == L_KEY)) {
@@ -4399,13 +4455,12 @@ ay_print_yang_imports(struct ly_out *out, struct ay_ynode *tree)
  *
  * @param[in] mod Module in which the tree is located.
  * @param[in] tree Ynode tree to print.
- * TODO comment
  * @param[in] vercode Decide if debugging information should be printed.
  * @param[out] str_out Printed tree in yang format. Call free() after use.
  * @return 0 on success.
  */
 static int
-ay_print_yang(struct module *mod, struct ay_ynode *tree, struct ay_transl *table, uint64_t vercode, char **str_out)
+ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char **str_out)
 {
     int ret;
     struct yprinter_ctx ctx;
@@ -4420,7 +4475,6 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, struct ay_transl *table
 
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
-    ctx.table = table;
     ctx.tree = tree;
     ctx.vercode = vercode;
     ctx.out = out;
@@ -4903,7 +4957,7 @@ ay_transl_create_pattern_table(const struct ay_lnode *tree, struct ay_transl *ta
         /* Find if pattern is already in table. */
         origin = tree[i].lens->regexp->pattern->str;
         patt = ay_transl_find(table, origin);
-        if (!patt && !ay_lense_pattern_is_label(tree[i].lens) && ay_lense_pattern_has_idents(tree[i].lens)) {
+        if (!patt && !ay_lense_pattern_is_label(tree[i].lens) && ay_lense_pattern_has_idents(NULL, tree[i].lens)) {
             dst = &table[LY_ARRAY_COUNT(table)];
             dst->origin = origin;
             LY_ARRAY_INCREMENT(table);
@@ -5186,12 +5240,14 @@ ay_ynode_shift_right(struct ay_ynode *tree)
  * @param[in] forest Forest of ynodes.
  * @param[in] ltree Tree of lnodes (Sized array). If function succeeds then the ownership of memory is moved to @tree,
  * so the memory of ltree should be therefore released by ::ay_ynode_tree_free().
+ * @param[in] tpatt_size Required memory space for ay_ynode_root.patt_table LY_ARRAY.
  * @param[out] tree Resulting ynode tree (new dynamic memory is allocated).
  * @return 0 on success.
  */
 static int
-ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_ynode **tree)
+ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, uint32_t tpatt_size, struct ay_ynode **tree)
 {
+    int ret;
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter;
     uint32_t forest_count;
@@ -5236,6 +5292,12 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
     if (valcount) {
         LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_VALUES(*tree), valcount, return AYE_MEMORY);
     }
+
+    /* Create translation table for lens.regexp.pattern. */
+    LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_PATT_TABLE(*tree), tpatt_size, return AYE_MEMORY);
+    ret = ay_transl_create_pattern_table(ltree, AY_YNODE_ROOT_PATT_TABLE(*tree));
+    AY_CHECK_RET(ret);
+
     /* Set idcnt. */
     AY_YNODE_ROOT_IDCNT(*tree) = ((*tree) + (*tree)->descendants)->id + 1;
     /* Set ltree. Note that this set must be the last operation before return. */
@@ -5251,10 +5313,10 @@ ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, struct ay_
  * @return Pointer to lnode or NULL.
  */
 static const struct ay_lnode *
-ay_ynode_get_repetition(struct ay_ynode *node)
+ay_ynode_get_repetition(const struct ay_ynode *node)
 {
     const struct ay_lnode *ret = NULL, *liter, *lstart, *lstop;
-    struct ay_ynode *yiter;
+    const struct ay_ynode *yiter;
 
     if (!node) {
         return ret;
@@ -5287,14 +5349,14 @@ ay_ynode_get_repetition(struct ay_ynode *node)
  * @return 1 if ynode is of type YN_LIST.
  */
 static ly_bool
-ay_ynode_rule_list(struct ay_ynode *node)
+ay_ynode_rule_list(const struct ay_ynode *node)
 {
     ly_bool has_value, has_idents;
     struct lens *label;
 
     label = AY_LABEL_LENS(node);
     has_value = label && ((label->tag == L_KEY) || (label->tag == L_SEQ)) && node->value;
-    has_idents = ay_lense_pattern_has_idents(label);
+    has_idents = !!ay_lense_pattern_has_idents(NULL, label);
     return (node->child || has_value || has_idents) && label && ay_ynode_get_repetition(node);
 }
 
@@ -5305,7 +5367,7 @@ ay_ynode_rule_list(struct ay_ynode *node)
  * @return 1 if ynode is of type YN_CONTAINER.
  */
 static ly_bool
-ay_ynode_rule_container(struct ay_ynode *node)
+ay_ynode_rule_container(const struct ay_ynode *node)
 {
     ly_bool has_value;
     struct lens *label;
@@ -5322,7 +5384,7 @@ ay_ynode_rule_container(struct ay_ynode *node)
  * @return 1 if ynode is of type YN_LEAFLIST.
  */
 static ly_bool
-ay_ynode_rule_leaflist(struct ay_ynode *node)
+ay_ynode_rule_leaflist(const struct ay_ynode *node)
 {
     return !node->child && node->label && ay_ynode_get_repetition(node);
 }
@@ -5334,7 +5396,7 @@ ay_ynode_rule_leaflist(struct ay_ynode *node)
  * @return 1 if ynode is of type YN_LEAF.
  */
 static ly_bool
-ay_ynode_rule_leaf(struct ay_ynode *node)
+ay_ynode_rule_leaf(const struct ay_ynode *node)
 {
     return !node->child && node->label;
 }
@@ -5342,19 +5404,22 @@ ay_ynode_rule_leaf(struct ay_ynode *node)
 /**
  * @brief Rule to insert key node.
  *
+ * @param[in] tree Tree of ynodes.
  * @param[in] node Node to check.
  * @return Number of nodes that should be inserted as a key.
  */
-static uint64_t
-ay_ynode_rule_node_key_and_value(struct ay_ynode *node)
+static uint32_t
+ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_ynode *node)
 {
     struct lens *label, *value;
+    (void) tree;
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
     if ((node->type != YN_CONTAINER) || !label) {
         return 0;
-    } else if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(label)) {
+    } else if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) ||
+            ay_lense_pattern_has_idents(NULL, label)) {
         return value ? 1 : 0;
     } else if (label->tag == L_SEQ) {
         return value ? 2 : 1;
@@ -5371,7 +5436,7 @@ ay_ynode_rule_node_key_and_value(struct ay_ynode *node)
  * @return 1 to meet the basic prerequisites for inserting YN_CASE.
  */
 static ly_bool
-ay_ynode_insert_case_prerequisite(struct ay_ynode *node)
+ay_ynode_insert_case_prerequisite(const struct ay_ynode *node)
 {
     if (!node->choice || !node->next || !node->next->choice) {
         return 0;
@@ -5390,11 +5455,11 @@ ay_ynode_insert_case_prerequisite(struct ay_ynode *node)
  * @param[in] node Node to check.
  * @return 1 if container should be inserted. Also the function returns 1 only for the first node in the wrap.
  */
-static uint64_t
-ay_ynode_rule_insert_case(struct ay_ynode *node)
+static uint32_t
+ay_ynode_rule_insert_case(const struct ay_ynode *node)
 {
     const struct ay_lnode *stop, *choice;
-    uint64_t ret;
+    uint32_t ret;
 
     ret = ay_ynode_insert_case_prerequisite(node);
     if (!ret) {
@@ -5416,11 +5481,12 @@ ay_ynode_rule_insert_case(struct ay_ynode *node)
 /**
  * @brief Check whether list should be splitted based on pattern which consists of sequence of identifiers.
  *
+ * @param[in] tree Tree of ynodes.
  * @param[in] node to check.
  * @return 0 or unsigned integer greater than 1 if node must be splitted.
  */
-static uint64_t
-ay_ynode_rule_node_split(struct ay_ynode *node)
+static uint32_t
+ay_ynode_rule_node_split(const struct ay_ynode *tree, const struct ay_ynode *node)
 {
     struct lens *label;
     uint64_t count;
@@ -5433,7 +5499,7 @@ ay_ynode_rule_node_split(struct ay_ynode *node)
         return 0;
     }
 
-    if ((count = ay_lense_pattern_idents_count(label)) && (count > 1)) {
+    if ((count = ay_lense_pattern_idents_count(tree, label)) && (count > 1)) {
         /* +2 for YN_GROUPING and YN_USES node in @p node. */
         return (count - 1) * node->descendants + 2 + (count - 1);
     } else {
@@ -5502,12 +5568,12 @@ ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
  * @param[in] tree Tree of ynodes.
  * @return Number of nodes to insert.
  */
-static uint64_t
-ay_ynode_rule_more_keys_for_node(struct ay_ynode *tree)
+static uint32_t
+ay_ynode_rule_more_keys_for_node(const struct ay_ynode *tree)
 {
-    uint64_t ret, i, j;
+    uint32_t ret, i, j;
     struct ay_dnode *labels;
-    struct ay_ynode *node;
+    const struct ay_ynode *node;
 
     labels = AY_YNODE_ROOT_LABELS(tree);
     if (!LY_ARRAY_COUNT(labels)) {
@@ -5538,8 +5604,8 @@ ay_ynode_rule_more_keys_for_node(struct ay_ynode *tree)
  * @param[in] node to check.
  * @return Number of nodes to insert.
  */
-static uint64_t
-ay_ynode_rule_create_groupings_toplevel(struct ay_ynode *node)
+static uint32_t
+ay_ynode_rule_create_groupings_toplevel(const struct ay_ynode *node)
 {
     if (node->id == node->ref) {
         /* YN_GROUPING + YN_USES */
@@ -5560,10 +5626,10 @@ ay_ynode_rule_create_groupings_toplevel(struct ay_ynode *node)
  * @param[in] node Node to check.
  * @return Number of nodes that can be insterted for choice.
  */
-static uint64_t
-ay_ynode_rule_insert_container_in_choice(struct ay_ynode *node)
+static uint32_t
+ay_ynode_rule_insert_container_in_choice(const struct ay_ynode *node)
 {
-    uint64_t ret;
+    uint32_t ret;
     struct ay_ynode *first, *iter;
     ly_bool case_presence;
 
@@ -6313,7 +6379,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 iter = node + j + 1;
                 iter->flags |= AY_HINT_MAND_FALSE;
             }
-        } else if ((node->type == YN_LEAF) && node->label && ay_lense_pattern_has_idents(node->label->lens)) {
+        } else if ((node->type == YN_LEAF) && node->label && ay_lense_pattern_has_idents(NULL, node->label->lens)) {
             if (ay_lnode_has_maybe(node->snode, 0, 0) && !ay_ynode_alone_in_choice(node)) {
                 node->flags |= AY_CHOICE_MAND_FALSE;
             } else {
@@ -6946,9 +7012,10 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
         if (node->type != YN_CONTAINER) {
             continue;
         }
-        count = ay_ynode_rule_node_key_and_value(&tree[i]);
+        count = ay_ynode_rule_node_key_and_value(tree, &tree[i]);
         label = AY_LABEL_LENS(node);
-        if (label && ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(label))) {
+        if (label && ((label->tag == L_LABEL) ||
+                    ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(NULL, label))) {
             if (node->descendants == 0) {
                 node->type = YN_LEAF;
             } else if (node->value) {
@@ -7552,14 +7619,14 @@ ay_ynode_node_split(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
 
-        if (!ay_ynode_rule_node_split(node)) {
+        if (!ay_ynode_rule_node_split(tree, node)) {
             continue;
         } else if (ay_ynode_splitted_seq_index(node) != 0) {
             continue;
         }
 
         assert(node->label);
-        idents_count = ay_lense_pattern_idents_count(node->label->lens);
+        idents_count = ay_lense_pattern_idents_count(tree, node->label->lens);
         assert(idents_count > 1);
 
         /* Just set choice to some value if not already set. */
@@ -8243,7 +8310,7 @@ ay_ynode_set_type(struct ay_ynode *tree)
  * @return 0 on success.
  */
 static int
-ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, int (*insert)(struct ay_ynode *))
+ay_ynode_trans_insert(struct ay_ynode **tree, int (*insert)(struct ay_ynode *), uint32_t items_count)
 {
     int ret;
     struct ay_ynode *new = NULL;
@@ -8267,17 +8334,17 @@ ay_ynode_trans_insert2(struct ay_ynode **tree, uint32_t items_count, int (*inser
  * @brief Wrapper for calling some insert function.
  *
  * @param[in,out] ctx Context containing tree of ynodes and default vaules.
- * @param[in] items_count Number of nodes to be inserted.
  * @param[in] insert Callback function which inserts some nodes.
+ * @param[in] items_count Number of nodes to be inserted.
  * @return 0 on success.
  */
 static int
-ay_ynode_trans_ident_insert2(struct yprinter_ctx *ctx, uint32_t items_count, int (*insert)(struct ay_ynode *))
+ay_ynode_trans_ident_insert(struct yprinter_ctx *ctx, int (*insert)(struct ay_ynode *), uint32_t items_count)
 {
     int ret = 0;
 
     if (items_count) {
-        AY_CHECK_RV(ay_ynode_trans_insert2(&ctx->tree, items_count, insert));
+        AY_CHECK_RV(ay_ynode_trans_insert(&ctx->tree, insert, items_count));
         ret = ay_ynode_idents(ctx, 1);
     }
 
@@ -8285,78 +8352,39 @@ ay_ynode_trans_ident_insert2(struct yprinter_ctx *ctx, uint32_t items_count, int
 }
 
 /**
- * @brief Wrapper for calling some insert function.
- *
- * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
- * The insertion result will be applied.
- * @param[in] rule Callback function with which to determine the total number of inserted nodes. This callback is
- * called for each node and the number of nodes to be inserted for that node is returned. Finally, all intermediate
- * results are summed.
- * @param[in] insert Callback function which inserts some nodes.
- * @return 0 on success.
- */
-static int
-ay_ynode_trans_insert1(struct ay_ynode **tree, uint64_t (*rule)(struct ay_ynode *), int (*insert)(struct ay_ynode *))
-{
-    uint64_t counter;
-
-    ay_ynode_summary(*tree, rule, &counter);
-    return ay_ynode_trans_insert2(tree, counter, insert);
-}
-
-/**
- * @brief Wrapper for calling some insert function.
- *
- * @param[in,out] ctx Context containing tree of ynodes and default vaules.
- * @param[in] rule Callback function with which to determine the total number of inserted nodes. This callback is
- * called for each node and the number of nodes to be inserted for that node is returned. Finally, all intermediate
- * results are summed.
- * @param[in] insert Callback function which inserts some nodes.
- * @return 0 on success.
- */
-static int
-ay_ynode_trans_ident_insert1(struct yprinter_ctx *ctx, uint64_t (*rule)(struct ay_ynode *),
-        int (*insert)(struct ay_ynode *))
-{
-    uint64_t counter;
-
-    ay_ynode_summary(ctx->tree, rule, &counter);
-    return ay_ynode_trans_ident_insert2(ctx, counter, insert);
-}
-
-/**
  * @brief Transformations based on ynode identifier.
  *
  * @param[in] mod Augeas module.
- * TODO comment
  * @param[in,out] tree Tree of ynodes.
  * @reutrn 0 on success.
  */
 static int
-ay_ynode_transformations_ident(struct module *mod, struct ay_transl *table, struct ay_ynode **tree)
+ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
 {
     int ret;
     struct yprinter_ctx ctx;
 
+#define TRANSF(FUNC, REQ_SPACE) \
+    AY_CHECK_RV(ay_ynode_trans_ident_insert(&ctx, FUNC, REQ_SPACE))
+
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
-    ctx.table = table;
 
     /* Set identifier for every ynode. */
     ctx.tree = *tree;
     ret = ay_ynode_idents(&ctx, 0);
     AY_CHECK_RET(ret);
 
-    AY_CHECK_RV(ay_ynode_trans_ident_insert1(&ctx,
-            ay_ynode_rule_insert_container_in_choice, ay_ynode_insert_container_in_choice));
+    TRANSF(ay_ynode_insert_container_in_choice, ay_ynode_summary(*tree, ay_ynode_rule_insert_container_in_choice));
 
-    AY_CHECK_RV(ay_ynode_trans_ident_insert2(&ctx,
-            ay_ynode_grouping_reduction_count(ctx.tree), ay_ynode_grouping_reduction));
+    TRANSF(ay_ynode_grouping_reduction, ay_ynode_grouping_reduction_count(ctx.tree));
 
     ret = ay_ynode_idents(&ctx, 1);
     AY_CHECK_RET(ret);
 
     *tree = ctx.tree;
+
+#undef TRANSF
 
     return 0;
 }
@@ -8365,14 +8393,16 @@ ay_ynode_transformations_ident(struct module *mod, struct ay_transl *table, stru
  * @brief Apply various transformations before the tree is ready to print.
  *
  * @param[in] mod Module containing lenses for printing.
- * TODO comment
  * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
  * @return 0 on success.
  */
 static int
-ay_ynode_transformations(struct module *mod, struct ay_transl *table, struct ay_ynode **tree)
+ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 {
     int ret = 0;
+
+#define TRANSF(FUNC, REQ_SPACE) \
+    AY_CHECK_RV(ay_ynode_trans_insert(tree, FUNC, REQ_SPACE))
 
     assert((*tree)->type == YN_ROOT);
 
@@ -8400,34 +8430,32 @@ ay_ynode_transformations(struct module *mod, struct ay_transl *table, struct ay_
     ay_ynode_set_lv(*tree);
 
     /* [ key lns1 | key lns2 ... ] -> [ key lns1 ] | [ key lns2 ] ... */
-    AY_CHECK_RV(ay_ynode_trans_insert2(tree, ay_ynode_rule_more_keys_for_node(*tree), ay_ynode_more_keys_for_node));
+    TRANSF(ay_ynode_more_keys_for_node, ay_ynode_rule_more_keys_for_node(*tree));
 
     /* ([key lns1 ...] . [key lns2 ...]) | [key lns3 ...]   ->
      * choice ch { case { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_insert_case, ay_ynode_insert_case));
+    TRANSF(ay_ynode_insert_case, ay_ynode_summary(*tree, ay_ynode_rule_insert_case));
 
     /* ... | [key lns1 . lns2] . lns3 | [key lns1 . lns2] . lns4 | ... ->
      * ... | [key lns1 . lns2] . (lns3 | lns4) | ... */
     /* If lns3 or lns4 missing then choice between lns3 and lns4 is not mandatory. */
-    AY_CHECK_RV(ay_ynode_trans_insert2(tree, 2, ay_ynode_merge_cases));
+    TRANSF(ay_ynode_merge_cases, 2);
 
     /* insert top-level list for storing configure file */
-    AY_CHECK_RV(ay_ynode_trans_insert2(tree, 1, ay_insert_list_files));
+    TRANSF(ay_insert_list_files, 1);
 
     /* Make a tree that reflects the order of records.
      * list A {} list B{} -> list C { container A{} container B{}}
      */
-    AY_CHECK_RV(ay_ynode_trans_insert2(tree,
-            ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)), ay_ynode_ordered_entries));
+    TRANSF(ay_ynode_ordered_entries, ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)));
 
     /* Apply recursive yang form for recursive lenses. */
-    AY_CHECK_RV(ay_ynode_trans_insert2(tree,
-            ay_ynode_rule_recursive_form(*tree), ay_ynode_recursive_form));
+    TRANSF(ay_ynode_recursive_form, ay_ynode_rule_recursive_form(*tree));
 
     /* [label str store lns]*   -> container { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> container { YN_KEY{} YN_VALUE{} } */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_node_key_and_value, ay_insert_node_key_and_value));
+    TRANSF(ay_insert_node_key_and_value, ay_ynode_summary2(*tree, ay_ynode_rule_node_key_and_value));
 
     ay_ynode_tree_set_mandatory(*tree);
 
@@ -8436,21 +8464,22 @@ ay_ynode_transformations(struct module *mod, struct ay_transl *table, struct ay_
     ay_ynode_set_ref(*tree);
 
     /* Create groupings and uses-stmt. Grouping are moved to the top-level part of the module. */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree,
-            ay_ynode_rule_create_groupings_toplevel, ay_ynode_create_groupings_toplevel));
+    TRANSF(ay_ynode_create_groupings_toplevel, ay_ynode_summary(*tree, ay_ynode_rule_create_groupings_toplevel));
 
     /* Delete YN_REC nodes. */
     ay_ynode_delete_ynrec(*tree);
 
     /* [key "a" | "b"] -> list a {} list b {} */
     /* It is for generally nodes, not just a list nodes. */
-    AY_CHECK_RV(ay_ynode_trans_insert1(tree, ay_ynode_rule_node_split, ay_ynode_node_split));
+    TRANSF(ay_ynode_node_split, ay_ynode_summary2(*tree, ay_ynode_rule_node_split));
 
     /* No other groupings will not be added, so move groupings in front of config-file list. */
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
     /* Transformations based on ynode identifier. */
-    AY_CHECK_RV(ay_ynode_transformations_ident(mod, table, tree));
+    AY_CHECK_RV(ay_ynode_transformations_ident(mod, tree));
+
+#undef TRANSF
 
     return ret;
 }
@@ -8462,7 +8491,6 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct lens *lens;
     struct ay_lnode *ltree = NULL;
     struct ay_ynode *yforest = NULL, *ytree = NULL;
-    struct ay_transl *tpatterns = NULL;
     uint32_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
 
     assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
@@ -8484,15 +8512,10 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ay_ynode_create_forest(ltree, yforest);
     ay_test_ynode_forest(vercode, mod, yforest);
 
-    /* Create translation table for lens.regexp.pattern. */
-    LY_ARRAY_CREATE_GOTO(NULL, tpatterns, tpatt_size, ret, cleanup);
-    ret = ay_transl_create_pattern_table(ltree, tpatterns);
-    AY_CHECK_GOTO(ret, cleanup);
-
     /* Convert ynode forest to tree. */
     ret = ay_test_ynode_copy(vercode, yforest);
     AY_CHECK_GOTO(ret, cleanup);
-    ret = ay_ynode_create_tree(yforest, ltree, &ytree);
+    ret = ay_ynode_create_tree(yforest, ltree, tpatt_size, &ytree);
     AY_CHECK_GOTO(ret, cleanup);
     /* The ltree is now owned by ytree, so ytree is responsible for freeing memory of ltree. */
     ltree = NULL;
@@ -8504,18 +8527,17 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     AY_CHECK_GOTO(ret, cleanup);
 
     /* Apply transformations. */
-    ret = ay_ynode_transformations(mod, tpatterns, &ytree);
+    ret = ay_ynode_transformations(mod, &ytree);
     AY_CHECK_GOTO(ret, cleanup);
     ret = ay_debug_ynode_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
     AY_CHECK_GOTO(ret, cleanup);
 
-    ret = ay_print_yang(mod, ytree, tpatterns, vercode, str);
+    ret = ay_print_yang(mod, ytree, vercode, str);
 
 cleanup:
     LY_ARRAY_FREE(ltree);
     LY_ARRAY_FREE(yforest);
     ay_ynode_tree_free(ytree);
-    ay_transl_table_free(tpatterns);
 
     return ret;
 }
