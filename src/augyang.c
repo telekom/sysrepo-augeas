@@ -224,6 +224,21 @@
 #define AY_EXT_VALPATH "value-yang-path"
 
 /**
+ * @defgroup lenseflags Lense flags.
+ *
+ * Various flags and additional infromation about lens structures (used in ::ay_lnode.flags).
+ *
+ * @{
+ */
+#define AY_LNODE_KEY_IS_LABEL   0x01    /**< A lense has tag L_KEY but should be L_LABEL because it doesn't
+                                             actually contain regular expression. For example 'key somename'. */
+#define AY_LNODE_KEY_HAS_IDENTS 0x02    /**< A lense has tag L_KEY and has list of identifiers delimited by '|'.
+                                             This flag is set even if some identifier is composed of prefixes
+                                             or suffixes (like: '(pref1|pref2)name|name2'). */
+#define AY_LNODE_KEY_IS_IDENT   0x03    /**< A lense has tag L_KEY but it is some name and not a regular expression. */
+/** @} lenseflags */
+
+/**
  * @brief Wrapper for lense node.
  *
  * Interconnection of lense structures is not suitable for comfortable browsing. Therefore, an ay_lnode wrapper has
@@ -236,6 +251,7 @@ struct ay_lnode {
     struct ay_lnode *child;     /**< Pointer to the first child node. */
     uint32_t descendants;       /**< Number of descendants in the subtree where current node is the root. */
 
+    uint32_t flags;             /**< Various additional information about [lense flags](@ref lenseflags) */
     struct lens *lens;          /**< Pointer to lense node. Always set. */
 };
 
@@ -2744,7 +2760,7 @@ clean:
  * @param[out] buffer Array with sufficient memory space in which the identifier will be written.
  * @return 1 if identifier is successfully found and standardized.
  */
-static int 
+static int
 ay_ynode_get_ident_from_transl_table(const struct ay_ynode *tree, const struct ay_ynode *node, enum ay_ident_dst opt,
         char *buffer)
 {
@@ -2794,9 +2810,9 @@ ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node,
 
     if ((label->tag == L_LABEL) || (label->tag == L_SEQ)) {
         return label->string->str;
-    } else if (ay_lense_pattern_is_label(label)) {
+    } else if (node->label->flags & AY_LNODE_KEY_IS_LABEL) {
         return label->regexp->pattern->str;
-    } else if (ay_lense_pattern_has_idents(tree, label)) {
+    } else if (node->label->flags & AY_LNODE_KEY_HAS_IDENTS) {
         *erc = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
         return buffer;
     } else {
@@ -2975,7 +2991,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         AY_CHECK_RET(ret);
         str = buffer;
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
-        if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(tree, label)) {
+        if (label && (node->label->flags & AY_LNODE_KEY_HAS_IDENTS)) {
             ret = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
@@ -3345,11 +3361,11 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_PATH " \"", ctx->space, "");
 
-    if ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(NULL, label)) {
-        ret = ay_print_yang_ident(ctx, node, AY_IDENT_DATA_PATH);
-    } else {
-        assert((label->tag == L_SEQ) || (label->tag == L_KEY));
+    if ((label->tag == L_SEQ) || ((label->tag == L_KEY) &&
+            !(node->label->flags & AY_LNODE_KEY_IS_IDENT))) {
         ly_print(ctx->out, "$$");
+    } else {
+        ret = ay_print_yang_ident(ctx, node, AY_IDENT_DATA_PATH);
     }
 
     ly_print(ctx->out, "\";\n");
@@ -3380,7 +3396,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else if (!value) {
         return ret;
     } else if ((node->type == YN_LEAF) && label &&
-            ((label->tag == L_LABEL) || ay_lense_pattern_has_idents(NULL, label))) {
+            ((label->tag == L_LABEL) || (node->label->flags & AY_LNODE_KEY_IS_IDENT))) {
         return ret;
     }
 
@@ -3715,10 +3731,10 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (node->type == YN_VALUE) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if (ay_lense_pattern_has_idents(NULL, label) && value) {
+    } else if (label && (node->label->flags & AY_LNODE_KEY_IS_IDENT) && value) {
         lnode = node->value;
         lv_type = AY_LV_TYPE_VALUE;
-    } else if ((node->type == YN_LEAF) && ay_lense_pattern_has_idents(NULL, label) && !value) {
+    } else if ((node->type == YN_LEAF) && (node->label->flags & AY_LNODE_KEY_IS_IDENT) && !value) {
         ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         return ret;
     } else if (label && (label->tag == L_KEY)) {
@@ -4937,17 +4953,18 @@ augyang_print_input_lenses(struct module *mod, char **str)
 /**
  * @brief Fill @p table with records and then the table will be ready to use.
  *
- * @param[in] tree Tree of lnodes.
+ * @param[in] tree Tree of lnodes. Flag AY_LNODE_KEY_HAS_IDENTS can be set.
  * @param[out] table Translation table of lens patterns. The LY_ARRAY must have enough allocated space.
  * @return 1 on success.
  */
 static int
-ay_transl_create_pattern_table(const struct ay_lnode *tree, struct ay_transl *table)
+ay_transl_create_pattern_table(struct ay_lnode *tree, struct ay_transl *table)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_transl *patt, *dst;
     uint64_t ret;
     char *origin;
+    ly_bool has_idents;
 
     /* Fill ay_transl.origin. */
     LY_ARRAY_FOR(tree, i) {
@@ -4956,8 +4973,14 @@ ay_transl_create_pattern_table(const struct ay_lnode *tree, struct ay_transl *ta
         }
         /* Find if pattern is already in table. */
         origin = tree[i].lens->regexp->pattern->str;
+
+        has_idents = !(tree[i].flags & AY_LNODE_KEY_IS_LABEL) && ay_lense_pattern_has_idents(NULL, tree[i].lens);
+        if (has_idents) {
+            tree[i].flags |= AY_LNODE_KEY_HAS_IDENTS;
+        }
+
         patt = ay_transl_find(table, origin);
-        if (!patt && !ay_lense_pattern_is_label(tree[i].lens) && ay_lense_pattern_has_idents(NULL, tree[i].lens)) {
+        if (!patt && has_idents) {
             dst = &table[LY_ARRAY_COUNT(table)];
             dst->origin = origin;
             LY_ARRAY_INCREMENT(table);
@@ -4987,6 +5010,9 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
 
     LY_ARRAY_INCREMENT(root);
     node->lens = lens;
+    if (ay_lense_pattern_is_label(lens)) {
+        node->flags |= AY_LNODE_KEY_IS_LABEL;
+    }
 
     if (AY_LENSE_HAS_NO_CHILD(lens->tag) || ((lens->tag == L_REC) && (lens->rec_internal))) {
         /* values are set by the parent */
@@ -5356,7 +5382,7 @@ ay_ynode_rule_list(const struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
     has_value = label && ((label->tag == L_KEY) || (label->tag == L_SEQ)) && node->value;
-    has_idents = !!ay_lense_pattern_has_idents(NULL, label);
+    has_idents = label && (node->label->flags & AY_LNODE_KEY_IS_IDENT);
     return (node->child || has_value || has_idents) && label && ay_ynode_get_repetition(node);
 }
 
@@ -5412,14 +5438,14 @@ static uint32_t
 ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_ynode *node)
 {
     struct lens *label, *value;
+
     (void) tree;
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
     if ((node->type != YN_CONTAINER) || !label) {
         return 0;
-    } else if ((label->tag == L_LABEL) || ay_lense_pattern_is_label(label) ||
-            ay_lense_pattern_has_idents(NULL, label)) {
+    } else if ((label->tag == L_LABEL) || (node->label->flags & AY_LNODE_KEY_IS_IDENT)) {
         return value ? 1 : 0;
     } else if (label->tag == L_SEQ) {
         return value ? 2 : 1;
@@ -6379,7 +6405,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 iter = node + j + 1;
                 iter->flags |= AY_HINT_MAND_FALSE;
             }
-        } else if ((node->type == YN_LEAF) && node->label && ay_lense_pattern_has_idents(NULL, node->label->lens)) {
+        } else if ((node->type == YN_LEAF) && node->label && (node->label->flags & AY_LNODE_KEY_IS_IDENT)) {
             if (ay_lnode_has_maybe(node->snode, 0, 0) && !ay_ynode_alone_in_choice(node)) {
                 node->flags |= AY_CHOICE_MAND_FALSE;
             } else {
@@ -7014,8 +7040,7 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
         }
         count = ay_ynode_rule_node_key_and_value(tree, &tree[i]);
         label = AY_LABEL_LENS(node);
-        if (label && ((label->tag == L_LABEL) ||
-                    ay_lense_pattern_is_label(label) || ay_lense_pattern_has_idents(NULL, label))) {
+        if (label && ((label->tag == L_LABEL) || (node->label->flags & AY_LNODE_KEY_IS_IDENT))) {
             if (node->descendants == 0) {
                 node->type = YN_LEAF;
             } else if (node->value) {
