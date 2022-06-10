@@ -466,6 +466,19 @@ struct ay_dnode {
 #define AY_DNODE_IS_VAL(DNODE) \
     (DNODE->values_count == 0)
 
+/**
+ * @brief Record in translation table.
+ *
+ * The lens.regexp.pattern.str can be a long string which may consist of a list of possible identifiers rather than
+ * a regular expression. It is more efficient to store such identifiers so that the pattern does not have to be parsed
+ * repeatedly.
+ */
+struct ay_transl {
+    const char *origin;     /**< Pointer to lens.regexp.pattern.str which is consists of list of identifiers. */
+    char **substr;          /**< Parsed identifiers from 'origin' are stored in LY_ARRAY. However, the identifier
+                                 is not yet complete, use ay_ynode_get_ident_from_transl_table(). */
+};
+
 struct lprinter_ctx;
 
 /**
@@ -494,6 +507,7 @@ struct lprinter_ctx {
 struct yprinter_ctx {
     struct augeas *aug;     /**< Augeas context. */
     struct module *mod;     /**< Current Augeas module. */
+    struct ay_transl *table;/**< TODO comment */
     struct ay_ynode *tree;  /**< Pointer to the Sized array. */
     uint64_t vercode;       /**< Verbose options from API to debugging. */
     struct ly_out *out;     /**< Output to which it is printed. */
@@ -636,13 +650,17 @@ ay_string_remove_character(char *str, const char *rem)
  * @param[in] lens Main lense where to start.
  * @param[out] ltree_size Number of lenses.
  * @param[out] yforest_size Number of lenses with L_SUBTREE tag.
+ * @param[out] tpatt_size Maximum number of records in translation table of lens patterns.
  */
 static void
-ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size)
+ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size, uint32_t *tpatt_size)
 {
     (*ltree_size)++;
     if ((lens->tag == L_SUBTREE) || (lens->tag == L_REC)) {
         (*yforest_size)++;
+    }
+    if (lens->tag == L_KEY) {
+        (*tpatt_size)++;
     }
 
     if (AY_LENSE_HAS_NO_CHILD(lens->tag)) {
@@ -650,13 +668,13 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
     }
 
     if (AY_LENSE_HAS_ONE_CHILD(lens->tag)) {
-        ay_lense_summary(lens->child, ltree_size, yforest_size);
+        ay_lense_summary(lens->child, ltree_size, yforest_size, tpatt_size);
     } else if (AY_LENSE_HAS_CHILDREN(lens->tag)) {
         for (uint64_t i = 0; i < lens->nchildren; i++) {
-            ay_lense_summary(lens->children[i], ltree_size, yforest_size);
+            ay_lense_summary(lens->children[i], ltree_size, yforest_size, tpatt_size);
         }
     } else if ((lens->tag == L_REC) && !lens->rec_internal) {
-        ay_lense_summary(lens->body, ltree_size, yforest_size);
+        ay_lense_summary(lens->body, ltree_size, yforest_size, tpatt_size);
     }
 }
 
@@ -719,6 +737,46 @@ ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value)
         LY_ARRAY_INCREMENT(dict);
         LY_ARRAY_INCREMENT(dict);
     }
+}
+
+/**
+ * @brief Find @p origin item in @p table.
+ *
+ * @param[in] table Array of translation records.
+ * @param[in] origin Pointer according to which the record will be searched.
+ * @return Record containing @p origin or NULL.
+ */
+static struct ay_transl *
+ay_transl_find(struct ay_transl *table, const char *origin)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_transl *ret;
+
+    ret = NULL;
+    LY_ARRAY_FOR(table, i) {
+        if (table[i].origin == origin) {
+            return &table[i];
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Release translation table.
+ *
+ * @param[in] table Array of translation records.
+ */
+static void
+ay_transl_table_free(struct ay_transl *table)
+{
+    LY_ARRAY_COUNT_TYPE i;
+
+    LY_ARRAY_FOR(table, i) {
+        LY_ARRAY_FREE(table[i].substr);
+    }
+
+    LY_ARRAY_FREE(table);
 }
 
 /**
@@ -2310,21 +2368,16 @@ ay_lense_pattern_has_idents(struct lens *lens)
 /**
  * @brief Count number of identifiers in the lense pattern.
  *
- * @param[in] lens Lense to check his pattern.
+ * @param[in] patt Lense pattern to check.
  * @return Number of identifiers.
  */
 static uint64_t
-ay_lense_pattern_idents_count(struct lens *lens)
+ay_pattern_idents_count(const char *patt)
 {
     uint64_t ret;
-    const char *patt;
-
-    if (!lens || (lens->tag != L_KEY) || !ay_lense_pattern_has_idents(lens)) {
-        return 0;
-    }
 
     ret = 1;
-    patt = ay_lense_pattern_next_union(lens->regexp->pattern->str);
+    patt = ay_lense_pattern_next_union(patt);
     if (!patt) {
         return ret;
     }
@@ -2335,6 +2388,22 @@ ay_lense_pattern_idents_count(struct lens *lens)
     }
 
     return ret;
+}
+
+/**
+ * @brief Count number of identifiers in the lense pattern.
+ *
+ * @param[in] lens Lense to check his pattern.
+ * @return Number of identifiers.
+ */
+static uint64_t
+ay_lense_pattern_idents_count(struct lens *lens)
+{
+    if (!lens || (lens->tag != L_KEY) || !ay_lense_pattern_has_idents(lens)) {
+        return 0;
+    }
+
+    return ay_pattern_idents_count(lens->regexp->pattern->str);
 }
 
 /**
@@ -2384,37 +2453,52 @@ ay_ynode_splitted_seq_index(struct ay_ynode *node)
 static const char *
 ay_pattern_union_token(const char *patt, uint64_t idx, uint64_t *token_len)
 {
-    char ch;
     uint64_t par, cnt;
     const char *ret, *iter, *start, *stop;
+    ly_bool end;
 
     assert(patt && token_len);
+
+    if (*patt == '\0') {
+        return NULL;
+    } else if (*patt == '|') {
+        patt++;
+    }
 
     start = patt;
     stop = NULL;
     par = 0;
     cnt = 0;
-    for (iter = patt; *iter; iter++) {
-        ch = *iter;
-        if (ch == '(') {
+    end = 0;
+    for (iter = patt; *iter && !end; iter++) {
+        switch (*iter) {
+        case '(':
             par++;
-        } else if (ch == ')') {
+            break;
+        case ')':
             if (!par) {
                 /* Interpret as the end of input. */
                 stop = iter;
-                break;
+                end = 1;
+            } else {
+                par--;
             }
-            par--;
-        } else if (!par && (ch == '|')) {
-            if (cnt == idx) {
+            break;
+        case '|':
+            if (par) {
+                break;
+            } else if (cnt == idx) {
                 /* Token on index 'idx' has been read. */
                 stop = iter;
-                break;
+                end = 1;
             } else if ((cnt + 1) == idx) {
                 /* The beginning of the token is found. */
                 start = iter + 1;
+                cnt++;
+            } else {
+                cnt++;
             }
-            cnt++;
+            break;
         }
     }
     assert(*start != '\0');
@@ -2449,41 +2533,47 @@ ay_pattern_union_token(const char *patt, uint64_t idx, uint64_t *token_len)
  * @param[in] patt Pattern string from lens.regexp.pattern.str.
  * @return New allocated pattern string without parentheses or NULL in case of memory error.
  */
-char *
+static char *
 ay_pattern_remove_parentheses(const char *patt)
 {
-    uint64_t i, j, len, par_removed, par;
-    char *buf;
+    uint64_t i, len, par_removed, par;
+    char *buf, *buffer;
     const char *ptoken;
 
-    buf = strdup(patt);
-    if (!buf) {
+    buffer = strdup(patt);
+    if (!buffer) {
         return NULL;
     }
+    buf = buffer;
 
-    do {
+    par_removed = 0;
+    while ((ptoken = ay_pattern_union_token(buf, 0, &len))) {
         par_removed = 0;
-        for (i = 0; (ptoken = ay_pattern_union_token(buf, i, &len)); i++) {
-            if ((ptoken[0] == '(') && (ptoken[len - 1] == ')')) {
-                par = 1;
-                for (j = 1; (j < len) && (par != 0); j++) {
-                    if (ptoken[j] == '(') {
-                        par++;
-                    } else if (ptoken[j] == ')') {
-                        par--;
-                    }
-                }
-                if (j == len) {
-                    /* remove parentheses */
-                    ay_string_remove_character(buf, &ptoken[len - 1]);
-                    ay_string_remove_character(buf, ptoken);
-                    par_removed = 1;
+        if ((ptoken[0] == '(') && (ptoken[len - 1] == ')')) {
+            par = 1;
+            for (i = 1; (i < len) && (par != 0); i++) {
+                if (ptoken[i] == '(') {
+                    par++;
+                } else if (ptoken[i] == ')') {
+                    par--;
                 }
             }
+            if (i == len) {
+                /* remove parentheses */
+                ay_string_remove_character(buf, &ptoken[len - 1]);
+                ay_string_remove_character(buf, ptoken);
+                len -= 2;
+                par_removed = 1;
+            }
         }
-    } while (par_removed);
+        if (!par_removed) {
+            /* Shift to the next token. */
+            buf = (char *)(ptoken + len);
+        }
+        /* Else try remove parentheses again. */
+    }
 
-    return buf;
+    return buffer;
 }
 
 /**
@@ -2554,50 +2644,73 @@ ay_pattern_identifier(const char *ptoken, uint64_t ptoken_len, uint64_t idx, cha
 }
 
 /**
- * @brief For given ynode find his identifier somewhere in the lense pattern (containing sequence of identifiers).
+ * @brief Create and fill ay_transl.substr LY_ARRAY based on ay_transl.origin.
  *
- * @param[in] node Node for which the identifier is being searched.
- * @param[in] opt Where the identifier will be placed.
- * @param[out] buffer Array with sufficient memory space in which the identifier will be written.
+ * @param[in,out] tran Translation record.
  * @return 0 on success.
  */
 static int
-ay_ynode_get_ident_from_pattern(struct ay_ynode *node, enum ay_ident_dst opt, char *buffer)
+ay_transl_create_substr(struct ay_transl *tran)
 {
     int ret;
-    uint64_t node_idx, idx_cnt, i, j, len;
+    uint64_t idx_cnt, cnt, i, len;
+    const char *ptoken, *patt;
+    char *pattern, *substr;
+    char buffer[AY_MAX_IDENT_SIZE];
+
+    assert(tran && tran->origin);
+
+    /* Allocate enough memory space for ay_transl.substr. */
+    cnt = ay_pattern_idents_count(tran->origin);
+    LY_ARRAY_CREATE_RET(NULL, tran->substr, cnt, AYE_MEMORY);
+
+    pattern = ay_pattern_remove_parentheses(tran->origin);
+    AY_CHECK_COND(!pattern, AYE_MEMORY);
+
+    idx_cnt = 0;
+    patt = pattern;
+    while ((ptoken = ay_pattern_union_token(patt, 0, &len))) {
+        for (i = 0; !(ret = ay_pattern_identifier(ptoken, len, i, buffer)); i++) {
+            substr = strdup(buffer);
+            if (!substr) {
+                ret = AYE_MEMORY;
+                goto clean;
+            }
+            tran->substr[idx_cnt] = substr;
+            idx_cnt++;
+            LY_ARRAY_INCREMENT(tran->substr);
+        }
+        AY_CHECK_GOTO(ret == AYE_IDENT_LIMIT, clean);
+        patt = ptoken + len;
+    }
+
+clean:
+    free(pattern);
+
+    return 0;
+}
+
+// TODO comment
+static int
+ay_ynode_get_ident_from_transl_table(struct ay_ynode *node, struct ay_transl *table, enum ay_ident_dst opt,
+        char *buffer)
+{
+    int ret;
+    uint64_t node_idx;
+    const char *pattern, *ident;
     struct lens *label;
-    const char *pattern, *ptoken;
-    char *patt;
+    struct ay_transl *tran;
 
     label = AY_LABEL_LENS(node);
     assert(label && (label->tag == L_KEY) && node->parent);
     pattern = label->regexp->pattern->str;
-
     /* find out which identifier index to look for in the pattern */
     node_idx = ay_ynode_splitted_seq_index(node);
 
-    patt = ay_pattern_remove_parentheses(pattern);
-    if (!patt) {
-        return AYE_MEMORY;
-    }
-
-    idx_cnt = 0;
-    for (i = 0; (ptoken = ay_pattern_union_token(patt, i, &len)); i++) {
-        for (j = 0; !(ret = ay_pattern_identifier(ptoken, len, j, buffer)); j++) {
-            if (idx_cnt == node_idx) {
-                goto stop;
-            }
-            idx_cnt++;
-        }
-        AY_CHECK_GOTO(ret == AYE_IDENT_LIMIT, end);
-    }
-stop:
-    assert(idx_cnt == node_idx);
-    ret = ay_get_ident_from_pattern_standardized(buffer, opt, buffer);
-
-end:
-    free(patt);
+    tran = ay_transl_find(table, pattern);
+    assert(tran && (node_idx < LY_ARRAY_COUNT(tran->substr)));
+    ident = tran->substr[node_idx];
+    ret = ay_get_ident_from_pattern_standardized(ident, opt, buffer);
 
     return ret;
 }
@@ -2606,13 +2719,15 @@ end:
  * @brief Get identifier of the ynode from the label lense.
  *
  * @param[in] node Node to process.
+ * TODO comment
  * @param[in] opt Where the identifier will be placed.
  * @param[out] buffer Identifier can be written to the @p buffer and in this case return value points to @p buffer.
  * @param[out] erc Error code is 0 on success.
  * @return Exact identifier, pointer to @p buffer or NULL.
  */
 static const char *
-ay_get_yang_ident_from_label(struct ay_ynode *node, enum ay_ident_dst opt, char *buffer, int *erc)
+ay_get_yang_ident_from_label(struct ay_ynode *node, struct ay_transl *table, enum ay_ident_dst opt, char *buffer,
+        int *erc)
 {
     struct lens *label;
 
@@ -2628,7 +2743,7 @@ ay_get_yang_ident_from_label(struct ay_ynode *node, enum ay_ident_dst opt, char 
     } else if (ay_lense_pattern_is_label(label)) {
         return label->regexp->pattern->str;
     } else if (ay_lense_pattern_has_idents(label)) {
-        *erc = ay_ynode_get_ident_from_pattern(node, opt, buffer);
+        *erc = ay_ynode_get_ident_from_transl_table(node, table, opt, buffer);
         return buffer;
     } else {
         return NULL;
@@ -2806,14 +2921,14 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         str = buffer;
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_NODE_NAME)) {
         if (!ay_lense_pattern_is_label(label) && ay_lense_pattern_has_idents(label)) {
-            ret = ay_ynode_get_ident_from_pattern(node, opt, buffer);
+            ret = ay_ynode_get_ident_from_transl_table(node, ctx->table, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if (!node->label) {
@@ -2824,7 +2939,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -2835,11 +2950,11 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, node->child->next, AY_IDENT_NODE_NAME, buffer);
         return ret;
     } else if (node->type == YN_KEY) {
-        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret)) && (label->tag != L_SEQ) &&
+        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret)) && (label->tag != L_SEQ) &&
                 value && (tmp = ay_get_lense_name(ctx->mod, value))) {
             AY_CHECK_RET(ret);
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
@@ -2857,7 +2972,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "value";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_NODE_NAME)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
@@ -2868,7 +2983,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(node, ctx->table, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -4284,12 +4399,13 @@ ay_print_yang_imports(struct ly_out *out, struct ay_ynode *tree)
  *
  * @param[in] mod Module in which the tree is located.
  * @param[in] tree Ynode tree to print.
+ * TODO comment
  * @param[in] vercode Decide if debugging information should be printed.
  * @param[out] str_out Printed tree in yang format. Call free() after use.
  * @return 0 on success.
  */
 static int
-ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char **str_out)
+ay_print_yang(struct module *mod, struct ay_ynode *tree, struct ay_transl *table, uint64_t vercode, char **str_out)
 {
     int ret;
     struct yprinter_ctx ctx;
@@ -4304,6 +4420,7 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
 
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
+    ctx.table = table;
     ctx.tree = tree;
     ctx.vercode = vercode;
     ctx.out = out;
@@ -4761,6 +4878,45 @@ augyang_print_input_lenses(struct module *mod, char **str)
     ret = ay_print_lens(lens, &print_func, lens, str);
 
     return ret;
+}
+
+/**
+ * @brief Fill @p table with records and then the table will be ready to use.
+ *
+ * @param[in] tree Tree of lnodes.
+ * @param[out] table Translation table of lens patterns. The LY_ARRAY must have enough allocated space.
+ * @return 1 on success.
+ */
+static int
+ay_transl_create_pattern_table(const struct ay_lnode *tree, struct ay_transl *table)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_transl *patt, *dst;
+    uint64_t ret;
+    char *origin;
+
+    /* Fill ay_transl.origin. */
+    LY_ARRAY_FOR(tree, i) {
+        if (tree[i].lens->tag != L_KEY) {
+            continue;
+        }
+        /* Find if pattern is already in table. */
+        origin = tree[i].lens->regexp->pattern->str;
+        patt = ay_transl_find(table, origin);
+        if (!patt && !ay_lense_pattern_is_label(tree[i].lens) && ay_lense_pattern_has_idents(tree[i].lens)) {
+            dst = &table[LY_ARRAY_COUNT(table)];
+            dst->origin = origin;
+            LY_ARRAY_INCREMENT(table);
+        }
+    }
+
+    /* Fill ay_transl.substr. */
+    LY_ARRAY_FOR(table, i) {
+        ret = ay_transl_create_substr(&table[i]);
+        AY_CHECK_RET(ret);
+    }
+
+    return 0;
 }
 
 /**
@@ -8172,17 +8328,19 @@ ay_ynode_trans_ident_insert1(struct yprinter_ctx *ctx, uint64_t (*rule)(struct a
  * @brief Transformations based on ynode identifier.
  *
  * @param[in] mod Augeas module.
+ * TODO comment
  * @param[in,out] tree Tree of ynodes.
  * @reutrn 0 on success.
  */
 static int
-ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
+ay_ynode_transformations_ident(struct module *mod, struct ay_transl *table, struct ay_ynode **tree)
 {
     int ret;
     struct yprinter_ctx ctx;
 
     ctx.aug = ay_get_augeas_ctx1(mod);
     ctx.mod = mod;
+    ctx.table = table;
 
     /* Set identifier for every ynode. */
     ctx.tree = *tree;
@@ -8207,11 +8365,12 @@ ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)
  * @brief Apply various transformations before the tree is ready to print.
  *
  * @param[in] mod Module containing lenses for printing.
+ * TODO comment
  * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
  * @return 0 on success.
  */
 static int
-ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
+ay_ynode_transformations(struct module *mod, struct ay_transl *table, struct ay_ynode **tree)
 {
     int ret = 0;
 
@@ -8291,7 +8450,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
     /* Transformations based on ynode identifier. */
-    AY_CHECK_RV(ay_ynode_transformations_ident(mod, tree));
+    AY_CHECK_RV(ay_ynode_transformations_ident(mod, table, tree));
 
     return ret;
 }
@@ -8303,14 +8462,15 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct lens *lens;
     struct ay_lnode *ltree = NULL;
     struct ay_ynode *yforest = NULL, *ytree = NULL;
-    uint32_t ltree_size = 0, yforest_size = 0;
+    struct ay_transl *tpatterns = NULL;
+    uint32_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
 
     assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
 
     lens = ay_lense_get_root(mod);
     AY_CHECK_COND(!lens, AYE_LENSE_NOT_FOUND);
 
-    ay_lense_summary(lens, &ltree_size, &yforest_size);
+    ay_lense_summary(lens, &ltree_size, &yforest_size, &tpatt_size);
 
     /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);
@@ -8323,6 +8483,11 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
     ay_ynode_create_forest(ltree, yforest);
     ay_test_ynode_forest(vercode, mod, yforest);
+
+    /* Create translation table for lens.regexp.pattern. */
+    LY_ARRAY_CREATE_GOTO(NULL, tpatterns, tpatt_size, ret, cleanup);
+    ret = ay_transl_create_pattern_table(ltree, tpatterns);
+    AY_CHECK_GOTO(ret, cleanup);
 
     /* Convert ynode forest to tree. */
     ret = ay_test_ynode_copy(vercode, yforest);
@@ -8339,17 +8504,18 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     AY_CHECK_GOTO(ret, cleanup);
 
     /* Apply transformations. */
-    ret = ay_ynode_transformations(mod, &ytree);
+    ret = ay_ynode_transformations(mod, tpatterns, &ytree);
     AY_CHECK_GOTO(ret, cleanup);
     ret = ay_debug_ynode_tree(vercode, AYV_YTREE_AFTER_TRANS, ytree);
     AY_CHECK_GOTO(ret, cleanup);
 
-    ret = ay_print_yang(mod, ytree, vercode, str);
+    ret = ay_print_yang(mod, ytree, tpatterns, vercode, str);
 
 cleanup:
     LY_ARRAY_FREE(ltree);
     LY_ARRAY_FREE(yforest);
     ay_ynode_tree_free(ytree);
+    ay_transl_table_free(tpatterns);
 
     return ret;
 }
