@@ -191,6 +191,7 @@
 #define AYE_IDENT_NOT_FOUND 5
 #define AYE_IDENT_LIMIT 6
 #define AYE_LTREE_NO_ROOT 7
+#define AYE_IDENT_BAD_CHAR 8
 
 /**
  * @brief Check if lense tag belongs to ynode.label.
@@ -563,6 +564,8 @@ augyang_get_error_message(int err_code)
         return AY_NAME " ERROR: identifier is too long. Output YANG is not valid.\n";
     case AYE_LTREE_NO_ROOT:
         return AY_NAME " ERROR: Augyang does not know which lense is the root.\n";
+    case AYE_IDENT_BAD_CHAR:
+        return AY_NAME " ERROR: Invalid character in identifier.\n";
     default:
         return AY_NAME " INTERNAL ERROR: error message not defined.\n";
     }
@@ -657,7 +660,7 @@ ay_get_filename(const char *path, const char **name, uint64_t *len)
  * @param[in,out] str Pointer to string.
  * @param[in] rem Pointer to character in @p str to be removed.
  */
-void
+static void
 ay_string_remove_character(char *str, const char *rem)
 {
     uint64_t idx, len;
@@ -667,6 +670,30 @@ ay_string_remove_character(char *str, const char *rem)
     idx = rem - str;
     assert(idx < len);
     memmove(&str[idx], &str[idx + 1], len - idx);
+}
+
+/**
+ * @brief Remove all @p rem characters from the @p str and write result to @p buffer.
+ *
+ * @param[in] str Input string.
+ * @param[in] rem Character that should not appear in @p buffer.
+ * @param[out] buffer Output string without @p rem.
+ */
+static void
+ay_string_remove_characters(const char *str, char rem, char *buffer)
+{
+    uint64_t i, j, len;
+
+    len = strlen(str);
+    assert(len < AY_MAX_IDENT_SIZE);
+    for (i = 0, j = 0; i < len; i++, j++) {
+        if (str[i] != rem) {
+            buffer[j] = str[i];
+        } else {
+            j--;
+        }
+    }
+    buffer[j] = '\0';
 }
 
 /**
@@ -1950,18 +1977,17 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
     int ret;
     int64_t i, j, len, stop;
 
+    assert((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH));
+
     stop = strlen(ident);
     for (i = 0, j = 0; i < stop; i++, j++) {
         switch (ident[i]) {
-        case '@':
-            j--;
-            break;
-        case '#':
-            j--;
-            break;
         case ' ':
             AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : ' ';
+            break;
+        case '#':
+            j--;
             break;
         case '+':
             len = strlen("plus-");
@@ -1978,6 +2004,21 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             } else {
                 AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 buffer[j] = '-';
+            }
+            break;
+        case '@':
+            j--;
+            break;
+        case '\\':
+            if ((j == 0) && (ident[i + 1] == '.')) {
+                /* remove '\' and also '.' */
+                j--;
+                i++;
+            } else if (ident[i + 1] == '.') {
+                /* remove '\' but keep '.' */
+                j--;
+            } else {
+                return AYE_IDENT_BAD_CHAR;
             }
             break;
         case '_':
@@ -2278,6 +2319,9 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
 
     for (i = 0, j = 0; ident[i] != '\0'; i++, j++) {
         switch (ident[i]) {
+        case '\n':
+            j--;
+            break;
         case ' ':
             if (j && (buffer[j - 1] == '-')) {
                 j--;
@@ -2294,8 +2338,17 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
         case ')':
             j--;
             break;
-        case '\n':
-            j--;
+        case '\\':
+            if ((j == 0) && (ident[i + 1] == '.')) {
+                /* remove '\' and also '.' */
+                j--;
+                i++;
+            } else if (ident[i + 1] == '.') {
+                /* remove '\' but keep '.' */
+                j--;
+            } else {
+                return AYE_IDENT_BAD_CHAR;
+            }
             break;
         case '_':
             if (j == 0) {
@@ -2321,20 +2374,33 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
  * @brief Check if character is valid as part of identifier.
  *
  * @param[in] ch Character to check.
+ * @param[out] shift Flag is set to 1 if the next character should not be read in the next iteration
+ * because it is preceded by a backslash. Otherwise is set to 0.
  * @return 1 for valid character, otherwise 0.
  */
 static ly_bool
-ay_ident_character_is_valid(const char *ch)
+ay_ident_character_is_valid(const char *ch, ly_bool *shift)
 {
+    assert(ch && shift);
+
+    *shift = 0;
+
     if (((*ch >= 65) && (*ch <= 90)) || /* A-Z */
             ((*ch >= 97) && (*ch <= 122)) || /* a-z */
-            (*ch == '_') ||
-            (*ch == '-') ||
-            (*ch == ' ') ||
             ((*ch >= 48) && (*ch <= 57))) { /* 0-9 */
         return 1;
+    } else if ((*ch == '\\') && (*(ch + 1) == '.')) {
+        *shift = 1;
+        return 1;
     } else {
-        return 0;
+        switch (*ch) {
+        case ' ':
+        case '-':
+        case '_':
+            return 1;
+        default:
+            return 0;
+        }
     }
 }
 
@@ -2351,15 +2417,17 @@ static ly_bool
 ay_lense_pattern_is_label(struct lens *lens)
 {
     char *ch;
+    ly_bool shift;
 
     if (!lens || ((lens->tag != L_STORE) && (lens->tag != L_KEY))) {
         return 0;
     }
 
     for (ch = lens->regexp->pattern->str; *ch != '\0'; ch++) {
-        if (!ay_ident_character_is_valid(ch)) {
+        if (!ay_ident_character_is_valid(ch, &shift)) {
             break;
         }
+        ch = shift ? ch + 1 : ch;
     }
 
     return *ch == '\0';
@@ -2395,6 +2463,7 @@ static struct ay_transl *
 ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens)
 {
     const char *iter, *patt;
+    ly_bool shift;
 
     if (!lens || (lens->tag != L_KEY)) {
         return NULL;
@@ -2407,14 +2476,18 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
     }
 
     for (iter = patt; *iter != '\0'; iter++) {
-        if ((*iter == '|') || (*iter == '(') || (*iter == ')')) {
+        switch (*iter) {
+        case '(':
+        case ')':
+        case '|':
+        case '\n': /* '\n'-> TODO pattern is probably written wrong -> bugfix lense? */
             continue;
-        } else if (*iter == '\n') {
-            /* TODO pattern is probably written wrong -> bugfix lense? */
-            continue;
-        } else if (!ay_ident_character_is_valid(iter)) {
-            return NULL;
+        default:
+            if (!ay_ident_character_is_valid(iter, &shift)) {
+                return NULL;
+            }
         }
+        iter = shift ? iter + 1 : iter;
     }
 
     /* Success - return some non-NULL address. */
@@ -2811,7 +2884,14 @@ ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node,
     if ((label->tag == L_LABEL) || (label->tag == L_SEQ)) {
         return label->string->str;
     } else if (node->label->flags & AY_LNODE_KEY_IS_LABEL) {
-        return label->regexp->pattern->str;
+        if ((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH)) {
+            /* remove backslashes */
+            ay_string_remove_characters(label->regexp->pattern->str, '\\', buffer);
+            return buffer;
+        } else {
+            /* It is assumed that the ay_get_ident_standardized() will be called later. */
+            return label->regexp->pattern->str;
+        }
     } else if (node->label->flags & AY_LNODE_KEY_HAS_IDENTS) {
         *erc = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
         return buffer;
@@ -3131,7 +3211,8 @@ ay_yang_ident_iter(struct ay_ynode *root, struct ay_ynode *iter)
  *
  * @param[in] tree Tree of ynodes.
  * @param[in] node Node for which the duplicates will be searched.
- * @param[out] dupl_rank Duplicate number for @p ident.
+ * @param[out] dupl_rank Duplicate number for @p ident. Rank may be greater than @p dupl_count because it is also
+ * derived from the number of the previous duplicate identifier.
  * @param[out] dupl_count Number of all duplicates.
  * @return 0 on success.
  */
@@ -3141,9 +3222,10 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
 {
     int ret = 0;
     struct ay_ynode *iter, *root, *gr;
-    int64_t rnk, tmp_rnk;
+    int64_t rnk, tmp_rnk, tmp, prev;
     uint64_t cnt, tmp_cnt;
     const char *ch1, *ch2;
+    char *end;
 
     assert(dupl_count);
 
@@ -3156,6 +3238,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     }
 
     root = ay_yang_ident_iter(NULL, node);
+    prev = -1;
     for (iter = ay_yang_ident_iter(root, NULL); iter; iter = ay_yang_ident_iter(root, iter)) {
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
             continue;
@@ -3178,7 +3261,14 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
                 break;
             }
         }
-        if ((isdigit(*ch1) && !*ch2) || (!*ch1 && !*ch2)) {
+        if (isdigit(*ch1) && !*ch2) {
+            errno = 0;
+            tmp = strtol(ch1, &end, 10);
+            if (!errno && (*end == '\0')) {
+                prev = rnk >= 0 ? prev : tmp;
+                cnt++;
+            }
+        } else if (!*ch1 && !*ch2) {
             cnt++;
         }
     }
@@ -3186,7 +3276,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
 end:
 
     if (dupl_rank) {
-        *dupl_rank = rnk;
+        *dupl_rank = prev >= 0 ? prev : rnk;
     }
     *dupl_count = cnt;
 
@@ -3329,7 +3419,12 @@ ay_ynode_idents(struct yprinter_ctx *ctx, ly_bool solve_duplicates)
         } else if (dupl_rank) {
             assert(dupl_rank > 0);
             strcpy(buffer, iter->ident);
-            AY_CHECK_MAX_IDENT_SIZE(buffer, "X");
+            if (dupl_rank < 10) {
+                AY_CHECK_MAX_IDENT_SIZE(buffer, "X");
+            } else {
+                assert(dupl_rank < 100);
+                AY_CHECK_MAX_IDENT_SIZE(buffer, "XX");
+            }
             sprintf(buffer + strlen(buffer),  "%" PRId64, dupl_rank + 1);
         } else {
             strcpy(buffer, iter->ident);

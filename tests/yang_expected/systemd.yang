@@ -9,25 +9,6 @@ module systemd {
 
   augex:augeas-mod-name "Systemd";
 
-  grouping include {
-    container include {
-      augex:data-path "$$";
-      augex:value-yang-path "sto-value";
-      presence "Config entry.";
-      leaf label {
-        mandatory true;
-        type string {
-          pattern "\\.include";
-        }
-      }
-      leaf sto-value {
-        mandatory true;
-        type string {
-          pattern "[^# \t\n]*[^# \t\n\\\\]";
-        }
-      }
-    }
-  }
   list systemd {
     key "config-file";
     leaf config-file {
@@ -41,7 +22,12 @@ module systemd {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      uses include;
+      leaf include {
+        type string {
+          pattern "[^# \t\n]*[^# \t\n\\\\]";
+        }
+        augex:data-path ".include";
+      }
     }
     list record-list {
       key "_id";
@@ -191,8 +177,11 @@ module systemd {
                 }
               }
             }
-            case include {
-              uses include;
+            leaf include {
+              type string {
+                pattern "[^# \t\n]*[^# \t\n\\\\]";
+              }
+              augex:data-path ".include";
             }
           }
         }
