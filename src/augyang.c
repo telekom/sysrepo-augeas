@@ -822,9 +822,12 @@ ay_transl_find(struct ay_transl *table, const char *origin)
 static void
 ay_transl_table_free(struct ay_transl *table)
 {
-    LY_ARRAY_COUNT_TYPE i;
+    LY_ARRAY_COUNT_TYPE i, j;
 
     LY_ARRAY_FOR(table, i) {
+        LY_ARRAY_FOR(table[i].substr, j) {
+            free(table[i].substr[j]);
+        }
         LY_ARRAY_FREE(table[i].substr);
     }
 
@@ -3231,6 +3234,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
 
     rnk = -1;
     cnt = 0;
+    prev = -1;
 
     if (node->type == YN_CASE) {
         rnk = 0;
@@ -3238,7 +3242,6 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
     }
 
     root = ay_yang_ident_iter(NULL, node);
-    prev = -1;
     for (iter = ay_yang_ident_iter(root, NULL); iter; iter = ay_yang_ident_iter(root, iter)) {
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
             continue;
