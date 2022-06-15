@@ -246,6 +246,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>28</_id>\n"
             "    <subsystem>\n"
+            "      <subsystem>Subsystem</subsystem>\n"
             "      <subsystemvalue>\n"
             "        <label>sftp</label>\n"
             "        <value>internal-sftp</value>\n"
@@ -255,6 +256,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>29</_id>\n"
             "    <accept-env>\n"
+            "      <accept-env>AcceptEnv</accept-env>\n"
             "      <accept-env-list>\n"
             "        <_id>1</_id>\n"
             "        <accept-env>\n"
@@ -309,6 +311,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>30</_id>\n"
             "    <accept-env>\n"
+            "      <accept-env>AcceptEnv</accept-env>\n"
             "      <accept-env-list>\n"
             "        <_id>1</_id>\n"
             "        <accept-env>\n"
@@ -349,6 +352,7 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>31</_id>\n"
             "    <accept-env>\n"
+            "      <accept-env>AcceptEnv</accept-env>\n"
             "      <accept-env-list>\n"
             "        <_id>1</_id>\n"
             "        <accept-env>\n"
@@ -368,6 +372,7 @@ test_load(void **state)
             "  <match-list>\n"
             "    <_id>1</_id>\n"
             "    <match>\n"
+            "      <match>Match</match>\n"
             "      <match-cond>\n"
             "        <config-entries>\n"
             "          <_id>1</_id>\n"
@@ -436,8 +441,10 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='31']/accept-env/"
             "accept-env-list[_id='3']/accept-env/value", "LC_CURRENCY", 0, NULL));
 
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='32']/subsystem/"
+            "subsystem", "Subsystem", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='32']/subsystem/subsystemvalue/"
-            "label", "netconf", 0, &entries));
+            "label", "netconf", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='32']/subsystem/subsystemvalue/"
             "value", "internal-nc", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='28']", 0, &node));

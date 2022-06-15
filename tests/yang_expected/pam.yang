@@ -44,7 +44,7 @@ module pam {
           leaf type {
             mandatory true;
             type string {
-              pattern "auth|session|account|password";
+              pattern "(?i)auth|session|account|password";
             }
             augex:data-path "type";
           }

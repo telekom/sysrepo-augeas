@@ -80,7 +80,7 @@ module httpd {
             leaf label {
               mandatory true;
               type string {
-                pattern "per((l[.0-9_a-z-]|[.0-9_a-km-z-])[.0-9_a-z-]*|())|pe([.0-9_a-qs-z-][.0-9_a-z-]*|())|(p[.0-9_a-df-z-]|[a-oq-z][.0-9_a-z-])[.0-9_a-z-]*|p|[a-oq-z]";
+                pattern "(?i)per((l[.0-9_a-z-]|[.0-9_a-km-z-])[.0-9_a-z-]*|())|pe([.0-9_a-qs-z-][.0-9_a-z-]*|())|(p[.0-9_a-df-z-]|[a-oq-z][.0-9_a-z-])[.0-9_a-z-]*|p|[a-oq-z]";
               }
             }
             leaf-list arg {
@@ -114,7 +114,7 @@ module httpd {
                   leaf word {
                     mandatory true;
                     type string {
-                      pattern "[a-z][a-z0-9._-]*";
+                      pattern "(?i)[a-z][a-z0-9._-]*";
                     }
                   }
                   uses directive;
@@ -142,7 +142,7 @@ module httpd {
           leaf word {
             mandatory true;
             type string {
-              pattern "[a-z][a-z0-9._-]*";
+              pattern "(?i)[a-z][a-z0-9._-]*";
             }
           }
           uses directive;

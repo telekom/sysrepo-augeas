@@ -295,22 +295,33 @@ module ldif {
                 }
               }
             }
-            leaf change-type {
-              type union {
+            container change-type {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf change-type {
+                mandatory true;
                 type string {
-                  pattern "add";
-                }
-                type string {
-                  pattern "delete";
-                }
-                type string {
-                  pattern "modify";
-                }
-                type string {
-                  pattern "modr?dn";
+                  pattern "(?i)changeType";
                 }
               }
-              augex:data-path "changeType";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "add";
+                  }
+                  type string {
+                    pattern "delete";
+                  }
+                  type string {
+                    pattern "modify";
+                  }
+                  type string {
+                    pattern "modr?dn";
+                  }
+                }
+              }
             }
             choice ch-ldif-change-record2 {
               list attr-val-spec-list {

@@ -59,8 +59,14 @@ module ssh {
     choice ch-send-env {
       mandatory true;
       container send-env {
-        augex:data-path "SendEnv";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf send-env {
+          mandatory true;
+          type string {
+            pattern "(?i)SendEnv";
+          }
+        }
         list array-entry-list {
           key "_id";
           ordered-by user;
@@ -86,50 +92,109 @@ module ssh {
           }
         }
       }
-      leaf proxy-command {
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-        }
-        augex:data-path "ProxyCommand";
-      }
-      container remote-fw {
-        augex:data-path "RemoteForward";
+      container proxy-command {
+        augex:data-path "$$";
+        augex:value-yang-path "value-to-eol";
         presence "Config entry.";
+        leaf id {
+          mandatory true;
+          type string {
+            pattern "(?i)ProxyCommand";
+          }
+        }
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+        }
+      }
+      container remote-forward {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf remote-forward {
+          mandatory true;
+          type string {
+            pattern "(?i)RemoteForward";
+          }
+        }
         uses remote-fw;
       }
-      container local-fw {
-        augex:data-path "LocalForward";
+      container local-forward {
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf local-forward {
+          mandatory true;
+          type string {
+            pattern "(?i)LocalForward";
+          }
+        }
         uses remote-fw;
       }
       container macs {
-        augex:data-path "MACs";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf macs {
+          mandatory true;
+          type string {
+            pattern "(?i)MACs";
+          }
+        }
         uses commas-entry-list;
       }
       container ciphers {
-        augex:data-path "Ciphers";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf ciphers {
+          mandatory true;
+          type string {
+            pattern "(?i)Ciphers";
+          }
+        }
         uses commas-entry-list;
       }
       container host-key-algorithms {
-        augex:data-path "HostKeyAlgorithms";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf host-key-algorithms {
+          mandatory true;
+          type string {
+            pattern "(?i)HostKeyAlgorithms";
+          }
+        }
         uses commas-entry-list;
       }
       container kex-algorithms {
-        augex:data-path "KexAlgorithms";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf host-key-algorithms {
+          mandatory true;
+          type string {
+            pattern "(?i)KexAlgorithms";
+          }
+        }
         uses commas-entry-list;
       }
       container pubkey-accepted-key-types {
-        augex:data-path "PubkeyAcceptedKeyTypes";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf pubkey-accepted-key-types {
+          mandatory true;
+          type string {
+            pattern "(?i)PubkeyAcceptedKeyTypes";
+          }
+        }
         uses commas-entry-list;
       }
-      container global-knownhosts-file {
-        augex:data-path "GlobalKnownHostsFile";
+      container global-known-hosts-file {
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf global-known-hosts-file {
+          mandatory true;
+          type string {
+            pattern "(?i)GlobalKnownHostsFile";
+          }
+        }
         list spaces-entry-list {
           key "_id";
           min-elements 1;
@@ -157,8 +222,14 @@ module ssh {
         }
       }
       container rekey-limit {
-        augex:data-path "RekeyLimit";
+        augex:data-path "$$";
         presence "Config entry.";
+        leaf rekey-limit {
+          mandatory true;
+          type string {
+            pattern "(?i)RekeyLimit";
+          }
+        }
         leaf amount {
           mandatory true;
           type string {
@@ -218,9 +289,15 @@ module ssh {
       choice ch-config-entries {
         mandatory true;
         container host {
-          augex:data-path "Host";
+          augex:data-path "$$";
           augex:value-yang-path "value-to-eol";
           presence "Config entry.";
+          leaf id {
+            mandatory true;
+            type string {
+              pattern "(?i)Host";
+            }
+          }
           leaf value-to-eol {
             mandatory true;
             type string {
@@ -239,8 +316,14 @@ module ssh {
           }
         }
         container match {
-          augex:data-path "Match";
+          augex:data-path "$$";
           presence "Config entry.";
+          leaf match {
+            mandatory true;
+            type string {
+              pattern "(?i)Match";
+            }
+          }
           container match-cond {
             augex:data-path "Condition";
             presence "Config entry.";
