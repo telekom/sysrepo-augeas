@@ -584,7 +584,7 @@ augds_log_errly(const struct ly_ctx *ly_ctx)
 int
 augds_get_config_files(augeas *aug, const struct lys_module *mod, int fs_path, const char ***files, uint32_t *file_count)
 {
-    int rc = SR_ERR_OK, i, label_count;
+    int rc = SR_ERR_OK, i, label_count = 0;
     char *path = NULL, **label_matches = NULL;
     const char *value, *lens_name;
     void *mem;
@@ -599,6 +599,7 @@ augds_get_config_files(augeas *aug, const struct lys_module *mod, int fs_path, c
     }
     label_count = aug_match(aug, path, &label_matches);
     if (label_count == -1) {
+        label_count = 0;
         AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
     }
 
