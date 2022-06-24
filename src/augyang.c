@@ -354,19 +354,22 @@ struct ay_ynode {
 
     /* Applies to every yang_type except YN_ROOT. For YN_ROOT type node use conversion to struct ay_ynode_root. */
 
-    const struct ay_lnode *snode;   /**< Pointer to the corresponding lnode with lense tag L_SUBTREE (or L_REC).
-                                         Can be NULL if the ynode was inserted by some transformation. */
-    const struct ay_lnode *label;   /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
-                                         or L_SEQ. Can be NULL. */
-    const struct ay_lnode *value;   /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
-                                         Can be NULL. */
-    const struct ay_lnode *choice;  /**< Pointer to the lnode with lense tag L_UNION.
-                                         Set if the node is under the influence of the union operator. */
-    char *ident;                    /**< Yang identifier (yang node name). */
-    uint32_t ref;                   /**< Containes ay_ynode.id of some other ynode. Used as reference. */
-    uint32_t id;                    /**< Numeric identifier of ynode node. */
-    uint16_t flags;                 /**< [ynode flags](@ref ynodeflags) */
-    uint16_t min_elems;             /**< Number of minimal elements in the node of type YN_LIST. */
+    const struct ay_lnode *snode;       /**< Pointer to the corresponding lnode with lense tag L_SUBTREE (or L_REC).
+                                             Can be NULL if the ynode was inserted by some transformation. */
+    const struct ay_lnode *label;       /**< Pointer to the first 'label' which is lense with tag L_KEY, L_LABEL
+                                             or L_SEQ. Can be NULL. */
+    const struct ay_lnode *value;       /**< Pointer to the first 'value' which is lense with tag L_STORE or L_VALUE.
+                                             Can be NULL. */
+    const struct ay_lnode *choice;      /**< Pointer to the lnode with lense tag L_UNION.
+                                             Set if the node is under the influence of the union operator. */
+    char *ident;                        /**< Yang identifier (yang node name). */
+    uint32_t ref;                       /**< Contains ay_ynode.id of some other ynode. Used as reference. */
+    uint32_t id;                        /**< Numeric identifier of ynode node. */
+    uint16_t flags;                     /**< [ynode flags](@ref ynodeflags) */
+    uint16_t min_elems;                 /**< Number of minimal elements in the node of type YN_LIST. */
+    uint32_t when_ref;                  /**< Contains ay_ynode.id of ynode that owns the value to which the 'when'
+                                             statement will be applied. */
+    const struct ay_lnode *when_val;    /**< Value for comparison in the 'when' statement. */
 };
 
 /**
@@ -393,8 +396,11 @@ struct ay_ynode_root {
                                          in the form '(pref1|pref2)name1|name2|name3(suf1|suf2)|...' and its parsed
                                          names (pref1name1, pref2name1, name2, name3suf1, name3suf2, ...). */
     uint32_t ref;                   /**< Not used. */
-    uint32_t flags;                 /**< Not used. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
+    uint16_t flags;                 /**< Not used. */
+    uint16_t min_elems;             /**< Not used. */
+    uint32_t when_ref;              /**< Not used. */
+    void *when_val;                 /**< Not used. */
 };
 
 /**
@@ -943,6 +949,8 @@ ay_ynode_copy_data(struct ay_ynode *dst, struct ay_ynode *src)
     dst->ref = src->ref;
     dst->flags = src->flags;
     dst->min_elems = src->min_elems;
+    dst->when_ref = src->when_ref;
+    dst->when_val = src->when_val;
 }
 
 /**
@@ -1254,13 +1262,36 @@ ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id)
 }
 
 /**
+ * @brief Get YN_USES node with @p ref_id.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] ref_id The ay_ynode.ref number used to find YN_USES node.
+ * @return YN_USES node or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_uses(struct ay_ynode *tree, uint32_t ref_id)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter;
+
+    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if ((iter->type == YN_USES) && (iter->ref == ref_id)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Find YN_VALUE node of @p node.
  *
  * @param[in] tree Tree of ynodes.
  * @param[in] node Parent node in which is YN_VALUE node.
  * @param[in] label Label by which the YN_VALUE node is to be found.
  * @param[in] value Value by which the YN_VALUE node is to be found.
- * @return The YN_VALUE node placed as a child.
+ * @return The YN_VALUE node placed as a child or NULL.
  */
 static struct ay_ynode *
 ay_ynode_get_value_node(const struct ay_ynode *tree, const struct ay_ynode *node, const struct ay_lnode *label,
@@ -1281,7 +1312,6 @@ ay_ynode_get_value_node(const struct ay_ynode *tree, const struct ay_ynode *node
 
         }
     }
-    assert(valnode);
 
     return valnode;
 }
@@ -1424,6 +1454,8 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
     } else if (n1->flags != n2->flags) {
         return 0;
     } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
+        return 0;
+    } else if (n1->when_ref != n2->when_ref) {
         return 0;
     }
 
@@ -3557,6 +3589,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*s"AY_EXT_PREFIX ":"AY_EXT_VALPATH " \"", ctx->space, "");
 
     valnode = ay_ynode_get_value_node(ctx->tree, node, node->label, node->value);
+    assert(valnode);
     ret = ay_print_yang_ident(ctx, valnode, AY_IDENT_VALUE_YPATH);
     ly_print(ctx->out, "\";\n");
 
@@ -3990,6 +4023,79 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang when-stmt.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node to process.
+ */
+static void
+ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    struct ay_ynode *sibl, *parent, *refnode, *valnode;
+    struct lens *value;
+    ly_bool is_simple;
+    const char *str;
+
+    if (!node->when_ref) {
+        return;
+    }
+
+    ly_print(ctx->out, "%*swhen \"", ctx->space, "");
+    value = node->when_val->lens;
+    assert((value->tag == L_VALUE) || (value->tag == L_STORE));
+    if (ay_lense_pattern_is_label(value)) {
+        /* The L_STORE pattern is just simple name. */
+        is_simple = 1;
+    } else {
+        /* The 'when' expression is more complex. */
+        ly_print(ctx->out, "re-match(");
+        is_simple = 0;
+    }
+
+    /* Print path to referenced node. */
+    refnode = NULL;
+    for (parent = node->parent; parent && !refnode; parent = parent->parent) {
+        if (parent->type == YN_GROUPING) {
+            parent = ay_ynode_get_uses(ctx->tree, parent->id);
+            assert(parent);
+            continue;
+        }
+        if (parent->id == node->when_ref) {
+            refnode = parent;
+            break;
+        }
+        ly_print(ctx->out, "../");
+        for (sibl = parent->child; sibl; sibl = sibl->next) {
+            if (sibl->id == node->when_ref) {
+                refnode = sibl;
+                break;
+            }
+        }
+    }
+    assert(refnode);
+    /* Print name of referenced node. */
+    valnode = ay_ynode_get_value_node(ctx->tree, refnode, refnode->label, refnode->value);
+    if (valnode) {
+        /* Print name of referenced node's child. */
+        ay_print_yang_ident(ctx, valnode, AY_IDENT_NODE_NAME);
+    } else {
+        /* Print name of referenced node. */
+        ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
+    }
+    /* Print value/regex for comparison. */
+    str = (value->tag == L_VALUE) ? value->string->str : value->regexp->pattern->str;
+    if (is_simple && !value->regexp->nocase) {
+        /* String is just simple name. */
+        ly_print(ctx->out, "=\'%s\'\";\n", str);
+    } else {
+        /* The 'when' expression is more complex, continue with printing of re-match function. */
+        ly_print(ctx->out, ", \'");
+        ay_print_regex_standardized(ctx->out, str);
+        ly_print(ctx->out, "\')\";\n");
+    }
+}
+
+/**
  * @brief Print yang config-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -4024,6 +4130,7 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_config(ctx, node);
+    ay_print_yang_when(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
@@ -4071,6 +4178,7 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
+    ay_print_yang_when(ctx, node);
 
     ay_print_yang_nesting_end(ctx);
 
@@ -4115,6 +4223,7 @@ ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*s\"Implicitly generated leaf to maintain recursive augeas data.\";\n",
             ctx->space + SPACE_INDENT, "");
     ay_print_yang_config(ctx, node);
+    ay_print_yang_when(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     return ret;
@@ -4267,6 +4376,7 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
     ay_print_yang_minelements(ctx, node);
     ay_print_yang_config(ctx, node);
+    ay_print_yang_when(ctx, node);
     if (is_lrec) {
         ly_print(ctx->out, "%*sleaf _r-id", ctx->space, "");
     } else {
@@ -4333,6 +4443,7 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     AY_CHECK_RET(ret);
     ay_print_yang_presence(ctx, node);
     ay_print_yang_config(ctx, node);
+    ay_print_yang_when(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_nesting_end(ctx);
@@ -4871,6 +4982,7 @@ static void
 ay_print_ynode_extension(struct lprinter_ctx *ctx)
 {
     struct ay_ynode *node;
+    const struct lens *lens;
 
     node = ctx->data;
 
@@ -4971,6 +5083,18 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
 
     if (node->min_elems) {
         ly_print(ctx->out, "%*s min_elems: %" PRIu16 "\n", ctx->space, "", node->min_elems);
+    }
+    if (node->when_ref) {
+        ly_print(ctx->out, "%*s when_ref: %" PRIu32 "\n", ctx->space, "", node->when_ref);
+    }
+    if (node->when_val) {
+        lens = node->when_val->lens;
+        if (lens->tag == L_STORE) {
+            ly_print(ctx->out, "%*s when_val: %s\n", ctx->space, "", lens->regexp->pattern->str);
+        } else {
+            assert(lens->tag == L_VALUE);
+            ly_print(ctx->out, "%*s when_val: %s\n", ctx->space, "", lens->string->str);
+        }
     }
 }
 
@@ -7391,6 +7515,93 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
 }
 
 /**
+ * @brief Move the 'when' data forward.
+ *
+ * @param[in,out] br Branch for merging.
+ */
+static void
+ay_ynode_merge_cases_move_when(struct ay_ynode *br)
+{
+    struct ay_ynode *first;
+
+    first = br->type == YN_CASE ? br->child : br;
+
+    if (first->when_ref && first->child) {
+        /* Moved to child. */
+        first->child->when_ref = first->when_ref;
+        first->child->when_val = first->when_val;
+    }
+    if (first->when_ref && (br->type == YN_CASE)) {
+        /* Moved to sibling. */
+        first->next->when_ref = first->when_ref;
+        first->next->when_val = first->when_val;
+    }
+    /* Complete the move operation. */
+    first->when_ref = 0;
+    first->when_val = NULL;
+}
+
+/**
+ * @brief Set 'when' data while merging cases.
+ *
+ * @param[in,out] br1 First branch to merge. The 'when' data are set or moved.
+ * @param[in,out] br2 Second branch to merge. The 'when' data are set or moved.
+ */
+static void
+ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
+{
+    struct ay_ynode *first1, *first2;
+
+    first1 = br1->type == YN_CASE ? br1->child : br1;
+    first2 = br2->type == YN_CASE ? br2->child : br2;
+
+    if (first1->when_ref || first2->when_ref) {
+        /* The 'when' data are just moved. */
+        ay_ynode_merge_cases_move_when(br1);
+        ay_ynode_merge_cases_move_when(br2);
+        return;
+    } else if (first1->value && first2->value && ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
+        /* Values are identical, so it cannot be distinguished. */
+        return;
+    }
+
+    /* Set 'when' for child. */
+    if (first1->child && !first2->child && first1->value) {
+        first1->child->when_ref = first1->id;
+        first1->child->when_val = first1->value;
+    } else if (!first1->child && first2->child && first2->value) {
+        first2->child->when_ref = first1->id;
+        first2->child->when_val = first2->value;
+    } else if (first1->child && first2->child) {
+        if (first1->value) {
+            first1->child->when_ref = first1->id;
+            first1->child->when_val = first1->value;
+        }
+        if (first2->value) {
+            first2->child->when_ref = first1->id;
+            first2->child->when_val = first2->value;
+        }
+    }
+
+    /* Set 'when' for sibling. */
+    if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
+        if (first1->value) {
+            first1->next->when_ref = first1->id;
+            first1->next->when_val = first1->value;
+        }
+        if (first2->value) {
+            first2->next->when_ref = first1->id;
+            first2->next->when_val = first2->value;
+        }
+    } else if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
+        if (first2->value) {
+            first2->next->when_ref = first1->id;
+            first2->next->when_val = first2->value;
+        }
+    }
+}
+
+/**
  * @brief Merge two group of nodes into one group.
  *
  * If @p merge_as_child is set then just move @p ns2 group to @p ns1 node as child.
@@ -7487,6 +7698,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     first1->flags |= first2->flags;
     first1->flags |= AY_HINT_MAND_TRUE;
     first1->min_elems = first1->min_elems < first2->min_elems ? first1->min_elems : first2->min_elems;
+    ay_ynode_merge_cases_set_when(br1, br2);
 
     /* Merge nodes inside first node. */
     if (first1->child && !first2->child) {
@@ -7526,6 +7738,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
         br2 = iter;
         first2 = br2->type == YN_CASE ? br2->child : br2;
     } else {
+        assert((first1->child && first2->child) || (!first1->child && !first2->child));
         /* TODO: if they both have children, then where to place the values? It must be placed
          * in the right choice branch. The YN_VALUES will probably need to be already generated.
          */
@@ -7922,12 +8135,18 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list->choice = choice;
             list->flags |= list->child->flags & AY_CHOICE_MAND_FALSE;
             list->child->flags &= ~AY_CHOICE_MAND_FALSE;
+            /* Move 'when' data to list. */
+            list->when_ref = list->child->when_ref;
+            list->when_val = list->child->when_val;
+            list->child->when_ref = 0;
+            list->child->when_val = NULL;
 
             /* every next LIST or LEAFLIST or YN_REC move to wrapper */
             while (list->next && (choice == list->next->choice) &&
                     ((list->next->type == YN_LIST) || (list->next->type == YN_LEAFLIST) || (list->next->type == YN_REC)) &&
                     (list->min_elems == list->next->min_elems) &&
                     (star == ay_ynode_get_repetition(list->next))) {
+                assert(!list->next->when_ref && !list->next->when_val);
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
             }
 

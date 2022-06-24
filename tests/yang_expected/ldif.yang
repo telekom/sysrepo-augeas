@@ -327,6 +327,7 @@ module ldif {
               list attr-val-spec-list {
                 key "_id";
                 min-elements 1;
+                when "../value='add'";
                 ordered-by user;
                 leaf _id {
                   type uint64;
@@ -349,6 +350,7 @@ module ldif {
               list config-entries {
                 key "_id";
                 min-elements 1;
+                when "../value='modify'";
                 ordered-by user;
                 leaf _id {
                   type uint64;
@@ -398,6 +400,7 @@ module ldif {
               list config-entries2 {
                 key "_id";
                 min-elements 1;
+                when "re-match(../value, 'modr?dn')";
                 ordered-by user;
                 leaf _id {
                   type uint64;
