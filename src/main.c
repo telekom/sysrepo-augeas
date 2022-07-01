@@ -150,6 +150,7 @@ aym_loadpath_add(char **loadpath, uint64_t *loadpathlen, char *item)
 {
     int ret = 0;
     uint64_t new_loadpathlen, itemlen;
+    char *new_loadpath;
 
     if (!*loadpath) {
         *loadpath = strdup(item);
@@ -160,10 +161,13 @@ aym_loadpath_add(char **loadpath, uint64_t *loadpathlen, char *item)
         itemlen = strlen(item);
         /* loadpathlen + 'null byte' + 'PATH_SEP_CHAR' + itemlen + 'null byte' */
         new_loadpathlen = *loadpathlen + itemlen + 3;
-        *loadpath = realloc(*loadpath, new_loadpathlen);
-        if (!*loadpath) {
+        new_loadpath = realloc(*loadpath, new_loadpathlen);
+        if (!new_loadpath) {
+            free(*loadpath);
+            *loadpath = NULL;
             return 1;
         }
+        *loadpath = new_loadpath;
 
         /* copy item to loadpath */
         (*loadpath)[*loadpathlen] = PATH_SEP_CHAR;
@@ -529,6 +533,7 @@ main(int argc, char **argv)
             goto cleanup;
         }
 
+        assert(aug->modules);
         /* get last compiled (current) module */
         for (mod_iter = aug->modules; mod_iter; mod_iter = mod_iter->next) {
             mod = mod_iter;
