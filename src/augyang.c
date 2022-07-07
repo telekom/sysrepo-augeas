@@ -777,23 +777,89 @@ ay_dnode_find(struct ay_dnode *dict, const void *kvd)
 }
 
 /**
+ * @brief Merge @p key2 and its values into @p key1.
+ *
+ * The @p key2 becomes value of @p key1.
+ *
+ * @param[in,out] dict Dictionary in which @p key1 and @p key2 is located.
+ * @param[in] key1 Key which will be enriched with new elements.
+ * @param[in] key2 Key which will be moved together with the values.
+ * @return 0 on success.
+ */
+static int
+ay_dnode_merge_keys(struct ay_dnode *dict, struct ay_dnode *key1, struct ay_dnode *key2)
+{
+    LY_ARRAY_COUNT_TYPE i, j, k;
+    struct ay_dnode *buff = NULL;
+
+    /* Create buffer. */
+    LY_ARRAY_CREATE_RET(NULL, buff, LY_ARRAY_COUNT(dict), AYE_MEMORY);
+    j = 0;
+
+    /* Insert key1 and its nodes. */
+    AY_DNODE_KEYVAL_FOR(key1, i) {
+        buff[j++] = key1[i];
+    }
+
+    /* Insert key2 as value of key1. */
+    buff[j] = *key2;
+    buff[j].values_count = 0;
+    j++;
+
+    /* Insert key2's values as key1 values. */
+    AY_DNODE_VAL_FOR(key2, i) {
+        AY_DNODE_VAL_FOR(key1, k) {
+            /* Every item in dictionary should be unique. */
+            assert(key1[k].kvd != key2[i].kvd);
+        }
+        buff[j++] = key2[i];
+    }
+
+    /* Set correct 'values_count' for key1. */
+    buff[0].values_count += key2->values_count + 1;
+
+    /* Copy all other keys and values. */
+    LY_ARRAY_FOR(dict, i) {
+        if ((&dict[i] == key1) || (&dict[i] == key2)) {
+            /* Skip nodes. */
+            i += dict[i].values_count;
+        } else {
+            buff[j++] = dict[i];
+        }
+    }
+    assert(i == j);
+
+    /* Store merge result into dict. */
+    LY_ARRAY_FOR(dict, i) {
+        dict[i] = buff[i];
+    }
+
+    LY_ARRAY_FREE(buff);
+    return 0;
+}
+
+/**
  * @brief Insert new KEY and VALUE pair or insert new VALUE for @p key to the dictionary.
  *
  * @param[in,out] dict Dictionary into which it is inserted.
  * @param[in] key The KEY to search or KEY to insert.
  * @param[in] value The VALUE to be added under @p key. If it is not unique, then another will NOT be added.
+ * @return 0 on success.
  */
-static void
+static int
 ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value)
 {
+    int ret = 0;
     struct ay_dnode *dkey, *dval, *gap;
 
     dkey = ay_dnode_find(dict, key);
     dval = ay_dnode_find(dict, value);
     if (dkey && AY_DNODE_IS_VAL(dkey)) {
-        return;
+        return ret;
     } else if (dval && AY_DNODE_IS_KEY(dval)) {
-        return;
+        /* The dval will no longer be dictionary key. It will be value of dkey. */
+        ret = ay_dnode_merge_keys(dict, dkey, dval);
+        return ret;
     }
 
     if (dkey) {
@@ -814,6 +880,8 @@ ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value)
         LY_ARRAY_INCREMENT(dict);
         LY_ARRAY_INCREMENT(dict);
     }
+
+    return ret;
 }
 
 /**
@@ -6782,7 +6850,7 @@ ay_delete_type_unknown(struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        if ((tree[i].type == YN_UNKNOWN) && (!tree[i].child)) {
+        if (tree[i].type == YN_UNKNOWN) {
             ay_ynode_delete_subtree(tree, &tree[i]);
             i--;
         }
@@ -6806,7 +6874,8 @@ ay_delete_comment(struct ay_ynode *tree)
         label = AY_LABEL_LENS(iter);
         if (label && (label->tag == L_LABEL) &&
                 (!strcmp("#comment", label->string->str) ||
-                (!strcmp("#scomment", label->string->str)))) {
+                !strcmp("!comment", label->string->str) ||
+                !strcmp("#scomment", label->string->str))) {
             ay_ynode_delete_subtree(tree, &tree[i]);
             i--;
         }
@@ -7025,10 +7094,12 @@ ay_ynode_delete_build_list(struct ay_ynode *tree)
  * Find labels and values which should be in the one union-stmt. See ::ay_lnode_next_lv().
  *
  * @param[in,out] tree Tree of ynodes.
+ * @return 0 on success.
  */
-static void
+static int
 ay_ynode_set_lv(struct ay_ynode *tree)
 {
+    int ret;
     LY_ARRAY_COUNT_TYPE i;
     const struct ay_lnode *label, *value, *next;
 
@@ -7037,13 +7108,17 @@ ay_ynode_set_lv(struct ay_ynode *tree)
         value = tree[i].value;
         next = label;
         while ((next = ay_lnode_next_lv(next, AY_LV_TYPE_LABEL))) {
-            ay_dnode_insert(AY_YNODE_ROOT_LABELS(tree), label, next);
+            ret = ay_dnode_insert(AY_YNODE_ROOT_LABELS(tree), label, next);
+            AY_CHECK_RET(ret);
         }
         next = value;
         while ((next = ay_lnode_next_lv(next, AY_LV_TYPE_VALUE))) {
-            ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), value, next);
+            ret = ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), value, next);
+            AY_CHECK_RET(ret);
         }
     }
+
+    return 0;
 }
 
 /**
@@ -7703,10 +7778,12 @@ ay_ynode_merge_nodes(struct ay_ynode *tree, struct ay_ynode *ns1, struct ay_ynod
  * @param[in,out] tree Tree of ynodes.
  * @param[in,out] br1 First branch.
  * @param[in,out] br2 Second branch.
+ * @return 0 on success.
  */
-static void
+static int
 ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_ynode *br2)
 {
+    int ret = 0;
     uint32_t br2_id;
     struct ay_ynode *iter, *first1, *first2;
 
@@ -7723,7 +7800,8 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     if (first1->child && !first2->child) {
         /* Merge values. */
         if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
-            ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            ret = ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            AY_CHECK_RET(ret);
             /* All children in first1 are not mandatory. */
             first1->flags |= AY_CHILDREN_MAND_FALSE;
         } else if (first1->value && !first2->value) {
@@ -7737,7 +7815,8 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     } else if (!first1->child && first2->child) {
         /* Merge values. */
         if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
-            ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            ret = ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            AY_CHECK_RET(ret);
             first1->flags |= AY_CHILDREN_MAND_FALSE;
         } else if (first1->value && !first2->value) {
             first1->flags |= AY_VALUE_IN_CHOICE;
@@ -7764,7 +7843,8 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
 
         /* Merge values. */
         if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
-            ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            ret = ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value);
+            AY_CHECK_RET(ret);
         } else if (first1->value && !first2->value) {
             first1->flags |= AY_VALUE_MAND_FALSE;
         } else if (!first1->value && first2->value) {
@@ -7802,6 +7882,8 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
     assert(iter);
     br2 = iter;
     ay_ynode_delete_subtree(tree, br2);
+
+    return 0;
 }
 
 /**
@@ -7824,6 +7906,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
 static int
 ay_ynode_merge_cases(struct ay_ynode *tree)
 {
+    int ret;
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *first_child, *chn1, *chn2;
     ly_bool match;
@@ -7848,7 +7931,8 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
                 if (!match) {
                     continue;
                 }
-                ay_ynode_merge_cases_(tree, chn1, chn2);
+                ret = ay_ynode_merge_cases_(tree, chn1, chn2);
+                AY_CHECK_RET(ret);
                 break;
             }
             if (match) {
@@ -8388,6 +8472,7 @@ ay_ynode_delete_ynrec(struct ay_ynode *tree)
  * @brief Move groupings in front of the config-file list.
  *
  * @param[in,out] tree Tree of ynodes.
+ * @return 0 on success.
  */
 static int
 ay_ynode_groupings_ahead(struct ay_ynode *tree)
@@ -8424,7 +8509,8 @@ ay_ynode_groupings_ahead(struct ay_ynode *tree)
                 if (iter->type == YN_USES) {
                     /* Connect YN_USES to the 'gr'. */
                     inserted = 1;
-                    ay_dnode_insert(dict, gr, iter);
+                    ret = ay_dnode_insert(dict, gr, iter);
+                    AY_CHECK_GOTO(ret, cleanup);
                 } else if (iter->type == YN_GROUPING) {
                     /* Skip inner YN_GROUPING. */
                     j += iter->descendants;
@@ -8432,7 +8518,8 @@ ay_ynode_groupings_ahead(struct ay_ynode *tree)
             }
             if (!inserted) {
                 /* Insert YN_GROUPING which does not have YN_USES nodes. */
-                ay_dnode_insert(dict, gr, NULL);
+                ret = ay_dnode_insert(dict, gr, NULL);
+                AY_CHECK_GOTO(ret, cleanup);
             }
         }
     }
