@@ -7343,6 +7343,33 @@ ay_ynode_place_value_as_usual(struct ay_ynode *tree, struct ay_ynode *node)
 }
 
 /**
+ * @brief Find a child whose ay_ynode.snode is @p snode.
+ *
+ * @param[in] parent Node in which children are searched.
+ * @param[in] snode Lnode with lens tag L_SUBTREE.
+ * @param[in] into_case If flag is set to 1, the search will continue in YN_CASE node.
+ * @return Pointer to ynode with equal snode.
+ * @return Pointer to YN_CASE (@p into_case must be set) which contains such a node.
+ * @return NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_child_by_snode(struct ay_ynode *parent, const struct ay_lnode *snode, ly_bool into_case)
+{
+    struct ay_ynode *iter, *ret;
+
+    ret = NULL;
+    for (iter = parent->child; iter && !ret; iter = iter->next) {
+        if (into_case && (iter->type == YN_CASE) && (ret = ay_ynode_get_child_by_snode(iter, snode, 1))) {
+            ret = iter;
+        } else if (iter->snode && (snode->lens == iter->snode->lens)) {
+            ret = iter;
+        }
+    }
+
+    return ret;
+}
+
+/**
  * @brief The YN_VALUE will be placed somewhere as a child of @p node.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -7353,7 +7380,7 @@ static struct ay_ynode *
 ay_ynode_place_value(struct ay_ynode *tree, struct ay_ynode *node)
 {
     const struct ay_lnode *iterl, *choice, *choice_wanted;
-    struct ay_ynode *itery, *dst, *value;
+    struct ay_ynode *dst, *value;
 
     assert(node->value);
 
@@ -7368,12 +7395,7 @@ ay_ynode_place_value(struct ay_ynode *tree, struct ay_ynode *node)
         if (iterl->lens->tag != L_SUBTREE) {
             continue;
         }
-        for (itery = node->child; itery; itery = itery->next) {
-            if (itery->snode && (iterl->lens == itery->snode->lens)) {
-                dst = itery;
-                break;
-            }
-        }
+        dst = ay_ynode_get_child_by_snode(node, iterl, 1);
     }
     if (!dst) {
         return ay_ynode_place_value_as_usual(tree, node);
@@ -7525,7 +7547,7 @@ ay_ynode_insert_case(struct ay_ynode *tree)
                 iter->choice = NULL;
             }
         }
-        if (ay_ynode_alone_in_choice(cas)) {
+        if (ay_ynode_alone_in_choice(cas) && (ay_lnode_has_attribute(cas->parent->value, L_UNION) != cas->choice)) {
             ay_ynode_delete_node(tree, cas);
         } else {
             i++;
