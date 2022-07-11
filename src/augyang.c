@@ -6875,6 +6875,7 @@ ay_delete_comment(struct ay_ynode *tree)
         if (label && (label->tag == L_LABEL) &&
                 (!strcmp("#comment", label->string->str) ||
                 !strcmp("!comment", label->string->str) ||
+                !strcmp("#mcomment", label->string->str) ||
                 !strcmp("#scomment", label->string->str))) {
             ay_ynode_delete_subtree(tree, &tree[i]);
             i--;
@@ -8388,6 +8389,8 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
                 }
             }
             ay_ynode_delete_node(tree, iter);
+            /* Correction of lrec_internal pointer. */
+            (*lrec_internal) = *lrec_internal > iter ? *lrec_internal - 1 : *lrec_internal;
         }
     }
 
