@@ -2173,8 +2173,14 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             }
             break;
         default:
-            AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            buffer[j] = ident[i];
+            if ((j == 0) && isalpha(ident[i])) {
+                buffer[j] = ident[i];
+            } else if (j > 0) {
+                AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+                buffer[j] = ident[i];
+            } else {
+                j--;
+            }
         }
     }
 
