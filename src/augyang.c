@@ -7859,12 +7859,6 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
         first1->type = YN_CONTAINER;
         ay_ynode_merge_nodes(tree, first1, first2->child, 1);
         first1->child->flags |= AY_CHOICE_MAND_FALSE;
-
-        /* Set the pointers to the correct values. */
-        for (iter = br1->next; iter && (iter->id != br2_id); iter = iter->next) {}
-        assert(iter);
-        br2 = iter;
-        first2 = br2->type == YN_CASE ? br2->child : br2;
     } else {
         assert((first1->child && first2->child) || (!first1->child && !first2->child));
         /* TODO: if they both have children, then where to place the values? It must be placed
@@ -7886,6 +7880,12 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
             ay_ynode_merge_nodes(tree, first1->child, first2->child, 0);
         }
     }
+
+    /* Set the pointers to the correct values. */
+    for (iter = br1->next; iter && (iter->id != br2_id); iter = iter->next) {}
+    assert(iter);
+    br2 = iter;
+    first2 = br2->type == YN_CASE ? br2->child : br2;
 
     /* Merge rest nodes. */
     if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
