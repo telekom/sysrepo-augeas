@@ -4630,7 +4630,8 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     choice_cnt = 1;
     last_choice = NULL;
     for (iter = node->parent->child; iter != node; iter = iter->next) {
-        if (iter->choice && (iter->choice != node->choice) && (last_choice != iter->choice)) {
+        if (iter->choice && (iter->choice != node->choice) && (last_choice != iter->choice) &&
+                !ay_ynode_alone_in_choice(iter)) {
             choice_cnt++;
             last_choice = iter->choice;
         }
@@ -8280,12 +8281,6 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                     (star == ay_ynode_get_repetition(list->next))) {
                 assert(!list->next->when_ref && !list->next->when_val);
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
-            }
-
-            if ((list == ay_ynode_get_first_in_choice(parent, choice)) &&
-                    (!list->next || (list->choice != list->next->choice))) {
-                /* The list is now alone in choice. */
-                list->choice = NULL;
             }
 
             /* for every child in wrapper set type to container */
