@@ -8010,7 +8010,8 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 
         skip = 0;
         /* Skip if subtree contains leafref because it can break recursive form. */
-        for (itj = iti->child; itj; itj = itj->next) {
+        for (j = 0; j < iti->descendants; j++) {
+            itj = &iti[j + 1];
             if (itj->type == YN_LEAFREF) {
                 skip = 1;
                 break;
