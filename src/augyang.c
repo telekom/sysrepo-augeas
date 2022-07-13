@@ -6112,6 +6112,54 @@ ay_test_ynode_copy(uint64_t vercode, struct ay_ynode *forest)
 }
 
 /**
+ * @brief Swap ynode nodes but keep parent, next, child and choice pointers.
+ *
+ * @param[in,out] node1 First node to swap.
+ * @param[in,out] node2 Second node to swap.
+ */
+static void
+ay_ynode_swap(struct ay_ynode *node1, struct ay_ynode *node2)
+{
+    struct ay_ynode *parent, *next, *child;
+    const struct ay_lnode *choice;
+    struct ay_ynode tmp;
+    uint32_t descendants;
+
+    /* Temporary store data node1. */
+    tmp = *node1;
+
+    /* Temporary store position pointers of node1. */
+    parent = node1->parent;
+    next = node1->next;
+    child = node1->child;
+    descendants = node1->descendants;
+    choice = node1->choice;
+    /* Copy ynode data into node1. */
+    *node1 = *node2;
+    /* Restore position pointers. */
+    node1->parent = parent;
+    node1->next = next;
+    node1->child = child;
+    node1->descendants = descendants;
+    node1->choice = choice;
+
+    /* Temporary store position pointers of node2. */
+    parent = node2->parent;
+    next = node2->next;
+    child = node2->child;
+    descendants = node2->descendants;
+    choice = node2->choice;
+    /* Copy ynode data into node2. */
+    *node2 = tmp;
+    /* Restore position pointers. */
+    node2->parent = parent;
+    node2->next = next;
+    node2->child = child;
+    node2->descendants = descendants;
+    node2->choice = choice;
+}
+
+/**
  * @brief Insert gap in the array.
  *
  * All pointers to ynodes are invalidated.
@@ -6858,7 +6906,11 @@ ay_delete_type_unknown(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         if (tree[i].type == YN_UNKNOWN) {
-            ay_ynode_delete_subtree(tree, &tree[i]);
+            if (tree[i].child && (tree[i].child->type == YN_REC)) {
+                ay_ynode_delete_node(tree, &tree[i]);
+            } else {
+                ay_ynode_delete_subtree(tree, &tree[i]);
+            }
             i--;
         }
     }
@@ -8417,6 +8469,15 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
             continue;
         }
         listrec = NULL;
+        if (lrec_external->label || lrec_external->value) {
+            assert((lrec_external->parent->label == lrec_external->label) &&
+                    (lrec_external->parent->value == lrec_external->value));
+            /* [ let rec lns = label . value ] -> let rec lns = [ label . value ]
+             * A node of type YN_REC should not have the attributes (label, value) of a SUBTREE node.
+             * Complications are avoided thanks to the swap. */
+            ay_ynode_swap(lrec_external, lrec_external->parent);
+            lrec_external = lrec_external->parent;
+        }
         prev_branch = NULL;
         lrec_internal = ay_ynode_lrec_internal(lrec_external, NULL);
         do {
@@ -8837,6 +8898,8 @@ ay_ynode_set_type(struct ay_ynode *tree)
         node = &tree[i];
         if (!node->snode) {
             assert(node->type != YN_UNKNOWN);
+            continue;
+        } else if (node->type == YN_REC) {
             continue;
         }
 
