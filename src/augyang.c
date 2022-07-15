@@ -8034,6 +8034,43 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
 }
 
 /**
+ * @brief The leafref path must not go outside groupings.
+ *
+ * @param[in] subtree Subtree to check.
+ * @return 1 if grouping must not be applied.
+ */
+static ly_bool
+ay_ynode_set_ref_leafref_restriction(struct ay_ynode *subtree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iti, *lrec_external;
+    struct lens *exter;
+
+    lrec_external = NULL;
+    for (iti = subtree->parent; iti && !lrec_external; iti = iti->parent) {
+        if (iti->type == YN_REC) {
+            lrec_external = iti;
+        }
+    }
+
+    if (!lrec_external) {
+        return 0;
+    }
+    exter = AY_SNODE_LENS(lrec_external);
+    assert(exter);
+
+    /* Skip if subtree contains leafref because it can break recursive form. */
+    for (i = 0; i < subtree->descendants; i++) {
+        iti = &subtree[i + 1];
+        if ((iti->type == YN_LEAFREF) && (exter->body == iti->snode->lens->body)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Nodes that belong to the same grouping are marked by ay_ynode.ref.
  *
  * This function is preparation before calling ::ay_ynode_create_groupings_toplevel().
@@ -8046,7 +8083,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i, j, start;
     struct ay_ynode *iti, *itj, *inner_nodes;
-    ly_bool skip, children_eq, subtree_eq, alone;
+    ly_bool children_eq, subtree_eq, alone;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get default subtree. */
@@ -8058,18 +8095,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
         } else if (iti->ref) {
             i += iti->descendants;
             continue;
-        }
-
-        skip = 0;
-        /* Skip if subtree contains leafref because it can break recursive form. */
-        for (j = 0; j < iti->descendants; j++) {
-            itj = &iti[j + 1];
-            if (itj->type == YN_LEAFREF) {
-                skip = 1;
-                break;
-            }
-        }
-        if (skip) {
+        } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
             continue;
         }
 
