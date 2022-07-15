@@ -1438,22 +1438,28 @@ ay_ynode_common_concat(const struct ay_ynode *node1, const struct ay_ynode *node
  * @brief Check if @p subtree contains some recursive node.
  *
  * @param[in] subtree Subtree of ynodes in which the recursive node will be searched.
- * @return 1 if subtree contains recursive node.
+ * @param[in] only_one Stop processing when the first recursive node is found.
+ * @return Number of internal recursive node.
  */
-static ly_bool
-ay_ynode_subtree_contains_rec(struct ay_ynode *subtree)
+static uint64_t
+ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
 {
-    uint64_t i;
+    uint64_t i, ret;
     struct ay_ynode *iter;
 
+    ret = 0;
     for (i = 0; i < subtree->descendants; i++) {
         iter = &subtree[i + 1];
-        if ((iter->type == YN_REC) || (iter->type == YN_LEAFREF)) {
-            return 1;
+        if ((iter->type == YN_LEAFREF) ||
+                (iter->snode && (iter->snode->lens->tag == L_REC) && iter->snode->lens->rec_internal)) {
+            ret++;
+            if (only_one) {
+                break;
+            }
         }
     }
 
-    return 0;
+    return ret;
 }
 
 /**
@@ -5953,18 +5959,18 @@ ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter;
     const struct ay_ynode *rec_ext;
-    uint64_t ret = 0, rec_int_count, copied;
+    uint64_t ret = 0, rec_int_count, copied, tmp;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         rec_ext = &tree[i];
-        if (rec_ext->type != YN_REC) {
+        if ((rec_ext->type != YN_REC) || rec_ext->snode->lens->rec_internal) {
             continue;
         }
         rec_int_count = 0;
         copied = 0;
         for (iter = rec_ext->child; iter; iter = iter->next) {
-            if (ay_ynode_subtree_contains_rec(iter)) {
-                rec_int_count++;
+            if ((tmp = ay_ynode_subtree_contains_rec(iter, 0))) {
+                rec_int_count += tmp;
             } else {
                 copied += iter->descendants + 1;
             }
@@ -6558,6 +6564,10 @@ static void
 ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
     struct ay_ynode *last;
+
+    if (dst == src) {
+        return;
+    }
 
     for (last = dst->child; last && last->next; last = last->next) {}
     if (last) {
@@ -8438,7 +8448,7 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
     for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
             iter && (iter->choice == branch->choice) && (iter != branch);
             iter = iter->next) {
-        if (ay_ynode_subtree_contains_rec(iter)) {
+        if (ay_ynode_subtree_contains_rec(iter, 1)) {
             continue;
         }
         ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
@@ -8447,7 +8457,7 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
     for (iter = branch->next;
             iter && (iter->choice == branch->choice);
             iter = iter->next) {
-        if (ay_ynode_subtree_contains_rec(iter)) {
+        if (ay_ynode_subtree_contains_rec(iter, 1)) {
             continue;
         }
         desc = iter->descendants;
