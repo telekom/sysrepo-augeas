@@ -8071,8 +8071,12 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
                 if (!match) {
                     continue;
                 }
-                ret = ay_ynode_merge_cases_(tree, chn1, chn2);
-                AY_CHECK_RET(ret);
+                if (ay_ynode_subtree_equal(chn1, chn2, 1)) {
+                    ay_ynode_delete_subtree(tree, chn2);
+                } else {
+                    ret = ay_ynode_merge_cases_(tree, chn1, chn2);
+                    AY_CHECK_RET(ret);
+                }
                 break;
             }
             if (match) {
