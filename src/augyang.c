@@ -1077,10 +1077,10 @@ ay_ynode_get_last(struct ay_ynode *node)
  * @param[in] type Type to search.
  * @return Node of type @p type or NULL.
  */
-static struct ay_ynode *
-ay_ynode_subtree_contains_type(struct ay_ynode *subtree, enum yang_type type)
+static const struct ay_ynode *
+ay_ynode_subtree_contains_type(const struct ay_ynode *subtree, enum yang_type type)
 {
-    struct ay_ynode *iter;
+    const struct ay_ynode *iter;
     LY_ARRAY_COUNT_TYPE i;
 
     for (i = 0; i < subtree->descendants; i++) {
@@ -2581,12 +2581,12 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
  * @brief Check if character is valid as part of identifier.
  *
  * @param[in] ch Character to check.
- * @param[out] shift Flag is set to 1 if the next character should not be read in the next iteration
+ * @param[out] shift Number is set to 1 if the next character should not be read in the next iteration
  * because it is preceded by a backslash. Otherwise is set to 0.
  * @return 1 for valid character, otherwise 0.
  */
 static ly_bool
-ay_ident_character_is_valid(const char *ch, ly_bool *shift)
+ay_ident_character_is_valid(const char *ch, uint32_t *shift)
 {
     assert(ch && shift);
 
@@ -2612,6 +2612,28 @@ ay_ident_character_is_valid(const char *ch, ly_bool *shift)
 }
 
 /**
+ * @brief Check if string @p str is equal to the allowed pattern.
+ *
+ * Typically, it is a regular expression related to spaces.
+ *
+ * @param[in] str String (identifier) to check.
+ * @param[out] shift Length of the found pattern - 1.
+ * @return 1 if pattern in identifier is valid.
+ */
+static ly_bool
+ay_ident_pattern_is_valid(const char *str, uint32_t *shift)
+{
+    *shift = 0;
+
+    if (!strncmp(str, "[ ]+", 4)) {
+        *shift = 3;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Check if pattern is so simple that can be interpreted as label.
  *
  * Function check if there is exactly one identifier in the pattern.
@@ -2624,7 +2646,7 @@ static ly_bool
 ay_lense_pattern_is_label(struct lens *lens)
 {
     char *ch;
-    ly_bool shift;
+    uint32_t shift;
 
     if (!lens || ((lens->tag != L_STORE) && (lens->tag != L_KEY)) || lens->regexp->nocase) {
         return 0;
@@ -2634,7 +2656,7 @@ ay_lense_pattern_is_label(struct lens *lens)
         if (!ay_ident_character_is_valid(ch, &shift)) {
             break;
         }
-        ch = shift ? ch + 1 : ch;
+        ch = shift ? ch + shift : ch;
     }
 
     return *ch == '\0';
@@ -2670,7 +2692,7 @@ static struct ay_transl *
 ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens)
 {
     const char *iter, *patt;
-    ly_bool shift;
+    uint32_t shift;
 
     if (!lens || (lens->tag != L_KEY)) {
         return NULL;
@@ -2690,11 +2712,12 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
         case '\n': /* '\n'-> TODO pattern is probably written wrong -> bugfix lense? */
             continue;
         default:
-            if (!ay_ident_character_is_valid(iter, &shift)) {
+            if (ay_ident_character_is_valid(iter, &shift) || ay_ident_pattern_is_valid(iter, &shift)) {
+                iter = shift ? iter + shift : iter;
+            } else {
                 return NULL;
             }
         }
-        iter = shift ? iter + 1 : iter;
     }
 
     /* Success - return some non-NULL address. */
@@ -2984,6 +3007,29 @@ ay_pattern_identifier(const char *ptoken, uint64_t ptoken_len, uint64_t idx, cha
 }
 
 /**
+ * @brief Special allowed patterns are deleted in the @p substr.
+ *
+ * @param[in,out] substr String to be converted.
+ * @param[in] len Length of @p substr.
+ */
+static void
+ay_trans_substr_conversion(char *substr, uint64_t len)
+{
+    uint64_t i, j;
+    uint32_t shift;
+
+    for (i = 0; i < len; i++) {
+        if (ay_ident_pattern_is_valid(&substr[i], &shift)) {
+            /* Remove subpattern and replaced it with ' '. */
+            for (j = 0; j < shift; j++) {
+                ay_string_remove_character(substr, &substr[i]);
+            }
+            substr[i] = ' ';
+        }
+    }
+}
+
+/**
  * @brief Create and fill ay_transl.substr LY_ARRAY based on ay_transl.origin.
  *
  * @param[in,out] tran Translation record.
@@ -3017,6 +3063,7 @@ ay_transl_create_substr(struct ay_transl *tran)
                 ret = AYE_MEMORY;
                 goto clean;
             }
+            ay_trans_substr_conversion(substr, len);
             tran->substr[idx_cnt] = substr;
             idx_cnt++;
             LY_ARRAY_INCREMENT(tran->substr);
@@ -5946,31 +5993,61 @@ ay_ynode_rule_insert_case(const struct ay_ynode *node)
 }
 
 /**
- * @brief Check whether list should be splitted based on pattern which consists of sequence of identifiers.
+ * @brief Find out how many nodes must be added if a node splits into multiple nodes.
  *
  * @param[in] tree Tree of ynodes.
- * @param[in] node to check.
- * @return 0 or unsigned integer greater than 1 if node must be splitted.
+ * @param[in] node Node to process.
+ * @return Number of nodes needed for split.
  */
-static uint32_t
-ay_ynode_rule_node_split(const struct ay_ynode *tree, const struct ay_ynode *node)
+static uint64_t
+ay_ynode_rule_node_is_splittable(const struct ay_ynode *tree, const struct ay_ynode *node)
 {
     struct lens *label;
     uint64_t count;
 
     label = AY_LABEL_LENS(node);
 
-    if (!label || (label->tag != L_KEY)) {
+    if ((node->type == YN_ROOT) || !label || (label->tag != L_KEY)) {
         return 0;
     } else if ((node->type == YN_KEY) || (node->type == YN_VALUE)) {
         return 0;
-    }
-
-    if ((count = ay_lense_pattern_idents_count(tree, label)) && (count > 1)) {
+    } else if ((count = ay_lense_pattern_idents_count(tree, label)) && (count > 1)) {
         /* +2 for YN_GROUPING and YN_USES node in @p node. */
         return (count - 1) * node->descendants + 2 + (count - 1);
     } else {
         return 0;
+    }
+}
+
+/**
+ * @brief Find out how many nodes must be added in total if all nodes splits into multiple nodes in the @p subtree.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] subtree to process.
+ * @return Number of nodes needed for split.
+ */
+static uint64_t
+ay_ynode_rule_node_split(const struct ay_ynode *tree, const struct ay_ynode *subtree)
+{
+    const struct ay_ynode *iter;
+    uint64_t children_total, count;
+
+    children_total = 0;
+    for (iter = subtree->child; iter; iter = iter->next) {
+        if (iter->child) {
+            children_total += ay_ynode_rule_node_split(tree, iter);
+        } else {
+            children_total += ay_ynode_rule_node_is_splittable(tree, iter);
+        }
+    }
+
+    count = ay_ynode_rule_node_is_splittable(tree, subtree);
+    if (count && children_total) {
+        return children_total * count;
+    } else if (count) {
+        return count;
+    } else {
+        return children_total;
     }
 }
 
@@ -8300,7 +8377,7 @@ ay_ynode_node_split(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
 
-        if (!ay_ynode_rule_node_split(tree, node)) {
+        if (!ay_ynode_rule_node_is_splittable(tree, node)) {
             continue;
         } else if (ay_ynode_splitted_seq_index(node) != 0) {
             continue;
@@ -9174,7 +9251,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     /* [key "a" | "b"] -> list a {} list b {} */
     /* It is for generally nodes, not just a list nodes. */
-    TRANSF(ay_ynode_node_split, ay_ynode_summary2(*tree, ay_ynode_rule_node_split));
+    TRANSF(ay_ynode_node_split, ay_ynode_rule_node_split(*tree, *tree));
 
     /* No other groupings will not be added, so move groupings in front of config-file list. */
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
