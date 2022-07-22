@@ -1052,6 +1052,28 @@ ay_ynode_copy_data(struct ay_ynode *dst, struct ay_ynode *src)
 }
 
 /**
+ * @brief Find node with @p id.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] start_index Index in the array of ynodes where to start searching.
+ * @param[in] id Number ay_ynode.id by which the node is searched.
+ * @return Node with @p id or NULL.
+ */
+static struct ay_ynode *
+ay_ynode_get_node(struct ay_ynode *tree, LY_ARRAY_COUNT_TYPE start_index, uint32_t id)
+{
+    LY_ARRAY_COUNT_TYPE i;
+
+    for (i = start_index; i < LY_ARRAY_COUNT(tree); i++) {
+        if (tree[i].id == id) {
+            return &tree[i];
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Get last sibling.
  *
  * @param[in] node Node from which it iterates to the last node.
@@ -6729,6 +6751,41 @@ ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 }
 
 /**
+ * @brief Correction of ay_ynode.when_ref after subtree is copied.
+ *
+ * Because ay_ynode.when_ref must refer to a node in the copied tree and not in the original one.
+ *
+ * @param[in,out] copied_subtree New subtree created.
+ * @param[in] original_subtree Subtree copied from.
+ */
+static void
+ay_ynode_copy_subtree_when_ref_correction(struct ay_ynode *copied_subtree, struct ay_ynode *original_subtree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter, *node_ref, *src, *dst;
+
+    assert(copied_subtree && original_subtree);
+
+    for (i = 0; i < original_subtree->descendants; i++) {
+        node_ref = &original_subtree[i + 1];
+        if (!node_ref->when_ref) {
+            continue;
+        }
+        /* Original node with when_ref is found. */
+        assert(original_subtree->type != YN_ROOT);
+        for (iter = node_ref->parent; node_ref != original_subtree->parent; node_ref = node_ref->parent) {
+            if (node_ref->when_ref == iter->id) {
+                /* Correction of when_ref in the copied subtree. */
+                dst = &copied_subtree[AY_INDEX(original_subtree, node_ref)];
+                src = &copied_subtree[AY_INDEX(original_subtree, iter)];
+                dst->when_ref = src->id;
+            }
+        }
+    }
+
+}
+
+/**
  * @brief Copy subtree @p src and insert it as last child of @p dst.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -6738,13 +6795,14 @@ ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 static void
 ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
-    struct ay_ynode *iter, *last;
-    uint32_t subtree_size;
+    struct ay_ynode *iter, *last, *copied_subtree, *original_subtree;
+    uint32_t subtree_size, src_id;
 
     for (last = dst->child; last && last->next; last = last->next) {}
     if (last == src) {
         return;
     }
+    src_id = src->id;
 
     subtree_size = src->descendants + 1;
     for (iter = dst; iter; iter = iter->parent) {
@@ -6757,6 +6815,9 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
         ay_ynode_copy_subtree(tree, AY_INDEX(tree, dst + 1), AY_INDEX(tree, src));
     }
     ay_ynode_tree_correction(tree);
+    copied_subtree = ay_ynode_get_last(dst->child);
+    original_subtree = ay_ynode_get_node(tree, AY_INDEX(tree, src), src_id);
+    ay_ynode_copy_subtree_when_ref_correction(copied_subtree, original_subtree);
 }
 
 /**
@@ -6769,15 +6830,19 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
 static void
 ay_ynode_copy_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, struct ay_ynode *src)
 {
-    struct ay_ynode *iter;
-    uint32_t subtree_size;
+    struct ay_ynode *iter, *copied_subtree, *original_subtree;
+    uint32_t subtree_size, src_id;
 
+    src_id = src->id;
     subtree_size = src->descendants + 1;
     for (iter = dst->parent; iter; iter = iter->parent) {
         iter->descendants += subtree_size;
     }
     ay_ynode_copy_subtree(tree, AY_INDEX(tree, dst + dst->descendants + 1), AY_INDEX(tree, src));
     ay_ynode_tree_correction(tree);
+    copied_subtree = dst->next;
+    original_subtree = ay_ynode_get_node(tree, AY_INDEX(tree, src), src_id);
+    ay_ynode_copy_subtree_when_ref_correction(copied_subtree, original_subtree);
 }
 
 /**
