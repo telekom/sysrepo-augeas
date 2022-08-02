@@ -8226,6 +8226,11 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
                     /* YN_CASE is useless. */
                     ay_ynode_delete_node(tree, chn1);
                 }
+                if (chn1->when_ref && ay_ynode_alone_in_choice(chn1)) {
+                    /* The when reference is meaningless if the node is not in choice. */
+                    chn1->when_ref = 0;
+                    chn1->when_val = NULL;
+                }
                 /* Repeat comparing because chn1 can be modified. */
                 continue;
             }
