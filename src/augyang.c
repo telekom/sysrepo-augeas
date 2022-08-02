@@ -4269,11 +4269,39 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct lens *value;
     ly_bool is_simple;
     const char *str;
+    uint64_t i, path_cnt;
 
     if (!node->when_ref) {
         return;
     }
 
+    /* Get referenced node. */
+    refnode = NULL;
+    path_cnt = 0;
+    for (parent = node->parent; parent && !refnode; parent = parent->parent) {
+        if (parent->type == YN_GROUPING) {
+            parent = ay_ynode_get_uses(ctx->tree, parent->id);
+            assert(parent);
+            continue;
+        }
+        if (parent->id == node->when_ref) {
+            refnode = parent;
+            break;
+        }
+        path_cnt++;
+        for (sibl = parent->child; sibl; sibl = sibl->next) {
+            if (sibl->id == node->when_ref) {
+                refnode = sibl;
+                break;
+            }
+        }
+    }
+    if (!refnode) {
+        /* TODO: referenced node in 'when' not found. It is probably located in grouping. */
+        return;
+    }
+
+    /* Print 'when' statement. */
     ly_print(ctx->out, "%*swhen \"", ctx->space, "");
     value = node->when_val->lens;
     assert((value->tag == L_VALUE) || (value->tag == L_STORE));
@@ -4287,26 +4315,10 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     /* Print path to referenced node. */
-    refnode = NULL;
-    for (parent = node->parent; parent && !refnode; parent = parent->parent) {
-        if (parent->type == YN_GROUPING) {
-            parent = ay_ynode_get_uses(ctx->tree, parent->id);
-            assert(parent);
-            continue;
-        }
-        if (parent->id == node->when_ref) {
-            refnode = parent;
-            break;
-        }
+    for (i = 0; i < path_cnt; i++) {
         ly_print(ctx->out, "../");
-        for (sibl = parent->child; sibl; sibl = sibl->next) {
-            if (sibl->id == node->when_ref) {
-                refnode = sibl;
-                break;
-            }
-        }
     }
-    assert(refnode);
+
     /* Print name of referenced node. */
     valnode = ay_ynode_get_value_node(ctx->tree, refnode, refnode->label, refnode->value);
     if (valnode) {
