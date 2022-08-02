@@ -1524,20 +1524,46 @@ ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
 static ly_bool
 ay_lnode_lense_equal(struct lens *l1, struct lens *l2)
 {
-    if (!l1 || !l2 || (l1->tag != l2->tag)) {
+    char *str1, *str2;
+
+    if (!l1 || !l2) {
         return 0;
     }
 
+    str1 = NULL;
     switch (l1->tag) {
     case L_STORE:
     case L_KEY:
-        return (l1->regexp == l2->regexp) || !strcmp(l1->regexp->pattern->str, l2->regexp->pattern->str);
+        str1 = l1->regexp->pattern->str;
+        break;
     case L_VALUE:
     case L_LABEL:
     case L_SEQ:
-        return (l1->string->str == l2->string->str) || !strcmp(l1->string->str, l2->string->str);
+        str1 = l1->string->str;
+        break;
     default:
+        return l1->tag == l2->tag;
+    }
+
+    str2 = NULL;
+    switch (l2->tag) {
+    case L_STORE:
+    case L_KEY:
+        str2 = l2->regexp->pattern->str;
+        break;
+    case L_VALUE:
+    case L_LABEL:
+    case L_SEQ:
+        str2 = l2->string->str;
+        break;
+    default:
+        return l1->tag == l2->tag;
+    }
+
+    if ((str1 == str2) || !strcmp(str1, str2)) {
         return 1;
+    } else {
+        return 0;
     }
 }
 
@@ -7299,7 +7325,7 @@ ay_ynode_delete_build_list_(struct ay_ynode *tree, ly_bool reverse)
             }
             prev1 = ay_ynode_get_prev(node1);
             prev2 = ay_ynode_get_prev(node2);
-            if (prev1 && ay_ynode_build_list_match(prev1, prev2, 0) && (prev1->type == prev2->type)) {
+            if (prev1 && ay_ynode_build_list_match(prev1, prev2, 0)) {
                 /* Search again due to 'lns . (sep . lns) . (sep . lns)*' pattern.
                  * First lns should be deleted too.
                  */
