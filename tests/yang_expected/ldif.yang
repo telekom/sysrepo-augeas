@@ -18,31 +18,42 @@ module ldif {
     }
   }
   grouping attr-val-spec {
-    leaf-list option {
-      type string {
-        pattern "[a-zA-Z0-9-]+";
-      }
-      ordered-by user;
-      augex:data-path "@option";
-    }
-    choice ch-attr-val-spec {
-      mandatory true;
-      leaf value {
+    container attr-val-spec {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf attr-type {
+        mandatory true;
         type string {
-          pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+          pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Cc]|[Dd][Nn][0-9A-Za-z-]|[Dd]|[Ii]|[ABE-HJ-Zabe-hj-z]|[Dd][0-9A-MO-Za-mo-z-])";
         }
       }
-      leaf base64 {
+      leaf-list option {
         type string {
-          pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+          pattern "[a-zA-Z0-9-]+";
         }
-        augex:data-path "@base64";
+        ordered-by user;
+        augex:data-path "@option";
       }
-      leaf url {
-        type string {
-          pattern "([^ \t\n][^\n]*)(((\n[ \t]+)([^ \t\n][^\n]*))*)";
+      choice ch-attr-val-spec {
+        mandatory true;
+        leaf value {
+          type string {
+            pattern "([^ \t\n:<][^\n]*)((\n[ \t]+[^ \t\n][^\n]*)*)";
+          }
         }
-        augex:data-path "@url";
+        leaf base64 {
+          type string {
+            pattern "([a-zA-Z0-9=+]+)(((\n[ \t]+)([a-zA-Z0-9=+]+))*)";
+          }
+          augex:data-path "@base64";
+        }
+        leaf url {
+          type string {
+            pattern "([^ \t\n][^\n]*)(((\n[ \t]+)([^ \t\n][^\n]*))*)";
+          }
+          augex:data-path "@url";
+        }
       }
     }
   }
@@ -62,18 +73,7 @@ module ldif {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container attr-val-spec {
-        augex:data-path "$$";
-        augex:value-yang-path "value";
-        presence "Config entry.";
-        leaf attr-type {
-          mandatory true;
-          type string {
-            pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
-          }
-        }
-        uses attr-val-spec;
-      }
+      uses attr-val-spec;
     }
   }
   list ldif {
@@ -160,18 +160,7 @@ module ldif {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              container attr-val-spec {
-                augex:data-path "$$";
-                augex:value-yang-path "value";
-                presence "Config entry.";
-                leaf attr-type {
-                  mandatory true;
-                  type string {
-                    pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
-                  }
-                }
-                uses attr-val-spec;
-              }
+              uses attr-val-spec;
             }
           }
         }
@@ -334,18 +323,7 @@ module ldif {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                container attr-val-spec {
-                  augex:data-path "$$";
-                  augex:value-yang-path "value";
-                  presence "Config entry.";
-                  leaf attr-type {
-                    mandatory true;
-                    type string {
-                      pattern "([0-9][0-9\\.]*)|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][0-9A-XZa-xz-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt]|[Cc][0-9A-GI-Za-gi-z-]([0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[0-9A-Za-z-]|())|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][0-9A-MO-Za-mo-z-]|[Cc][Hh][Aa]|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg]|([Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-][0-9A-Za-z-])[0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][Ee][0-9A-Za-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp][0-9A-DF-Za-df-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][Pp]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy][0-9A-OQ-Za-oq-z-]|[Cc][Hh][Aa][Nn][Gg][Ee][Tt][Yy]|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][0-9A-FH-Za-fh-z-]|[Cc][Hh][Aa][Nn]|[Cc][Hh][0-9B-Zb-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][0-9B-Zb-z-]|[Cc][Hh]|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Cc][Hh][Aa][Nn][Gg][Ee][0-9A-SU-Za-su-z-]|[Cc][Hh][Aa][Nn][Gg][Ee]|[Dd][Nn][0-9A-Za-z-][0-9A-Za-z-]([0-9A-Za-z-][0-9A-Za-z-]*|())|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-][0-9A-Za-z-][0-9A-Za-z-]*|[Dd][0-9A-MO-Za-mo-z-][0-9A-Za-z-]|[Ii][Nn][Cc][Ll][Uu][Dd](([Ee][0-9A-Za-z-]|[0-9A-DF-Za-df-z-])[0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll][Uu]([0-9A-CE-Za-ce-z-][0-9A-Za-z-]*|())|[Ii][Nn][Cc][Ll]([0-9A-TV-Za-tv-z-][0-9A-Za-z-]*|())|([Ii][Nn][Cc][0-9A-KM-Za-km-z-]|([Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-])[0-9A-Za-z-]*|[Ii][Nn][Cc]|[Ii][Nn][0-9ABD-Zabd-z-]|([Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-])[0-9A-Za-z-]|[Ii][Nn]|[Ii][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z][0-9A-Za-z-]|[Ii]|[Dd]|[Dd][Nn][0-9A-Za-z-]|[Dd][0-9A-MO-Za-mo-z-]|[ABE-HJ-Zabe-hj-z]|[Cc])";
-                    }
-                  }
-                  uses attr-val-spec;
-                }
+                uses attr-val-spec;
               }
               list config-entries {
                 key "_id";

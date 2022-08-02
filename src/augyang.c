@@ -317,6 +317,8 @@ enum yang_type {
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
 #define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
 #define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
+
+#define AY_YNODE_FLAGS_CMP_MASK 0xFF    /**< Bitmask to use when comparing ay_ynode.flags. */
 /** @} ynodeflags */
 
 /**
@@ -1603,7 +1605,7 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
         return 0;
     } else if ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) {
         return 0;
-    } else if (n1->flags != n2->flags) {
+    } else if ((n1->flags & AY_YNODE_FLAGS_CMP_MASK) != (n2->flags & AY_YNODE_FLAGS_CMP_MASK)) {
         return 0;
     } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
         return 0;
