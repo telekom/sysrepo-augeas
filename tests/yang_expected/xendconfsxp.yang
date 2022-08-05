@@ -35,7 +35,7 @@ module xendconfsxp {
           mandatory true;
           leaf item {
             type string {
-              pattern "[A-Za-z0-9_./-]+|\\\"([^\\\"\\\\]|(\\\\.))*\\\"|'([^'\\\\]|(\\\\.))*'";
+              pattern "[A-Za-z0-9_./-]+|\\\"([^\\\\\"\\\\\\\\]|(\\\\.))*\\\"|'([^'\\\\\\\\]|(\\\\.))*'";
             }
             augex:data-path "item";
           }
@@ -70,7 +70,7 @@ module xendconfsxp {
                   }
                   leaf item {
                     type string {
-                      pattern "[A-Za-z0-9_./-]+|\\\"([^\\\"\\\\]|(\\\\.))*\\\"|'([^'\\\\]|(\\\\.))*'";
+                      pattern "[A-Za-z0-9_./-]+|\\\"([^\\\\\"\\\\\\\\]|(\\\\.))*\\\"|'([^'\\\\\\\\]|(\\\\.))*'";
                     }
                     augex:data-path "item";
                   }

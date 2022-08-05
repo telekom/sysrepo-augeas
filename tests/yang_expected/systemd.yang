@@ -102,7 +102,7 @@ module systemd {
               }
               leaf command {
                 type string {
-                  pattern "[^#@ \t\n\\-][^#@ \t\n\\-][^# \t\n\\\\]*";
+                  pattern "[^#@ \t\n\\\\-][^#@ \t\n\\\\-][^# \t\n\\\\]*";
                 }
                 augex:data-path "command";
               }

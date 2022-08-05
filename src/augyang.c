@@ -2419,7 +2419,6 @@ ay_regex_try_skip(const char *curr)
             parcnt--;
             skip++;
             break;
-        case '|':
         case '\r':
             skip++;
             break;
@@ -2459,6 +2458,20 @@ ay_regex_try_skip(const char *curr)
 /**
  * @brief Print lense regex pattern to be valid for libyang.
  *
+ * This function converts an augeas regular expression to a double-quoted yang pattern. Backslash cases are a bit
+ * complicated. Examples of backslash conversions are in the following table, where augeas regular expression is on
+ * the left and yang double-quoted pattern is on the right:
+ *
+ * [\\]     |   [\\\\]      - match one backslash character
+ * \\\\     |   \\\\        - match one backslash character
+ * \[       |   \\[         - match character '['
+ * []]      |   [\\]]       - match character ']'
+ * [\\\\]   |   [\\\\\\\\]  - match one backslash character
+ *
+ * Note:
+ * The lense tests in augeas/src/lenses/tests require escaping of backslash.
+ * Conversion probably doesn't work in all cases.
+ *
  * @param[in,out] out Output handler for printing.
  * @param[in] patt Regex pattern to print.
  * @return 0 on success.
@@ -2468,7 +2481,7 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
 {
     const char *ch, *skip;
     char *mem, *src;
-    ly_bool charClassExpr = 0;
+    ly_bool charClassExpr, charClassEmpty;
 
     if (!patt || (*patt == '\0')) {
         return 0;
@@ -2484,38 +2497,41 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
     /* remove () around pattern  */
     ay_regex_remove_parentheses(&src);
 
+    charClassExpr = 0;
+    charClassEmpty = 0;
+
     for (ch = src; *ch; ch++) {
 
         if ((skip = ay_regex_try_skip(ch)) != ch) {
             ch = skip - 1;
             continue;
-        } else {
-            skip = ch;
         }
 
         switch (*ch) {
         case '[':
-            if ((ch[1] == '^') && (ch[2] == ']') && (ch[3] == '[')) {
-                ly_print(out, "[^\\\\]\\\\[");
-                skip = &ch[3];
-            } else if ((ch[1] == '^') && (ch[2] == '[') && (ch[3] == ']')) {
-                ly_print(out, "[^\\\\[\\\\]");
-                skip = &ch[3];
-            } else if ((ch[1] == '^') && (ch[2] == '[')) {
-                ly_print(out, "[^\\\\[");
-                skip = &ch[2];
-            } else if ((ch[1] == '^') && (ch[2] == ']')) {
-                ly_print(out, "[^\\\\]");
-                skip = &ch[2];
+            if (charClassExpr) {
+                /* Character [ is escaped. */
+                ly_print(out, "\\\\[");
             } else {
+                /* Start of character class expression []. */
+                charClassExpr = 1;
+                charClassEmpty = 1;
                 ly_print(out, "[");
             }
-            charClassExpr = 1;
-            break;
+            continue;
         case ']':
-            ly_print(out, "]");
-            charClassExpr = 0;
-            break;
+            if (charClassExpr && charClassEmpty) {
+                /* Character ] is escaped. */
+                ly_print(out, "\\\\]");
+            } else {
+                /* End of character class expression []. */
+                charClassExpr = 0;
+                ly_print(out, "]");
+            }
+            continue;
+        case '^':
+            ly_print(out, "^");
+            continue;
         case '\n':
             ly_print(out, "\\n");
             break;
@@ -2527,24 +2543,43 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
             break;
         case '\\':
             switch (ch[1]) {
+            case '[':
             case ']':
-                if (charClassExpr) {
-                    /* TODO weird */
-                    ly_print(out, "\\\\\\\\]");
-                    skip = &ch[1];
+                if (charClassExpr && !charClassEmpty) {
+                    /* Write backslash character inside of []. */
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
                 } else {
-                    ly_print(out, "\\\\]");
-                    skip = &ch[1];
+                    /* Escape character ] or [. */
+                    ly_print(out, "\\\\");
+                    ly_print(out, "%c", ch[1]);
+                    ch++;
+                    continue;
                 }
                 break;
             case '\\':
-                /* just print \\ */
-                ly_print(out, "\\\\\\\\");
-                skip = &ch[1];
+                if (charClassExpr) {
+                    /* Write backslash character twice. */
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                } else {
+                    /* Write backslash character outside of []. */
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                }
+                ch++;
                 break;
             default:
-                /* just print first \ */
-                ly_print(out, "\\\\");
+                if (charClassExpr) {
+                    /* Write backslash character inside of []. */
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                } else {
+                    /* Some character will be escaped outside of []. */
+                    ly_print(out, "\\\\");
+                }
                 break;
             }
             break;
@@ -2553,7 +2588,7 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
             break;
         }
 
-        ch = skip;
+        charClassEmpty = 0;
     }
 
     free(mem);

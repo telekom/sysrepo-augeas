@@ -24,7 +24,7 @@ module dhclient {
         mandatory true;
         leaf sto-to-spc-noeval {
           type string {
-            pattern "[^=\\#,;{}\" \t\n]|[^=\\#,;{}\" \t\n][^\\#,;{}\" \t\n]*|\"[^\\#\"\n]+\"";
+            pattern "[^=\\\\#,;{}\" \t\n]|[^=\\\\#,;{}\" \t\n][^\\\\#,;{}\" \t\n]*|\"[^\\\\#\"\n]+\"";
           }
         }
         case code {
@@ -72,7 +72,7 @@ module dhclient {
         leaf sto-to-spc {
           mandatory true;
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
         }
       }
@@ -188,49 +188,49 @@ module dhclient {
         }
         leaf interface {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "interface";
         }
         leaf script {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "script";
         }
         leaf bootp {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "bootp";
         }
         leaf fixed-address {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "fixed-address";
         }
         leaf filename {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "filename";
         }
         leaf server-name {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "server-name";
         }
         leaf medium {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "medium";
         }
         leaf vendor-option-space {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "vendor option space";
         }
@@ -269,49 +269,49 @@ module dhclient {
         mandatory true;
         leaf timeout {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "timeout";
         }
         leaf retry {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "retry";
         }
         leaf select-timeout {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "select-timeout";
         }
         leaf reboot {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "reboot";
         }
         leaf backoff-cutoff {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "backoff-cutoff";
         }
         leaf initial-interval {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "initial-interval";
         }
         leaf do-forward-updates {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "do-forward-updates";
         }
         leaf reject {
           type string {
-            pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
           }
           augex:data-path "reject";
         }
@@ -366,7 +366,7 @@ module dhclient {
           presence "Config entry.";
           leaf sto-to-spc {
             type string {
-              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+              pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
           uses stmt-block;
@@ -377,7 +377,7 @@ module dhclient {
           presence "Config entry.";
           leaf sto-to-spc {
             type string {
-              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+              pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
           uses stmt-block;
@@ -388,7 +388,7 @@ module dhclient {
           presence "Config entry.";
           leaf sto-to-spc {
             type string {
-              pattern "[^\\#,;{}\" \t\n]+|\"[^\\#\"\n]+\"";
+              pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
           uses stmt-block;

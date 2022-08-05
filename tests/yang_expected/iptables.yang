@@ -164,7 +164,7 @@ module iptables {
           }
           leaf value {
             type string {
-              pattern "([^\" \t\n!-][^ \t\n]*)|\"([^\"\\\n]|\\\\.)*\"";
+              pattern "([^\" \t\n!-][^ \t\n]*)|\"([^\"\\\\\n]|\\\\.)*\"";
             }
           }
         }

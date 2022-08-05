@@ -39,7 +39,7 @@ module grubenv {
         leaf value {
           mandatory true;
           type string {
-            pattern "[^\\\n]*(\\\\(\\\\|\n)[^\\\n]*)*";
+            pattern "[^\\\\\n]*(\\\\(\\\\|\n)[^\\\\\n]*)*";
           }
           augex:data-path "value";
         }

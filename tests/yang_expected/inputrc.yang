@@ -94,7 +94,7 @@ module inputrc {
                   leaf mapping {
                     mandatory true;
                     type string {
-                      pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+                      pattern "[A-Za-z0-9_.\"\\\\*/+\\\\,\\\\-]+";
                     }
                     augex:data-path "mapping";
                   }
@@ -137,7 +137,7 @@ module inputrc {
                     leaf mapping {
                       mandatory true;
                       type string {
-                        pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+                        pattern "[A-Za-z0-9_.\"\\\\*/+\\\\,\\\\-]+";
                       }
                       augex:data-path "mapping";
                     }
@@ -163,7 +163,7 @@ module inputrc {
           leaf mapping {
             mandatory true;
             type string {
-              pattern "[A-Za-z0-9_.\"\\*/+\\,\\-]+";
+              pattern "[A-Za-z0-9_.\"\\\\*/+\\\\,\\\\-]+";
             }
             augex:data-path "mapping";
           }

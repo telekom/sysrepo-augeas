@@ -28,7 +28,7 @@ module rtadvd {
         leaf-list name {
           min-elements 1;
           type string {
-            pattern "[^#:\\\\\t\n|][^:\\\\\t\n|]*";
+            pattern "[^#:\\\\\\\\\t\n|][^:\\\\\\\\\t\n|]*";
           }
           ordered-by user;
           augex:data-path "name";

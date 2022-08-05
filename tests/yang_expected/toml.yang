@@ -14,19 +14,19 @@ module toml {
       mandatory true;
       leaf string {
         type string {
-          pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+          pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
         }
         augex:data-path "string";
       }
       leaf string-multi {
         type string {
-          pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+          pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
         }
         augex:data-path "string_multi";
       }
       leaf string-literal {
         type string {
-          pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
+          pattern "([^\\\\']|\\\\['/bfnrtu\\\\])*";
         }
         augex:data-path "string_literal";
       }
@@ -81,19 +81,19 @@ module toml {
             mandatory true;
             leaf string {
               type string {
-                pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+                pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
               }
               augex:data-path "string";
             }
             leaf string-multi {
               type string {
-                pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+                pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
               }
               augex:data-path "string_multi";
             }
             leaf string-literal {
               type string {
-                pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
+                pattern "([^\\\\']|\\\\['/bfnrtu\\\\])*";
               }
               augex:data-path "string_literal";
             }
@@ -161,19 +161,19 @@ module toml {
           mandatory true;
           leaf string {
             type string {
-              pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+              pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
             }
             augex:data-path "string";
           }
           leaf string-multi {
             type string {
-              pattern "([^\\\"]|\\\\[\"/bfnrtu\\\\])*";
+              pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
             }
             augex:data-path "string_multi";
           }
           leaf string-literal {
             type string {
-              pattern "([^\\']|\\\\['/bfnrtu\\\\])*";
+              pattern "([^\\\\']|\\\\['/bfnrtu\\\\])*";
             }
             augex:data-path "string_literal";
           }

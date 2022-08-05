@@ -354,7 +354,7 @@ module nginx {
               leaf uri {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#uri";
               }
@@ -400,14 +400,14 @@ module nginx {
               presence "Config entry.";
               leaf address {
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#address";
               }
               leaf geo {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#geo";
               }
@@ -454,14 +454,14 @@ module nginx {
               leaf source {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#source";
               }
               leaf variable {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#variable";
               }
@@ -508,14 +508,14 @@ module nginx {
               leaf string {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#string";
               }
               leaf variable {
                 mandatory true;
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#variable";
               }
@@ -561,7 +561,7 @@ module nginx {
               presence "Config entry.";
               leaf name {
                 type string {
-                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\"]|\\.)*\")";
+                  pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }
                 augex:data-path "#name";
               }
