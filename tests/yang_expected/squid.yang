@@ -77,7 +77,7 @@ module squid {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list entry {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -85,7 +85,7 @@ module squid {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-config-entries {
+      choice ch-entry {
         mandatory true;
         leaf accept-filter {
           type string {

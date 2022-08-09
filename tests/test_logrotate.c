@@ -54,19 +54,19 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <config-entries>\n"
+            "  <attrs>\n"
             "    <_id>1</_id>\n"
             "    <schedule>weekly</schedule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>2</_id>\n"
             "    <rotate>4</rotate>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>3</_id>\n"
             "    <create/>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>4</_id>\n"
             "    <tabooext>\n"
             "      <value>+</value>\n"
@@ -74,12 +74,12 @@ test_load(void **state)
             "      <list-item>.orig</list-item>\n"
             "      <list-item>.ignore</list-item>\n"
             "    </tabooext>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>5</_id>\n"
             "    <include>/etc/logrotate.d</include>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>6</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/wtmp</file>\n"
@@ -105,8 +105,8 @@ test_load(void **state)
             "        <rotate>1</rotate>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>7</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/btmp</file>\n"
@@ -132,8 +132,8 @@ test_load(void **state)
             "        <rotate>1</rotate>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>8</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/vsftpd.log</file>\n"
@@ -158,8 +158,8 @@ test_load(void **state)
             "        <schedule>weekly</schedule>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>9</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/apache2/*.log</file>\n"
@@ -206,8 +206,8 @@ test_load(void **state)
             "                fi</prerotate>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>10</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/mailman/digest</file>\n"
@@ -255,8 +255,8 @@ test_load(void **state)
             "        <postrotate>        [ -f '/var/run/mailman/mailman.pid' ] &amp;&amp; /usr/lib/mailman/bin/mailmanctl -q reopen || exit 0</postrotate>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </attrs>\n"
+            "  <attrs>\n"
             "    <_id>11</_id>\n"
             "    <rule>\n"
             "      <file>/var/log/ntp</file>\n"
@@ -297,7 +297,7 @@ test_load(void **state)
             "        <postrotate>        chmod 644 /var/log/ntp</postrotate>\n"
             "      </config-entries>\n"
             "    </rule>\n"
-            "  </config-entries>\n"
+            "  </attrs>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -312,24 +312,24 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/rule/config-entries[_id='10']/shred",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='11']/rule/config-entries[_id='10']/shred",
             "noshred", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='11']/rule/config-entries[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='11']/rule/config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='9']/rule/file",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='9']/rule/file",
             "/usr/local/var/log/apache2/*.log", 0, &entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='12']/rule/file", "/root_file", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='12']/rule/config-entries[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/file", "/root_file", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='1']/"
             "su", NULL, 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='12']/rule/config-entries[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='2']/"
             "olddir", "/root_old_dir", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='12']/rule/config-entries[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='2']/"
             "copy", "copy", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='12']/rule/config-entries[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='2']/"
             "start", "123456789", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='9']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='9']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -362,11 +362,11 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='11']/rule/config-entries[_id='3']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='11']/rule/config-entries[_id='3']/"
             "maxage", "182", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='6']/rule/config-entries[_id='3']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='6']/rule/config-entries[_id='3']/"
             "create/group", "root", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='2']/rotate", "2", LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='2']/rotate", "2", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -397,11 +397,11 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/tabooext/list-item[.='.orig']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='4']/tabooext/list-item[.='.orig']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='10']/rule/config-entries[_id='1']/su/group", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='10']/rule/config-entries[_id='1']/su/group", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='11']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='11']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

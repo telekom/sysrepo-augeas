@@ -301,7 +301,7 @@ module ntp {
         container statistics-record {
           augex:data-path "statistics";
           presence "Config entry.";
-          list config-entries {
+          list statistics-opts {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -309,7 +309,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch-config-entries {
+            choice ch-statistics-opts {
               mandatory true;
               leaf loopstats {
                 type empty;
@@ -340,7 +340,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          list config-entries {
+          list filegen-opts {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -348,7 +348,7 @@ module ntp {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            choice ch-config-entries {
+            choice ch-filegen-opts {
               mandatory true;
               leaf file {
                 type string {

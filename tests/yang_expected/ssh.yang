@@ -55,209 +55,218 @@ module ssh {
       }
     }
   }
-  grouping ch-send-env {
-    choice ch-send-env {
-      mandatory true;
-      container send-env {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf send-env {
-          mandatory true;
-          type string {
-            pattern "(?i)SendEnv";
-          }
-        }
-        list array-entry-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container array-entry {
-            augex:data-path "$$";
-            augex:value-yang-path "value-to-spc";
-            presence "Config entry.";
-            leaf array-entry {
-              mandatory true;
-              type uint64;
+  grouping match-entry {
+    list match-entry {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-match-entry {
+        mandatory true;
+        container send-env {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf send-env {
+            mandatory true;
+            type string {
+              pattern "(?i)SendEnv";
             }
-            leaf value-to-spc {
-              mandatory true;
-              type string {
-                pattern "[^ \t\n=][^ \t\n]*";
+          }
+          list array-entry-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container array-entry {
+              augex:data-path "$$";
+              augex:value-yang-path "value-to-spc";
+              presence "Config entry.";
+              leaf array-entry {
+                mandatory true;
+                type uint64;
+              }
+              leaf value-to-spc {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n=][^ \t\n]*";
+                }
               }
             }
           }
         }
-      }
-      container proxy-command {
-        augex:data-path "$$";
-        augex:value-yang-path "value-to-eol";
-        presence "Config entry.";
-        leaf id {
-          mandatory true;
-          type string {
-            pattern "(?i)ProxyCommand";
-          }
-        }
-        leaf value-to-eol {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-          }
-        }
-      }
-      container remote-forward {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf remote-forward {
-          mandatory true;
-          type string {
-            pattern "(?i)RemoteForward";
-          }
-        }
-        uses remote-fw;
-      }
-      container local-forward {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf local-forward {
-          mandatory true;
-          type string {
-            pattern "(?i)LocalForward";
-          }
-        }
-        uses remote-fw;
-      }
-      container macs {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf macs {
-          mandatory true;
-          type string {
-            pattern "(?i)MACs";
-          }
-        }
-        uses commas-entry-list;
-      }
-      container ciphers {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf ciphers {
-          mandatory true;
-          type string {
-            pattern "(?i)Ciphers";
-          }
-        }
-        uses commas-entry-list;
-      }
-      container host-key-algorithms {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf host-key-algorithms {
-          mandatory true;
-          type string {
-            pattern "(?i)HostKeyAlgorithms";
-          }
-        }
-        uses commas-entry-list;
-      }
-      container kex-algorithms {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf host-key-algorithms {
-          mandatory true;
-          type string {
-            pattern "(?i)KexAlgorithms";
-          }
-        }
-        uses commas-entry-list;
-      }
-      container pubkey-accepted-key-types {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf pubkey-accepted-key-types {
-          mandatory true;
-          type string {
-            pattern "(?i)PubkeyAcceptedKeyTypes";
-          }
-        }
-        uses commas-entry-list;
-      }
-      container global-known-hosts-file {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf global-known-hosts-file {
-          mandatory true;
-          type string {
-            pattern "(?i)GlobalKnownHostsFile";
-          }
-        }
-        list spaces-entry-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container spaces-entry {
-            augex:data-path "$$";
-            augex:value-yang-path "value-to-spc";
-            presence "Config entry.";
-            leaf spaces-entry {
-              mandatory true;
-              type uint64;
+        container proxy-command {
+          augex:data-path "$$";
+          augex:value-yang-path "value-to-eol";
+          presence "Config entry.";
+          leaf id {
+            mandatory true;
+            type string {
+              pattern "(?i)ProxyCommand";
             }
-            leaf value-to-spc {
-              mandatory true;
-              type string {
-                pattern "[^ \t\n=][^ \t\n]*";
+          }
+          leaf value-to-eol {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+          }
+        }
+        container remote-forward {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf remote-forward {
+            mandatory true;
+            type string {
+              pattern "(?i)RemoteForward";
+            }
+          }
+          uses remote-fw;
+        }
+        container local-forward {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf local-forward {
+            mandatory true;
+            type string {
+              pattern "(?i)LocalForward";
+            }
+          }
+          uses remote-fw;
+        }
+        container macs {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf macs {
+            mandatory true;
+            type string {
+              pattern "(?i)MACs";
+            }
+          }
+          uses commas-entry-list;
+        }
+        container ciphers {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf ciphers {
+            mandatory true;
+            type string {
+              pattern "(?i)Ciphers";
+            }
+          }
+          uses commas-entry-list;
+        }
+        container host-key-algorithms {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf host-key-algorithms {
+            mandatory true;
+            type string {
+              pattern "(?i)HostKeyAlgorithms";
+            }
+          }
+          uses commas-entry-list;
+        }
+        container kex-algorithms {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf host-key-algorithms {
+            mandatory true;
+            type string {
+              pattern "(?i)KexAlgorithms";
+            }
+          }
+          uses commas-entry-list;
+        }
+        container pubkey-accepted-key-types {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf pubkey-accepted-key-types {
+            mandatory true;
+            type string {
+              pattern "(?i)PubkeyAcceptedKeyTypes";
+            }
+          }
+          uses commas-entry-list;
+        }
+        container global-known-hosts-file {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf global-known-hosts-file {
+            mandatory true;
+            type string {
+              pattern "(?i)GlobalKnownHostsFile";
+            }
+          }
+          list spaces-entry-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container spaces-entry {
+              augex:data-path "$$";
+              augex:value-yang-path "value-to-spc";
+              presence "Config entry.";
+              leaf spaces-entry {
+                mandatory true;
+                type uint64;
+              }
+              leaf value-to-spc {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n=][^ \t\n]*";
+                }
               }
             }
           }
         }
-      }
-      container rekey-limit {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf rekey-limit {
-          mandatory true;
-          type string {
-            pattern "(?i)RekeyLimit";
+        container rekey-limit {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf rekey-limit {
+            mandatory true;
+            type string {
+              pattern "(?i)RekeyLimit";
+            }
+          }
+          leaf amount {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n=][^ \t\n]*";
+            }
+            augex:data-path "amount";
+          }
+          leaf duration {
+            type string {
+              pattern "[^ \t\n=][^ \t\n]*";
+            }
+            augex:data-path "duration";
           }
         }
-        leaf amount {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n=][^ \t\n]*";
+        container other-entry {
+          augex:data-path "$$";
+          augex:value-yang-path "value-to-spc";
+          presence "Config entry.";
+          leaf key-re {
+            mandatory true;
+            type string {
+              pattern "[Cc][Ii][Pp][Hh][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Cc][Ii][Pp]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Cc][Ii]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii][Ll](([Ee][0-9A-Za-z]|[0-9A-DF-Za-df-z])[0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb]([0-9B-Zb-z][0-9A-Za-z]*|())|[Gg][Ll][Oo]([0-9AC-Zac-z][0-9A-Za-z]*|())|[Gg][Ll]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee][Yy]([Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[0-9B-Zb-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][0-9A-JL-Za-jl-z][0-9A-Za-z]*|[Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Kk][Ee][Xx]([0-9B-Zb-z][0-9A-Za-z]*|())|[Kk][Ee]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww][Aa][Rr](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww][Aa]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww]([0-9B-Zb-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Ll][Oo][Cc]([0-9B-Zb-z][0-9A-Za-z]*|())|[Ll][Oo]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Tt][Cc](([Hh][0-9A-Za-z]|[0-9A-GI-Za-gi-z])[0-9A-Za-z]*|())|[Mm][Aa][Tt]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Cc](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Mm][Aa]([0-9ABD-SU-Zabd-su-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm][Aa][Nn](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm][Aa]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm]([0-9B-Zb-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Rr][Oo]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy][Pp][Ee](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy][Pp]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee]([0-9A-CE-Za-ce-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy]([0-9B-Zb-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Pp][Uu]([0-9AC-Zac-z][0-9A-Za-z]*|())|[Pp][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii][Mm][Ii](([Tt][0-9A-Za-z]|[0-9A-SU-Za-su-z])[0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii][Mm]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww][Aa][Rr](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww][Aa]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww]([0-9B-Zb-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Rr][Ee][Mm]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Rr][Ee]([0-9A-JLN-Za-jln-z][0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd][Ee][Nn](([Vv][0-9A-Za-z]|[0-9A-UW-Za-uw-z])[0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Ss][Ee][Nn]([0-9A-CE-Za-ce-z][0-9A-Za-z]*|())|[Ss][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|([Ss][0-9A-DF-Za-df-z]|[Rr][0-9A-DF-Za-df-z]|[Pp][0-9A-QSTV-Za-qstv-z]|[Mm][0-9B-Zb-z]|[Ll][0-9A-NP-Za-np-z]|[Kk][0-9A-DF-Za-df-z]|[Hh][0-9A-NP-Za-np-z]|[Gg][0-9A-KM-Za-km-z]|[Cc][0-9A-HJ-Za-hj-z]|[0-9ABD-FIJNOQT-Zabd-fijnoqt-z][0-9A-Za-z])[0-9A-Za-z]*|[Ss]|[Rr]|[Pp]|[Mm]|[Ll]|[Kk]|[Hh]|[Gg]|[Cc]|[0-9ABD-FIJNOQT-Zabd-fijnoqt-z]";
+            }
           }
-          augex:data-path "amount";
-        }
-        leaf duration {
-          type string {
-            pattern "[^ \t\n=][^ \t\n]*";
-          }
-          augex:data-path "duration";
-        }
-      }
-      container other-entry {
-        augex:data-path "$$";
-        augex:value-yang-path "value-to-spc";
-        presence "Config entry.";
-        leaf key-re {
-          mandatory true;
-          type string {
-            pattern "[Cc][Ii][Pp][Hh][Ee][Rr](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh][Ee]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Cc][Ii][Pp][Hh]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Cc][Ii][Pp]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Cc][Ii]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii][Ll](([Ee][0-9A-Za-z]|[0-9A-DF-Za-df-z])[0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll][Kk]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa][Ll]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Gg][Ll][Oo][Bb]([0-9B-Zb-z][0-9A-Za-z]*|())|[Gg][Ll][Oo]([0-9AC-Zac-z][0-9A-Za-z]*|())|[Gg][Ll]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee][Yy]([Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[0-9B-Zb-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Hh][Oo][Ss][Tt][0-9A-JL-Za-jl-z][0-9A-Za-z]*|[Hh][Oo][Ss]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Hh][Oo]([0-9A-RT-Za-rt-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh][Mm](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt][Hh]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii][Tt]([0-9A-GI-Za-gi-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr][Ii]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo][Rr]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll][Gg]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa][Ll]([0-9A-FH-Za-fh-z][0-9A-Za-z]*|())|[Kk][Ee][Xx][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Kk][Ee][Xx]([0-9B-Zb-z][0-9A-Za-z]*|())|[Kk][Ee]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww][Aa][Rr](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww][Aa]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr][Ww]([0-9B-Zb-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo][Rr]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll][Ff]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa][Ll]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Ll][Oo][Cc][Aa]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Ll][Oo][Cc]([0-9B-Zb-z][0-9A-Za-z]*|())|[Ll][Oo]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Tt][Cc](([Hh][0-9A-Za-z]|[0-9A-GI-Za-gi-z])[0-9A-Za-z]*|())|[Mm][Aa][Tt]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Mm][Aa][Cc](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Mm][Aa]([0-9ABD-SU-Zabd-su-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm][Aa][Nn](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm][Aa]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm]([0-9B-Zb-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc][Oo]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy][Cc]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx][Yy]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Rr][Oo][Xx]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Rr][Oo]([0-9A-WYZa-wyz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy][Pp][Ee](([Ss][0-9A-Za-z]|[0-9A-RT-Za-rt-z])[0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy][Pp]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt][Yy]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy][Tt]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee][Yy]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee][Dd]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt][Ee]([0-9A-CE-Za-ce-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee][Pp]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc][Ee]([0-9A-OQ-Za-oq-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc][Cc]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa][Cc]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy][Aa]([0-9ABD-Zabd-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee][Yy]([0-9B-Zb-z][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Pp][Uu][Bb][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Pp][Uu][Bb]([0-9A-JL-Za-jl-z][0-9A-Za-z]*|())|[Pp][Uu]([0-9AC-Zac-z][0-9A-Za-z]*|())|[Pp][Rr]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii][Mm][Ii](([Tt][0-9A-Za-z]|[0-9A-SU-Za-su-z])[0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii][Mm]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll][Ii]([0-9A-LN-Za-ln-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy][Ll]([0-9A-HJ-Za-hj-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee][Yy]([0-9A-KM-Za-km-z][0-9A-Za-z]*|())|[Rr][Ee][Kk][Ee]([0-9A-XZa-xz][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww][Aa][Rr](([Dd][0-9A-Za-z]|[0-9A-CE-Za-ce-z])[0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww][Aa]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr][Ww]([0-9B-Zb-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo][Rr]([0-9A-VX-Za-vx-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff][Oo]([0-9A-QS-Za-qs-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee][Ff]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt][Ee]([0-9A-EG-Za-eg-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo][Tt]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Rr][Ee][Mm][Oo]([0-9A-SU-Za-su-z][0-9A-Za-z]*|())|[Rr][Ee][Mm]([0-9A-NP-Za-np-z][0-9A-Za-z]*|())|[Rr][Ee][Kk]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Rr][Ee]([0-9A-JLN-Za-jln-z][0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd][Ee][Nn](([Vv][0-9A-Za-z]|[0-9A-UW-Za-uw-z])[0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|[Ss][Ee][Nn][Dd]([0-9A-DF-Za-df-z][0-9A-Za-z]*|())|[Ss][Ee][Nn]([0-9A-CE-Za-ce-z][0-9A-Za-z]*|())|[Ss][Ee]([0-9A-MO-Za-mo-z][0-9A-Za-z]*|())|([Ss][0-9A-DF-Za-df-z]|[Rr][0-9A-DF-Za-df-z]|[Pp][0-9A-QSTV-Za-qstv-z]|[Mm][0-9B-Zb-z]|[Ll][0-9A-NP-Za-np-z]|[Kk][0-9A-DF-Za-df-z]|[Hh][0-9A-NP-Za-np-z]|[Gg][0-9A-KM-Za-km-z]|[Cc][0-9A-HJ-Za-hj-z]|[0-9ABD-FIJNOQT-Zabd-fijnoqt-z][0-9A-Za-z])[0-9A-Za-z]*|[Ss]|[Rr]|[Pp]|[Mm]|[Ll]|[Kk]|[Hh]|[Gg]|[Cc]|[0-9ABD-FIJNOQT-Zabd-fijnoqt-z]";
-          }
-        }
-        leaf value-to-spc {
-          mandatory true;
-          type string {
-            pattern "[^ \t\n=][^ \t\n]*";
+          leaf value-to-spc {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n=][^ \t\n]*";
+            }
           }
         }
       }
@@ -268,16 +277,7 @@ module ssh {
     leaf config-file {
       type string;
     }
-    list ch-send-env-list {
-      key "_id";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      uses ch-send-env;
-    }
+    uses match-entry;
     list config-entries {
       key "_id";
       ordered-by user;
@@ -304,16 +304,7 @@ module ssh {
               pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
             }
           }
-          list ch-send-env-list {
-            key "_id";
-            ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            uses ch-send-env;
-          }
+          uses match-entry;
         }
         container match {
           augex:data-path "$$";
@@ -327,7 +318,7 @@ module ssh {
           container match-cond {
             augex:data-path "Condition";
             presence "Config entry.";
-            list config-entries {
+            list condition-entry {
               key "_id";
               min-elements 1;
               ordered-by user;
@@ -363,16 +354,7 @@ module ssh {
           container settings {
             augex:data-path "Settings";
             presence "Config entry.";
-            list ch-send-env-list {
-              key "_id";
-              ordered-by user;
-              leaf _id {
-                type uint64;
-                description
-                  "Implicitly generated list key to maintain the order of the augeas data.";
-              }
-              uses ch-send-env;
-            }
+            uses match-entry;
           }
         }
       }

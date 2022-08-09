@@ -2035,6 +2035,64 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
 }
 
 /**
+ * @brief Get lense name which is not directly related to @p node.
+ *
+ * This function is a bit experimental. The point is that, for example, list nodes often have the identifier
+ * 'config-entries', which often causes name collisions. But there may be unused lense identifiers in the augeas module
+ * and it would be a pity not to use them. So even though the identifier isn't quite directly related to the @p node,
+ * it's still better than the default name ('config-entries').
+ *
+ * @param[in] mod Module in which search the @p lens.
+ * @param[in] node Node for which the identifier is to be found.
+ * @return Identifier or NULL.
+ */
+static char *
+ay_get_spare_lense_name(struct module *mod, const struct ay_ynode *node)
+{
+    const struct ay_ynode *ynter;
+    const struct ay_lnode *liter, *start, *end;
+    struct binding *bind_iter;
+
+    /* Find the node that terminates the search. */
+    end = NULL;
+    for (ynter = node->parent; ynter; ynter = ynter->parent) {
+        if (ynter->snode) {
+            end = ynter->snode;
+            break;
+        }
+    }
+    if (!end) {
+        return NULL;
+    }
+
+    /* Find the node that starts the search. */
+    start = NULL;
+    for (ynter = node->child; ynter; ynter = ynter->child) {
+        if (ynter->snode) {
+            start = ynter->snode;
+            break;
+        } else if (ynter->label) {
+            start = ynter->label;
+            break;
+        }
+    }
+    if (!start) {
+        return NULL;
+    }
+
+    /* Find a free unused identifier in the module. */
+    for (liter = start->parent; liter && (liter != end); liter = liter->parent) {
+        LY_LIST_FOR(mod->bindings, bind_iter) {
+            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
+                return bind_iter->ident->str;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Get lense name from specific module and search using a regular expression.
  *
  * @param[in] aug Augeas context.
@@ -3427,6 +3485,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
+        } else if ((tmp = ay_get_spare_lense_name(ctx->mod, node))) {
+            str = tmp;
         } else {
             str = "config-entries";
         }

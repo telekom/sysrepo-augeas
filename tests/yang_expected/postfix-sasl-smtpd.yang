@@ -14,7 +14,7 @@ module postfix-sasl-smtpd {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list entries {
       key "_id";
       min-elements 1;
       ordered-by user;
@@ -23,7 +23,7 @@ module postfix-sasl-smtpd {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-config-entries {
+      choice ch-entries {
         mandatory true;
         leaf pwcheck-method {
           type string {

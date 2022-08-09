@@ -428,7 +428,7 @@ module sshd {
         container match-cond {
           augex:data-path "Condition";
           presence "Config entry.";
-          list config-entries {
+          list condition-entry {
             key "_id";
             min-elements 1;
             ordered-by user;

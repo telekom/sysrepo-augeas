@@ -46,7 +46,7 @@ module logrotate {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list attrs {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -54,7 +54,7 @@ module logrotate {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-config-entries {
+      choice ch-attrs {
         mandatory true;
         leaf schedule {
           type string {

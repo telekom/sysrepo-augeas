@@ -129,8 +129,8 @@ module dhclient {
       augex:data-path "second";
     }
   }
-  grouping stmt-block {
-    list config-entries {
+  grouping stmt-block-entry {
+    list stmt-block-entry {
       key "_id";
       min-elements 1;
       ordered-by user;
@@ -139,7 +139,7 @@ module dhclient {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-config-entries {
+      choice ch-stmt-block-entry {
         mandatory true;
         container media {
           augex:data-path "media";
@@ -369,7 +369,7 @@ module dhclient {
               pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
-          uses stmt-block;
+          uses stmt-block-entry;
         }
         container lease {
           augex:data-path "lease";
@@ -380,7 +380,7 @@ module dhclient {
               pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
-          uses stmt-block;
+          uses stmt-block-entry;
         }
         container alias {
           augex:data-path "alias";
@@ -391,7 +391,7 @@ module dhclient {
               pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
             }
           }
-          uses stmt-block;
+          uses stmt-block-entry;
         }
       }
     }

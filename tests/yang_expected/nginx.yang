@@ -59,7 +59,7 @@ module nginx {
     leaf config-file {
       type string;
     }
-    list config-entries {
+    list directive {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -67,7 +67,7 @@ module nginx {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-config-entries {
+      choice ch-directive {
         mandatory true;
         container simple {
           augex:data-path "$$";

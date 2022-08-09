@@ -51,34 +51,33 @@ test_load(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
     lyd_print_mem(&str, st->data, LYD_XML, LYD_PRINT_WITHSIBLINGS);
 
-    //printf("%s\n", str);
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <config-entries>\n"
+            "  <entries>\n"
             "    <_id>1</_id>\n"
             "    <pwcheck-method>auxprop saslauthd</pwcheck-method>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </entries>\n"
+            "  <entries>\n"
             "    <_id>2</_id>\n"
             "    <auxprop-plugin>plesk</auxprop-plugin>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </entries>\n"
+            "  <entries>\n"
             "    <_id>3</_id>\n"
             "    <saslauthd-path>/private/plesk_saslauthd</saslauthd-path>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </entries>\n"
+            "  <entries>\n"
             "    <_id>4</_id>\n"
             "    <mech-list>CRAM-MD5 PLAIN LOGIN</mech-list>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </entries>\n"
+            "  <entries>\n"
             "    <_id>5</_id>\n"
             "    <sql-engine>intentionally disabled</sql-engine>\n"
-            "  </config-entries>\n"
-            "  <config-entries>\n"
+            "  </entries>\n"
+            "  <entries>\n"
             "    <_id>6</_id>\n"
             "    <log-level>4</log-level>\n"
-            "  </config-entries>\n"
+            "  </entries>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -93,16 +92,16 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/auxprop-plugin", "flask", 0, &new));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entries[_id='7']/auxprop-plugin", "flask", 0, &new));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
 
     node = new;
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='8']/auxprop-plugin", "plesk2", 0, &new));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entries[_id='8']/auxprop-plugin", "plesk2", 0, &new));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
 
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='5']", 0, &node));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='9']/sql-engine", "old", 0, &new));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='5']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entries[_id='9']/sql-engine", "old", 0, &new));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
 
     /* store new data */
@@ -127,9 +126,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/mech-list", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='4']/mech-list", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_change_term(node, "CRAM-MD5 PLAIN"));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']/pwcheck-method", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='1']/pwcheck-method", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_change_term(node, "auxprop"));
 
     /* store new data */
@@ -157,9 +156,9 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove 2 list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='3']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='3']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='5']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='5']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

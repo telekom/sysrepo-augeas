@@ -325,7 +325,7 @@ module ldif {
                 }
                 uses attr-val-spec;
               }
-              list config-entries {
+              list change-modify {
                 key "_id";
                 min-elements 1;
                 when "../change-type/value='modify'";
@@ -335,7 +335,7 @@ module ldif {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                choice ch-config-entries {
+                choice ch-change-modify {
                   mandatory true;
                   container add {
                     augex:data-path "add";
@@ -375,7 +375,7 @@ module ldif {
                   }
                 }
               }
-              list config-entries2 {
+              list change-modrdn {
                 key "_id";
                 min-elements 1;
                 when "re-match(../change-type/value, 'modr?dn')";
@@ -385,7 +385,7 @@ module ldif {
                   description
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
-                choice ch-config-entries2 {
+                choice ch-change-modrdn {
                   mandatory true;
                   container newrdn {
                     augex:data-path "newrdn";
