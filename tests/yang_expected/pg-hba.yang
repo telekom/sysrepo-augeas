@@ -94,11 +94,11 @@ module pg-hba {
           mandatory true;
           container case {
             presence "Config entry.";
+            when "../type='local'";
             container method {
               augex:data-path "method";
               augex:value-yang-path "value";
               presence "Config entry.";
-              when "../../type='local'";
               leaf value {
                 mandatory true;
                 type string {
@@ -110,13 +110,13 @@ module pg-hba {
           }
           container case2 {
             presence "Config entry.";
+            when "re-match(../type, '((host)|(hostssl))|(hostnossl)')";
             leaf address {
               mandatory true;
               type string {
                 pattern "([0-9a-fA-F:.]+(/[0-9]+|[ \t]+[0-9.]+))|(\\.?[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)";
               }
               augex:data-path "address";
-              when "re-match(../../type, '((host)|(hostssl))|(hostnossl)')";
             }
             container method {
               augex:data-path "method";

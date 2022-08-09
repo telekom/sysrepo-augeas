@@ -1349,11 +1349,13 @@ ay_ynode_nodes_in_choice(const struct ay_ynode *ns)
 {
     ly_bool in_choice;
     const struct ay_ynode *iter;
+    const struct ay_lnode *choice;
 
     assert(ns);
     in_choice = 1;
+    choice = ns->choice;
     for (iter = ns; iter; iter = iter->next) {
-        if (!iter->choice) {
+        if (!iter->choice || (choice != iter->choice)) {
             in_choice = 0;
             break;
         }
@@ -4870,6 +4872,7 @@ ay_print_yang_case(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
     }
     ay_print_yang_nesting_begin2(ctx, node->id);
+    ay_print_yang_when(ctx, node);
 
     return ret;
 }
@@ -6087,6 +6090,86 @@ ay_ynode_rule_insert_case(const struct ay_ynode *node)
     ret = ay_ynode_common_concat(node, node->next, choice);
 
     return ret;
+}
+
+/**
+ * @brief Check if choice branches should be merged.
+ *
+ * @param[in] br1 First branch to check.
+ * @param[in] br2 Second branch to check.
+ * @return 1 if should be merged.
+ */
+static ly_bool
+ay_ynode_merge_choice_branches(const struct ay_ynode *br1, const struct ay_ynode *br2)
+{
+    struct lens *lab1, *lab2;
+
+    lab1 = AY_LABEL_LENS(br1);
+    lab2 = AY_LABEL_LENS(br2);
+
+    /* Compare roots. */
+    if ((lab1 || lab2) && !ay_lnode_lense_equal(lab1, lab2)) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Compare choice branches if should be merged.
+ *
+ * @param[in] br1 First branch to check.
+ * @param[in] br2 Second branch to check.
+ * @return 1 if should be merged.
+ */
+static ly_bool
+ay_ynode_cmp_choice_branches(const struct ay_ynode *br1, const struct ay_ynode *br2)
+{
+    ly_bool match;
+
+    if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
+        match = ay_ynode_merge_choice_branches(br1->child, br2->child);
+    } else if ((br1->type == YN_CASE) && (br2->type != YN_CASE)) {
+        match = ay_ynode_merge_choice_branches(br1->child, br2);
+    } else if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
+        match = ay_ynode_merge_choice_branches(br1, br2->child);
+    } else {
+        assert((br1->type != YN_CASE) && (br2->type != YN_CASE));
+        match = ay_ynode_merge_choice_branches(br1, br2);
+    }
+
+    return match;
+}
+
+/**
+ * @brief Compare choice branches if should be merged and count how many nodes to add.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return The maximum number of nodes that can be added.
+ */
+static uint64_t
+ay_ynode_rule_merge_cases(const struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_ynode *chn1, *chn2;
+    uint64_t match;
+
+    match = 0;
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        chn1 = &tree[i];
+        if (!chn1->choice) {
+            continue;
+        }
+
+        for (chn2 = chn1->next; chn2 && (chn2->choice == chn1->choice); chn2 = chn2->next) {
+            if (ay_ynode_cmp_choice_branches(chn1, chn2)) {
+                match++;
+            }
+        }
+    }
+
+    /* A 2 cases for the children of the first node and 2 for nodes after the first. */
+    return match * 4;
 }
 
 /**
@@ -7893,55 +7976,6 @@ ay_ynode_insert_case(struct ay_ynode *tree)
 }
 
 /**
- * @brief Check if choice branches should be merged.
- *
- * @param[in] br1 First branch to check.
- * @param[in] br2 Second branch to check.
- * @return 1 if should be merged.
- */
-static ly_bool
-ay_ynode_merge_choice_branches(struct ay_ynode *br1, struct ay_ynode *br2)
-{
-    struct lens *lab1, *lab2;
-
-    lab1 = AY_LABEL_LENS(br1);
-    lab2 = AY_LABEL_LENS(br2);
-
-    /* Compare roots. */
-    if ((lab1 || lab2) && !ay_lnode_lense_equal(lab1, lab2)) {
-        return 0;
-    }
-
-    return 1;
-}
-
-/**
- * @brief Compare choice branches if should be merged.
- *
- * @param[in] br1 First branch to check.
- * @param[in] br2 Second branch to check.
- * @return 1 if should be merged.
- */
-static ly_bool
-ay_ynode_cmp_choice_branches(struct ay_ynode *br1, struct ay_ynode *br2)
-{
-    ly_bool match;
-
-    if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
-        match = ay_ynode_merge_choice_branches(br1->child, br2->child);
-    } else if ((br1->type == YN_CASE) && (br2->type != YN_CASE)) {
-        match = ay_ynode_merge_choice_branches(br1->child, br2);
-    } else if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
-        match = ay_ynode_merge_choice_branches(br1, br2->child);
-    } else {
-        assert((br1->type != YN_CASE) && (br2->type != YN_CASE));
-        match = ay_ynode_merge_choice_branches(br1, br2);
-    }
-
-    return match;
-}
-
-/**
  * @brief Insert YN_CASE node only if @p ns has no successor.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -7952,12 +7986,20 @@ ay_ynode_cmp_choice_branches(struct ay_ynode *br1, struct ay_ynode *br2)
 static ly_bool
 ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay_lnode *choice)
 {
+    if (ns->type == YN_CASE) {
+        return 0;
+    }
+
     if (ns->next) {
         /* Create YN_CASE for ns. */
         ay_ynode_insert_parent_for_rest(tree, ns);
         /* Unify choice. */
-        ns->choice = choice;
+        ns->choice = ns->child->choice ? ns->child->choice : choice;
         ns->type = YN_CASE;
+        ns->when_ref = ns->child->when_ref;
+        ns->when_val = ns->child->when_val;
+        ns->child->when_ref = 0;
+        ns->child->when_val = NULL;
         return 1;
     } else {
         ns->choice = choice;
@@ -7977,19 +8019,19 @@ ay_ynode_merge_cases_move_when(struct ay_ynode *br)
 
     first = br->type == YN_CASE ? br->child : br;
 
-    if (first->when_ref && first->child) {
+    if (br->when_ref && first->child) {
         /* Moved to child. */
-        first->child->when_ref = first->when_ref;
-        first->child->when_val = first->when_val;
+        first->child->when_ref = br->when_ref;
+        first->child->when_val = br->when_val;
     }
-    if (first->when_ref && (br->type == YN_CASE)) {
+    if (br->when_ref && (br->type == YN_CASE)) {
         /* Moved to sibling. */
-        first->next->when_ref = first->when_ref;
-        first->next->when_val = first->when_val;
+        first->next->when_ref = br->when_ref;
+        first->next->when_val = br->when_val;
     }
     /* Complete the move operation. */
-    first->when_ref = 0;
-    first->when_val = NULL;
+    br->when_ref = 0;
+    br->when_val = NULL;
 }
 
 /**
@@ -8006,7 +8048,7 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
     first1 = br1->type == YN_CASE ? br1->child : br1;
     first2 = br2->type == YN_CASE ? br2->child : br2;
 
-    if (first1->when_ref || first2->when_ref) {
+    if (br1->when_ref || br2->when_ref) {
         /* The 'when' data are just moved. */
         ay_ynode_merge_cases_move_when(br1);
         ay_ynode_merge_cases_move_when(br2);
@@ -8124,7 +8166,7 @@ ay_ynode_merge_nodes(struct ay_ynode *tree, struct ay_ynode *ns1, struct ay_ynod
             }
             ay_ynode_case_insert(tree, ns2, AY_YNODE_ROOT_LTREE(tree));
             /* Set new sibling. */
-            ay_ynode_move_subtree_as_sibling(tree, ns1, ns2);
+            ay_ynode_move_subtree_as_last_child(tree, ns1->parent, ns2);
         }
     }
 }
@@ -9186,6 +9228,11 @@ ay_ynode_insert_container_in_choice(struct ay_ynode *tree)
                 ay_ynode_insert_wrapper(tree, iter);
                 iter->type = YN_CONTAINER;
                 iter->choice = iter->child->choice;
+
+                iter->when_ref = iter->child->when_ref;
+                iter->when_val = iter->child->when_val;
+                iter->child->when_ref = 0;
+                iter->child->when_val = NULL;
             }
         }
     }
@@ -9365,7 +9412,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     /* ... | [key lns1 . lns2] . lns3 | [key lns1 . lns2] . lns4 | ... ->
      * ... | [key lns1 . lns2] . (lns3 | lns4) | ... */
     /* If lns3 or lns4 missing then choice between lns3 and lns4 is not mandatory. */
-    TRANSF(ay_ynode_merge_cases, 2);
+    TRANSF(ay_ynode_merge_cases, ay_ynode_rule_merge_cases(*tree));
 
     /* insert top-level list for storing configure file */
     TRANSF(ay_insert_list_files, 1);
