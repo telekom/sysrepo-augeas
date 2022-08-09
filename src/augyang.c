@@ -4304,7 +4304,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     struct ay_ynode *sibl, *parent, *refnode, *valnode;
     struct lens *value;
-    ly_bool is_simple;
+    ly_bool is_simple, refnode_is_sibling;
     const char *str;
     uint64_t i, path_cnt;
 
@@ -4315,6 +4315,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     /* Get referenced node. */
     refnode = NULL;
     path_cnt = 0;
+    refnode_is_sibling = 0;
     for (parent = node->parent; parent && !refnode; parent = parent->parent) {
         if (parent->type == YN_GROUPING) {
             parent = ay_ynode_get_uses(ctx->tree, parent->id);
@@ -4329,6 +4330,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
         for (sibl = parent->child; sibl; sibl = sibl->next) {
             if (sibl->id == node->when_ref) {
                 refnode = sibl;
+                refnode_is_sibling = 1;
                 break;
             }
         }
@@ -4358,8 +4360,14 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     /* Print name of referenced node. */
     valnode = ay_ynode_get_value_node(ctx->tree, refnode, refnode->label, refnode->value);
-    if (valnode) {
-        /* Print name of referenced node's child. */
+    if (refnode_is_sibling && valnode) {
+        /* Print name of referenced node. */
+        ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
+        ly_print(ctx->out, "/");
+        /* Print name of referenced node's value. */
+        ay_print_yang_ident(ctx, valnode, AY_IDENT_NODE_NAME);
+    } else if (valnode) {
+        /* Print name of referenced node's child (value). */
         ay_print_yang_ident(ctx, valnode, AY_IDENT_NODE_NAME);
     } else {
         /* Print name of referenced node. */
