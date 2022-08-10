@@ -1,0 +1,26 @@
+version: 1
+dn: cn=foo bar,dc=example,dc=com
+# test
+ou: example value
+cn:: Zm9vIGJhcg==
+# test
+telephoneNumber;foo;bar: +1 123 456 789
+binary;foo:< file:///file/something
+# test
+
+dn: cn=simple,dc=example,dc=com
+cn: simple
+test: split line starts with
+  :colon
+
+dn:: Y249c2ltcGxlLGRjPWV4YW1wbGUsZGM9Y29t
+# test
+cn: simple
+
+dn: cn=simple,dc=exam
+    ple,dc=com
+cn: simple
+telephoneNumber:: KzEgMTIzIDQ1
+  NiA3ODk=
+
+# test

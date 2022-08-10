@@ -1,0 +1,33 @@
+version: 1
+dn: cn=foo,dc=example,dc=com
+changetype: delete
+
+dn: cn=simple,dc=example,dc=com
+control: 1.2.3.4
+control: 1.2.3.4  true
+# test
+control: 1.2.3.4  true: foo bar
+control: 1.2.3.4  true:: Zm9vIGJhcg==
+changetype: add
+cn: simple
+
+dn: cn=foo bar,dc=example,dc=com
+changeType: modify
+add: telephoneNumber
+telephoneNumber: +1 123 456 789
+-
+replace: homePostalAddress;lang-fr
+homePostalAddress;lang-fr: 34 rue de Seine
+# test
+-
+delete: telephoneNumber
+-
+replace: telephoneNumber
+telephoneNumber:: KzEgMTIzIDQ1NiA3ODk=
+-
+
+dn: cn=foo,dc=example,dc=com
+changetype: moddn
+newrdn: cn=bar
+deleteoldrdn: 0
+newsuperior: dc=example,dc=net

@@ -286,7 +286,7 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
     }
 
     /* get path to all the relevant instances */
-    if (lyd_parent(data_node)->schema->nodetype == LYS_LIST) {
+    if ((lyd_parent(data_node)->schema->nodetype == LYS_LIST) && lyd_parent(lyd_parent(data_node))) {
         /* lists have no data-path meaning they are not present in Augeas data so we must take all these YANG data
          * list instances into consideration */
         path = lyd_path(lyd_parent(data_node), LYD_PATH_STD_NO_LAST_PRED, NULL, 0);

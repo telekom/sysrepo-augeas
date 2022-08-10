@@ -48,6 +48,10 @@ augds_free_info_node(struct augnode *augnode)
 {
     uint32_t i;
 
+    for (i = 0; i < augnode->case_count; ++i) {
+        free(augnode->cases[i].pcodes);
+    }
+    free(augnode->cases);
     free(augnode->pcodes);
     for (i = 0; i < augnode->child_count; ++i) {
         augds_free_info_node(&augnode->child[i]);
@@ -56,11 +60,37 @@ augds_free_info_node(struct augnode *augnode)
 }
 
 /**
+ * @brief Add a new case to an array.
+ *
+ * @param[in] anode Augnode to modify.
+ * @param[in] data_path Case data path to store.
+ * @param[out] acase Added case.
+ * @return SR error value.
+ */
+static int
+augds_init_auginfo_add_case(struct augnode *anode, const char *data_path, struct augnode_case **acase)
+{
+    void *mem;
+
+    mem = realloc(anode->cases, (anode->case_count + 1) * sizeof *anode->cases);
+    if (!mem) {
+        AUG_LOG_ERRMEM_RET;
+    }
+    anode->cases = mem;
+    *acase = &anode->cases[anode->case_count];
+    memset(*acase, 0, sizeof **acase);
+
+    (*acase)->data_path = data_path;
+    ++anode->case_count;
+    return SR_ERR_OK;
+}
+
+/**
  * @brief Add a new pcode pointer to an array.
  *
- * @param[in] pcode pcode to add.
+ * @param[in] pcode pcode to store.
  * @param[in,out] pcodes Array of pcodes to add to.
- * @param[in,out] pcode_count Count of @p pcodes.
+ * @param[in,out] pcode_count Count of @p pcodes
  * @return SR error value.
  */
 static int
@@ -100,9 +130,6 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
     uint32_t compile_opts;
     PCRE2_SIZE err_offset;
     LY_ARRAY_COUNT_TYPE u, v;
-
-    *pcodes = NULL;
-    *pcode_count = 0;
 
     /* get the type */
     if (node->nodetype & LYD_NODE_INNER) {
@@ -173,6 +200,80 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
 }
 
 /**
+ * @brief Init augnode of a schema node with case parent, which requires special metainformation
+ * (data-path and pattern to match) to determine whether it will be created or not.
+ *
+ * @param[in] auginfo Base auginfo structure.
+ * @param[in] node Schema node with the value or one of its descendants.
+ * @param[in,out] anode Augnode to finish initializing.
+ * @param[in,out] acase Current augnode case to add to.
+ * @return SR error value.
+ */
+static int
+augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, struct augnode *anode,
+        struct augnode_case **acase)
+{
+    int rc = SR_ERR_OK;
+    const struct lysc_node *iter;
+    enum augds_ext_node_type node_type;
+    const char *data_path, *value_path;
+
+    assert(node);
+
+    /* skip any keys */
+    while (lysc_is_key(node)) {
+        node = node->next;
+    }
+
+    /* get data path of the node, if any */
+    augds_node_get_type(node, &node_type, &data_path, &value_path);
+
+    if (data_path) {
+        /* we have the node required to exist */
+        if (!*acase) {
+            if ((rc = augds_init_auginfo_add_case(anode, data_path, acase))) {
+                return rc;
+            }
+        }
+
+        if (node->nodetype == LYS_CONTAINER) {
+            /* use the value-path node pattern */
+            if (value_path) {
+                iter = NULL;
+                while ((iter = lys_getnext(iter, node, NULL, 0))) {
+                    if (!strcmp(value_path, iter->name)) {
+                        rc = augds_init_auginfo_get_pattern(auginfo, iter, &(*acase)->pcodes, &(*acase)->pcode_count);
+                        break;
+                    }
+                }
+                assert(iter);
+            }
+        } else {
+            /* use term node pattern of the value */
+            assert((node->nodetype & LYD_NODE_TERM) && (node_type == AUGDS_EXT_NODE_VALUE));
+            rc = augds_init_auginfo_get_pattern(auginfo, node, &(*acase)->pcodes, &(*acase)->pcode_count);
+        }
+
+        return rc;
+    }
+
+    assert(node->nodetype & (LYS_LIST | LYS_CONTAINER | LYS_CHOICE));
+    if (node->nodetype & (LYS_LIST | LYS_CONTAINER)) {
+        /* go into an implicit list/container */
+        rc = augds_init_auginfo_case(auginfo, lysc_node_child(node), anode, acase);
+    } else if (node->nodetype == LYS_CHOICE) {
+        /* use patterns of all the data in the nested choice, recursively */
+        LY_LIST_FOR(lysc_node_child(node), iter) {
+            if ((rc = augds_init_auginfo_case(auginfo, lysc_node_child(iter), anode, acase))) {
+                break;
+            }
+        }
+    }
+
+    return rc;
+}
+
+/**
  * @brief Init augnodes of schema siblings, recursively.
  *
  * @param[in] auginfo Base auginfo structure.
@@ -186,10 +287,11 @@ static int
 augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *mod, struct augnode *parent,
         struct augnode **augnodes, uint32_t *augnode_count)
 {
-    const struct lysc_node *node = NULL, *node2, *child;
-    enum augds_ext_node_type node_type, node_type2;
-    const char *data_path, *value_path, *case_data_path;
+    const struct lysc_node *node = NULL, *node2;
+    enum augds_ext_node_type node_type;
+    const char *data_path, *value_path;
     struct augnode *anode;
+    struct augnode_case *acase;
     void *mem;
     uint32_t i, j;
     int r;
@@ -236,36 +338,10 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
             /* get the pattern */
             augds_init_auginfo_get_pattern(auginfo, node, &anode->pcodes, &anode->pcode_count);
         } else if ((node_type == AUGDS_EXT_NODE_NONE) && node->parent && (node->parent->nodetype == LYS_CASE)) {
-            /* extra caution, may work for other nodes, too */
-            assert(node->nodetype & (LYS_CONTAINER | LYS_LIST));
-
-            /* store the data-path and compiled pattern to use for matching when deciding whether to create this node
-             * and hence select the case */
-            child = lysc_node_child(node);
-            while (lysc_is_key(child)) {
-                child = child->next;
-            }
-            if (child->nodetype == LYS_LIST) {
-                /* skip the implicit list */
-                child = lysc_node_child(child)->next;
-            }
-            if (child->nodetype == LYS_CONTAINER) {
-                augds_node_get_type(child, &node_type2, &case_data_path, NULL);
-                assert(case_data_path);
-                anode->case_data_path = case_data_path;
-
-                /* use the first mandatory child pattern, which is technically the value */
-                child = lysc_node_child(child);
-                assert(child->flags & LYS_MAND_TRUE);
-                augds_init_auginfo_get_pattern(auginfo, child, &anode->pcodes, &anode->pcode_count);
-            } else {
-                assert(child->nodetype & LYD_NODE_TERM);
-                augds_node_get_type(child, &node_type2, &case_data_path, NULL);
-                assert(node_type2 == AUGDS_EXT_NODE_VALUE);
-
-                anode->case_data_path = case_data_path;
-                augds_init_auginfo_get_pattern(auginfo, child, &anode->pcodes, &anode->pcode_count);
-            }
+            /* special case handling to be able to properly load these data, there can be more suitable cases if
+             * there is a nested choice */
+            acase = NULL;
+            augds_init_auginfo_case(auginfo, node, anode, &acase);
         }
 
         /* fill augnode children, recursively */

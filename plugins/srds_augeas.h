@@ -63,27 +63,35 @@ enum augds_diff_op {
     AUGDS_OP_NONE
 };
 
+struct augnode {
+    const char *data_path;          /**< data-path of the augeas-extension in the schema node */
+    const char *value_path;         /**< value-yang-path of the augeas-extension in the schema node */
+    struct augnode_case {
+        const char *data_path;      /**< data-path whose value must match pattern(s) for this node to be created */
+        const pcre2_code **pcodes;  /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
+        uint32_t pcode_count;       /**< count of pcodes */
+    } *cases;
+    uint32_t case_count;
+
+    const struct lysc_node *schema; /**< schema node */
+    const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */
+    const pcre2_code **pcodes;      /**< optional compiled PCRE2 pattern of the schema pattern matching Augeas labels */
+    uint32_t pcode_count;           /**< count of pcodes */
+    uint64_t next_idx;              /**< index to be used for the next list instance, if applicable */
+    struct augnode *child;          /**< array of children of this node */
+    uint32_t child_count;           /**< number of children */
+    struct augnode *parent;         /**< augnode parent */
+};
+
 struct auginfo {
     augeas *aug;    /**< augeas handle */
 
     struct augmod {
-        const struct lys_module *mod;       /**< libyang module */
-        struct augnode {
-            const char *data_path;          /**< data-path of the augeas-extension in the schema node */
-            const char *value_path;         /**< value-yang-path of the augeas-extension in the schema node */
-            const char *case_data_path;     /**< data-path whose value must match pattern in pcode for this node to be created */
-            const struct lysc_node *schema; /**< schema node */
-            const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */
-            const pcre2_code **pcodes;      /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
-            uint32_t pcode_count;           /**< count of pcodes */
-            uint64_t next_idx;              /**< index to be used for the next list instance, if applicable */
-            struct augnode *child;          /**< array of children of this node */
-            uint32_t child_count;           /**< number of children */
-            struct augnode *parent;         /**< augnode parent */
-        } *toplevel;    /**< array of top-level nodes */
-        uint32_t toplevel_count;    /**< top-level node count */
-    } *mods;            /**< array of all loaded libyang/augeas modules */
-    uint32_t mod_count; /**< module count */
+        const struct lys_module *mod;   /**< libyang module */
+        struct augnode *toplevel;       /**< array of top-level nodes */
+        uint32_t toplevel_count;        /**< top-level node count */
+    } *mods;                            /**< array of all loaded libyang/augeas modules */
+    uint32_t mod_count;                 /**< module count */
 
     pcre2_code *pcode_uint64;       /**< compiled PCRE2 pattern to match uint64 values, to be reused */
 };
