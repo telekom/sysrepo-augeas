@@ -50,10 +50,15 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(AUGYANG_VERSION 1.0.0)
 set(SRDS_AUGEAS_VERSION 1.0.0)
 
-# version of libyang that this project depends on
+# libyang required version
 set(LIBYANG_DEP_VERSION 2.0.235)
 set(LIBYANG_DEP_SOVERSION 2.23.0)
 set(LIBYANG_DEP_SOVERSION_MAJOR 2)
+
+# sysrepo required version
+set(SYSREPO_DEP_VERSION 2.1.86)
+set(SYSREPO_DEP_SOVERSION 7.8.12)
+set(SYSREPO_DEP_SOVERSION_MAJOR 7)
 
 # global C flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
@@ -174,7 +179,7 @@ target_link_libraries(augyang ${LIBYANG_LIBRARIES})
 include_directories(${LIBYANG_INCLUDE_DIRS})
 
 # sysrepo
-find_package(Sysrepo 7 REQUIRED)
+find_package(Sysrepo ${SYSREPO_DEP_SOVERSION} REQUIRED)
 target_link_libraries(srds_augeas ${SYSREPO_LIBRARIES})
 target_link_libraries(ay_startup ${SYSREPO_LIBRARIES})
 include_directories(${SYSREPO_INCLUDE_DIRS})

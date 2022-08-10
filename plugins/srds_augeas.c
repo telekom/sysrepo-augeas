@@ -474,6 +474,53 @@ cleanup:
     return rc;
 }
 
+static int
+srpds_aug_last_modif(const struct lys_module *mod, sr_datastore_t ds, struct timespec *mtime)
+{
+    int rc = SR_ERR_OK;
+    uint32_t i, file_count;
+    struct augmod *augmod;
+    const char **files = NULL;
+    struct stat buf;
+
+    (void)ds;
+
+    mtime->tv_sec = 0;
+    mtime->tv_nsec = 0;
+
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, &augmod))) {
+        goto cleanup;
+    }
+
+    /* reload data if they changed */
+    aug_load(auginfo.aug);
+    if ((rc = augds_check_erraug(auginfo.aug))) {
+        goto cleanup;
+    }
+
+    /* get all parsed files, there may be none */
+    if ((rc = augds_get_config_files(auginfo.aug, mod, 0, &files, &file_count))) {
+        goto cleanup;
+    }
+
+    for (i = 0; i < file_count; ++i) {
+        /* get latest modify time */
+        if (stat(files[i], &buf) == -1) {
+            SRPLG_LOG_ERR(srpds_name, "Stat of \"%s\" failed (%s).", files[i], strerror(errno));
+            rc = SR_ERR_SYS;
+            goto cleanup;
+        }
+        if (mtime->tv_sec < buf.st_mtime) {
+            mtime->tv_sec = buf.st_mtime;
+        }
+    }
+
+cleanup:
+    free(files);
+    return rc;
+}
+
 SRPLG_DATASTORE = {
     .name = srpds_name,
     .init_cb = srpds_aug_init,
@@ -491,4 +538,5 @@ SRPLG_DATASTORE = {
     .access_set_cb = srpds_aug_access_set,
     .access_get_cb = srpds_aug_access_get,
     .access_check_cb = srpds_aug_access_check,
+    .last_modif_cb = srpds_aug_last_modif,
 };
