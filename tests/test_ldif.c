@@ -206,7 +206,7 @@ test_load(void **state)
             "  </ldif-changes>\n"
             "</ldif>\n"
             "<ldif xmlns=\"aug:ldif\">\n"
-            "  <config-file>/home/vasko/Documents/augyang/tests/config_files/ldif2</config-file>\n"
+            "  <config-file>" AUG_CONFIG_FILES_DIR "/ldif2</config-file>\n"
             "  <ldif-content>\n"
             "    <version>1</version>\n"
             "    <ldif-attrval-record-list>\n"
