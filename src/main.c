@@ -526,6 +526,7 @@ main(int argc, char **argv)
         if (__aug_load_module_file(aug, filename) == -1) {
             fprintf(stderr, "ERROR: %s\n", aug_error_message(aug));
             const char *s = aug_error_details(aug);
+
             if (s != NULL) {
                 fprintf(stderr, "ERROR: %s\n", s);
             }

@@ -469,6 +469,7 @@ struct ay_ynode_root {
 struct ay_dnode {
     uint32_t values_count;      /**< Number of VALUES stored for the KEY and it cannot be 0. This means that if it
                                      contains 0, it is a dnode of type VALUE. */
+
     union {
         const void *kvd;                /**< Generic KEY or VALUE Data. */
         const struct ay_lnode *lnode;   /**< Generic KEY or VALUE of type lnode. */
