@@ -317,6 +317,8 @@ enum yang_type {
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
 #define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
 #define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
+#define AY_CHOICE_CREATED       0x800   /**< A choice is created by the transform and is not in lense. Or it's in the
+                                             lense, but it's moved so it doesn't match the ay_lnode tree. */
 
 #define AY_YNODE_FLAGS_CMP_MASK 0xFF    /**< Bitmask to use when comparing ay_ynode.flags. */
 /** @} ynodeflags */
@@ -5436,6 +5438,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         if (node->flags & AY_HINT_MAND_FALSE) {
             ly_print(ctx->out, " hint_mand_false");
         }
+        if (node->flags & AY_CHOICE_CREATED) {
+            ly_print(ctx->out, " choice_created");
+        }
         ly_print(ctx->out, "\n");
     }
 
@@ -6195,6 +6200,10 @@ static ly_bool
 ay_ynode_cmp_choice_branches(const struct ay_ynode *br1, const struct ay_ynode *br2)
 {
     ly_bool match;
+
+    if (br1->when_ref || br2->when_ref) {
+        return 0;
+    }
 
     if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
         match = ay_ynode_merge_choice_branches(br1->child, br2->child);
@@ -7152,7 +7161,7 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
         }
         assert(list->child);
         start = list->child->choice ? list->child : ay_ynode_next_choice_group(list->child);
-        if (!start || (start->choice == AY_YNODE_ROOT_LTREE(tree))) {
+        if (!start || (start->flags & AY_CHOICE_CREATED)) {
             continue;
         }
         /* Set stop */
@@ -7255,7 +7264,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 !ay_ynode_alone_in_choice(node)) {
             maybe = 1;
             for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
-                lnode = iter->choice == AY_YNODE_ROOT_LTREE(tree) ? iter->snode : iter->choice;
+                lnode = iter->flags & AY_CHOICE_CREATED ? iter->snode : iter->choice;
                 if (!ay_lnode_has_maybe(lnode, 0, 0)) {
                     maybe = 0;
                     break;
@@ -8055,23 +8064,35 @@ ay_ynode_insert_case(struct ay_ynode *tree)
 static ly_bool
 ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay_lnode *choice)
 {
+    struct ay_ynode *cas;
+
     if (ns->type == YN_CASE) {
         return 0;
+    }
+
+    if (!ns->choice) {
+        ns->flags |= AY_CHOICE_CREATED;
     }
 
     if (ns->next) {
         /* Create YN_CASE for ns. */
         ay_ynode_insert_parent_for_rest(tree, ns);
+        cas = ns;
         /* Unify choice. */
-        ns->choice = ns->child->choice ? ns->child->choice : choice;
-        ns->type = YN_CASE;
-        ns->when_ref = ns->child->when_ref;
-        ns->when_val = ns->child->when_val;
-        ns->child->when_ref = 0;
-        ns->child->when_val = NULL;
+        if (choice) {
+            cas->choice = choice;
+        } else {
+            assert(cas->parent->choice);
+            cas->choice = cas->parent->choice;
+        }
+        cas->type = YN_CASE;
+        cas->when_ref = cas->child->when_ref;
+        cas->when_val = cas->child->when_val;
+        cas->child->when_ref = 0;
+        cas->child->when_val = NULL;
         return 1;
     } else {
-        ns->choice = choice;
+        ns->choice = ns->parent->choice;
         return 0;
     }
 }
@@ -8213,6 +8234,7 @@ ay_ynode_merge_nodes(struct ay_ynode *tree, struct ay_ynode *ns1, struct ay_ynod
             /* Unify choice. */
             for (iter = last->next; iter; iter = iter->next) {
                 iter->choice = ns1->choice;
+                iter->flags |= AY_CHOICE_CREATED;
             }
         } else if (ns1_in_choice && !ns2_in_choice) {
             ay_ynode_case_insert(tree, ns2, ns1->choice);
@@ -8230,10 +8252,10 @@ ay_ynode_merge_nodes(struct ay_ynode *tree, struct ay_ynode *ns1, struct ay_ynod
             ay_ynode_delete_node(tree, ns1->next);
         } else {
             assert(!ns1_in_choice && !ns2_in_choice);
-            if (ay_ynode_case_insert(tree, ns1, AY_YNODE_ROOT_LTREE(tree))) {
+            if (ay_ynode_case_insert(tree, ns1, NULL)) {
                 ns2++;
             }
-            ay_ynode_case_insert(tree, ns2, AY_YNODE_ROOT_LTREE(tree));
+            ay_ynode_case_insert(tree, ns2, NULL);
             /* Set new sibling. */
             ay_ynode_move_subtree_as_last_child(tree, ns1->parent, ns2);
         }
@@ -8644,7 +8666,10 @@ ay_ynode_node_split(struct ay_ynode *tree)
         assert(idents_count > 1);
 
         /* Just set choice to some value if not already set. */
-        node->choice = !node->choice ? AY_YNODE_ROOT_LTREE(tree) : node->choice;
+        if (!node->choice) {
+            node->choice = AY_YNODE_ROOT_LTREE(tree);
+            node->flags |= AY_CHOICE_CREATED;
+        }
 
         grouping_id = 0;
         inner_nodes = ay_ynode_inner_nodes(node);
@@ -8740,7 +8765,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list->type = YN_LIST;
             list->min_elems = list->child->min_elems;
             list->choice = choice;
-            list->flags |= list->child->flags & AY_CHOICE_MAND_FALSE;
+            list->flags |= list->child->flags & (AY_CHOICE_MAND_FALSE | AY_CHOICE_CREATED);
             list->child->flags &= ~AY_CHOICE_MAND_FALSE;
             /* Move 'when' data to list. */
             list->when_ref = list->child->when_ref;
@@ -8853,6 +8878,7 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
     /* Set some choice id. */
     for (iter = listord->child; iter; iter = iter->next) {
         iter->choice = AY_YNODE_ROOT_LTREE(tree);
+        iter->flags |= AY_CHOICE_CREATED;
     }
 
     /* Remove duplicit YN_LIST node. */

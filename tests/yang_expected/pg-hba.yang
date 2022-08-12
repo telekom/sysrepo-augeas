@@ -74,27 +74,27 @@ module pg-hba {
           }
           augex:data-path "type";
         }
-        leaf-list database {
-          min-elements 1;
-          type string {
-            pattern "[^,# \n\t]+";
-          }
-          ordered-by user;
-          augex:data-path "database";
-        }
-        leaf-list user {
-          min-elements 1;
-          type string {
-            pattern "[^,# \n\t]+";
-          }
-          ordered-by user;
-          augex:data-path "user";
-        }
         choice ch-record {
           mandatory true;
           container case {
             presence "Config entry.";
             when "../type='local'";
+            leaf-list database {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "database";
+            }
+            leaf-list user {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "user";
+            }
             container method {
               augex:data-path "method";
               augex:value-yang-path "value";
@@ -111,6 +111,22 @@ module pg-hba {
           container case2 {
             presence "Config entry.";
             when "re-match(../type, '((host)|(hostssl))|(hostnossl)')";
+            leaf-list database {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "database";
+            }
+            leaf-list user {
+              min-elements 1;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              ordered-by user;
+              augex:data-path "user";
+            }
             leaf address {
               mandatory true;
               type string {
