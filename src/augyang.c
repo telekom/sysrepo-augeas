@@ -7547,6 +7547,7 @@ ay_ynode_delete_build_list_(struct ay_ynode *tree, ly_bool reverse)
 
             if (reverse) {
                 for (j = 0; j < cmp_cnt; j++) {
+                    i -= prev2->descendants + 1;
                     ay_ynode_delete_subtree(tree, prev2);
                 }
                 /* The ay_ynode_delete_subtree() function set 'next' and 'child' pointers in the original form.
@@ -7557,9 +7558,8 @@ ay_ynode_delete_build_list_(struct ay_ynode *tree, ly_bool reverse)
                 for (j = 0; j < cmp_cnt; j++) {
                     ay_ynode_delete_subtree(tree, node1);
                 }
+                i--;
             }
-
-            i--;
             break;
         }
     }

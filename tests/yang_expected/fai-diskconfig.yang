@@ -1,0 +1,747 @@
+module fai-diskconfig {
+  yang-version 1.1;
+  namespace "aug:fai-diskconfig";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "FAI_DiskConfig";
+
+  grouping mount-option-list {
+    list mount-option-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container mount-option {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf mount-option {
+          mandatory true;
+          type uint64;
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^,= \t\n]+";
+          }
+        }
+        leaf value2 {
+          type string {
+            pattern "[^,= \t\n]+";
+          }
+          augex:data-path "value";
+        }
+      }
+    }
+  }
+  grouping fs-options {
+    list config-entries {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf createopts {
+          type string {
+            pattern "[^\"\n]*";
+          }
+          augex:data-path "createopts";
+        }
+        leaf tuneopts {
+          type string {
+            pattern "[^\"\n]*";
+          }
+          augex:data-path "tuneopts";
+        }
+      }
+    }
+  }
+  grouping locallist-list {
+    list locallist-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container locallist {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf locallist {
+          mandatory true;
+          type uint64;
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "([0-9]+)|(all)";
+          }
+        }
+      }
+    }
+  }
+  grouping locallist-list2 {
+    list locallist-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container locallist {
+        augex:data-path "$$";
+        augex:value-yang-path "integer";
+        presence "Config entry.";
+        leaf locallist {
+          mandatory true;
+          type uint64;
+        }
+        leaf integer {
+          mandatory true;
+          type uint64;
+        }
+      }
+    }
+  }
+  grouping option {
+    list option {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-option {
+        mandatory true;
+        container preserve-always {
+          augex:data-path "preserve_always";
+          presence "Config entry.";
+          uses locallist-list;
+        }
+        container preserve-reinstall {
+          augex:data-path "preserve_reinstall";
+          presence "Config entry.";
+          uses locallist-list2;
+        }
+        container resize {
+          augex:data-path "resize";
+          presence "Config entry.";
+          uses locallist-list2;
+        }
+        leaf disklabel {
+          type string {
+            pattern "msdos|gpt";
+          }
+          augex:data-path "disklabel";
+        }
+        leaf bootable {
+          type uint64;
+          augex:data-path "bootable";
+        }
+        leaf virtual {
+          type empty;
+          augex:data-path "virtual";
+        }
+        leaf fstabkey {
+          type string {
+            pattern "device|label|uuid";
+          }
+          augex:data-path "fstabkey";
+        }
+        container always-format {
+          augex:data-path "always_format";
+          presence "Config entry.";
+          uses locallist-list2;
+        }
+        leaf sameas {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "sameas";
+        }
+      }
+    }
+  }
+  grouping mountpoint {
+    container mountpoint {
+      augex:data-path "mountpoint";
+      augex:value-yang-path "mountpoint-kw";
+      presence "Config entry.";
+      leaf mountpoint-kw {
+        mandatory true;
+        type string {
+          pattern "((-)|(swap))|(/[^: \t\n]*)";
+        }
+      }
+      leaf encrypt {
+        type empty;
+        augex:data-path "encrypt";
+      }
+    }
+    container size {
+      augex:data-path "size";
+      augex:value-yang-path "size-kw";
+      presence "Config entry.";
+      leaf size-kw {
+        mandatory true;
+        type string {
+          pattern "([0-9]+[kMGTP%]?(-([0-9]+[kMGTP%]?)?)?)|(-[0-9]+[kMGTP%]?)";
+        }
+      }
+      leaf resize {
+        type empty;
+        augex:data-path "resize";
+      }
+    }
+    leaf filesystem {
+      mandatory true;
+      type string {
+        pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+      }
+      augex:data-path "filesystem";
+    }
+    container mount-options {
+      augex:data-path "mount_options";
+      presence "Config entry.";
+      uses mount-option-list;
+    }
+    container fs-options {
+      augex:data-path "fs_options";
+      presence "Config entry.";
+      uses fs-options;
+    }
+  }
+  grouping volume-cryptsetup {
+    container mountpoint {
+      augex:data-path "mountpoint";
+      augex:value-yang-path "mountpoint-kw";
+      presence "Config entry.";
+      leaf mountpoint-kw {
+        mandatory true;
+        type string {
+          pattern "((-)|(swap))|(/[^: \t\n]*)";
+        }
+      }
+      leaf encrypt {
+        type empty;
+        augex:data-path "encrypt";
+      }
+    }
+    leaf device {
+      mandatory true;
+      type string {
+        pattern "[^ \t\n]+";
+      }
+      augex:data-path "device";
+    }
+    leaf filesystem {
+      mandatory true;
+      type string {
+        pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+      }
+      augex:data-path "filesystem";
+    }
+    container mount-options {
+      augex:data-path "mount_options";
+      presence "Config entry.";
+      uses mount-option-list;
+    }
+    container fs-options {
+      augex:data-path "fs_options";
+      presence "Config entry.";
+      uses fs-options;
+    }
+  }
+  grouping gr {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        container primary {
+          augex:data-path "primary";
+          presence "Config entry.";
+          uses mountpoint;
+        }
+        container logical {
+          augex:data-path "logical";
+          presence "Config entry.";
+          uses mountpoint;
+        }
+        container raw-disk {
+          augex:data-path "raw-disk";
+          presence "Config entry.";
+          uses mountpoint;
+        }
+      }
+    }
+  }
+  list fai-diskconfig {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list disk-config-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container disk-config {
+        augex:data-path "disk_config";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type union {
+            type string {
+              pattern "lvm";
+            }
+            type string {
+              pattern "raid";
+            }
+            type string {
+              pattern "tmpfs";
+            }
+            type string {
+              pattern "end";
+            }
+            type string {
+              pattern "disk[0-9]+";
+            }
+            type string {
+              pattern "cryptsetup";
+            }
+            type string {
+              pattern "cryptsetu((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|cryptset([^\t\n u][^\t\n ]*|())|cryptse([^\t\n t][^\t\n ]*|())|crypts([^\t\n e][^\t\n ]*|())|crypt([^\t\n s][^\t\n ]*|())|cryp([^\t\n t][^\t\n ]*|())|cry([^\t\n p][^\t\n ]*|())|cr([^\t\n y][^\t\n ]*|())|disk[0-9][0-9][0-9]*[^\t\n 0-9][^\t\n ]*|disk[0-9][^\t\n 0-9][^\t\n ]*|disk([^\t\n 0-9][^\t\n ]*|())|dis([^\t\n k][^\t\n ]*|())|di([^\t\n s][^\t\n ]*|())|en((d[^\t\n ]|[^\t\n d])[^\t\n ]*|())|lv((m[^\t\n ]|[^\t\n m])[^\t\n ]*|())|rai((d[^\t\n ]|[^\t\n d])[^\t\n ]*|())|ra([^\t\n i][^\t\n ]*|())|tmpf((s[^\t\n ]|[^\t\n s])[^\t\n ]*|())|tmp([^\t\n f][^\t\n ]*|())|tm([^\t\n p][^\t\n ]*|())|(t[^\t\n m]|r[^\t\n a]|l[^\t\n v]|e[^\t\n n]|d[^\t\n i]|c[^\t\n r]|[^\t\n c-elrt][^\t\n ])[^\t\n ]*|t|r|l|e|d|c|[^\t\n c-elrt]";
+            }
+          }
+        }
+        choice ch-disk-config {
+          mandatory true;
+          container case {
+            presence "Config entry.";
+            when "value='lvm'";
+            list lvmoption {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-lvmoption {
+                mandatory true;
+                leaf preserve-always {
+                  type string {
+                    pattern "[^/, \t\n-]+-[^/, \t\n-]+(,[^/, \t\n-]+-[^/, \t\n-]+)*";
+                  }
+                  augex:data-path "preserve_always";
+                }
+                leaf preserve-reinstall {
+                  type string {
+                    pattern "[^/, \t\n-]+-[^/, \t\n-]+(,[^/, \t\n-]+-[^/, \t\n-]+)*";
+                  }
+                  augex:data-path "preserve_reinstall";
+                }
+                leaf resize {
+                  type string {
+                    pattern "[^/, \t\n-]+-[^/, \t\n-]+(,[^/, \t\n-]+-[^/, \t\n-]+)*";
+                  }
+                  augex:data-path "resize";
+                }
+                leaf fstabkey {
+                  type string {
+                    pattern "device|label|uuid";
+                  }
+                  augex:data-path "fstabkey";
+                }
+              }
+            }
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-config-entries {
+                container lv {
+                  augex:data-path "lv";
+                  presence "Config entry.";
+                  leaf vg {
+                    mandatory true;
+                    type string {
+                      pattern "ra((w[^\t\n #-]|[^\t\n #w-])[^\t\n #-]*|())|(r[^\t\n #a-]|[^\t\n #r-][^\t\n #-])[^\t\n #-]*|r|[^\t\n #r-]";
+                    }
+                    augex:data-path "vg";
+                  }
+                  leaf name {
+                    mandatory true;
+                    type string {
+                      pattern "[^ \t\n]+";
+                    }
+                    augex:data-path "name";
+                  }
+                  container mountpoint {
+                    augex:data-path "mountpoint";
+                    augex:value-yang-path "mountpoint-kw";
+                    presence "Config entry.";
+                    leaf mountpoint-kw {
+                      mandatory true;
+                      type string {
+                        pattern "((-)|(swap))|(/[^: \t\n]*)";
+                      }
+                    }
+                    leaf encrypt {
+                      type empty;
+                      augex:data-path "encrypt";
+                    }
+                  }
+                  container size {
+                    augex:data-path "size";
+                    augex:value-yang-path "size-kw";
+                    presence "Config entry.";
+                    leaf size-kw {
+                      mandatory true;
+                      type string {
+                        pattern "([0-9]+[kMGTP%]?(-([0-9]+[kMGTP%]?)?)?)|(-[0-9]+[kMGTP%]?)";
+                      }
+                    }
+                    leaf resize {
+                      type empty;
+                      augex:data-path "resize";
+                    }
+                  }
+                  leaf filesystem {
+                    mandatory true;
+                    type string {
+                      pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+                    }
+                    augex:data-path "filesystem";
+                  }
+                  container mount-options {
+                    augex:data-path "mount_options";
+                    presence "Config entry.";
+                    uses mount-option-list;
+                  }
+                  container fs-options {
+                    augex:data-path "fs_options";
+                    presence "Config entry.";
+                    uses fs-options;
+                  }
+                }
+                container volume-vg {
+                  augex:data-path "vg";
+                  presence "Config entry.";
+                  leaf name {
+                    mandatory true;
+                    type string {
+                      pattern "[^/ \t\n]+";
+                    }
+                    augex:data-path "name";
+                  }
+                  container disk {
+                    augex:data-path "disk";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type string {
+                        pattern "[^., \t\n]+";
+                      }
+                    }
+                    leaf partition {
+                      type uint64;
+                      augex:data-path "partition";
+                    }
+                  }
+                  leaf pvcreateopts {
+                    type string {
+                      pattern "[^\"\n]*";
+                    }
+                    augex:data-path "pvcreateopts";
+                  }
+                }
+              }
+            }
+          }
+          container case2 {
+            presence "Config entry.";
+            when "value='raid'";
+            list raidoption {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-raidoption {
+                mandatory true;
+                container preserve-always {
+                  augex:data-path "preserve_always";
+                  presence "Config entry.";
+                  uses locallist-list;
+                }
+                container preserve-reinstall {
+                  augex:data-path "preserve_reinstall";
+                  presence "Config entry.";
+                  uses locallist-list2;
+                }
+                leaf fstabkey {
+                  type string {
+                    pattern "device|label|uuid";
+                  }
+                  augex:data-path "fstabkey";
+                }
+              }
+            }
+            list volume-raid-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container volume-raid {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "raid[0156]";
+                  }
+                }
+                container mountpoint {
+                  augex:data-path "mountpoint";
+                  augex:value-yang-path "mountpoint-kw";
+                  presence "Config entry.";
+                  leaf mountpoint-kw {
+                    mandatory true;
+                    type string {
+                      pattern "((-)|(swap))|(/[^: \t\n]*)";
+                    }
+                  }
+                  leaf encrypt {
+                    type empty;
+                    augex:data-path "encrypt";
+                  }
+                }
+                list disk-with-opt-list {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  container disk-with-opt {
+                    augex:data-path "disk";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type string {
+                        pattern "[^:., \t\n]+";
+                      }
+                    }
+                    leaf partition {
+                      type uint64;
+                      augex:data-path "partition";
+                    }
+                    list config-entries {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      choice ch-config-entries {
+                        mandatory true;
+                        leaf spare {
+                          type empty;
+                          augex:data-path "spare";
+                        }
+                        leaf missing {
+                          type empty;
+                          augex:data-path "missing";
+                        }
+                      }
+                    }
+                  }
+                }
+                leaf filesystem {
+                  mandatory true;
+                  type string {
+                    pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+                  }
+                  augex:data-path "filesystem";
+                }
+                container mount-options {
+                  augex:data-path "mount_options";
+                  presence "Config entry.";
+                  uses mount-option-list;
+                }
+                container fs-options {
+                  augex:data-path "fs_options";
+                  presence "Config entry.";
+                  uses fs-options;
+                }
+              }
+            }
+          }
+          container case3 {
+            presence "Config entry.";
+            when "value='tmpfs'";
+            uses option;
+            list volume-tmpfs-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container volume-tmpfs {
+                augex:data-path "tmpfs";
+                presence "Config entry.";
+                container mountpoint {
+                  augex:data-path "mountpoint";
+                  augex:value-yang-path "mountpoint-kw";
+                  presence "Config entry.";
+                  leaf mountpoint-kw {
+                    mandatory true;
+                    type string {
+                      pattern "((-)|(swap))|(/[^: \t\n]*)";
+                    }
+                  }
+                  leaf encrypt {
+                    type empty;
+                    augex:data-path "encrypt";
+                  }
+                }
+                container size {
+                  augex:data-path "size";
+                  augex:value-yang-path "size-kw";
+                  presence "Config entry.";
+                  leaf size-kw {
+                    mandatory true;
+                    type string {
+                      pattern "([0-9]+[kMGTP%]?(-([0-9]+[kMGTP%]?)?)?)|(-[0-9]+[kMGTP%]?)";
+                    }
+                  }
+                  leaf resize {
+                    type empty;
+                    augex:data-path "resize";
+                  }
+                }
+                container mount-options {
+                  augex:data-path "mount_options";
+                  presence "Config entry.";
+                  uses mount-option-list;
+                }
+                container fs-options {
+                  augex:data-path "fs_options";
+                  presence "Config entry.";
+                  uses fs-options;
+                }
+              }
+            }
+          }
+          container case4 {
+            presence "Config entry.";
+            when "value='end'";
+            uses option;
+            uses gr;
+          }
+          container case5 {
+            presence "Config entry.";
+            when "re-match(value, 'disk[0-9]+')";
+            uses option;
+            uses gr;
+          }
+          container case6 {
+            presence "Config entry.";
+            when "value='cryptsetup'";
+            list cryptoption-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf randinit {
+                type empty;
+                augex:data-path "randinit";
+              }
+            }
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-config-entries {
+                mandatory true;
+                container swap {
+                  augex:data-path "swap";
+                  presence "Config entry.";
+                  uses volume-cryptsetup;
+                }
+                container tmp {
+                  augex:data-path "tmp";
+                  presence "Config entry.";
+                  uses volume-cryptsetup;
+                }
+                container luks {
+                  augex:data-path "luks";
+                  presence "Config entry.";
+                  uses volume-cryptsetup;
+                }
+              }
+            }
+          }
+          container case7 {
+            presence "Config entry.";
+            when "re-match(value, 'cryptsetu((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|cryptset([^\t\n u][^\t\n ]*|())|cryptse([^\t\n t][^\t\n ]*|())|crypts([^\t\n e][^\t\n ]*|())|crypt([^\t\n s][^\t\n ]*|())|cryp([^\t\n t][^\t\n ]*|())|cry([^\t\n p][^\t\n ]*|())|cr([^\t\n y][^\t\n ]*|())|disk[0-9][0-9][0-9]*[^\t\n 0-9][^\t\n ]*|disk[0-9][^\t\n 0-9][^\t\n ]*|disk([^\t\n 0-9][^\t\n ]*|())|dis([^\t\n k][^\t\n ]*|())|di([^\t\n s][^\t\n ]*|())|en((d[^\t\n ]|[^\t\n d])[^\t\n ]*|())|lv((m[^\t\n ]|[^\t\n m])[^\t\n ]*|())|rai((d[^\t\n ]|[^\t\n d])[^\t\n ]*|())|ra([^\t\n i][^\t\n ]*|())|tmpf((s[^\t\n ]|[^\t\n s])[^\t\n ]*|())|tmp([^\t\n f][^\t\n ]*|())|tm([^\t\n p][^\t\n ]*|())|(t[^\t\n m]|r[^\t\n a]|l[^\t\n v]|e[^\t\n n]|d[^\t\n i]|c[^\t\n r]|[^\t\n c-elrt][^\t\n ])[^\t\n ]*|t|r|l|e|d|c|[^\t\n c-elrt]')";
+            uses option;
+            uses gr;
+          }
+        }
+      }
+    }
+  }
+}
