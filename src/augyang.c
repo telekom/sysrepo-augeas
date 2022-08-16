@@ -4398,11 +4398,11 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     path_cnt = 0;
     refnode_is_sibling = 0;
     for (parent = node->parent; parent && !refnode; parent = parent->parent) {
+        path_cnt++;
         if (parent->id == node->when_ref) {
             refnode = parent;
             break;
         }
-        path_cnt++;
         for (sibl = parent->child; sibl; sibl = sibl->next) {
             if (sibl->id == node->when_ref) {
                 refnode = sibl;
