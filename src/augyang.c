@@ -4411,6 +4411,9 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
             }
         }
     }
+    if (node->type == YN_CASE) {
+        path_cnt--;
+    }
 
     /* Print 'when' statement. */
     ly_print(ctx->out, "%*swhen \"", ctx->space, "");

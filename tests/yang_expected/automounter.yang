@@ -1,0 +1,183 @@
+module automounter {
+  yang-version 1.1;
+  namespace "aug:automounter";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Automounter";
+
+  grouping opt-list {
+    list opt-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container opt {
+        augex:data-path "opt";
+        augex:value-yang-path "optlabel";
+        presence "Config entry.";
+        leaf optlabel {
+          mandatory true;
+          type string {
+            pattern "[^,#:\\\\(\\\\)= \n\t]+";
+          }
+        }
+        leaf value {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "value";
+        }
+      }
+    }
+  }
+  grouping location-list {
+    list location-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container location {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf location {
+          mandatory true;
+          type uint64;
+        }
+        list entry-host-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry-host {
+            augex:data-path "host";
+            augex:value-yang-path "hostname";
+            presence "Config entry.";
+            leaf hostname {
+              mandatory true;
+              type string {
+                pattern "[^-:#\\\\(\\\\), \n\t][^:#\\\\(\\\\), \n\t]*";
+              }
+            }
+            leaf weight {
+              type uint64;
+              augex:data-path "weight";
+            }
+          }
+        }
+        leaf path {
+          mandatory true;
+          type string {
+            pattern "[^-+#: \t\n][^#: \t\n]*";
+          }
+          augex:data-path "path";
+        }
+      }
+    }
+  }
+  list automounter {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "entry-mkey";
+        presence "Config entry.";
+        leaf entry {
+          mandatory true;
+          type uint64;
+        }
+        leaf entry-mkey {
+          mandatory true;
+          type union {
+            type string {
+              pattern "[^-+#: \t\n][^#: \t\n]*";
+            }
+            type string {
+              pattern "\\+";
+            }
+          }
+        }
+        choice ch-entry {
+          mandatory true;
+          case opt-list {
+            when "re-match(entry-mkey, '[^-+#: \t\n][^#: \t\n]*')";
+            uses opt-list;
+            choice ch-opt-list {
+              mandatory true;
+              container entry-locations {
+                augex:data-path "location";
+                presence "Config entry.";
+                uses location-list;
+              }
+              container entry-multimounts {
+                augex:data-path "mount";
+                presence "Config entry.";
+                list mount-list {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  container mount {
+                    augex:data-path "$$";
+                    augex:value-yang-path "entry-mkey";
+                    presence "Config entry.";
+                    leaf mount {
+                      mandatory true;
+                      type uint64;
+                    }
+                    leaf entry-mkey {
+                      mandatory true;
+                      type string {
+                        pattern "[^-+#: \t\n][^#: \t\n]*";
+                      }
+                    }
+                    uses opt-list;
+                    container entry-locations {
+                      augex:data-path "location";
+                      presence "Config entry.";
+                      uses location-list;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          leaf map {
+            type string {
+              pattern "[^: \t\n]+";
+            }
+            augex:data-path "map";
+            when "re-match(../entry-mkey, '\\+')";
+          }
+        }
+      }
+    }
+  }
+}
