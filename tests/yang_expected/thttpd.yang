@@ -40,7 +40,7 @@ module thttpd {
           type string {
             pattern "[^\n# \t]*";
           }
-          augex:data-path "data-dir";
+          augex:data-path "data_dir";
         }
         leaf user {
           type string {
@@ -94,7 +94,7 @@ module thttpd {
           type string {
             pattern "[^\n# \t]*";
           }
-          augex:data-path "max-age";
+          augex:data-path "max_age";
         }
         container flagline {
           augex:data-path "$$";

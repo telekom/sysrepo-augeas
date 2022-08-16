@@ -2710,7 +2710,7 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
                 j--;
             } else {
                 AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-                buffer[j] = '-';
+                buffer[j] = opt == AY_IDENT_NODE_NAME ? '-' : '_';
             }
             break;
         default:

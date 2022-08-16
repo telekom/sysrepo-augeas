@@ -91,133 +91,133 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "accept-filter";
+          augex:data-path "accept_filter";
         }
         leaf access-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "access-log";
+          augex:data-path "access_log";
         }
         leaf acl-uses-indirect-client {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "acl-uses-indirect-client";
+          augex:data-path "acl_uses_indirect_client";
         }
         leaf adaptation-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "adaptation-access";
+          augex:data-path "adaptation_access";
         }
         leaf adaptation-service-set {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "adaptation-service-set";
+          augex:data-path "adaptation_service_set";
         }
         leaf allow-underscore {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "allow-underscore";
+          augex:data-path "allow_underscore";
         }
         leaf always-direct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "always-direct";
+          augex:data-path "always_direct";
         }
         leaf announce-file {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "announce-file";
+          augex:data-path "announce_file";
         }
         leaf announce-host {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "announce-host";
+          augex:data-path "announce_host";
         }
         leaf announce-period {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "announce-period";
+          augex:data-path "announce_period";
         }
         leaf announce-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "announce-port";
+          augex:data-path "announce_port";
         }
         leaf append-domain {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "append-domain";
+          augex:data-path "append_domain";
         }
         leaf as-whois-server {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "as-whois-server";
+          augex:data-path "as_whois_server";
         }
         leaf authenticate-cache-garbage-interval {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "authenticate-cache-garbage-interval";
+          augex:data-path "authenticate_cache_garbage_interval";
         }
         leaf authenticate-ip-shortcircuit-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "authenticate-ip-shortcircuit-access";
+          augex:data-path "authenticate_ip_shortcircuit_access";
         }
         leaf authenticate-ip-shortcircuit-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "authenticate-ip-shortcircuit-ttl";
+          augex:data-path "authenticate_ip_shortcircuit_ttl";
         }
         leaf authenticate-ip-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "authenticate-ip-ttl";
+          augex:data-path "authenticate_ip_ttl";
         }
         leaf authenticate-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "authenticate-ttl";
+          augex:data-path "authenticate_ttl";
         }
         leaf background-ping-rate {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "background-ping-rate";
+          augex:data-path "background_ping_rate";
         }
         leaf balance-on-multiple-ip {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "balance-on-multiple-ip";
+          augex:data-path "balance_on_multiple_ip";
         }
         leaf broken-posts {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "broken-posts";
+          augex:data-path "broken_posts";
         }
         leaf buffered-logs {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "buffered-logs";
+          augex:data-path "buffered_logs";
         }
         leaf cache {
           type string {
@@ -229,109 +229,109 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-dir";
+          augex:data-path "cache_dir";
         }
         leaf cache-dns-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-dns-program";
+          augex:data-path "cache_dns_program";
         }
         leaf cache-effective-group {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-effective-group";
+          augex:data-path "cache_effective_group";
         }
         leaf cache-effective-user {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-effective-user";
+          augex:data-path "cache_effective_user";
         }
         leaf cache-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-log";
+          augex:data-path "cache_log";
         }
         leaf cache-mem {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-mem";
+          augex:data-path "cache_mem";
         }
         leaf cache-mgr {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-mgr";
+          augex:data-path "cache_mgr";
         }
         leaf cachemgr-passwd {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cachemgr-passwd";
+          augex:data-path "cachemgr_passwd";
         }
         leaf cache-peer {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-peer";
+          augex:data-path "cache_peer";
         }
         leaf cache-peer-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-peer-access";
+          augex:data-path "cache_peer_access";
         }
         leaf cache-peer-domain {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-peer-domain";
+          augex:data-path "cache_peer_domain";
         }
         leaf cache-replacement-policy {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-replacement-policy";
+          augex:data-path "cache_replacement_policy";
         }
         leaf cache-store-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-store-log";
+          augex:data-path "cache_store_log";
         }
         leaf cache-swap-high {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-swap-high";
+          augex:data-path "cache_swap_high";
         }
         leaf cache-swap-low {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-swap-low";
+          augex:data-path "cache_swap_low";
         }
         leaf cache-swap-state {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-swap-state";
+          augex:data-path "cache_swap_state";
         }
         leaf cache-vary {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "cache-vary";
+          augex:data-path "cache_vary";
         }
         leaf check-hostnames {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "check-hostnames";
+          augex:data-path "check_hostnames";
         }
         leaf chroot {
           type string {
@@ -343,715 +343,715 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "client-db";
+          augex:data-path "client_db";
         }
         leaf client-lifetime {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "client-lifetime";
+          augex:data-path "client_lifetime";
         }
         leaf client-netmask {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "client-netmask";
+          augex:data-path "client_netmask";
         }
         leaf client-persistent-connections {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "client-persistent-connections";
+          augex:data-path "client_persistent_connections";
         }
         leaf clientside-tos {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "clientside-tos";
+          augex:data-path "clientside_tos";
         }
         leaf collapsed-forwarding {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "collapsed-forwarding";
+          augex:data-path "collapsed_forwarding";
         }
         leaf connect-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "connect-timeout";
+          augex:data-path "connect_timeout";
         }
         leaf coredump-dir {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "coredump-dir";
+          augex:data-path "coredump_dir";
         }
         leaf dead-peer-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dead-peer-timeout";
+          augex:data-path "dead_peer_timeout";
         }
         leaf debug-options {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "debug-options";
+          augex:data-path "debug_options";
         }
         leaf delay-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-access";
+          augex:data-path "delay_access";
         }
         leaf delay-class {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-class";
+          augex:data-path "delay_class";
         }
         leaf delay-initial-bucket-level {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-initial-bucket-level";
+          augex:data-path "delay_initial_bucket_level";
         }
         leaf delay-parameters {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-parameters";
+          augex:data-path "delay_parameters";
         }
         leaf delay-pools {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-pools";
+          augex:data-path "delay_pools";
         }
         leaf delay-pool-uses-indirect-client {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "delay-pool-uses-indirect-client";
+          augex:data-path "delay_pool_uses_indirect_client";
         }
         leaf deny-info {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "deny-info";
+          augex:data-path "deny_info";
         }
         leaf detect-broken-pconn {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "detect-broken-pconn";
+          augex:data-path "detect_broken_pconn";
         }
         leaf digest-bits-per-entry {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-bits-per-entry";
+          augex:data-path "digest_bits_per_entry";
         }
         leaf digest-generation {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-generation";
+          augex:data-path "digest_generation";
         }
         leaf digest-rebuild-chunk-percentage {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-rebuild-chunk-percentage";
+          augex:data-path "digest_rebuild_chunk_percentage";
         }
         leaf digest-rebuild-period {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-rebuild-period";
+          augex:data-path "digest_rebuild_period";
         }
         leaf digest-rewrite-period {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-rewrite-period";
+          augex:data-path "digest_rewrite_period";
         }
         leaf digest-swapout-chunk-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "digest-swapout-chunk-size";
+          augex:data-path "digest_swapout_chunk_size";
         }
         leaf diskd-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "diskd-program";
+          augex:data-path "diskd_program";
         }
         leaf dns-children {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-children";
+          augex:data-path "dns_children";
         }
         leaf dns-defnames {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-defnames";
+          augex:data-path "dns_defnames";
         }
         leaf dns-nameservers {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-nameservers";
+          augex:data-path "dns_nameservers";
         }
         leaf dns-retransmit-interval {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-retransmit-interval";
+          augex:data-path "dns_retransmit_interval";
         }
         leaf dns-testnames {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-testnames";
+          augex:data-path "dns_testnames";
         }
         leaf dns-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-timeout";
+          augex:data-path "dns_timeout";
         }
         leaf dns-v4-fallback {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "dns-v4-fallback";
+          augex:data-path "dns_v4_fallback";
         }
         leaf ecap-enable {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ecap-enable";
+          augex:data-path "ecap_enable";
         }
         leaf ecap-service {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ecap-service";
+          augex:data-path "ecap_service";
         }
         leaf email-err-data {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "email-err-data";
+          augex:data-path "email_err_data";
         }
         leaf emulate-httpd-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "emulate-httpd-log";
+          augex:data-path "emulate_httpd_log";
         }
         leaf err-html-text {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "err-html-text";
+          augex:data-path "err_html_text";
         }
         leaf error-default-language {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "error-default-language";
+          augex:data-path "error_default_language";
         }
         leaf error-directory {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "error-directory";
+          augex:data-path "error_directory";
         }
         leaf error-log-languages {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "error-log-languages";
+          augex:data-path "error_log_languages";
         }
         leaf error-map {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "error-map";
+          augex:data-path "error_map";
         }
         leaf err-page-stylesheet {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "err-page-stylesheet";
+          augex:data-path "err_page_stylesheet";
         }
         leaf esi-parser {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "esi-parser";
+          augex:data-path "esi_parser";
         }
         leaf external-acl-type {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "external-acl-type";
+          augex:data-path "external_acl_type";
         }
         leaf external-refresh-check {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "external-refresh-check";
+          augex:data-path "external_refresh_check";
         }
         leaf follow-x-forwarded-for {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "follow-x-forwarded-for";
+          augex:data-path "follow_x_forwarded_for";
         }
         leaf forwarded-for {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "forwarded-for";
+          augex:data-path "forwarded_for";
         }
         leaf forward-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "forward-log";
+          augex:data-path "forward_log";
         }
         leaf forward-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "forward-timeout";
+          augex:data-path "forward_timeout";
         }
         leaf fqdncache-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "fqdncache-size";
+          augex:data-path "fqdncache_size";
         }
         leaf ftp-epsv-all {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-epsv-all";
+          augex:data-path "ftp_epsv_all";
         }
         leaf ftp-list-width {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-list-width";
+          augex:data-path "ftp_list_width";
         }
         leaf ftp-passive {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-passive";
+          augex:data-path "ftp_passive";
         }
         leaf ftp-sanitycheck {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-sanitycheck";
+          augex:data-path "ftp_sanitycheck";
         }
         leaf ftp-telnet-protocol {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-telnet-protocol";
+          augex:data-path "ftp_telnet_protocol";
         }
         leaf ftp-user {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ftp-user";
+          augex:data-path "ftp_user";
         }
         leaf global-internal-static {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "global-internal-static";
+          augex:data-path "global_internal_static";
         }
         leaf half-closed-clients {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "half-closed-clients";
+          augex:data-path "half_closed_clients";
         }
         leaf header-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "header-access";
+          augex:data-path "header_access";
         }
         leaf header-replace {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "header-replace";
+          augex:data-path "header_replace";
         }
         leaf hierarchy-stoplist {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "hierarchy-stoplist";
+          augex:data-path "hierarchy_stoplist";
         }
         leaf high-memory-warning {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "high-memory-warning";
+          augex:data-path "high_memory_warning";
         }
         leaf high-page-fault-warning {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "high-page-fault-warning";
+          augex:data-path "high_page_fault_warning";
         }
         leaf high-response-time-warning {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "high-response-time-warning";
+          augex:data-path "high_response_time_warning";
         }
         leaf hostname-aliases {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "hostname-aliases";
+          augex:data-path "hostname_aliases";
         }
         leaf hosts-file {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "hosts-file";
+          augex:data-path "hosts_file";
         }
         leaf htcp-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "htcp-access";
+          augex:data-path "htcp_access";
         }
         leaf htcp-clr-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "htcp-clr-access";
+          augex:data-path "htcp_clr_access";
         }
         leaf htcp-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "htcp-port";
+          augex:data-path "htcp_port";
         }
         leaf http-accel-surrogate-remote {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "http-accel-surrogate-remote";
+          augex:data-path "http_accel_surrogate_remote";
         }
         leaf http-access2 {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "http-access2";
+          augex:data-path "http_access2";
         }
         leaf httpd-accel-no-pmtu-disc {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "httpd-accel-no-pmtu-disc";
+          augex:data-path "httpd_accel_no_pmtu_disc";
         }
         leaf httpd-accel-surrogate-id {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "httpd-accel-surrogate-id";
+          augex:data-path "httpd_accel_surrogate_id";
         }
         leaf httpd-suppress-version-string {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "httpd-suppress-version-string";
+          augex:data-path "httpd_suppress_version_string";
         }
         leaf http-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "http-port";
+          augex:data-path "http_port";
         }
         leaf http-reply-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "http-reply-access";
+          augex:data-path "http_reply_access";
         }
         leaf https-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "https-port";
+          augex:data-path "https_port";
         }
         leaf icap-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-access";
+          augex:data-path "icap_access";
         }
         leaf icap-class {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-class";
+          augex:data-path "icap_class";
         }
         leaf icap-client-username-encode {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-client-username-encode";
+          augex:data-path "icap_client_username_encode";
         }
         leaf icap-client-username-header {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-client-username-header";
+          augex:data-path "icap_client_username_header";
         }
         leaf icap-connect-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-connect-timeout";
+          augex:data-path "icap_connect_timeout";
         }
         leaf icap-default-options-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-default-options-ttl";
+          augex:data-path "icap_default_options_ttl";
         }
         leaf icap-enable {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-enable";
+          augex:data-path "icap_enable";
         }
         leaf icap-io-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-io-timeout";
+          augex:data-path "icap_io_timeout";
         }
         leaf icap-persistent-connections {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-persistent-connections";
+          augex:data-path "icap_persistent_connections";
         }
         leaf icap-preview-enable {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-preview-enable";
+          augex:data-path "icap_preview_enable";
         }
         leaf icap-preview-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-preview-size";
+          augex:data-path "icap_preview_size";
         }
         leaf icap-send-client-ip {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-send-client-ip";
+          augex:data-path "icap_send_client_ip";
         }
         leaf icap-send-client-username {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-send-client-username";
+          augex:data-path "icap_send_client_username";
         }
         leaf icap-service {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-service";
+          augex:data-path "icap_service";
         }
         leaf icap-service-failure-limit {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-service-failure-limit";
+          augex:data-path "icap_service_failure_limit";
         }
         leaf icap-service-revival-delay {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icap-service-revival-delay";
+          augex:data-path "icap_service_revival_delay";
         }
         leaf icon-directory {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icon-directory";
+          augex:data-path "icon_directory";
         }
         leaf icp-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icp-access";
+          augex:data-path "icp_access";
         }
         leaf icp-hit-stale {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icp-hit-stale";
+          augex:data-path "icp_hit_stale";
         }
         leaf icp-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icp-port";
+          augex:data-path "icp_port";
         }
         leaf icp-query-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "icp-query-timeout";
+          augex:data-path "icp_query_timeout";
         }
         leaf ident-lookup-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ident-lookup-access";
+          augex:data-path "ident_lookup_access";
         }
         leaf ident-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ident-timeout";
+          augex:data-path "ident_timeout";
         }
         leaf ie-refresh {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ie-refresh";
+          augex:data-path "ie_refresh";
         }
         leaf ignore-expect-100 {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ignore-expect-100";
+          augex:data-path "ignore_expect_100";
         }
         leaf ignore-ims-on-miss {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ignore-ims-on-miss";
+          augex:data-path "ignore_ims_on_miss";
         }
         leaf ignore-unknown-nameservers {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ignore-unknown-nameservers";
+          augex:data-path "ignore_unknown_nameservers";
         }
         leaf incoming-dns-average {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "incoming-dns-average";
+          augex:data-path "incoming_dns_average";
         }
         leaf incoming-http-average {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "incoming-http-average";
+          augex:data-path "incoming_http_average";
         }
         leaf incoming-icp-average {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "incoming-icp-average";
+          augex:data-path "incoming_icp_average";
         }
         leaf incoming-rate {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "incoming-rate";
+          augex:data-path "incoming_rate";
         }
         leaf ipcache-high {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ipcache-high";
+          augex:data-path "ipcache_high";
         }
         leaf ipcache-low {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ipcache-low";
+          augex:data-path "ipcache_low";
         }
         leaf ipcache-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ipcache-size";
+          augex:data-path "ipcache_size";
         }
         leaf loadable-modules {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "loadable-modules";
+          augex:data-path "loadable_modules";
         }
         leaf location-rewrite-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "location-rewrite-access";
+          augex:data-path "location_rewrite_access";
         }
         leaf location-rewrite-children {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "location-rewrite-children";
+          augex:data-path "location_rewrite_children";
         }
         leaf location-rewrite-concurrency {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "location-rewrite-concurrency";
+          augex:data-path "location_rewrite_concurrency";
         }
         leaf location-rewrite-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "location-rewrite-program";
+          augex:data-path "location_rewrite_program";
         }
         leaf log-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-access";
+          augex:data-path "log_access";
         }
         leaf logfile-daemon {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "logfile-daemon";
+          augex:data-path "logfile_daemon";
         }
         leaf logfile-rotate {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "logfile-rotate";
+          augex:data-path "logfile_rotate";
         }
         leaf logformat {
           type string {
@@ -1063,679 +1063,679 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-fqdn";
+          augex:data-path "log_fqdn";
         }
         leaf log-icp-queries {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-icp-queries";
+          augex:data-path "log_icp_queries";
         }
         leaf log-ip-on-direct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-ip-on-direct";
+          augex:data-path "log_ip_on_direct";
         }
         leaf log-mime-hdrs {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-mime-hdrs";
+          augex:data-path "log_mime_hdrs";
         }
         leaf log-uses-indirect-client {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "log-uses-indirect-client";
+          augex:data-path "log_uses_indirect_client";
         }
         leaf mail-from {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mail-from";
+          augex:data-path "mail_from";
         }
         leaf mail-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mail-program";
+          augex:data-path "mail_program";
         }
         leaf max-filedescriptors {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "max-filedescriptors";
+          augex:data-path "max_filedescriptors";
         }
         leaf maximum-icp-query-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "maximum-icp-query-timeout";
+          augex:data-path "maximum_icp_query_timeout";
         }
         leaf maximum-object-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "maximum-object-size";
+          augex:data-path "maximum_object_size";
         }
         leaf maximum-object-size-in-memory {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "maximum-object-size-in-memory";
+          augex:data-path "maximum_object_size_in_memory";
         }
         leaf maximum-single-addr-tries {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "maximum-single-addr-tries";
+          augex:data-path "maximum_single_addr_tries";
         }
         leaf max-open-disk-fds {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "max-open-disk-fds";
+          augex:data-path "max_open_disk_fds";
         }
         leaf max-stale {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "max-stale";
+          augex:data-path "max_stale";
         }
         leaf mcast-groups {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-groups";
+          augex:data-path "mcast_groups";
         }
         leaf mcast-icp-query-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-icp-query-timeout";
+          augex:data-path "mcast_icp_query_timeout";
         }
         leaf mcast-miss-addr {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-miss-addr";
+          augex:data-path "mcast_miss_addr";
         }
         leaf mcast-miss-encode-key {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-miss-encode-key";
+          augex:data-path "mcast_miss_encode_key";
         }
         leaf mcast-miss-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-miss-port";
+          augex:data-path "mcast_miss_port";
         }
         leaf mcast-miss-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mcast-miss-ttl";
+          augex:data-path "mcast_miss_ttl";
         }
         leaf memory-pools {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "memory-pools";
+          augex:data-path "memory_pools";
         }
         leaf memory-pools-limit {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "memory-pools-limit";
+          augex:data-path "memory_pools_limit";
         }
         leaf memory-replacement-policy {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "memory-replacement-policy";
+          augex:data-path "memory_replacement_policy";
         }
         leaf mime-table {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "mime-table";
+          augex:data-path "mime_table";
         }
         leaf min-dns-poll-cnt {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "min-dns-poll-cnt";
+          augex:data-path "min_dns_poll_cnt";
         }
         leaf min-http-poll-cnt {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "min-http-poll-cnt";
+          augex:data-path "min_http_poll_cnt";
         }
         leaf min-icp-poll-cnt {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "min-icp-poll-cnt";
+          augex:data-path "min_icp_poll_cnt";
         }
         leaf minimum-direct-hops {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "minimum-direct-hops";
+          augex:data-path "minimum_direct_hops";
         }
         leaf minimum-direct-rtt {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "minimum-direct-rtt";
+          augex:data-path "minimum_direct_rtt";
         }
         leaf minimum-expiry-time {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "minimum-expiry-time";
+          augex:data-path "minimum_expiry_time";
         }
         leaf minimum-icp-query-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "minimum-icp-query-timeout";
+          augex:data-path "minimum_icp_query_timeout";
         }
         leaf minimum-object-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "minimum-object-size";
+          augex:data-path "minimum_object_size";
         }
         leaf miss-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "miss-access";
+          augex:data-path "miss_access";
         }
         leaf negative-dns-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "negative-dns-ttl";
+          augex:data-path "negative_dns_ttl";
         }
         leaf negative-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "negative-ttl";
+          augex:data-path "negative_ttl";
         }
         leaf neighbor-type-domain {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "neighbor-type-domain";
+          augex:data-path "neighbor_type_domain";
         }
         leaf netdb-filename {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "netdb-filename";
+          augex:data-path "netdb_filename";
         }
         leaf netdb-high {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "netdb-high";
+          augex:data-path "netdb_high";
         }
         leaf netdb-low {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "netdb-low";
+          augex:data-path "netdb_low";
         }
         leaf netdb-ping-period {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "netdb-ping-period";
+          augex:data-path "netdb_ping_period";
         }
         leaf never-direct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "never-direct";
+          augex:data-path "never_direct";
         }
         leaf no-cache {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "no-cache";
+          augex:data-path "no_cache";
         }
         leaf nonhierarchical-direct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "nonhierarchical-direct";
+          augex:data-path "nonhierarchical_direct";
         }
         leaf offline-mode {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "offline-mode";
+          augex:data-path "offline_mode";
         }
         leaf pconn-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "pconn-timeout";
+          augex:data-path "pconn_timeout";
         }
         leaf peer-connect-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "peer-connect-timeout";
+          augex:data-path "peer_connect_timeout";
         }
         leaf persistent-connection-after-error {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "persistent-connection-after-error";
+          augex:data-path "persistent_connection_after_error";
         }
         leaf persistent-request-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "persistent-request-timeout";
+          augex:data-path "persistent_request_timeout";
         }
         leaf pid-filename {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "pid-filename";
+          augex:data-path "pid_filename";
         }
         leaf pinger-enable {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "pinger-enable";
+          augex:data-path "pinger_enable";
         }
         leaf pinger-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "pinger-program";
+          augex:data-path "pinger_program";
         }
         leaf pipeline-prefetch {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "pipeline-prefetch";
+          augex:data-path "pipeline_prefetch";
         }
         leaf positive-dns-ttl {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "positive-dns-ttl";
+          augex:data-path "positive_dns_ttl";
         }
         leaf prefer-direct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "prefer-direct";
+          augex:data-path "prefer_direct";
         }
         leaf qos-flows {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "qos-flows";
+          augex:data-path "qos_flows";
         }
         leaf query-icmp {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "query-icmp";
+          augex:data-path "query_icmp";
         }
         leaf quick-abort-max {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "quick-abort-max";
+          augex:data-path "quick_abort_max";
         }
         leaf quick-abort-min {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "quick-abort-min";
+          augex:data-path "quick_abort_min";
         }
         leaf quick-abort-pct {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "quick-abort-pct";
+          augex:data-path "quick_abort_pct";
         }
         leaf range-offset-limit {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "range-offset-limit";
+          augex:data-path "range_offset_limit";
         }
         leaf read-ahead-gap {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "read-ahead-gap";
+          augex:data-path "read_ahead_gap";
         }
         leaf read-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "read-timeout";
+          augex:data-path "read_timeout";
         }
         leaf redirector-bypass {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "redirector-bypass";
+          augex:data-path "redirector_bypass";
         }
         leaf referer-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "referer-log";
+          augex:data-path "referer_log";
         }
         leaf refresh-all-ims {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "refresh-all-ims";
+          augex:data-path "refresh_all_ims";
         }
         leaf refresh-stale-hit {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "refresh-stale-hit";
+          augex:data-path "refresh_stale_hit";
         }
         leaf relaxed-header-parser {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "relaxed-header-parser";
+          augex:data-path "relaxed_header_parser";
         }
         leaf reload-into-ims {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "reload-into-ims";
+          augex:data-path "reload_into_ims";
         }
         leaf reply-body-max-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "reply-body-max-size";
+          augex:data-path "reply_body_max_size";
         }
         leaf reply-header-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "reply-header-access";
+          augex:data-path "reply_header_access";
         }
         leaf reply-header-max-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "reply-header-max-size";
+          augex:data-path "reply_header_max_size";
         }
         leaf request-body-max-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "request-body-max-size";
+          augex:data-path "request_body_max_size";
         }
         leaf request-entities {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "request-entities";
+          augex:data-path "request_entities";
         }
         leaf request-header-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "request-header-access";
+          augex:data-path "request_header_access";
         }
         leaf request-header-max-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "request-header-max-size";
+          augex:data-path "request_header_max_size";
         }
         leaf request-timeout {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "request-timeout";
+          augex:data-path "request_timeout";
         }
         leaf retry-on-error {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "retry-on-error";
+          augex:data-path "retry_on_error";
         }
         leaf server-http11 {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "server-http11";
+          augex:data-path "server_http11";
         }
         leaf server-persistent-connections {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "server-persistent-connections";
+          augex:data-path "server_persistent_connections";
         }
         leaf short-icon-urls {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "short-icon-urls";
+          augex:data-path "short_icon_urls";
         }
         leaf shutdown-lifetime {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "shutdown-lifetime";
+          augex:data-path "shutdown_lifetime";
         }
         leaf sleep-after-fork {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sleep-after-fork";
+          augex:data-path "sleep_after_fork";
         }
         leaf snmp-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "snmp-access";
+          augex:data-path "snmp_access";
         }
         leaf snmp-incoming-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "snmp-incoming-address";
+          augex:data-path "snmp_incoming_address";
         }
         leaf snmp-outgoing-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "snmp-outgoing-address";
+          augex:data-path "snmp_outgoing_address";
         }
         leaf snmp-port {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "snmp-port";
+          augex:data-path "snmp_port";
         }
         leaf ssl-bump {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ssl-bump";
+          augex:data-path "ssl_bump";
         }
         leaf ssl-engine {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ssl-engine";
+          augex:data-path "ssl_engine";
         }
         leaf sslpassword-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslpassword-program";
+          augex:data-path "sslpassword_program";
         }
         leaf sslproxy-cafile {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-cafile";
+          augex:data-path "sslproxy_cafile";
         }
         leaf sslproxy-capath {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-capath";
+          augex:data-path "sslproxy_capath";
         }
         leaf sslproxy-cert-error {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-cert-error";
+          augex:data-path "sslproxy_cert_error";
         }
         leaf sslproxy-cipher {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-cipher";
+          augex:data-path "sslproxy_cipher";
         }
         leaf sslproxy-client-certificate {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-client-certificate";
+          augex:data-path "sslproxy_client_certificate";
         }
         leaf sslproxy-client-key {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-client-key";
+          augex:data-path "sslproxy_client_key";
         }
         leaf sslproxy-flags {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-flags";
+          augex:data-path "sslproxy_flags";
         }
         leaf sslproxy-options {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-options";
+          augex:data-path "sslproxy_options";
         }
         leaf sslproxy-version {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "sslproxy-version";
+          augex:data-path "sslproxy_version";
         }
         leaf ssl-unclean-shutdown {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "ssl-unclean-shutdown";
+          augex:data-path "ssl_unclean_shutdown";
         }
         leaf store-avg-object-size {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "store-avg-object-size";
+          augex:data-path "store_avg_object_size";
         }
         leaf store-dir-select-algorithm {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "store-dir-select-algorithm";
+          augex:data-path "store_dir_select_algorithm";
         }
         leaf store-objects-per-bucket {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "store-objects-per-bucket";
+          augex:data-path "store_objects_per_bucket";
         }
         leaf storeurl-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "storeurl-access";
+          augex:data-path "storeurl_access";
         }
         leaf storeurl-rewrite-children {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "storeurl-rewrite-children";
+          augex:data-path "storeurl_rewrite_children";
         }
         leaf storeurl-rewrite-concurrency {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "storeurl-rewrite-concurrency";
+          augex:data-path "storeurl_rewrite_concurrency";
         }
         leaf storeurl-rewrite-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "storeurl-rewrite-program";
+          augex:data-path "storeurl_rewrite_program";
         }
         leaf strip-query-terms {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "strip-query-terms";
+          augex:data-path "strip_query_terms";
         }
         leaf tcp-outgoing-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "tcp-outgoing-address";
+          augex:data-path "tcp_outgoing_address";
         }
         leaf tcp-outgoing-tos {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "tcp-outgoing-tos";
+          augex:data-path "tcp_outgoing_tos";
         }
         leaf tcp-recv-bufsize {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "tcp-recv-bufsize";
+          augex:data-path "tcp_recv_bufsize";
         }
         leaf test-reachability {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "test-reachability";
+          augex:data-path "test_reachability";
         }
         leaf udp-incoming-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "udp-incoming-address";
+          augex:data-path "udp_incoming_address";
         }
         leaf udp-outgoing-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "udp-outgoing-address";
+          augex:data-path "udp_outgoing_address";
         }
         leaf umask {
           type string {
@@ -1747,73 +1747,73 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "unique-hostname";
+          augex:data-path "unique_hostname";
         }
         leaf unlinkd-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "unlinkd-program";
+          augex:data-path "unlinkd_program";
         }
         leaf update-headers {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "update-headers";
+          augex:data-path "update_headers";
         }
         leaf uri-whitespace {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "uri-whitespace";
+          augex:data-path "uri_whitespace";
         }
         leaf url-rewrite-access {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-access";
+          augex:data-path "url_rewrite_access";
         }
         leaf url-rewrite-bypass {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-bypass";
+          augex:data-path "url_rewrite_bypass";
         }
         leaf url-rewrite-children {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-children";
+          augex:data-path "url_rewrite_children";
         }
         leaf url-rewrite-concurrency {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-concurrency";
+          augex:data-path "url_rewrite_concurrency";
         }
         leaf url-rewrite-host-header {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-host-header";
+          augex:data-path "url_rewrite_host_header";
         }
         leaf url-rewrite-program {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "url-rewrite-program";
+          augex:data-path "url_rewrite_program";
         }
         leaf useragent-log {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "useragent-log";
+          augex:data-path "useragent_log";
         }
         leaf vary-ignore-expire {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "vary-ignore-expire";
+          augex:data-path "vary_ignore_expire";
         }
         leaf via {
           type string {
@@ -1825,121 +1825,121 @@ module squid {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "visible-hostname";
+          augex:data-path "visible_hostname";
         }
         leaf wccp2-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-address";
+          augex:data-path "wccp2_address";
         }
         leaf wccp2-assignment-method {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-assignment-method";
+          augex:data-path "wccp2_assignment_method";
         }
         leaf wccp2-forwarding-method {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-forwarding-method";
+          augex:data-path "wccp2_forwarding_method";
         }
         leaf wccp2-rebuild-wait {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-rebuild-wait";
+          augex:data-path "wccp2_rebuild_wait";
         }
         leaf wccp2-return-method {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-return-method";
+          augex:data-path "wccp2_return_method";
         }
         leaf wccp2-router {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-router";
+          augex:data-path "wccp2_router";
         }
         leaf wccp2-service {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-service";
+          augex:data-path "wccp2_service";
         }
         leaf wccp2-service-info {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-service-info";
+          augex:data-path "wccp2_service_info";
         }
         leaf wccp2-weight {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp2-weight";
+          augex:data-path "wccp2_weight";
         }
         leaf wccp-address {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp-address";
+          augex:data-path "wccp_address";
         }
         leaf wccp-router {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp-router";
+          augex:data-path "wccp_router";
         }
         leaf wccp-version {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "wccp-version";
+          augex:data-path "wccp_version";
         }
         leaf windows-ipaddrchangemonitor {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "windows-ipaddrchangemonitor";
+          augex:data-path "windows_ipaddrchangemonitor";
         }
         leaf zero-buffers {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zero-buffers";
+          augex:data-path "zero_buffers";
         }
         leaf zph-local {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zph-local";
+          augex:data-path "zph_local";
         }
         leaf zph-mode {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zph-mode";
+          augex:data-path "zph_mode";
         }
         leaf zph-option {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zph-option";
+          augex:data-path "zph_option";
         }
         leaf zph-parent {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zph-parent";
+          augex:data-path "zph_parent";
         }
         leaf zph-sibling {
           type string {
             pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
           }
-          augex:data-path "zph-sibling";
+          augex:data-path "zph_sibling";
         }
         container auth-param {
           augex:data-path "auth_param";
@@ -1999,17 +1999,17 @@ module squid {
           }
         }
         container http-access3 {
-          augex:data-path "http-access";
+          augex:data-path "http_access";
           presence "Config entry.";
           uses ch-allow;
         }
         container upgrade-http0.9 {
-          augex:data-path "upgrade-http0.9";
+          augex:data-path "upgrade_http0.9";
           presence "Config entry.";
           uses ch-allow;
         }
         container broken-vary-encoding {
-          augex:data-path "broken-vary-encoding";
+          augex:data-path "broken_vary_encoding";
           presence "Config entry.";
           uses ch-allow;
         }
