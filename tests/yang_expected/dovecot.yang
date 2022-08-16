@@ -1,0 +1,915 @@
+module dovecot {
+  yang-version 1.1;
+  namespace "aug:dovecot";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Dovecot";
+
+  grouping entry {
+    container entry {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf keys {
+        mandatory true;
+        type string {
+          pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+        }
+      }
+      leaf value {
+        type string {
+          pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+        }
+      }
+    }
+  }
+  list dovecot {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case entry {
+          uses entry;
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include";
+        }
+        leaf include-try {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include_try";
+        }
+        list dict-list {
+          key "_r-id";
+          config false;
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          choice ch-dict-list {
+            mandatory true;
+            container dict {
+              augex:data-path "dict";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container userdb {
+              augex:data-path "userdb";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container passdb {
+              augex:data-path "passdb";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container protocol {
+              augex:data-path "protocol";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container service {
+              augex:data-path "service";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container plugin {
+              augex:data-path "plugin";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container namespace {
+              augex:data-path "namespace";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container map {
+              augex:data-path "map";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container fields {
+              augex:data-path "fields";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container unix-listener {
+              augex:data-path "unix_listener";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container fifo-listener {
+              augex:data-path "fifo_listener";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+            container inet-listener {
+              augex:data-path "inet_listener";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                type string {
+                  pattern "!?[/A-Za-z0-9_-]+";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  container entry {
+                    augex:data-path "$$";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf keys {
+                      mandatory true;
+                      type string {
+                        pattern "dic((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|di([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|field((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|fiel([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|fifo_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|fifo_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|fifo_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|fifo_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|fifo_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|fifo_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|fifo_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fifo([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|fif([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|fie([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|fi([.0-9A-Z_a-dg-z-][.0-9A-Z_a-z-]*|())|include_tr((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|include_t([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|include_([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Za-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inet_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|inet_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|inet_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inet_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inet_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|inet_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|inet_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|inet([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|ine([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abdf-z-][.0-9A-Z_a-z-]*|())|ma((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|namespac((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|namespa([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|namesp([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|names([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|name([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|passd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|pass([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|pas([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|plugi((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|plug([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|plu([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|protoco((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|protoc([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|proto([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|prot([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pro([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|pr([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|pl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|pa([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|servic((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|servi([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|serv([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ser([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|se([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|unix_listene((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|unix_listen([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_liste([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|unix_list([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|unix_lis([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|unix_li([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|unix_l([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|unix_([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|unix([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|uni([.0-9A-Z_a-wyz-][.0-9A-Z_a-z-]*|())|userd((b[.0-9A-Z_a-z-]|[.0-9A-Z_ac-z-])[.0-9A-Z_a-z-]*|())|user([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|use([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|us([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|un([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|(u[.0-9A-Z_a-mo-rt-z-]|s[.0-9A-Z_a-df-z-]|p[.0-9A-Z_b-km-qs-z-]|n[.0-9A-Z_b-z-]|m[.0-9A-Z_b-z-]|i[.0-9A-Z_a-mo-z-]|f[.0-9A-Z_a-hj-z-]|d[.0-9A-Z_a-hj-z-]|[.0-9A-Z_a-ceghj-loqrtv-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|u|s|p|n|m|i|f|d|[.0-9A-Z_a-ceghj-loqrtv-z-]";
+                      }
+                    }
+                    leaf value {
+                      type string {
+                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
+                      }
+                    }
+                  }
+                  leaf _dict-ref {
+                    type leafref {
+                      path "../../../../dict-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  container mailbox {
+                    augex:data-path "mailbox";
+                    augex:value-yang-path "value";
+                    presence "Config entry.";
+                    leaf value {
+                      mandatory true;
+                      type union {
+                        type string {
+                          pattern "[^\" \t\n]+";
+                        }
+                        type string {
+                          pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                        }
+                      }
+                    }
+                    list entry-list {
+                      key "_id";
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      uses entry;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

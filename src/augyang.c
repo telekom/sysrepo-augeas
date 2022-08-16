@@ -8386,6 +8386,76 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
 }
 
 /**
+ * @brief Merging two branches which are the same except for value in first node.
+ *
+ * If the branches are the same including values in first nodes,
+ * the function returns 1 and @p br2 can be deleted.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in,out] br1 First branch.
+ * @param[in,out] br2 Second branch.
+ * @return 1 for success and the @p br2 subtree can be deleted.
+ * @return 0 if the branches are differ, function will not change any data.
+ */
+static ly_bool
+ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_ynode *br2, int *err)
+{
+    struct ay_ynode *first1, *first2, *st1, *st2;
+
+    assert(br1 && br2 && err);
+
+    /* The branches must have the same form. */
+    if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
+        return 0;
+    } else if ((br1->type == YN_CASE) && (br2->type != YN_CASE)) {
+        return 0;
+    }
+
+    first1 = br1->type == YN_CASE ? br1->child : br1;
+    first2 = br2->type == YN_CASE ? br2->child : br2;
+
+    if (br1->type == YN_CASE) {
+        assert(br2->type == YN_CASE);
+        /* Check if all sibling subtrees except the first one are equal. */
+        for (st1 = first1->next, st2 = first2->next; st1 && st2; st1 = st1->next, st2 = st2->next) {
+            if (!ay_ynode_subtree_equal(st1, st2, 1)) {
+                return 0;
+            }
+        }
+        if ((!st1 && st2) || (st1 && !st2)) {
+            /* The number of siblings differs. */
+            return 0;
+        }
+    }
+
+    /* Check if first node's children are equal. */
+    if ((!first1->child && first2->child) || (first1->child && !first2->child) ||
+            (first1->child && first2->child && !ay_ynode_subtree_equal(first1, first2, 0))) {
+        /* Children of the nodes are different, so the ay_ynode_merge_cases_() function must be called. */
+        return 0;
+    }
+
+    /* Success, @p br2 can be deleted. */
+    *err = 0;
+
+    if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
+        /* values are different, update dictionary for values. */
+        *err = ay_dnode_insert(AY_YNODE_ROOT_VALUES(tree), first1->value, first2->value, ay_dnode_lnode_equal);
+    } else if (first1->value && !first2->value) {
+        first1->flags |= AY_VALUE_MAND_FALSE;
+    } else if (!first1->value && first2->value) {
+        first1->value = first2->value;
+        first1->flags |= AY_VALUE_MAND_FALSE;
+    }
+    /* else br1 and br2 are equal */
+
+    /* The min_elems must be reset before @p br2 is deleted. */
+    first1->min_elems = first1->min_elems < first2->min_elems ? first1->min_elems : first2->min_elems;
+
+    return 1;
+}
+
+/**
  * @brief Merge branches to one if the leading nodes have the same label.
  *
  * For example:
@@ -8409,6 +8479,7 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *first_child, *chn1, *chn2;
     ly_bool match;
+    int err;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get first child. */
@@ -8431,6 +8502,9 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
                     continue;
                 }
                 if (ay_ynode_subtree_equal(chn1, chn2, 1)) {
+                    ay_ynode_delete_subtree(tree, chn2);
+                } else if (ay_ynode_merge_cases_only_by_value(tree, chn1, chn2, &err)) {
+                    AY_CHECK_RET(err);
                     ay_ynode_delete_subtree(tree, chn2);
                 } else {
                     ret = ay_ynode_merge_cases_(tree, chn1, chn2);
