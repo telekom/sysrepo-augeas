@@ -1389,29 +1389,6 @@ ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id)
 }
 
 /**
- * @brief Get YN_USES node with @p ref_id.
- *
- * @param[in] tree Tree of ynodes.
- * @param[in] ref_id The ay_ynode.ref number used to find YN_USES node.
- * @return YN_USES node or NULL.
- */
-static struct ay_ynode *
-ay_ynode_get_uses(struct ay_ynode *tree, uint32_t ref_id)
-{
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *iter;
-
-    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        iter = &tree[i];
-        if ((iter->type == YN_USES) && (iter->ref == ref_id)) {
-            return iter;
-        }
-    }
-
-    return NULL;
-}
-
-/**
  * @brief Find YN_VALUE node of @p node.
  *
  * @param[in] tree Tree of ynodes.
@@ -1519,6 +1496,47 @@ ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
     }
 
     return ret;
+}
+
+/**
+ * @brief Check if 'when' path in all nodes refer to a node in the subtree.
+ *
+ * @param[in] subtree Subtree in which nodes with 'when' will be searched.
+ * @return 1 if all 'when' paths are valid.
+ */
+static ly_bool
+ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree)
+{
+    uint64_t i;
+    const struct ay_ynode *node, *iter;
+    ly_bool found;
+
+    if (subtree->when_ref) {
+        /* Root of subtree cannot have a correct 'when'. */
+        return 0;
+    }
+
+    for (i = 0; i < subtree->descendants; i++) {
+        node = &subtree[i + 1];
+        if (!node->when_ref) {
+            continue;
+        }
+        /* Found node with 'when'. */
+
+        /* Check if 'when' refers to a parental node in the subtree. */
+        found = 0;
+        for (iter = node->parent; iter != subtree->parent; iter = iter->parent) {
+            if (iter->id == node->when_ref) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 /**
@@ -4380,11 +4398,6 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     path_cnt = 0;
     refnode_is_sibling = 0;
     for (parent = node->parent; parent && !refnode; parent = parent->parent) {
-        if (parent->type == YN_GROUPING) {
-            parent = ay_ynode_get_uses(ctx->tree, parent->id);
-            assert(parent);
-            continue;
-        }
         if (parent->id == node->when_ref) {
             refnode = parent;
             break;
@@ -4397,10 +4410,6 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
                 break;
             }
         }
-    }
-    if (!refnode) {
-        /* TODO: referenced node in 'when' not found. It is probably located in grouping. */
-        return;
     }
 
     /* Print 'when' statement. */
@@ -8513,6 +8522,8 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             i += iti->descendants;
             continue;
         } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
+            continue;
+        } else if (!ay_ynode_when_paths_are_valid(iti)) {
             continue;
         }
 
