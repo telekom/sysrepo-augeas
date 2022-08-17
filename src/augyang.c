@@ -1501,20 +1501,18 @@ ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
 /**
  * @brief Check if 'when' path in all nodes refer to a node in the subtree.
  *
+ * Root of subtree is not check.
+ *
  * @param[in] subtree Subtree in which nodes with 'when' will be searched.
+ * @param[in] path_to_root Flag set to 1 if 'when' can refer to the root.
  * @return 1 if all 'when' paths are valid.
  */
-static ly_bool
-ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree)
+static int
+ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree, ly_bool path_to_root)
 {
     uint64_t i;
-    const struct ay_ynode *node, *iter;
+    const struct ay_ynode *node, *iter, *stop;
     ly_bool found;
-
-    if (subtree->when_ref) {
-        /* Root of subtree cannot have a correct 'when'. */
-        return 0;
-    }
 
     for (i = 0; i < subtree->descendants; i++) {
         node = &subtree[i + 1];
@@ -1525,7 +1523,8 @@ ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree)
 
         /* Check if 'when' refers to a parental node in the subtree. */
         found = 0;
-        for (iter = node->parent; iter != subtree->parent; iter = iter->parent) {
+        stop = path_to_root ? subtree->parent : subtree;
+        for (iter = node->parent; iter != stop; iter = iter->parent) {
             if (iter->id == node->when_ref) {
                 found = 1;
                 break;
@@ -4411,7 +4410,13 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
             }
         }
     }
-    if (node->type == YN_CASE) {
+    if (!refnode) {
+        /* Warning: when is ignored. */
+        printf("augyang warn: 'when' has invalid path and therefore will not be generated "
+                "(id = %" PRIu32 ", when_ref = %" PRIu32 ").\n", node->id, node->when_ref);
+        return;
+    }
+    if ((node->type == YN_CASE) && (path_cnt > 0)) {
         path_cnt--;
     }
 
@@ -8600,7 +8605,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             continue;
         } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
             continue;
-        } else if (!ay_ynode_when_paths_are_valid(iti)) {
+        } else if (iti->when_ref || !ay_ynode_when_paths_are_valid(iti, 1)) {
             continue;
         }
 
@@ -8738,7 +8743,7 @@ ay_ynode_node_split(struct ay_ynode *tree)
 {
     uint64_t idents_count, i, j, grouping_id;
     struct ay_ynode *node, *node_new, *grouping, *inner_nodes, *key, *value;
-    ly_bool rec_form;
+    ly_bool rec_form, valid_when;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
@@ -8762,11 +8767,12 @@ ay_ynode_node_split(struct ay_ynode *tree)
         grouping_id = 0;
         inner_nodes = ay_ynode_inner_nodes(node);
         rec_form = ay_ynode_subtree_contains_type(node, YN_LEAFREF) ? 1 : 0;
+        valid_when = ay_ynode_when_paths_are_valid(node, 0);
         if (inner_nodes && (inner_nodes->type == YN_USES)) {
             grouping_id = inner_nodes->ref;
         } else if (inner_nodes && (inner_nodes->type == YN_GROUPING)) {
             grouping_id = inner_nodes->id;
-        } else if (inner_nodes && !rec_form) {
+        } else if (inner_nodes && !rec_form && valid_when) {
             /* Create grouping. */
             ay_ynode_insert_parent_for_rest(tree, inner_nodes);
             grouping = inner_nodes;
@@ -8784,7 +8790,7 @@ ay_ynode_node_split(struct ay_ynode *tree)
 
         /* Split node. */
         for (j = 0; j < (idents_count - 1); j++) {
-            if (rec_form) {
+            if (rec_form || !valid_when) {
                 ay_ynode_copy_subtree_as_sibling(tree, node, node);
             } else {
                 /* insert new node */
