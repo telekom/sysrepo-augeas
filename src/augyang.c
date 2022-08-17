@@ -319,6 +319,7 @@ enum yang_type {
 #define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
 #define AY_CHOICE_CREATED       0x800   /**< A choice is created by the transform and is not in lense. Or it's in the
                                              lense, but it's moved so it doesn't match the ay_lnode tree. */
+#define AY_WHEN_TARGET          0x1000  /**< A node is the target of some when statement. */
 
 #define AY_YNODE_FLAGS_CMP_MASK 0xFF    /**< Bitmask to use when comparing ay_ynode.flags. */
 /** @} ynodeflags */
@@ -1501,7 +1502,7 @@ ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
 /**
  * @brief Check if 'when' path in all nodes refer to a node in the subtree.
  *
- * Root of subtree is not check.
+ * It is not checked if the root has the 'when'.
  *
  * @param[in] subtree Subtree in which nodes with 'when' will be searched.
  * @param[in] path_to_root Flag set to 1 if 'when' can refer to the root.
@@ -1511,28 +1512,47 @@ static int
 ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree, ly_bool path_to_root)
 {
     uint64_t i;
-    const struct ay_ynode *node, *iter, *stop;
-    ly_bool found;
+    const struct ay_ynode *node, *iter, *stop, *sibl;
+    ly_bool found, when_present, target_present;
 
+    when_present = 0;
+    target_present = subtree->flags & AY_WHEN_TARGET ? 1 : 0;
     for (i = 0; i < subtree->descendants; i++) {
         node = &subtree[i + 1];
+
+        if (node->flags & AY_WHEN_TARGET) {
+            target_present = 1;
+        }
         if (!node->when_ref) {
             continue;
         }
         /* Found node with 'when'. */
+        when_present = 1;
 
         /* Check if 'when' refers to a parental node in the subtree. */
         found = 0;
         stop = path_to_root ? subtree->parent : subtree;
-        for (iter = node->parent; iter != stop; iter = iter->parent) {
+        for (iter = node->parent; (iter != stop) && !found; iter = iter->parent) {
             if (iter->id == node->when_ref) {
                 found = 1;
                 break;
+            }
+            /* Check if 'when' refers to sibling. */
+            for (sibl = iter->child; sibl; sibl = sibl->next) {
+                if (sibl->id == node->when_ref) {
+                    found = 1;
+                    break;
+                }
             }
         }
         if (!found) {
             return 0;
         }
+    }
+
+    if (!when_present && target_present) {
+        /* Some node is the target of 'when', but no node in the subtree has a 'when' statement. */
+        return 0;
     }
 
     return 1;
@@ -4382,11 +4402,11 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    struct ay_ynode *sibl, *parent, *refnode, *valnode;
+    struct ay_ynode *child, *parent, *refnode, *valnode;
     struct lens *value;
-    ly_bool is_simple, refnode_is_sibling;
+    ly_bool is_simple;
     const char *str;
-    uint64_t i, path_cnt;
+    uint64_t i, j, path_cnt;
 
     if (!node->when_ref) {
         return;
@@ -4395,28 +4415,35 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     /* Get referenced node. */
     refnode = NULL;
     path_cnt = 0;
-    refnode_is_sibling = 0;
-    for (parent = node->parent; parent && !refnode; parent = parent->parent) {
-        path_cnt++;
+    for (parent = node->parent; parent; parent = parent->parent) {
+        path_cnt = (parent->type != YN_CASE) ? path_cnt + 1 : path_cnt;
         if (parent->id == node->when_ref) {
             refnode = parent;
             break;
         }
-        for (sibl = parent->child; sibl; sibl = sibl->next) {
-            if (sibl->id == node->when_ref) {
-                refnode = sibl;
-                refnode_is_sibling = 1;
+        /* The entire subtree is searched, but the 'parent' child should actually be found. Additionally, it can be
+         * wrapped in a YN_LIST, complicating a simple search using a 'for' loop.
+         */
+        for (j = 0; j < parent->descendants; j++) {
+            child = &parent[j + 1];
+            if (child->id == node->when_ref) {
+                refnode = child;
                 break;
             }
+        }
+        if (refnode) {
+            break;
         }
     }
     if (!refnode) {
         /* Warning: when is ignored. */
-        printf("augyang warn: 'when' has invalid path and therefore will not be generated "
+        fprintf(stderr, "augyang warn: 'when' has invalid path and therefore will not be generated "
                 "(id = %" PRIu32 ", when_ref = %" PRIu32 ").\n", node->id, node->when_ref);
         return;
     }
+
     if ((node->type == YN_CASE) && (path_cnt > 0)) {
+        /* In YANG, the case-stmt is not counted in the path. */
         path_cnt--;
     }
 
@@ -4437,10 +4464,15 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     for (i = 0; i < path_cnt; i++) {
         ly_print(ctx->out, "../");
     }
+    if ((refnode->parent->type == YN_LIST) && (refnode->parent->parent == parent)) {
+        /* Print list name. */
+        ay_print_yang_ident(ctx, refnode->parent, AY_IDENT_NODE_NAME);
+        ly_print(ctx->out, "/");
+    }
 
     /* Print name of referenced node. */
     valnode = ay_ynode_get_value_node(ctx->tree, refnode, refnode->label, refnode->value);
-    if (refnode_is_sibling && valnode) {
+    if ((refnode != parent) && valnode) {
         /* Print name of referenced node. */
         ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
         ly_print(ctx->out, "/");
@@ -5457,6 +5489,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         }
         if (node->flags & AY_CHOICE_CREATED) {
             ly_print(ctx->out, " choice_created");
+        }
+        if (node->flags & AY_WHEN_TARGET) {
+            ly_print(ctx->out, " when_target");
         }
         ly_print(ctx->out, "\n");
     }
@@ -8169,17 +8204,21 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
     if (first1->child && !first2->child && first1->value) {
         first1->child->when_ref = first1->id;
         first1->child->when_val = first1->value;
+        first1->flags |= AY_WHEN_TARGET;
     } else if (!first1->child && first2->child && first2->value) {
         first2->child->when_ref = first1->id;
         first2->child->when_val = first2->value;
+        first1->flags |= AY_WHEN_TARGET;
     } else if (first1->child && first2->child) {
         if (first1->value) {
             first1->child->when_ref = first1->id;
             first1->child->when_val = first1->value;
+            first1->flags |= AY_WHEN_TARGET;
         }
         if (first2->value) {
             first2->child->when_ref = first1->id;
             first2->child->when_val = first2->value;
+            first1->flags |= AY_WHEN_TARGET;
         }
     }
 
@@ -8188,15 +8227,18 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
         if (first1->value) {
             first1->next->when_ref = first1->id;
             first1->next->when_val = first1->value;
+            first1->flags |= AY_WHEN_TARGET;
         }
         if (first2->value) {
             first2->next->when_ref = first1->id;
             first2->next->when_val = first2->value;
+            first1->flags |= AY_WHEN_TARGET;
         }
     } else if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
         if (first2->value) {
             first2->next->when_ref = first1->id;
             first2->next->when_val = first2->value;
+            first1->flags |= AY_WHEN_TARGET;
         }
     }
 }
@@ -8620,7 +8662,10 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             if (itj->ref) {
                 j += itj->descendants;
                 continue;
+            } else if (itj->when_ref || !ay_ynode_when_paths_are_valid(itj, 1)) {
+                continue;
             }
+
             if ((itj->type == YN_CONTAINER) &&
                     ((alone && ay_ynode_inner_node_alone(itj)) || !ay_ynode_inner_nodes(itj)) &&
                     !children_eq && ay_ynode_subtree_equal(iti, itj, 1)) {
