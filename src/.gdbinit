@@ -134,12 +134,12 @@ define ay_lptree
     p ay_gdb_lptree($arg0)
     set logging overwrite on
     set logging redirect on
-    set logging file $arg1
-    set logging on
+    set logging file $arg1.augy
+    set logging enabled on
     set pagination off
     printf "%s\n", $
     set pagination on
-    set logging off
+    set logging enabled off
     set logging redirect off
     set logging overwrite off
 end
@@ -166,4 +166,23 @@ ay_trans *tree
 :windo e
 Or if it is the last command then just @:
 @param[in] tree Pointer to ynode tree to log.
+end
+
+define ay_get_module
+    set $mod = $arg0->modules
+    if $_streq($mod->name, $arg1)
+        p *$mod
+    end
+
+    while $mod->next
+        if $_streq($mod->name, $arg1)
+            p *$mod
+        end
+        set $mod = $mod->next
+    end
+end
+document ay_get_module
+@brief Take the augeas structure and search for the specified module.
+@param[in] aug Pointer to struct augeas.
+@param[in] name String containing the name of the module to be found.
 end
