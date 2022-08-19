@@ -4234,11 +4234,13 @@ static int
 ay_print_yang_type_item(struct yprinter_ctx *ctx, const struct ay_ynode *node, const struct ay_lnode *lnode)
 {
     int ret;
+    char *str;
 
+    str = (lnode->lens->tag == L_VALUE) ? lnode->lens->string->str : NULL;
     ret = ay_print_yang_type_builtin(ctx, lnode->lens);
     if (ret) {
         /* The builtin print failed, so print just string pattern. */
-        if (lnode->lens->tag == L_VALUE) {
+        if ((lnode->lens->tag == L_VALUE) && !isspace(str[0]) && !isspace(str[strlen(str) - 1])) {
             ret = ay_print_yang_enumeration(ctx, lnode->lens);
         } else {
             ret = ay_print_yang_type_string(ctx, node, lnode);
