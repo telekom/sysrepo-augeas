@@ -300,6 +300,7 @@ module nginx {
               augex:data-path "if";
               presence "Config entry.";
               leaf cond {
+                mandatory true;
                 type string {
                   pattern "\\(([^ \t\n{]|[ \t\n][^{])*\\)";
                 }
@@ -560,6 +561,7 @@ module nginx {
               augex:data-path "upstream";
               presence "Config entry.";
               leaf name {
+                mandatory true;
                 type string {
                   pattern "([^\" \t\n{][^ \t\n{]*)|(\"([^\\\\\"]|\\.)*\")";
                 }

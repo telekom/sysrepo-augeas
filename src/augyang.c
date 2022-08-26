@@ -1155,6 +1155,10 @@ ay_ynode_common_choice(const struct ay_lnode *node1, const struct ay_lnode *node
 {
     const struct ay_lnode *it1, *it2;
 
+    if (!node1 || !node2) {
+        return NULL;
+    }
+
     for (it1 = node1; it1 != stop; it1 = it1->parent) {
         if (it1->lens->tag != L_UNION) {
             continue;
@@ -1196,6 +1200,34 @@ ay_ynode_get_first_in_choice(const struct ay_ynode *parent, const struct ay_lnod
     }
 
     return NULL;
+}
+
+/**
+ * @brief Reset choice to original value or to NULL.
+ *
+ * Use if the unified choice value (from ::ay_ynode_unite_choice()) is no longer needed.
+ *
+ * @param[in,out] node Node whose choice will be reset.
+ * @param[in] choice Upper search limit.
+ */
+static void
+ay_ynode_reset_choice(struct ay_ynode *node, const struct ay_lnode *stop)
+{
+    const struct ay_lnode *iter, *choice;
+
+    if (!node->snode || !node->choice) {
+        return;
+    }
+
+    choice = NULL;
+    for (iter = node->snode; iter && (iter != stop); iter = iter->parent) {
+        if (iter->lens->tag == L_UNION) {
+            choice = iter;
+            break;
+        }
+    }
+
+    node->choice = choice;
 }
 
 /**
@@ -1453,9 +1485,9 @@ ay_lnode_get_last_concat(const struct ay_lnode *start, const struct ay_lnode *st
  * @param[in] node1 First node.
  * @param[in] node2 Second node.
  * @param[in] stop Parent node is used as a search stop.
- * @return Common last L_CONCAT or NULL.
+ * @return Common last lnode with tag L_CONCAT or NULL.
  */
-static ly_bool
+static const struct ay_lnode *
 ay_ynode_common_concat(const struct ay_ynode *node1, const struct ay_ynode *node2, const struct ay_lnode *stop)
 {
     const struct ay_lnode *con1, *con2;
@@ -1465,7 +1497,7 @@ ay_ynode_common_concat(const struct ay_ynode *node1, const struct ay_ynode *node
     con1 = ay_lnode_get_last_concat(node1->snode, stop);
     con2 = ay_lnode_get_last_concat(node2->snode, stop);
     if (con1 && con2 && (con1 == con2)) {
-        return 1;
+        return con1;
     } else {
         return 0;
     }
@@ -1552,6 +1584,35 @@ ay_ynode_when_paths_are_valid(const struct ay_ynode *subtree, ly_bool path_to_ro
 
     if (!when_present && target_present) {
         /* Some node is the target of 'when', but no node in the subtree has a 'when' statement. */
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Check if 'when' value is valid and can therefore be printed.
+ *
+ * @param[in] node Node with ay_ynode.when_val to check.
+ * @return 1 if 'when' value should be valid.
+ */
+static ly_bool
+ay_ynode_when_value_is_valid(const struct ay_ynode *node)
+{
+    const char *str;
+    struct lens *ln;
+
+    assert(node->when_val);
+    ln = node->when_val->lens;
+
+    assert((ln->tag == L_VALUE) || (ln->tag == L_STORE));
+    str = ln->tag == L_VALUE ? ln->string->str : ln->regexp->pattern->str;
+
+    if (strchr(str, '\'')) {
+        /* The 'when' is not valid from the point of view of the XPATH 1.0 standard.
+         * One solution is to use a variable such as SINGLE_QUOTE that contains the ' value.
+         * But such generated yang would then only be valid for libyang.
+         */
         return 0;
     }
 
@@ -4450,7 +4511,14 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     /* Print 'when' statement. */
-    ly_print(ctx->out, "%*swhen \"", ctx->space, "");
+    if (!ay_ynode_when_value_is_valid(node)) {
+        /* The 'when' is not valid from the point of view of the XPATH 1.0 standard,
+         * so at least the 'when' restriction is printed as a comment.
+         */
+        ly_print(ctx->out, "%*s//when \"", ctx->space, "");
+    } else {
+        ly_print(ctx->out, "%*swhen \"", ctx->space, "");
+    }
     value = node->when_val->lens;
     assert((value->tag == L_VALUE) || (value->tag == L_STORE));
     if (ay_lense_pattern_is_label(value)) {
@@ -5435,10 +5503,15 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         break;
     }
 
-    ly_print(ctx->out, " (id: %" PRIu32 ")\n", node->id);
-
     if (node->type == YN_ROOT) {
+        ly_print(ctx->out, "\n");
         return;
+    }
+
+    if (node->parent->type == YN_ROOT) {
+        ly_print(ctx->out, " (id: %" PRIu32 ", par: R00T)\n", node->id);
+    } else {
+        ly_print(ctx->out, " (id: %" PRIu32 ", par: %" PRIu32 ")\n", node->id, node->parent->id);
     }
 
     if (node->choice) {
@@ -6172,19 +6245,22 @@ ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_yn
 }
 
 /**
- * @brief Basic checks for ay_ynode_rule_insert_case() and ay_ynode_insert_case().
+ * @brief Basic checks for ay_ynode_insert_case().
  *
- * @param[in] node Node to check.
+ * @param[in] node1 First node to check.
+ * @param[in] node2 Second node to check.
  * @return 1 to meet the basic prerequisites for inserting YN_CASE.
  */
 static ly_bool
-ay_ynode_insert_case_prerequisite(const struct ay_ynode *node)
+ay_ynode_insert_case_prerequisite(const struct ay_ynode *node1, const struct ay_ynode *node2)
 {
-    if (!node->choice || !node->next || !node->next->choice) {
+    if (!node1 || !node2) {
         return 0;
-    } else if (node->choice != node->next->choice) {
+    } else if (!node1->choice || !node2->choice) {
         return 0;
-    } else if (!node->snode || !node->next->snode) {
+    } else if (node1->choice != node2->choice) {
+        return 0;
+    } else if (!node1->snode || !node2->snode) {
         return 0;
     } else {
         return 1;
@@ -6200,24 +6276,28 @@ ay_ynode_insert_case_prerequisite(const struct ay_ynode *node)
 static uint32_t
 ay_ynode_rule_insert_case(const struct ay_ynode *node)
 {
-    const struct ay_lnode *stop, *choice;
-    uint32_t ret;
+    const struct ay_ynode *first, *iter;
+    uint64_t cnt, rank;
 
-    ret = ay_ynode_insert_case_prerequisite(node);
-    if (!ret) {
+    if (!node->choice) {
         return 0;
     }
 
-    /* Find common choice. */
-    stop = node->choice;
-    choice = ay_ynode_common_choice(node->snode, node->next->snode, stop);
-    if (!choice) {
+    first = ay_ynode_get_first_in_choice(node, node->choice);
+    if (!first) {
         return 0;
     }
-    /* Find common concat. */
-    ret = ay_ynode_common_concat(node, node->next, choice);
 
-    return ret;
+    /* Every even node can theoretically have a case. */
+    cnt = 1;
+    for (iter = first; iter->next && (iter->choice == iter->next->choice); iter = iter->next) {
+        if (iter == node) {
+            rank = cnt;
+        }
+        cnt++;
+    }
+
+    return rank % 2;
 }
 
 /**
@@ -7136,7 +7216,7 @@ ay_ynode_copy_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, st
 }
 
 /**
- * @brief Reset choice for ynodes.
+ * @brief Unite (reset) choice for ynodes.
  *
  * The lnode tree contains nodes that are not important to the ynode tree. They may even be misleading and lead
  * to bugs. For example, ay_ynode.choice may incorrectly point to a L_UNION consisting of L_DEL nodes. But it should
@@ -7145,7 +7225,7 @@ ay_ynode_copy_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, st
  * @param[in,out] tree Tree of ynodes.
  */
 static void
-ay_ynode_reset_choice(struct ay_ynode *tree)
+ay_ynode_unite_choice(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *first, *node, *iter;
@@ -7774,6 +7854,8 @@ ay_ynode_more_keys_for_node_insert_nodes(struct ay_ynode *tree, struct ay_dnode 
                 /* The 'key' will contain set of nodes. */
                 /* Get the corresponding sibling of @p node (where 'key' is assigned). */
                 for (k = 1, sibl = node->next; k < i; k++, sibl = sibl->next) {}
+                /* Reset choice for child. */
+                ay_ynode_reset_choice(child, choice);
                 /* Move subtree. */
                 ay_ynode_move_subtree_as_last_child(tree, sibl, child);
                 break;
@@ -8052,36 +8134,31 @@ ay_ynode_insert_case(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *first, *cas, *iter;
-    const struct ay_lnode *choice;
+    const struct ay_lnode *common_choice, *con;
     uint64_t j, cnt;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         first = &tree[i];
-        if (!ay_ynode_rule_insert_case(first)) {
+        cnt = 0;
+        /* Count how many subtrees will be in case. */
+        for (iter = first->next; iter; iter = iter->next) {
+            if (!ay_ynode_insert_case_prerequisite(first, iter)) {
+                break;
+            }
+            /* Get first common choice. */
+            common_choice = ay_ynode_common_choice(first->snode, iter->snode, first->choice);
+            /* Get last common concatenation. */
+            if (!(con = ay_ynode_common_concat(first, iter, common_choice))) {
+                break;
+            }
+            cnt++;
+        }
+        if (!cnt) {
+            /* No case will be generated. */
             continue;
         }
 
-        cnt = 1;
-        for (iter = first->next; iter; iter = iter->next) {
-            if (!ay_ynode_insert_case_prerequisite(iter)) {
-                break;
-            }
-            choice = ay_ynode_common_choice(iter->snode, iter->next->snode, iter->choice);
-            if (choice == iter->choice) {
-                /* node1 and node2 can be in YN_CASE only if there is CONCAT between them. */
-                if (ay_ynode_common_concat(iter, iter->next, choice)) {
-                    cnt++;
-                } else {
-                    break;
-                }
-            } else if (choice) {
-                /* pattern: YN_CASE {node1 CONCAT node2 UNION node3... */
-                cnt++;
-            } else {
-                break;
-            }
-        }
-
+        /* Insert case. */
         ay_ynode_insert_wrapper(tree, first);
         cas = first;
         first = cas->child;
@@ -8089,19 +8166,27 @@ ay_ynode_insert_case(struct ay_ynode *tree)
         cas->choice = first->choice;
         first->choice = NULL;
 
+        /* Move subtrees to case. */
         for (j = 0; j < cnt; j++) {
             ay_ynode_move_subtree_as_last_child(tree, cas, cas->next);
         }
-        for (iter = cas->child; iter; iter = iter->next) {
+        /* Reset choice in children. */
+        for (iter = cas->child->next; iter; iter = iter->next) {
+            ay_ynode_reset_choice(iter, cas->choice);
+        }
+        /* Set choice to NULL if some child is alone in choice. */
+        for (iter = cas->child->next; iter; iter = iter->next) {
             if (ay_ynode_alone_in_choice(iter)) {
                 iter->choice = NULL;
             }
         }
-        if (ay_ynode_alone_in_choice(cas) && (ay_lnode_has_attribute(cas->parent->value, L_UNION) != cas->choice)) {
+        /* In the end, the case is alone, so it will be deleted. */
+        if (ay_ynode_alone_in_choice(cas)) {
+            cas->child->choice = cas->choice;
             ay_ynode_delete_node(tree, cas);
-        } else {
-            i++;
+            continue;
         }
+        i++;
     }
 
     return 0;
@@ -9627,8 +9712,8 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
      */
     ay_ynode_delete_build_list(*tree);
 
-    /* Unite choice for siblings. */
-    ay_ynode_reset_choice(*tree);
+    /* Reset choice for siblings. */
+    ay_ynode_unite_choice(*tree);
 
     /* [ (key lns1 | key lns2) lns3 ]    -> node { type union { pattern lns1; pattern lns2; }}
      * store to YN_ROOT.labels
