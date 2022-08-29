@@ -9596,7 +9596,10 @@ ay_ynode_set_type(struct ay_ynode *tree)
 /**
  * @brief Wrapper for calling some insert function.
  *
- * @param[in,out] tree Tree of ynodes. The memory address of the tree will be changed.
+ * Warning: The @p tree pointer may or may not change. Therefore, this function should only be called
+ * from ay_ynode_transformations() which does not contain pointers to array elements.
+ *
+ * @param[in,out] tree Tree of ynodes. The memory address of the tree may change.
  * The insertion result will be applied.
  * @param[in] items_count Number of nodes to be inserted.
  * @param[in] insert Callback function which inserts some nodes.
@@ -9606,17 +9609,18 @@ static int
 ay_ynode_trans_insert(struct ay_ynode **tree, int (*insert)(struct ay_ynode *), uint32_t items_count)
 {
     int ret;
-    struct ay_ynode *new = NULL;
     uint64_t free_space, new_size;
+    void *old;
 
     free_space = AY_YNODE_ROOT_ARRSIZE(*tree) - LY_ARRAY_COUNT(*tree);
     if (free_space < items_count) {
         new_size = AY_YNODE_ROOT_ARRSIZE(*tree) + (items_count - free_space);
-        LY_ARRAY_CREATE(NULL, new, new_size, return AYE_MEMORY);
-        ay_ynode_copy(new, *tree);
-        AY_YNODE_ROOT_ARRSIZE(new) = new_size;
-        LY_ARRAY_FREE(*tree);
-        *tree = new;
+        old = *tree;
+        LY_ARRAY_CREATE(NULL, *tree, new_size, return AYE_MEMORY);
+        if (*tree != old) {
+            ay_ynode_tree_correction(*tree);
+        }
+        AY_YNODE_ROOT_ARRSIZE(*tree) = new_size;
     }
     ret = insert(*tree);
 
