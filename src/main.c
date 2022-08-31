@@ -516,6 +516,8 @@ main(int argc, char **argv)
         modname = argv[optind + i];
         /* parse and compile augeas module */
         aym_insert_filename(modname, ".aug", 0, filename);
+        // printf("%s\n", filename);
+
         dirpath = aym_find_aug_module(loadpath, filename);
         if (!dirpath) {
             fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
@@ -523,6 +525,7 @@ main(int argc, char **argv)
             continue;
         }
         aym_insert_dirpath(dirpath, filename);
+
         if (__aug_load_module_file(aug, filename) == -1) {
             fprintf(stderr, "ERROR: %s\n", aug_error_message(aug));
             const char *s = aug_error_details(aug);
@@ -562,6 +565,7 @@ main(int argc, char **argv)
             fprintf(file, "%s", str);
             fclose(file);
         }
+
         free(str);
         str = NULL;
     }

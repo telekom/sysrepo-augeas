@@ -37,6 +37,11 @@
 #define SPACE_INDENT 2
 
 /**
+ * @brief The minimum number of characters a regex must contain to be considered long.
+ */
+#define AY_REGEX_LONG 72
+
+/**
  * @brief Check @p RETVAL and call return with @p RETVAL.
  *
  * @param[in] RETVAL Value to check.
@@ -201,6 +206,7 @@
 #define AYE_IDENT_LIMIT 6
 #define AYE_LTREE_NO_ROOT 7
 #define AYE_IDENT_BAD_CHAR 8
+#define AYE_PARSE_FAILED 9
 
 /**
  * @brief Check if lense tag belongs to ynode.label.
@@ -234,6 +240,59 @@
 #define AY_EXT_VALPATH "value-yang-path"
 
 /**
+ * @defgroup pnodeflags Pnode flags.
+ *
+ * Various flags and additional infromation about pnode structure (used in ::ay_pnode.flags).
+ *
+ * @{
+ */
+#define AY_PNODE_HAS_REGEXP     0x1     /**< Pnode does not contain a reference to another pnode,
+                                             but a pointer to a regexp. */
+#define AY_PNODE_REG_MINUS      0x2     /**< Terms subtree contains a regular expression with a minus operation. */
+#define AY_PNODE_REG_UNMIN      0x4     /**< Terms subtree contains a regular expression starting with the A_UNION
+                                             operation and there is a minus operation in one of the branches. */
+/** @} pnodeflags */
+
+/**
+ * @brief Check if ay_pnode.ref is set.
+ *
+ * @param[in] PNODE Pointer to pnode.
+ */
+#define AY_PNODE_REF(PNODE) \
+    (PNODE->ref && !(PNODE->flags & AY_PNODE_HAS_REGEXP))
+
+/**
+ * @brief Wrapper for augeas struct term.
+ *
+ * This node represents the information obtained from parsing the augeas module. As a wrapper allows more convenient
+ * browsing of term nodes. Pnodes are connected in the form of a tree, where the root is the pnode containing the term
+ * with the A_MODULE tag. Pnodes are stored in the form of Sized Array. An Augeas term can have two children and they
+ * are accessed via the term.left and term.right pointers. For pnode, the left child is accessed via the ay_pnode.child
+ * pointer and right child is accessed via ay_pnode.child->next.
+ */
+struct ay_pnode {
+    struct ay_pnode *parent;        /**< Pointer to parent node. */
+    struct ay_pnode *next;          /**< Pointer to the next sibling. */
+    struct ay_pnode *child;         /**< Pointer to the first child (left term). */
+    uint32_t descendants;           /**< Number of descendants in the subtree where current node is the root. */
+
+    uint32_t flags;                 /**< Various additional information about [pnode flags](@ref pnodeflags). */
+    struct ay_pnode *bind;          /**< Pointer to the pnode with the A_BIND term under which this node belongs.
+                                         In other words it is pointer to a branch from the root of the whole tree. */
+
+    union {
+        struct ay_pnode *ref;       /**< This pointer is set at the pnode with the term A_IDENT and refers to the
+                                         substituent. Macro AY_PNODE_REF is prepared for checking settings. When
+                                         traversing all descendants, it is not enough to use only the
+                                         ay_pnode.descendats item, but also this reference. */
+        struct regexp *regexp;      /**< Flag AY_PNODE_HAS_REGEXP muset be set. This pointer is set at the pnode with
+                                         the term A_IDENT and refers directly to regular expression located in the
+                                         different (compiled) agueas module. */
+    };
+    struct term *term;              /**< Pointer to the corresponding augeas term. */
+};
+
+/**
  * @defgroup lenseflags Lense flags.
  *
  * Various flags and additional infromation about lens structures (used in ::ay_lnode.flags).
@@ -261,9 +320,10 @@
 /**
  * @brief Wrapper for lense node.
  *
- * Interconnection of lense structures is not suitable for comfortable browsing. Therefore, an ay_lnode wrapper has
- * been created that contains a better connection between the nodes.
- * The lnode nodes are stored in the Sized array and the number of nodes should not be modified.
+ * This node represents information obtained by compiling augeas terms. The result of the compilation is in the form
+ * of augeas lense. Interconnection of lense structures is not suitable for comfortable browsing.
+ * Therefore, an ay_lnode wrapper has been created that contains a better connection between the nodes. The lnode nodes
+ * are stored in the Sized array and the number of nodes should not be modified.
  */
 struct ay_lnode {
     struct ay_lnode *parent;    /**< Pointer to the parent node. */
@@ -272,6 +332,7 @@ struct ay_lnode {
     uint32_t descendants;       /**< Number of descendants in the subtree where current node is the root. */
 
     uint32_t flags;             /**< Various additional information about [lense flags](@ref lenseflags) */
+    struct ay_pnode *pnode;     /**< Access to augeas term. Can be NULL. */
     struct lens *lens;          /**< Pointer to lense node. Always set. */
 };
 
@@ -597,6 +658,8 @@ augyang_get_error_message(int err_code)
         return AY_NAME " ERROR: Augyang does not know which lense is the root.\n";
     case AYE_IDENT_BAD_CHAR:
         return AY_NAME " ERROR: Invalid character in identifier.\n";
+    case AYE_PARSE_FAILED:
+        return AY_NAME " ERROR: Augeas failed to parse.\n";
     default:
         return AY_NAME " INTERNAL ERROR: error message not defined.\n";
     }
@@ -759,6 +822,300 @@ ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size
     } else if ((lens->tag == L_REC) && !lens->rec_internal) {
         ay_lense_summary(lens->body, ltree_size, yforest_size, tpatt_size);
     }
+}
+
+/**
+ * @brief Get a name of the lense from @p mod.
+ *
+ * @param[in] mod Module where to find lense name.
+ * @param[in] lens Lense for which the name is to be found.
+ * @return Name of the lense or NULL.
+ */
+static char *
+ay_get_lense_name_by_mod(struct module *mod, struct lens *lens)
+{
+    struct binding *bind_iter;
+
+    if (!lens) {
+        return NULL;
+    }
+
+    LY_LIST_FOR(mod->bindings, bind_iter) {
+        if (bind_iter->value->lens == lens) {
+            return bind_iter->ident->str;
+        }
+    }
+
+    if ((lens->tag == L_STORE) || (lens->tag == L_KEY)) {
+        LY_LIST_FOR(mod->bindings, bind_iter) {
+            if (bind_iter->value->tag != V_REGEXP) {
+                continue;
+            }
+            if (bind_iter->value->regexp == lens->regexp) {
+                return bind_iter->ident->str;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Get Augeas context from module.
+ *
+ * @param[in] mod Module from which the context is taken.
+ * @return Augeas context.
+ */
+static struct augeas *
+ay_get_augeas_ctx1(struct module *mod)
+{
+    assert(mod);
+    return (struct augeas *)mod->bindings->value->info->error->aug;
+}
+
+/**
+ * @brief Get Augeas context from lense.
+ *
+ * @param[in] lens Lense from which the context is taken.
+ * @return Augeas context.
+ */
+static struct augeas *
+ay_get_augeas_ctx2(struct lens *lens)
+{
+    assert(lens);
+    return (struct augeas *)lens->info->error->aug;
+}
+
+/**
+ * @brief Get module by the module name.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] modname Name of the required module.
+ * @param[in] modname_len Set string length if not terminated by '\0'.
+ * @return Pointer to Augeas module or NULL.
+ */
+static struct module *
+ay_get_module(struct augeas *aug, const char *modname, size_t modname_len)
+{
+    struct module *mod = NULL, *mod_iter;
+    size_t len;
+
+    len = modname_len ? modname_len : strlen(modname);
+    LY_LIST_FOR(aug->modules, mod_iter) {
+        if (!strncmp(mod_iter->name, modname, len)) {
+            mod = mod_iter;
+            break;
+        }
+    }
+
+    return mod;
+}
+
+/**
+ * @brief Get lense name from specific module.
+ *
+ * @param[in] modname Name of the module where to look for @p lens.
+ * @param[in] lens Lense for which to find the name.
+ * @return Lense name or NULL.
+ */
+static char *
+ay_get_lense_name_by_modname(const char *modname, struct lens *lens)
+{
+    char *ret;
+    struct module *mod;
+
+    mod = ay_get_module(ay_get_augeas_ctx2(lens), modname, 0);
+    ret = mod ? ay_get_lense_name_by_mod(mod, lens) : NULL;
+
+    return ret;
+}
+
+/**
+ * @brief Find @p lensname in the @p mod module and return its regexp if it is of type V_REGEXP.
+ *
+ * @param[in] mod Augeas module in which lense will be searched.
+ * @param[in] lensname Name of lense.
+ * @return Pointer to regexp or NULL.
+ */
+static struct regexp *
+ay_get_regexp_by_lensname(struct module *mod, char *lensname)
+{
+    struct binding *bind_iter;
+
+    LY_LIST_FOR(mod->bindings, bind_iter) {
+        if (strcmp(bind_iter->ident->str, lensname)) {
+            continue;
+        } else if (bind_iter->value->tag != V_REGEXP) {
+            continue;
+        }
+
+        return bind_iter->value->regexp;
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Get lense name.
+ *
+ * It is probably not possible to find a lense name base on @p lens alone because there is no direct mapping between
+ * the module path (lens->regexp->info->filename) and module name (mod->name).
+ *
+ * @param[in] mod Module in which search the @p lens. If it fails then it is then searched in other predefined modules.
+ * @param[in] lens Lense for which to find the name.
+ * @return Lense name or NULL.
+ */
+static char *
+ay_get_lense_name(struct module *mod, struct lens *lens)
+{
+    static char *ret;
+
+    if (!lens) {
+        return NULL;
+    }
+
+    ret = ay_get_lense_name_by_mod(mod, lens);
+    if (!ret) {
+        ret = ay_get_lense_name_by_modname("Rx", lens);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Get lense name which is not directly related to @p node.
+ *
+ * This function is a bit experimental. The point is that, for example, list nodes often have the identifier
+ * 'config-entries', which often causes name collisions. But there may be unused lense identifiers in the augeas module
+ * and it would be a pity not to use them. So even though the identifier isn't quite directly related to the @p node,
+ * it's still better than the default name ('config-entries').
+ *
+ * @param[in] mod Module in which search the @p lens.
+ * @param[in] node Node for which the identifier is to be found.
+ * @return Identifier or NULL.
+ */
+static char *
+ay_get_spare_lense_name(struct module *mod, const struct ay_ynode *node)
+{
+    const struct ay_ynode *ynter;
+    const struct ay_lnode *liter, *start, *end;
+    struct binding *bind_iter;
+
+    /* Find the node that terminates the search. */
+    end = NULL;
+    for (ynter = node->parent; ynter; ynter = ynter->parent) {
+        if (ynter->snode) {
+            end = ynter->snode;
+            break;
+        }
+    }
+    if (!end) {
+        return NULL;
+    }
+
+    /* Find the node that starts the search. */
+    start = NULL;
+    for (ynter = node->child; ynter; ynter = ynter->child) {
+        if (ynter->snode) {
+            start = ynter->snode;
+            break;
+        } else if (ynter->label) {
+            start = ynter->label;
+            break;
+        }
+    }
+    if (!start) {
+        return NULL;
+    }
+
+    /* Find a free unused identifier in the module. */
+    for (liter = start->parent; liter && (liter != end); liter = liter->parent) {
+        LY_LIST_FOR(mod->bindings, bind_iter) {
+            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
+                return bind_iter->ident->str;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Get lense name from specific module and search using a regular expression.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] modname Name of the module where to look for @p pattern.
+ * @param[in] pattern Regular expression used to find lense.
+ * @param[in] ignore_maybe Flag set to 1 to ignore the "{0,1}" substring in @p pattern.
+ * Augeas inserts this substring into the @p pattern if it is affected by the '?' (maybe) operator.
+ * @return Lense name which has @p pattern in the @p modname module otherwise NULL.
+ */
+static char *
+ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *pattern, ly_bool ignore_maybe)
+{
+    char *ret = NULL;
+    struct module *mod;
+    size_t pattern_len, maybe_len = strlen("{0,1}");
+    char *found;
+    uint64_t cnt_found = 0;
+    struct binding *bind_iter;
+    char *str;
+
+    if (!pattern) {
+        return NULL;
+    }
+
+    mod = ay_get_module(aug, modname, 0);
+    if (!mod) {
+        return ret;
+    }
+
+    pattern_len = strlen(pattern);
+    if (ignore_maybe && (pattern_len > maybe_len) && !strcmp(pattern + (pattern_len - maybe_len), "{0,1}")) {
+        pattern_len = pattern_len - maybe_len;
+        /* pattern without parentheses */
+        pattern++;
+        pattern_len -= 2;
+    }
+
+    mod = ay_get_module(aug, modname, 0);
+    LY_LIST_FOR(mod->bindings, bind_iter) {
+        if (bind_iter->value->tag != V_REGEXP) {
+            continue;
+        }
+        str = bind_iter->value->regexp->pattern->str;
+        if (strlen(str) != pattern_len) {
+            continue;
+        }
+        if (!strncmp(str, pattern, pattern_len)) {
+            found = bind_iter->ident->str;
+            cnt_found++;
+        }
+    }
+
+    if (cnt_found == 1) {
+        ret = found;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Print module name.
+ *
+ * @param[in] mod Module whose name is to be printed.
+ * @param[out] namelen Length of module name.
+ * @return Module name.
+ */
+static const char *
+ay_get_yang_module_name(struct module *mod, size_t *namelen)
+{
+    const char *name, *path;
+
+    path = mod->bindings->value->info->filename->str;
+    ay_get_filename(path, &name, namelen);
+
+    return name;
 }
 
 /**
@@ -961,6 +1318,813 @@ ay_transl_table_free(struct ay_transl *table)
     }
 
     LY_ARRAY_FREE(table);
+}
+
+/**
+ * @brief Recursively loop through the terms and call the callback function.
+ *
+ * @param[in] term Current term.
+ * @param[in,out] data Data that the callback function can modify.
+ * @param[in] func Callback function which take @p data as parameter.
+ */
+static void
+ay_term_visitor(struct term *term, void *data, void (*func)(struct term *, void *data))
+{
+    func(term, data);
+
+    switch (term->tag) {
+    case A_MODULE:
+        list_for_each(dcl, term->decls) {
+            assert(dcl->tag == A_BIND);
+            ay_term_visitor(dcl, data, func);
+        }
+        break;
+    case A_BIND:
+        ay_term_visitor(term->exp, data, func);
+        break;
+    case A_LET:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_COMPOSE:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_UNION:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_MINUS:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_CONCAT:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_APP:
+        ay_term_visitor(term->left, data, func);
+        ay_term_visitor(term->right, data, func);
+        break;
+    case A_VALUE:
+        break;
+    case A_IDENT:
+        break;
+    case A_BRACKET:
+        ay_term_visitor(term->brexp, data, func);
+        break;
+    case A_FUNC:
+        ay_term_visitor(term->body, data, func);
+        break;
+    case A_REP:
+        ay_term_visitor(term->rexp, data, func);
+        break;
+    case A_TEST:
+        break;
+    default:
+        break;
+    }
+}
+
+/**
+ * @brief Increment counter @p cnt.
+ *
+ * @param[in] term Current term.
+ * @param[in,out] cnt Pointer to counter of type uint64_t.
+ */
+static void
+ay_term_count(struct term *term, void *cnt)
+{
+    (void) term;
+    ++(*(uint64_t *)cnt);
+}
+
+/**
+ * @brief Set pnode ay_pnode.term and ay_pnode.descendants.
+ *
+ * @param[in] term Current term.
+ * @param[in,out] data Pnode iterator.
+ */
+static void
+ay_pnode_set_term(struct term *term, void *data)
+{
+    struct ay_pnode **iter;
+    uint32_t cnt = 0;
+
+    iter = data;
+    (*iter)->term = term;
+    ay_term_visitor(term, &cnt, ay_term_count);
+    (*iter)->descendants = cnt - 1;
+    ++(*iter);
+}
+
+/**
+ * @brief Set pointers parent, child and next in the pnode tree by ay_pnode.descendants.
+ *
+ * Should be the same as ay_ynode_tree_correction().
+ *
+ * @param[in,out] tree Tree of pnodes.
+ */
+static void
+ay_pnode_tree_correction(struct ay_pnode *tree)
+{
+    struct ay_pnode *parent, *iter, *next;
+    uint32_t sum;
+
+    /* Copied from ay_ynode_tree_correction(). */
+    LY_ARRAY_FOR(tree, struct ay_pnode, parent) {
+        iter = parent->descendants ? parent + 1 : NULL;
+        parent->child = iter;
+        sum = 0;
+        while (iter) {
+            iter->parent = parent;
+            iter->child = iter->descendants ? iter + 1 : NULL;
+            sum += iter->descendants + 1;
+            next = sum != parent->descendants ? iter + iter->descendants + 1 : NULL;
+            iter->next = next;
+            iter = next;
+        }
+    }
+}
+
+/**
+ * @brief Set ay_pnode.bind for all pnodes.
+ *
+ * @param[in,out] tree Tree of pnodes.
+ */
+static void
+ay_pnode_set_bind(struct ay_pnode *tree)
+{
+    struct ay_pnode *bind, *iter;
+    LY_ARRAY_COUNT_TYPE i;
+
+    for (bind = tree->child; bind; bind = bind->next) {
+        for (i = 0; i < bind->descendants; i++) {
+            iter = &bind[i + 1];
+            iter->bind = bind;
+        }
+    }
+}
+
+/**
+ * @brief Defined in augeas project in the file parser.y.
+ */
+int augl_parse_file(struct augeas *aug, const char *name, struct term **term);
+
+/**
+ * @brief Parse augeas module @p filename and create pnode tree.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] filename Name of the module to parse.
+ * @param[out] ptree Tree of pnodes.
+ * @return 0 on success.
+ */
+static int
+ay_pnode_create(struct augeas *aug, const char *filename, struct ay_pnode **ptree)
+{
+    int ret;
+    struct ay_pnode *tree, *iter;
+    struct term *term;
+    uint32_t cnt = 0;
+
+    ret = augl_parse_file(aug, filename, &term);
+    if (ret || (aug->error->code != AUG_NOERROR)) {
+        return AYE_PARSE_FAILED;
+    }
+
+    ay_term_visitor(term, &cnt, ay_term_count);
+    tree = NULL;
+    LY_ARRAY_CREATE(NULL, tree, cnt, return AYE_MEMORY);
+    iter = tree;
+    ay_term_visitor(term, &iter, ay_pnode_set_term);
+    AY_SET_LY_ARRAY_SIZE(tree, cnt);
+    ay_pnode_tree_correction(tree);
+    ay_pnode_set_bind(tree);
+
+    *ptree = tree;
+
+    return 0;
+}
+
+/**
+ * @brief Release pnode tree.
+ *
+ * @param[in] tree Tree of pnodes.
+ */
+static void
+ay_pnode_free(struct ay_pnode *tree)
+{
+    if (tree) {
+        unref(tree->term, term);
+        LY_ARRAY_FREE(tree);
+    }
+}
+
+/**
+ * @brief Copy pnode data from @p dst to @p src.
+ *
+ * @param[out] dst Destination node.
+ * @param[in] src Source node.
+ */
+static void
+ay_pnode_copy_data(struct ay_pnode *dst, struct ay_pnode *src)
+{
+    dst->flags = src->flags;
+    dst->bind = src->bind;
+    dst->ref = src->ref;
+    dst->term = src->term;
+}
+
+/**
+ * @brief Swap pnode data.
+ *
+ * @param[in,out] first First pnode.
+ * @param[in,out] second Second pnode.
+ */
+static void
+ay_pnode_swap_data(struct ay_pnode *first, struct ay_pnode *second)
+{
+    struct ay_pnode tmp;
+
+    ay_pnode_copy_data(&tmp, first);
+    ay_pnode_copy_data(first, second);
+    ay_pnode_copy_data(second, &tmp);
+}
+
+/**
+ * @brief Check if pnode subtree contains term with tag @p tag.
+ *
+ * Goes through the ay_pnode.ref.
+ *
+ * @param[in] node Subtree to check.
+ * @param[in] tag Augeas term tag to search.
+ * @return 1 if @p tag was found.
+ */
+static ly_bool
+ay_pnode_peek(struct ay_pnode *node, enum term_tag tag)
+{
+    uint32_t i;
+    ly_bool ret;
+
+    for (i = 0; i <= node->descendants; i++) {
+        if (node->term->tag == tag) {
+            return 1;
+        } else if (AY_PNODE_REF(node)) {
+            ret = ay_pnode_peek(node->ref, tag);
+            AY_CHECK_RET(ret);
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Check if term info are equal.
+ *
+ * @param[in] inf1 First info to check.
+ * @param[in] inf2 Second info to check.
+ * @return 1 if info are equal.
+ */
+static ly_bool
+ay_term_info_equal(const struct info *inf1, const struct info *inf2)
+{
+    if (inf1->first_line != inf2->first_line) {
+        return 0;
+    } else if (inf1->first_column != inf2->first_column) {
+        return 0;
+    } else if (inf1->last_line != inf2->last_line) {
+        return 0;
+    } else if (inf1->last_column != inf2->last_column) {
+        return 0;
+    } else if (strcmp(inf1->filename->str, inf2->filename->str)) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * @brief Find pnode with the same @p info.
+ *
+ * @param[in] tree Tree of pnodes.
+ * @param[in] info Info by which the pnode will be searched.
+ * @return Pnode with equal @p info or NULL.
+ */
+static struct ay_pnode *
+ay_pnode_find_by_info(struct ay_pnode *tree, struct info *info)
+{
+    uint32_t i;
+
+    LY_ARRAY_FOR(tree, i) {
+        if (ay_term_info_equal(tree[i].term->info, info)) {
+            return &tree[i];
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Count the total number of minuses.
+ *
+ * @param[in] regex Subtree of pnodes related to regular expression.
+ * @return Number of minuses.
+ */
+static uint32_t
+ay_pnode_minus_count(struct ay_pnode *regex)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_pnode *iter;
+    uint32_t ret = 0;
+
+    for (i = 0; i <= regex->descendants; i++) {
+        iter = &regex[i];
+        if (iter->term->tag == A_MINUS) {
+            ++ret;
+        } else if (AY_PNODE_REF(iter)) {
+            ret += ay_pnode_minus_count(iter->ref);
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief For A_IDENT term, find a corresponding A_FUNC term in the current bind.
+ *
+ * @param[in] ident Pnode with tag A_IDENT.
+ * @return Pnode with the same name as @p ident or NULL.
+ */
+static struct ay_pnode *
+ay_pnode_find_func(struct ay_pnode *ident)
+{
+    struct ay_pnode *iter;
+
+    assert(ident->term->tag == A_IDENT);
+
+    for (iter = ident; iter != ident->bind; iter = iter->parent) {
+        if (iter->term->tag != A_FUNC) {
+            continue;
+        } else if (iter->parent->term->tag != A_LET) {
+            continue;
+        } else if (!strcmp(iter->term->param->name->str, ident->term->ident->str)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief For A_IDENT term, find a corresponding A_BIND pnode.
+ *
+ * @param[in] ident Pnode with tag A_IDENT.
+ * @return Pnode with the same name as @p ident or NULL.
+ */
+static struct ay_pnode *
+ay_pnode_find_bind(struct ay_pnode *tree, struct ay_pnode *ident)
+{
+    struct ay_pnode *iter;
+
+    for (iter = tree->child; iter; iter = iter->next) {
+        assert(iter->term->tag == A_BIND);
+        if (!strcmp(iter->term->bname, ident->term->ident->str)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Check if pnode regex subtree has all references set.
+ *
+ * Check if the all IDENT pnodes are resolved.
+ *
+ * @param[in] regex Subtree of pnodes related to regular expression.
+ * @return 1 if all IDENT pnodes are resolved.
+ */
+static ly_bool
+ay_pnode_ident_are_evaluated(struct ay_pnode *regex)
+{
+    int ret;
+    uint32_t i;
+    struct ay_pnode *iter;
+
+    for (i = 0; i <= regex->descendants; i++) {
+        iter = &regex[i];
+        if (iter->term->tag != A_IDENT) {
+            continue;
+        }
+
+        if (!iter->ref) {
+            return 0;
+        } else if (AY_PNODE_REF(iter)) {
+            ret = ay_pnode_ident_are_evaluated(iter->ref);
+            AY_CHECK_COND(!ret, 0);
+        }
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Check if pnode regex contains simple expression with minus.
+ *
+ * And it can be simply be expressed in YANG.
+ *
+ * @param[in] regex Subtree of pnodes related to regex.
+ * @return 1 if regular expression is considered as "simple".
+ */
+static ly_bool
+ay_pnode_is_simple_minus_regex(struct ay_pnode *regex)
+{
+    ly_bool ret;
+    uint32_t minus_count;
+
+    /* Check if regex contains simple expression with minus. */
+    if (AY_PNODE_REF(regex)) {
+        return ay_pnode_is_simple_minus_regex(regex->ref);
+    } else if (regex->term->tag == A_REP) {
+        return ay_pnode_is_simple_minus_regex(regex->child);
+    } else if (regex->term->tag == A_UNION) {
+        ret = ay_pnode_is_simple_minus_regex(regex->child);
+        ret |= ay_pnode_is_simple_minus_regex(regex->child->next);
+        return ret;
+    } else if (regex->term->tag != A_MINUS) {
+        return 0;
+    }
+    minus_count = ay_pnode_minus_count(regex);
+    AY_CHECK_COND(minus_count != 1, 0);
+
+    if (!ay_pnode_ident_are_evaluated(regex)) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Find a regular expression in some compiled module by @p ident .
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] ident Identifier in "module.lense" format is valid.
+ * @return Pointer to regexp or NULL.
+ */
+static struct regexp *
+ay_pnode_regexp_lookup_in_diff_mod(struct augeas *aug, char *ident)
+{
+    struct module *mod;
+    char *lensname, *modname, *dot;
+    size_t modname_len;
+
+    dot = strchr(ident, '.');
+    if (!dot) {
+        return NULL;
+    }
+
+    modname = ident;
+    modname_len = dot - ident;
+    mod = ay_get_module(aug, modname, modname_len);
+
+    lensname = dot + 1;
+    assert(lensname[0] != '\0');
+
+    return ay_get_regexp_by_lensname(mod, lensname);
+}
+
+/**
+ * @brief For every pnode set ay_pnode.ref or ay_pnode.regexp.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] tree Tree of pnodes.
+ * @param[in] regex Subtree of pnodes related to regex. Only pnode with term tag A_IDENT will be affected.
+ */
+static void
+ay_pnode_set_ref(struct augeas *aug, struct ay_pnode *tree, struct ay_pnode *regex)
+{
+    struct ay_pnode *ident, *func, *bind;
+    struct regexp *re;
+    uint32_t i;
+
+    for (i = 0; i <= regex->descendants; i++) {
+        ident = &regex[i];
+        if (ident->term->tag != A_IDENT) {
+            continue;
+        }
+
+        re = ay_pnode_regexp_lookup_in_diff_mod(aug, ident->term->ident->str);
+        if (re) {
+            ident->flags |= AY_PNODE_HAS_REGEXP;
+            ident->regexp = re;
+            continue;
+        }
+
+        func = ay_pnode_find_func(ident);
+        if (func) {
+            ident->ref = func->parent->child->next;
+            ay_pnode_set_ref(aug, tree, ident->ref);
+            continue;
+        }
+
+        bind = ay_pnode_find_bind(tree, ident);
+        if (bind) {
+            ident->ref = bind->child;
+            ay_pnode_set_ref(aug, tree, ident->ref);
+        }
+    }
+}
+
+/**
+ * @brief If possible, iterate over the ay_pnode.ref.
+ *
+ * @param[in] regex Subtree of pnodes related to regex.
+ * @return Some pnode or @p regex.
+ */
+static struct ay_pnode *
+ay_pnode_ref_apply(struct ay_pnode *regex)
+{
+    if (AY_PNODE_REF(regex)) {
+        return ay_pnode_ref_apply(regex->ref);
+    } else {
+        return regex;
+    }
+}
+
+/**
+ * @brief Swap pnode data if parent is A_REP and child is A_MINUS.
+ *
+ * If the function is applied, then the pnode tree and term tree will be different.
+ * But that shouldn't be a problem. This modification made it easier to write the algorithms that follow.
+ *
+ * @param[in,out] regex Subtree of pnodes related to regex.
+ */
+static void
+ay_pnode_swap_rep_minus(struct ay_pnode *regex)
+{
+    struct ay_pnode *iter;
+
+    for (iter = regex; AY_PNODE_REF(iter); iter = iter->ref) {}
+
+    if (iter->term->tag == A_UNION) {
+        ay_pnode_swap_rep_minus(iter->child);
+        ay_pnode_swap_rep_minus(iter->child->next);
+    } else if ((iter->term->tag == A_REP) && (iter->child->term->tag == A_MINUS)) {
+        ay_pnode_swap_data(iter, iter->child);
+    }
+}
+
+/**
+ * @brief Check if regular expression is long.
+ *
+ * @param[in] regex Regular expression.
+ */
+static ly_bool
+ay_regex_is_long(const char *regex)
+{
+    uint64_t i, cnt;
+
+    cnt = 0;
+    for (i = 0; regex[i] != '\0'; i++) {
+        ++cnt;
+        if (cnt >= AY_REGEX_LONG) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief For every lnode set parsed node.
+ *
+ * The root of the pnode tree is stored in the root of the lnode node.
+ * Only lnodes tagged L_STORE and L_KEY can have pnode set.
+ *
+ * @param[in,out] tree Tree of lnodes.
+ * @param[in] ptree Tree of pnodes.
+ */
+static void
+ay_lnode_set_pnode(struct ay_lnode *tree, struct ay_pnode *ptree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_lnode *iter;
+    struct ay_pnode *pnode;
+    struct augeas *aug;
+
+    aug = ay_get_augeas_ctx2(tree->lens);
+    LY_ARRAY_FOR(tree, i) {
+        iter = &tree[i];
+        if ((iter->lens->tag != L_STORE) && (iter->lens->tag != L_KEY)) {
+            continue;
+        } else if (!ay_regex_is_long(iter->lens->regexp->pattern->str)) {
+            continue;
+        }
+
+        pnode = ay_pnode_find_by_info(ptree, iter->lens->info);
+        if (!pnode || (pnode->term->tag != A_APP)) {
+            continue;
+        }
+
+        pnode = pnode->child->next;
+        ay_pnode_set_ref(aug, ptree, pnode);
+        pnode = ay_pnode_ref_apply(pnode);
+        ay_pnode_swap_rep_minus(pnode);
+
+        /* TODO For AY_PNODE_REG_UNMIN form of regex, there can be more minuses. */
+        if (!ay_pnode_is_simple_minus_regex(pnode)) {
+            continue;
+        }
+        pnode->flags |= AY_PNODE_REG_MINUS;
+        iter->pnode = pnode;
+    }
+
+    /* Store root of pnode tree in lnode. */
+    assert((tree->lens->tag != L_STORE) && (tree->lens->tag != L_KEY));
+    tree->pnode = ptree;
+}
+
+/**
+ * @brief Calculate the length of the string for the regular expression.
+ *
+ * @param[in] regex Subtree of pnodes representing the regular expression to be converted to a string.
+ * @return Length of string.
+ */
+static uint64_t
+ay_pnode_regex_buffer_size(struct ay_pnode *regex)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    uint64_t ret = 0;
+    struct ay_pnode *iter;
+
+    for (i = 0; i <= regex->descendants; i++) {
+        iter = &regex[i];
+        switch (iter->term->tag) {
+        case A_UNION:
+            /* | */
+            ret += 1;
+            break;
+        case A_CONCAT:
+            /* ()() */
+            ret += 4;
+            break;
+        case A_VALUE:
+            assert((iter->term->value->tag == V_STRING) || (iter->term->value->tag == V_REGEXP));
+            if (iter->term->value->tag == V_STRING) {
+                /* Assume that every character can be escaped. */
+                ret += 2 * strlen(iter->term->value->string->str);
+            } else {
+                ret += strlen(iter->term->value->regexp->pattern->str);
+            }
+            break;
+        case A_IDENT:
+            if (AY_PNODE_REF(iter)) {
+                ret += ay_pnode_regex_buffer_size(iter->ref);
+            } else {
+                assert(iter->regexp && (iter->flags & AY_PNODE_HAS_REGEXP));
+                ret += strlen(iter->regexp->pattern->str);
+            }
+            break;
+        case A_REP:
+            /* ()* */
+            ret += 3;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Print regular expression from pnodes to buffer.
+ *
+ * @param[in] buffer Large enough buffer to hold the printed string.
+ * @param[in,out] idx Current index in which a character can be printed.
+ * @param[in] regex Subtree of pnodes related to the regex.
+ * @return 0 on success.
+ */
+static int
+ay_pnode_print_regex_to_buffer(char *buffer, uint64_t *idx, struct ay_pnode *regex)
+{
+    int ret = 0;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_pnode *iter;
+    struct regexp *re;
+    char *str;
+
+    for (i = 0; i <= regex->descendants; i++) {
+        iter = &regex[i];
+        switch (iter->term->tag) {
+        case A_UNION:
+            ay_pnode_print_regex_to_buffer(buffer, idx, iter->child);
+            buffer[(*idx)++] = '|';
+            ay_pnode_print_regex_to_buffer(buffer, idx, iter->child->next);
+            i += iter->descendants;
+            break;
+        case A_CONCAT:
+            if (ay_pnode_peek(iter->child, A_UNION)) {
+                buffer[(*idx)++] = '(';
+                ay_pnode_print_regex_to_buffer(buffer, idx, iter->child);
+                buffer[(*idx)++] = ')';
+            } else {
+                ay_pnode_print_regex_to_buffer(buffer, idx, iter->child);
+            }
+            if (ay_pnode_peek(iter->child->next, A_UNION)) {
+                buffer[(*idx)++] = '(';
+                ay_pnode_print_regex_to_buffer(buffer, idx, iter->child->next);
+                buffer[(*idx)++] = ')';
+            } else {
+                ay_pnode_print_regex_to_buffer(buffer, idx, iter->child->next);
+            }
+            i += iter->descendants;
+            break;
+        case A_VALUE:
+            if (iter->term->value->tag == V_STRING) {
+                /* Convert string to regexp. */
+                re = make_regexp_literal(iter->term->value->info, iter->term->value->string->str);
+                AY_CHECK_COND((re == NULL), AYE_MEMORY);
+                str = re->pattern->str;
+                strcpy(&buffer[*idx], str);
+                *idx += strlen(str);
+                unref(re, regexp);
+            } else {
+                assert(iter->term->value->tag == V_REGEXP);
+                str = iter->term->value->regexp->pattern->str;
+                strcpy(&buffer[*idx], str);
+                *idx += strlen(str);
+            }
+            break;
+        case A_IDENT:
+            assert(iter->ref);
+            if (AY_PNODE_REF(iter)) {
+                ret = ay_pnode_print_regex_to_buffer(buffer, idx, iter->ref);
+                AY_CHECK_RET(ret);
+            } else {
+                assert(iter->regexp && (iter->flags & AY_PNODE_HAS_REGEXP));
+                str = iter->regexp->pattern->str;
+                strcpy(&buffer[*idx], str);
+                *idx += strlen(str);
+            }
+            break;
+        case A_REP:
+            buffer[(*idx)++] = '(';
+            ret = ay_pnode_print_regex_to_buffer(buffer, idx, iter->child);
+            AY_CHECK_RET(ret);
+            buffer[(*idx)++] = ')';
+            switch (iter->term->quant) {
+            case Q_STAR:
+                buffer[(*idx)++] = '*';
+                break;
+            case Q_PLUS:
+                buffer[(*idx)++] = '+';
+                break;
+            case Q_MAYBE:
+                buffer[(*idx)++] = '?';
+                break;
+            }
+            i += iter->descendants;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static int ay_print_regex_standardized(struct ly_out *out, const char *patt);
+
+/**
+ * @brief Print regular expression in @p regex subtree.
+ *
+ * @param[out] out Output where the regex is printed.
+ * @param[in] regex Subtree of pnodes related to the regex.
+ * @return 0 on success.
+ */
+static int
+ay_pnode_print_regex(struct ly_out *out, struct ay_pnode *regex)
+{
+    int ret;
+    uint64_t size, idx = 0;
+    char *buffer;
+
+    size = ay_pnode_regex_buffer_size(regex);
+    buffer = malloc(size + 1);
+    if (!buffer) {
+        return AYE_MEMORY;
+    }
+
+    ret = ay_pnode_print_regex_to_buffer(buffer, &idx, regex);
+    AY_CHECK_GOTO(ret, free);
+
+    buffer[idx] = '\0';
+    ay_print_regex_standardized(out, buffer);
+
+free:
+    free(buffer);
+    return ret;
 }
 
 /**
@@ -2004,272 +3168,6 @@ ay_print_lens(void *data, struct lprinter_ctx_f *func, struct lens *root_lense, 
 }
 
 static int ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node);
-
-/**
- * @brief Get a name of the lense from @p mod.
- *
- * @param[in] mod Module where to find lense name.
- * @param[in] lens Lense for which the name is to be found.
- * @return Name of the lense or NULL.
- */
-static char *
-ay_get_lense_name_by_mod(struct module *mod, struct lens *lens)
-{
-    struct binding *bind_iter;
-
-    if (!lens) {
-        return NULL;
-    }
-
-    LY_LIST_FOR(mod->bindings, bind_iter) {
-        if (bind_iter->value->lens == lens) {
-            return bind_iter->ident->str;
-        }
-    }
-
-    if ((lens->tag == L_STORE) || (lens->tag == L_KEY)) {
-        LY_LIST_FOR(mod->bindings, bind_iter) {
-            if (bind_iter->value->tag != V_REGEXP) {
-                continue;
-            }
-            if (bind_iter->value->regexp == lens->regexp) {
-                return bind_iter->ident->str;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-/**
- * @brief Get Augeas context from module.
- *
- * @param[in] mod Module from which the context is taken.
- * @return Augeas context.
- */
-static struct augeas *
-ay_get_augeas_ctx1(struct module *mod)
-{
-    assert(mod);
-    return (struct augeas *)mod->bindings->value->info->error->aug;
-}
-
-/**
- * @brief Get Augeas context from lense.
- *
- * @param[in] lens Lense from which the context is taken.
- * @return Augeas context.
- */
-static struct augeas *
-ay_get_augeas_ctx2(struct lens *lens)
-{
-    assert(lens);
-    return (struct augeas *)lens->info->error->aug;
-}
-
-/**
- * @brief Get module by the module name.
- *
- * @param[in] aug Augeas context.
- * @param[in] modname Name of the required module.
- * @return Pointer to Augeas module or NULL.
- */
-static struct module *
-ay_get_module(struct augeas *aug, const char *modname)
-{
-    struct module *mod = NULL, *mod_iter;
-
-    LY_LIST_FOR(aug->modules, mod_iter) {
-        if (!strcmp(mod_iter->name, modname)) {
-            mod = mod_iter;
-            break;
-        }
-    }
-
-    return mod;
-}
-
-/**
- * @brief Get lense name from specific module.
- *
- * @param[in] modname Name of the module where to look for @p lens.
- * @param[in] lens Lense for which to find the name.
- * @return Lense name or NULL.
- */
-static char *
-ay_get_lense_name_by_modname(const char *modname, struct lens *lens)
-{
-    char *ret;
-    struct module *mod;
-
-    mod = ay_get_module(ay_get_augeas_ctx2(lens), modname);
-    ret = mod ? ay_get_lense_name_by_mod(mod, lens) : NULL;
-
-    return ret;
-}
-
-/**
- * @brief Get lense name.
- *
- * It is probably not possible to find a lense name base on @p lens alone because there is no direct mapping between
- * the module path (lens->regexp->info->filename) and module name (mod->name).
- *
- * @param[in] mod Module in which search the @p lens. If it fails then it is then searched in other predefined modules.
- * @param[in] lens Lense for which to find the name.
- * @return Lense name or NULL.
- */
-static char *
-ay_get_lense_name(struct module *mod, struct lens *lens)
-{
-    static char *ret;
-
-    if (!lens) {
-        return NULL;
-    }
-
-    ret = ay_get_lense_name_by_mod(mod, lens);
-    if (!ret) {
-        ret = ay_get_lense_name_by_modname("Rx", lens);
-    }
-
-    return ret;
-}
-
-/**
- * @brief Get lense name which is not directly related to @p node.
- *
- * This function is a bit experimental. The point is that, for example, list nodes often have the identifier
- * 'config-entries', which often causes name collisions. But there may be unused lense identifiers in the augeas module
- * and it would be a pity not to use them. So even though the identifier isn't quite directly related to the @p node,
- * it's still better than the default name ('config-entries').
- *
- * @param[in] mod Module in which search the @p lens.
- * @param[in] node Node for which the identifier is to be found.
- * @return Identifier or NULL.
- */
-static char *
-ay_get_spare_lense_name(struct module *mod, const struct ay_ynode *node)
-{
-    const struct ay_ynode *ynter;
-    const struct ay_lnode *liter, *start, *end;
-    struct binding *bind_iter;
-
-    /* Find the node that terminates the search. */
-    end = NULL;
-    for (ynter = node->parent; ynter; ynter = ynter->parent) {
-        if (ynter->snode) {
-            end = ynter->snode;
-            break;
-        }
-    }
-    if (!end) {
-        return NULL;
-    }
-
-    /* Find the node that starts the search. */
-    start = NULL;
-    for (ynter = node->child; ynter; ynter = ynter->child) {
-        if (ynter->snode) {
-            start = ynter->snode;
-            break;
-        } else if (ynter->label) {
-            start = ynter->label;
-            break;
-        }
-    }
-    if (!start) {
-        return NULL;
-    }
-
-    /* Find a free unused identifier in the module. */
-    for (liter = start->parent; liter && (liter != end); liter = liter->parent) {
-        LY_LIST_FOR(mod->bindings, bind_iter) {
-            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
-                return bind_iter->ident->str;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-/**
- * @brief Get lense name from specific module and search using a regular expression.
- *
- * @param[in] aug Augeas context.
- * @param[in] modname Name of the module where to look for @p pattern.
- * @param[in] pattern Regular expression used to find lense.
- * @param[in] ignore_maybe Flag set to 1 to ignore the "{0,1}" substring in @p pattern.
- * Augeas inserts this substring into the @p pattern if it is affected by the '?' (maybe) operator.
- * @return Lense name which has @p pattern in the @p modname module otherwise NULL.
- */
-static char *
-ay_get_lense_name_by_regex(struct augeas *aug, const char *modname, const char *pattern, ly_bool ignore_maybe)
-{
-    char *ret = NULL;
-    struct module *mod;
-    size_t pattern_len, maybe_len = strlen("{0,1}");
-    char *found;
-    uint64_t cnt_found = 0;
-    struct binding *bind_iter;
-    char *str;
-
-    if (!pattern) {
-        return NULL;
-    }
-
-    mod = ay_get_module(aug, modname);
-    if (!mod) {
-        return ret;
-    }
-
-    pattern_len = strlen(pattern);
-    if (ignore_maybe && (pattern_len > maybe_len) && !strcmp(pattern + (pattern_len - maybe_len), "{0,1}")) {
-        pattern_len = pattern_len - maybe_len;
-        /* pattern without parentheses */
-        pattern++;
-        pattern_len -= 2;
-    }
-
-    mod = ay_get_module(aug, modname);
-    LY_LIST_FOR(mod->bindings, bind_iter) {
-        if (bind_iter->value->tag != V_REGEXP) {
-            continue;
-        }
-        str = bind_iter->value->regexp->pattern->str;
-        if (strlen(str) != pattern_len) {
-            continue;
-        }
-        if (!strncmp(str, pattern, pattern_len)) {
-            found = bind_iter->ident->str;
-            cnt_found++;
-        }
-    }
-
-    if (cnt_found == 1) {
-        ret = found;
-    }
-
-    return ret;
-}
-
-/**
- * @brief Print module name.
- *
- * @param[in] mod Module whose name is to be printed.
- * @param[out] namelen Length of module name.
- * @return Module name.
- */
-static const char *
-ay_get_yang_module_name(struct module *mod, size_t *namelen)
-{
-    const char *name, *path;
-
-    path = mod->bindings->value->info->filename->str;
-    ay_get_filename(path, &name, namelen);
-
-    return name;
-}
 
 /**
  * @brief Print opening curly brace and set new indent.
@@ -4143,6 +5041,32 @@ ay_yang_type_is_empty_string(const struct lens *lens)
 }
 
 /**
+ * @brief Check or set flag AY_PNODE_REG_UNMIN.
+ *
+ * @param[in] node Corresponding ynode to check flags.
+ * @param[in] pnode Pnode to which a flag can be set.
+ * @return 1 if AY_PNODE_REG_UNMIN flag is set.
+ */
+static ly_bool
+ay_yang_type_is_regex_unmin(const struct ay_ynode *node, struct ay_pnode *pnode)
+{
+    if (!pnode) {
+        return 0;
+    } else if (pnode->flags & AY_PNODE_REG_UNMIN) {
+        return 1;
+    } else if (!(pnode->flags & AY_PNODE_REG_MINUS)) {
+        return 0;
+    } else if (node->flags & AY_WHEN_TARGET) {
+        return 0;
+    } else if (pnode->term->tag == A_UNION) {
+        pnode->flags |= AY_PNODE_REG_UNMIN;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Print type enumeration for lense with tag L_VALUE.
  *
  * @param[in] ctx Context for printing.
@@ -4163,6 +5087,145 @@ ay_print_yang_enumeration(struct yprinter_ctx *ctx, struct lens *lens)
 }
 
 /**
+ * @brief Print caseless flag in the pattern.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] re Regexp to check.
+ */
+static void
+ay_print_yang_pattern_nocase(struct yprinter_ctx *ctx, const struct regexp *re)
+{
+    if (re->nocase) {
+        ly_print(ctx->out, "(?i)");
+    }
+}
+
+/**
+ * @brief Check if caseless flag should be printed.
+ *
+ * @param[in] node Subtree of pnodes related to regexp.
+ * @return 1 if regexp is nocase.
+ */
+static int
+ay_pnode_regexp_has_nocase(struct ay_pnode *node)
+{
+    int ret;
+
+    if (AY_PNODE_REF(node)) {
+        ret = ay_pnode_regexp_has_nocase(node->ref);
+    } else if ((node->term->tag == A_VALUE) && (node->term->value->tag == V_REGEXP)) {
+        ret = node->term->value->regexp->nocase;
+    } else if (node->term->tag == A_UNION) {
+        ret = ay_pnode_regexp_has_nocase(node->child);
+        ret &= ay_pnode_regexp_has_nocase(node->child->next);
+    } else {
+        ret = 0;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Print caseless flag in the pattern.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Subtree of pnodes related to regexp.
+ */
+static void
+ay_pnode_print_yang_pattern_nocase(struct yprinter_ctx *ctx, struct ay_pnode *node)
+{
+    if (ay_pnode_regexp_has_nocase(node)) {
+        ly_print(ctx->out, "(?i)");
+    }
+}
+
+/**
+ * @brief Print yang pattern by pnode regex.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] regex Subtree of pnodes related to regexp.
+ */
+static int
+ay_print_yang_pattern_by_pnode_regex(struct yprinter_ctx *ctx, struct ay_pnode *regex)
+{
+    int ret;
+
+    ly_print(ctx->out, "%*spattern \"", ctx->space, "");
+    ay_pnode_print_yang_pattern_nocase(ctx, regex);
+    ret = ay_pnode_print_regex(ctx->out, regex);
+    ly_print(ctx->out, "\"");
+
+    return ret;
+}
+
+/**
+ * @brief Print yang patterns with modifier invert-match.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] regex Subtree of pnodes related to regexp.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_pattern_minus(struct yprinter_ctx *ctx, const struct ay_pnode *regex)
+{
+    int ret;
+
+    assert(regex->term->tag == A_MINUS);
+    ret = ay_print_yang_pattern_by_pnode_regex(ctx, regex->child);
+    AY_CHECK_RET(ret);
+    ly_print(ctx->out, ";\n");
+    /* Print pattern with invert-match. */
+    ret = ay_print_yang_pattern_by_pnode_regex(ctx, regex->child->next);
+    AY_CHECK_RET(ret);
+    ay_print_yang_nesting_begin(ctx);
+    ly_print(ctx->out, "%*smodifier invert-match;\n", ctx->space, "");
+    ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
+ * @brief Print yang pattern.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node to print.
+ * @param[in] lnode Node of type lnode containing string/regex for printing.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_pattern(struct yprinter_ctx *ctx, const struct ay_ynode *node, const struct ay_lnode *lnode)
+{
+    int ret = 0;
+    const char *subpatt;
+
+    if (!(node->flags & AY_WHEN_TARGET) && lnode->pnode) {
+        ay_print_yang_pattern_minus(ctx, lnode->pnode);
+        return ret;
+    } else if (lnode->lens->tag == L_VALUE) {
+        ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", lnode->lens->string->str);
+        ay_print_yang_nesting_end(ctx);
+        return ret;
+    }
+
+    assert((lnode->lens->tag == L_KEY) || (lnode->lens->tag == L_STORE));
+    ly_print(ctx->out, "%*spattern \"", ctx->space, "");
+    ay_print_yang_pattern_nocase(ctx, lnode->lens->regexp);
+
+    if ((lnode->flags & AY_LNODE_KEY_HAS_IDENTS) && (node->type == YN_KEY)) {
+        subpatt = ay_ynode_get_substr_from_transl_table(ctx->tree, node->parent);
+        ly_print(ctx->out, "%s\";\n", subpatt);
+    } else if (lnode->flags & AY_LNODE_KEY_HAS_IDENTS) {
+        subpatt = ay_ynode_get_substr_from_transl_table(ctx->tree, node);
+        ly_print(ctx->out, "%s\";\n", subpatt);
+    } else {
+        ay_print_regex_standardized(ctx->out, lnode->lens->regexp->pattern->str);
+        ly_print(ctx->out, "\";\n");
+    }
+
+    return ret;
+}
+
+/**
  * @brief Print type-stmt string and also pattern-stmt if necessary.
  *
  * @param[in] ctx Context for printing.
@@ -4173,7 +5236,6 @@ ay_print_yang_enumeration(struct yprinter_ctx *ctx, struct lens *lens)
 static int
 ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct ay_ynode *node, const struct ay_lnode *lnode)
 {
-    const char *subpatt;
     int ret = 0;
 
     if (!lnode) {
@@ -4184,31 +5246,70 @@ ay_print_yang_type_string(struct yprinter_ctx *ctx, const struct ay_ynode *node,
     ly_print(ctx->out, "%*stype string", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
 
-    if (lnode->lens->tag == L_VALUE) {
-        ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", lnode->lens->string->str);
-        ay_print_yang_nesting_end(ctx);
-        return ret;
-    }
-
-    assert((lnode->lens->tag == L_KEY) || (lnode->lens->tag == L_STORE));
-    ly_print(ctx->out, "%*spattern \"", ctx->space, "");
-    if (lnode->lens->regexp->nocase) {
-        ly_print(ctx->out, "(?i)");
-    }
-    if ((lnode->flags & AY_LNODE_KEY_HAS_IDENTS) && (node->type == YN_KEY)) {
-        subpatt = ay_ynode_get_substr_from_transl_table(ctx->tree, node->parent);
-        ly_print(ctx->out, "%s", subpatt);
-    } else if (lnode->flags & AY_LNODE_KEY_HAS_IDENTS) {
-        subpatt = ay_ynode_get_substr_from_transl_table(ctx->tree, node);
-        ly_print(ctx->out, "%s", subpatt);
-    } else {
-        ay_print_regex_standardized(ctx->out, lnode->lens->regexp->pattern->str);
-    }
-    ly_print(ctx->out, "\";\n");
+    ay_print_yang_pattern(ctx, node, lnode);
 
     ay_print_yang_nesting_end(ctx);
 
     return ret;
+}
+
+/**
+ * @brief Print yang type union item whose regexp will be printed from parsed node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type ynode to which the union is to be printed.
+ * @param[in] regex Subtree of pnodes related to regexp.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_type_union_item_from_regex(struct yprinter_ctx *ctx, const struct ay_ynode *node, struct ay_pnode *regex)
+{
+    int ret;
+    struct ay_lnode wrapper = {0};
+
+    if (ay_pnode_peek(regex, A_MINUS)) {
+        wrapper.pnode = ay_pnode_ref_apply(regex);
+        ret = ay_print_yang_type_string(ctx, node, &wrapper);
+    } else {
+        ly_print(ctx->out, "%*stype string", ctx->space, "");
+        ay_print_yang_nesting_begin(ctx);
+        ret = ay_print_yang_pattern_by_pnode_regex(ctx, regex);
+        ly_print(ctx->out, ";\n");
+        ay_print_yang_nesting_end(ctx);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Print yang type union items whose regexp will be printed from parsed node.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node of type ynode to which the union is to be printed.
+ * @param[in] regex Subtree of pnodes related to regexp.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_type_union_items_from_regex(struct yprinter_ctx *ctx, const struct ay_ynode *node,
+        const struct ay_lnode *lnode)
+{
+    int ret;
+    struct ay_pnode *uni;
+
+    assert(lnode->pnode->term->tag == A_UNION);
+
+    /* Get first A_UNION item. */
+    for (uni = lnode->pnode; uni->term->tag != A_UNION; uni = uni->child) {}
+
+    for ( ; uni != lnode->pnode->parent; uni = uni->parent) {
+        ret = ay_print_yang_type_union_item_from_regex(ctx, node, uni->child);
+        AY_CHECK_RET(ret);
+
+        ret = ay_print_yang_type_union_item_from_regex(ctx, node, uni->child->next);
+        AY_CHECK_RET(ret);
+    }
+
+    return 0;
 }
 
 /**
@@ -4332,14 +5433,15 @@ ay_print_yang_type_union_items(struct yprinter_ctx *ctx, const struct ay_ynode *
 
     assert(AY_DNODE_IS_KEY(key));
 
-    /* Print dnode KEY. */
-    ret = ay_print_yang_type_item(ctx, node, key->lkey);
-
     /* Print dnode KEY'S VALUES. */
-    AY_DNODE_VAL_FOR(key, i) {
-        item = key[i].lval;
-        assert((item->lens->tag == L_STORE) || (item->lens->tag == L_KEY) || (item->lens->tag == L_VALUE));
-        ret = ay_print_yang_type_item(ctx, node, item);
+    AY_DNODE_KEYVAL_FOR(key, i) {
+        item = key[i].lnode;
+        if (ay_yang_type_is_regex_unmin(node, item->pnode)) {
+            ret = ay_print_yang_type_union_items_from_regex(ctx, node, item);
+        } else {
+            assert((item->lens->tag == L_STORE) || (item->lens->tag == L_KEY) || (item->lens->tag == L_VALUE));
+            ret = ay_print_yang_type_item(ctx, node, item);
+        }
         AY_CHECK_RET(ret);
     }
 
@@ -4361,7 +5463,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     const struct ay_lnode *lnode;
     struct ay_dnode *key;
     uint8_t lv_type;
-    ly_bool empty_string = 0, empty_type = 0;
+    ly_bool empty_string = 0, empty_type = 0, reg_unmin = 0;
     uint64_t i;
 
     if (!node->label && !node->value) {
@@ -4406,7 +5508,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (key) {
         /* Iterate over key and its values .*/
         AY_DNODE_KEYVAL_FOR(key, i) {
-            if (empty_string && empty_type) {
+            if (empty_string && empty_type && reg_unmin) {
                 /* Both are set. */
                 break;
             }
@@ -4420,6 +5522,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else {
         empty_string = ay_yang_type_is_empty_string(lnode->lens);
         empty_type = ay_yang_type_is_empty(lnode);
+        reg_unmin = ay_yang_type_is_regex_unmin(node, lnode->pnode);
     }
 
     if (empty_type && (node->type == YN_VALUE) && (node->flags & AY_YNODE_MAND_FALSE)) {
@@ -4427,7 +5530,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     /* Print union */
-    if (empty_string || empty_type || key) {
+    if (empty_string || empty_type || reg_unmin || key) {
         ly_print(ctx->out, "%*stype union", ctx->space, "");
         ay_print_yang_nesting_begin(ctx);
     }
@@ -4447,13 +5550,15 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
     if (key) {
         /* Print other types in union. */
         ay_print_yang_type_union_items(ctx, node, key);
+    } else if (reg_unmin) {
+        ay_print_yang_type_union_items_from_regex(ctx, node, lnode);
     } else {
         /* Print lnode type. */
         ret = ay_print_yang_type_item(ctx, node, lnode);
     }
 
     /* End of union. */
-    if (empty_string || empty_type || key) {
+    if (empty_string || empty_type || reg_unmin || key) {
         ay_print_yang_nesting_end(ctx);
     }
 
@@ -5239,15 +6344,16 @@ ay_print_yang_imports(struct ly_out *out, struct ay_ynode *tree)
 static int
 ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char **str_out)
 {
-    int ret;
+    int ret = 0;
     struct yprinter_ctx ctx;
-    struct ly_out *out;
+    struct ly_out *out = NULL;
     const char *modname;
     char *str;
     size_t i, modname_len;
 
     if (ly_out_new_memory(&str, 0, &out)) {
-        return AYE_MEMORY;
+        ret = AYE_MEMORY;
+        goto free;
     }
 
     ctx.aug = ay_get_augeas_ctx1(mod);
@@ -5280,9 +6386,11 @@ ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char 
     ret = ay_print_yang_children(&ctx, tree);
 
     ly_print(out, "}\n");
-    ly_out_free(out, NULL, 0);
 
     *str_out = str;
+
+free:
+    ly_out_free(out, NULL, 0);
 
     return ret;
 }
@@ -5737,6 +6845,238 @@ augyang_print_input_lenses(struct module *mod, char **str)
     ret = ay_print_lens(lens, &print_func, lens, str);
 
     return ret;
+}
+
+/**
+ * @brief Recursively print all terms in @p exp.
+ *
+ * @param[in,out] out Printed output string.
+ * @param[in] exp Subtree to print.
+ * @param[in] space Space alignment.
+ */
+static void
+ay_term_print(struct ly_out *out, struct term *exp, int space)
+{
+    if (!exp) {
+        return;
+    }
+
+    space += 3;
+
+    switch (exp->tag) {
+    case A_MODULE:
+        printf("MOD %s\n", exp->mname);
+        list_for_each(dcl, exp->decls) {
+            ay_term_print(out, dcl, 0);
+            printf("\n");
+        }
+        break;
+    case A_BIND:
+        printf("- %s\n", exp->bname);
+        ay_term_print(out, exp->exp, 0);
+        break;
+    case A_LET:
+        printf("LET");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_COMPOSE:
+        printf("COM");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_UNION:
+        printf("UNI");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_MINUS:
+        printf("MIN");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_CONCAT:
+        printf("CON");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_APP:
+        printf("APP");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->left, space);
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->right, space);
+        break;
+    case A_VALUE:
+        /* V_NATIVE? */
+        printf("VAL");
+        if (exp->value->tag == V_REGEXP) {
+            char *str;
+
+            str = regexp_escape(exp->value->regexp);
+            printf(" \"%s\"", str);
+            free(str);
+        } else if (exp->value->tag == V_STRING) {
+            printf(" \"%s\"", exp->value->string->str);
+        } else {
+            printf("---");
+        }
+        break;
+    case A_IDENT:
+        printf("IDE %s", exp->ident->str);
+        break;
+    case A_BRACKET:
+        printf("BRA");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->brexp, space);
+        break;
+    case A_FUNC:
+        printf("FUNC(%s)", exp->param ? exp->param->name->str : "");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->body, space);
+        break;
+    case A_REP:
+        printf("REP");
+        printf("\n%*s", space, "");
+        ay_term_print(out, exp->rexp, space);
+        break;
+    case A_TEST:
+    default:
+        printf(" .");
+        break;
+    }
+}
+
+/**
+ * @brief Get augeas term from @p node.
+ *
+ * @param[in] node from which the term is obtained.
+ * @return augeas term or NULL.
+ */
+static struct term *
+ay_pnode_get_term(const struct ay_pnode *node)
+{
+    AY_CHECK_COND(!node, NULL);
+    return node->term;
+}
+
+/**
+ * @copydoc ay_pnode_get_term()
+ */
+static struct term *
+ay_lnode_get_term(const struct ay_lnode *node)
+{
+    AY_CHECK_COND(!node, NULL);
+    return ay_pnode_get_term(node->pnode);
+}
+
+/**
+ * @copydoc ay_pnode_get_term()
+ */
+static struct term *
+ay_ynode_get_term(const struct ay_ynode *node)
+{
+    AY_CHECK_COND(!node, NULL);
+    AY_CHECK_COND(node->type != YN_ROOT, NULL);
+    return ay_lnode_get_term(AY_YNODE_ROOT_LTREE(node));
+}
+
+/**
+ * @brief Enumeration for ay_print_terms().
+ */
+enum ay_term_print_type{
+    TPT_YNODE,  /* struct ay_ynode */
+    TPT_LNODE,  /* struct ay_lnode */
+    TPT_PNODE,  /* struct ay_pnode */
+    TPT_TERM    /* struct term */
+};
+
+/**
+ * @brief Print tree in the form of terms.
+ *
+ * @param[in] tree Tree of type @p tpt.
+ * @param[in] tpt See ay_term_print_type.
+ * @return Printed terms or NULL.
+ */
+static char *
+ay_print_terms(void *tree, enum ay_term_print_type tpt)
+{
+    char *str;
+    struct ly_out *out;
+
+    if (ly_out_new_memory(&str, 0, &out)) {
+        return NULL;
+    }
+
+    switch (tpt) {
+    case TPT_YNODE:
+        ay_term_print(out, ay_ynode_get_term(tree), 0);
+        break;
+    case TPT_LNODE:
+        ay_term_print(out, ay_lnode_get_term(tree), 0);
+        break;
+    case TPT_PNODE:
+        ay_term_print(out, ay_pnode_get_term(tree), 0);
+        break;
+    case TPT_TERM:
+        ay_term_print(out, tree, 0);
+        break;
+    }
+
+    ly_out_free(out, NULL, 0);
+
+    return str;
+}
+
+/**
+ * @brief Print augeas terms based on verbose settings.
+ *
+ * @param[in] vercode Verbose that decides the execution of a function.
+ * @param[in] ptree Tree of pnodes.
+ */
+static void
+ay_pnode_print_verbose(uint64_t vercode, struct ay_pnode *ptree)
+{
+    char *str;
+
+    if (!(vercode & AYV_PTREE)) {
+        return;
+    }
+
+    str = ay_print_terms(ptree, TPT_PNODE);
+    if (str) {
+        printf("%s\n", str);
+        free(str);
+    }
+}
+
+int
+augyang_print_input_terms(struct augeas *aug, const char *filename, char **str)
+{
+    int ret;
+    struct term *tree = NULL;
+
+    ret = augl_parse_file(aug, filename, &tree);
+    if (ret || (aug->error->code != AUG_NOERROR)) {
+        return AYE_PARSE_FAILED;
+    }
+
+    *str = ay_print_terms(tree, TPT_TERM);
+    ret = *str ? 0 : AYE_MEMORY;
+
+    unref(tree, term);
+
+    return 0;
 }
 
 /**
@@ -9792,6 +11132,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct lens *lens;
     struct ay_lnode *ltree = NULL;
     struct ay_ynode *yforest = NULL, *ytree = NULL;
+    struct ay_pnode *ptree = NULL;
     uint32_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
 
     assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
@@ -9807,6 +11148,13 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ret = ay_lnode_tree_check(ltree, mod);
     AY_CHECK_GOTO(ret, cleanup);
     ay_test_lnode_tree(vercode, mod, ltree);
+
+    /* Create pnode tree. */
+    ret = ay_pnode_create(ay_get_augeas_ctx1(mod), lens->info->filename->str, &ptree);
+    AY_CHECK_GOTO(ret, cleanup);
+    /* Set ptree in lnode tree. */
+    ay_lnode_set_pnode(ltree, ptree);
+    ay_pnode_print_verbose(vercode, ptree);
 
     /* Create ynode forest. */
     LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
@@ -9837,6 +11185,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
 
 cleanup:
     LY_ARRAY_FREE(ltree);
+    ay_pnode_free(ptree);
     LY_ARRAY_FREE(yforest);
     ay_ynode_tree_free(ytree);
 

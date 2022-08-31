@@ -214,8 +214,16 @@ module fai-diskconfig {
     }
     leaf filesystem {
       mandatory true;
-      type string {
-        pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+      type union {
+        type string {
+          pattern "-|swap";
+        }
+        type string {
+          pattern "[^ \t\n]+";
+          pattern "-|swap" {
+            modifier invert-match;
+          }
+        }
       }
       augex:data-path "filesystem";
     }
@@ -255,8 +263,16 @@ module fai-diskconfig {
     }
     leaf filesystem {
       mandatory true;
-      type string {
-        pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+      type union {
+        type string {
+          pattern "-|swap";
+        }
+        type string {
+          pattern "[^ \t\n]+";
+          pattern "-|swap" {
+            modifier invert-match;
+          }
+        }
       }
       augex:data-path "filesystem";
     }
@@ -398,7 +414,10 @@ module fai-diskconfig {
                   leaf vg {
                     mandatory true;
                     type string {
-                      pattern "ra((w[^\t\n #-]|[^\t\n #w-])[^\t\n #-]*|())|(r[^\t\n #a-]|[^\t\n #r-][^\t\n #-])[^\t\n #-]*|r|[^\t\n #r-]";
+                      pattern "[^# \t\n-]+";
+                      pattern "raw" {
+                        modifier invert-match;
+                      }
                     }
                     augex:data-path "vg";
                   }
@@ -441,8 +460,16 @@ module fai-diskconfig {
                   }
                   leaf filesystem {
                     mandatory true;
-                    type string {
-                      pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+                    type union {
+                      type string {
+                        pattern "-|swap";
+                      }
+                      type string {
+                        pattern "[^ \t\n]+";
+                        pattern "-|swap" {
+                          modifier invert-match;
+                        }
+                      }
                     }
                     augex:data-path "filesystem";
                   }
@@ -602,8 +629,16 @@ module fai-diskconfig {
                 }
                 leaf filesystem {
                   mandatory true;
-                  type string {
-                    pattern "((-)|(swap))|(swa((p[^\t\n ]|[^\t\n p])[^\t\n ]*|())|sw([^\t\n a][^\t\n ]*|())|(s[^\t\n w]|[^\t\n s-][^\t\n ]|-[^\t\n ])[^\t\n ]*|s|[^\t\n s-])";
+                  type union {
+                    type string {
+                      pattern "-|swap";
+                    }
+                    type string {
+                      pattern "[^ \t\n]+";
+                      pattern "-|swap" {
+                        modifier invert-match;
+                      }
+                    }
                   }
                   augex:data-path "filesystem";
                 }

@@ -31,7 +31,10 @@ module cron {
           leaf label {
             mandatory true;
             type string {
-              pattern "(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])[0-9][0-9]*\\]|(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])\\]|entry[1-9A-Z_a-z-][1-9A-Z_a-z-]*|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*|())|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*|())|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*|())|(e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*|e|[1-9A-Z_a-df-z-]";
+              pattern "[A-Za-z1-9_-]+(\\[[0-9]+\\])?";
+              pattern "entry" {
+                modifier invert-match;
+              }
             }
           }
           leaf value {

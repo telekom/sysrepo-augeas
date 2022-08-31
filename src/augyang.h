@@ -16,12 +16,24 @@
 
 #include <inttypes.h>
 
-#define AYV_LTREE               0x1
-#define AYV_YTREE               0x2
-#define AYV_YTREE_AFTER_TRANS   0x4
-#define AYV_YNODE_ID_IN_YANG    0x8
+#define AYV_LTREE               0x01
+#define AYV_YTREE               0x02
+#define AYV_YTREE_AFTER_TRANS   0x04
+#define AYV_YNODE_ID_IN_YANG    0x08
+#define AYV_PTREE               0x10
 
 struct module;
+struct augeas;
+
+/**
+ * @brief Parse augeas module @p filename and print terms.
+ *
+ * @param[in,out] aug Augeas context.
+ * @param[in] filename Path with name of augeas module.
+ * @param[out] str Dynamically allocated output string containing printed terms.
+ * @return 0 on success. The augyang_get_error_message() is used for the error message.
+ */
+int augyang_print_input_terms(struct augeas *aug, const char *filename, char **str);
 
 /**
  * @brief Print lenses of the module.
@@ -51,3 +63,5 @@ int augyang_print_yang(struct module *mod, uint64_t vercode, char **str);
  * @return Message string.
  */
 const char *augyang_get_error_message(int err_code);
+
+void augyang_print_stats(struct augeas *aug);
