@@ -4129,10 +4129,11 @@ ay_yang_type_is_empty_string(const struct lens *lens)
     const char *patstr = "{0,1}";
     const size_t patlen = 5; /* strlen("{0,1}") */
 
-    if ((lens->tag != L_KEY) && (lens->tag != L_STORE)) {
-        return 0;
+    if ((lens->tag == L_LABEL) || (lens->tag == L_VALUE)) {
+        return lens->string->str[0] == '\0';
     }
 
+    assert((lens->tag == L_KEY) || (lens->tag == L_STORE));
     rpstr = lens->regexp->pattern->str;
     rplen = strlen(rpstr);
     if (rplen < patlen) {
@@ -4301,7 +4302,10 @@ ay_print_yang_type_item(struct yprinter_ctx *ctx, const struct ay_ynode *node, c
     ret = ay_print_yang_type_builtin(ctx, lnode->lens);
     if (ret) {
         /* The builtin print failed, so print just string pattern. */
-        if ((lnode->lens->tag == L_VALUE) && !isspace(str[0]) && !isspace(str[strlen(str) - 1])) {
+        if ((lnode->lens->tag == L_VALUE) && (lnode->lens->string->str[0] == '\0')) {
+            /* It is assumed that the empty string has already been printed. */
+            return 0;
+        } else if ((lnode->lens->tag == L_VALUE) && !isspace(str[0]) && !isspace(str[strlen(str) - 1])) {
             ret = ay_print_yang_enumeration(ctx, lnode->lens);
         } else {
             ret = ay_print_yang_type_string(ctx, node, lnode);
