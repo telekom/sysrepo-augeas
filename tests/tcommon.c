@@ -67,8 +67,10 @@ tteardown_glob(void **state)
     struct tstate *st = (struct tstate *)*state;
     int ret = 0;
 
-    /* destroy DS */
-    st->ds_plg->destroy_cb(st->mod, SR_DS_STARTUP);
+    if (st->ds_plg) {
+        /* destroy DS */
+        st->ds_plg->destroy_cb(st->mod, SR_DS_STARTUP);
+    }
 
     /* free */
     lyd_free_siblings(st->data);
