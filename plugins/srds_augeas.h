@@ -70,7 +70,8 @@ struct augnode {
         const char *data_path;      /**< data-path whose value must match pattern(s) for this node to be created */
         const pcre2_code **pcodes;  /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
         uint32_t pcode_count;       /**< count of pcodes */
-    } *cases;
+    } *cases;                       /**< array of nested cases, set only if this case existence cannot be decided
+                                         based on its own data-path/pattern */
     uint32_t case_count;
 
     const struct lysc_node *schema; /**< schema node */

@@ -212,14 +212,13 @@ augds_pattern_label_match(const pcre2_code **pcodes, uint32_t pcode_count, const
  *
  * @param[in] augnode Augnode structure of the leafref.
  * @param[in] parent YANG data parent of the leafref.
- * @param[out] data_path_match Data path of the recursive Augeas label to match.
  * @param[out] augnode_list Augnode of the leafref target parent list.
  * @param[out] list_parent Parent YANG data node of the leafref target parent list.
  * @return SR error code.
  */
 static int
 augds_aug2yang_augnode_leafref_parent(const struct augnode *augnode, const struct lyd_node *parent,
-        const char **data_path_match, struct augnode **augnode_list, struct lyd_node **list_parent)
+        struct augnode **augnode_list, struct lyd_node **list_parent)
 {
     int rc = SR_ERR_OK;
     const struct lysc_node_leaf *sleaf;
@@ -253,9 +252,7 @@ augds_aug2yang_augnode_leafref_parent(const struct augnode *augnode, const struc
     /* find its augnode structure */
     for (an = augnode->parent; an; an = an->parent) {
         if (an->schema == lref_list->schema) {
-            /* assume the first child is the recursive node */
-            assert(an->child && an->child[0].data_path);
-            *data_path_match = an->child[0].data_path;
+            /* match */
             *augnode_list = an;
             break;
         }
@@ -602,8 +599,9 @@ augds_aug2yang_augnode_recursive_labels_r(augeas *aug, const struct augnode *aug
         char **label_matches, int label_count, struct lyd_node *parent)
 {
     int rc = SR_ERR_OK, j;
-    const char *ext_node, *label_node;
+    const char *label_node;
     char *label, *label_node_d = NULL, idx_str[22];
+    uint32_t k;
     struct lyd_node *parent2, *new_node;
     struct augnode *an_list;
 
@@ -613,7 +611,7 @@ augds_aug2yang_augnode_recursive_labels_r(augeas *aug, const struct augnode *aug
     assert(((struct lysc_node_leaf *)augnode->schema)->type->basetype == LY_TYPE_LEAFREF);
 
     /* find the augnode and data parent of the list that is recursively referenced */
-    if ((rc = augds_aug2yang_augnode_leafref_parent(augnode, parent, &ext_node, &an_list, &parent2))) {
+    if ((rc = augds_aug2yang_augnode_leafref_parent(augnode, parent, &an_list, &parent2))) {
         goto cleanup;
     }
     assert((an_list->schema->nodetype == LYS_LIST) && an_list->schema->parent);
@@ -626,8 +624,15 @@ augds_aug2yang_augnode_recursive_labels_r(augeas *aug, const struct augnode *aug
         }
 
         label_node = augds_get_label_node(label, &label_node_d);
-        if (!augds_ext_label_node_equal(ext_node, label_node, NULL)) {
-            /* not a match */
+        for (k = 0; k < an_list->child_count; ++k) {
+            assert(an_list->child[k].data_path);
+            if (augds_ext_label_node_equal(an_list->child[k].data_path, label_node, NULL)) {
+                /* match */
+                break;
+            }
+        }
+        if (k == an_list->child_count) {
+            /* no match */
             goto next_iter;
         }
 
