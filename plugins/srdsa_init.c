@@ -46,13 +46,21 @@
 static void
 augds_free_info_node(struct augnode *augnode)
 {
-    uint32_t i;
+    uint32_t i, j;
 
     for (i = 0; i < augnode->case_count; ++i) {
-        free(augnode->cases[i].pcodes);
+        for (j = 0; j < augnode->cases[i].pattern_count; ++j) {
+            free(augnode->cases[i].patterns[j].groups);
+        }
+        free(augnode->cases[i].patterns);
     }
     free(augnode->cases);
-    free(augnode->pcodes);
+
+    for (i = 0; i < augnode->pattern_count; ++i) {
+        free(augnode->patterns[i].groups);
+    }
+    free(augnode->patterns);
+
     for (i = 0; i < augnode->child_count; ++i) {
         augds_free_info_node(&augnode->child[i]);
     }
@@ -86,26 +94,75 @@ augds_init_auginfo_add_case(struct augnode *anode, const char *data_path, struct
 }
 
 /**
- * @brief Add a new pcode pointer to an array.
+ * @brief Add a new pattern to an array.
  *
- * @param[in] pcode pcode to store.
- * @param[in,out] pcodes Array of pcodes to add to.
- * @param[in,out] pcode_count Count of @p pcodes
+ * @param[in] pcode Compiled PCRE2 pattern code to store.
+ * @param[in] inverted Whether the match is inverted or not.
+ * @param[in,out] patterns Array of patterns to add to.
+ * @param[in,out] pattern_count Count of @p patterns.
  * @return SR error value.
  */
 static int
-augds_init_auginfo_add_pcode(const pcre2_code *pcode, const pcre2_code ***pcodes, uint32_t *pcode_count)
+augds_init_auginfo_add_pattern(const pcre2_code *pcode, uint32_t inverted, struct augnode_pattern **patterns,
+        uint32_t *pattern_count)
 {
     void *mem;
 
-    mem = realloc(*pcodes, (*pcode_count + 1) * sizeof **pcodes);
+    /* add pattern */
+    mem = realloc(*patterns, (*pattern_count + 1) * sizeof **patterns);
     if (!mem) {
         AUG_LOG_ERRMEM_RET;
     }
-    *pcodes = mem;
+    *patterns = mem;
 
-    (*pcodes)[*pcode_count] = pcode;
-    ++(*pcode_count);
+    /* add one group */
+    (*patterns)[*pattern_count].groups = malloc(sizeof *(*patterns)[*pattern_count].groups);
+    if (!(*patterns)[*pattern_count].groups) {
+        AUG_LOG_ERRMEM_RET;
+    }
+
+    (*patterns)[*pattern_count].groups[0].pcode = pcode;
+    (*patterns)[*pattern_count].groups[0].inverted = inverted;
+
+    (*patterns)[*pattern_count].group_count = 1;
+    ++(*pattern_count);
+    return SR_ERR_OK;
+}
+
+/**
+ * @brief Add a new pattern to an array with multiple separate PCRE2 patterns.
+ *
+ * @param[in] ly_patterns Array of libyang compiled patterns.
+ * @param[in,out] patterns Array of patterns to add to.
+ * @param[in,out] pattern_count Count of @p patterns.
+ * @return SR error value.
+ */
+static int
+augds_init_auginfo_add_pattern2(struct lysc_pattern **ly_patterns, struct augnode_pattern **patterns,
+        uint32_t *pattern_count)
+{
+    void *mem;
+    LY_ARRAY_COUNT_TYPE u;
+
+    mem = realloc(*patterns, (*pattern_count + 1) * sizeof **patterns);
+    if (!mem) {
+        AUG_LOG_ERRMEM_RET;
+    }
+    *patterns = mem;
+
+    /* add all the patterns as separate groups */
+    (*patterns)[*pattern_count].groups = calloc(LY_ARRAY_COUNT(ly_patterns), sizeof *(*patterns)[*pattern_count].groups);
+    if (!(*patterns)[*pattern_count].groups) {
+        AUG_LOG_ERRMEM_RET;
+    }
+
+    LY_ARRAY_FOR(ly_patterns, u) {
+        (*patterns)[*pattern_count].groups[u].pcode = ly_patterns[u]->code;
+        (*patterns)[*pattern_count].groups[u].inverted = ly_patterns[u]->inverted;
+    }
+
+    (*patterns)[*pattern_count].group_count = LY_ARRAY_COUNT(ly_patterns);
+    ++(*pattern_count);
     return SR_ERR_OK;
 }
 
@@ -114,13 +171,13 @@ augds_init_auginfo_add_pcode(const pcre2_code *pcode, const pcre2_code ***pcodes
  *
  * @param[in] auginfo Base auginfo structure with the compiled uint64 pattern cache.
  * @param[in] node YANG node with the pattern.
- * @param[out] pcodes Array of pointers to compiled patterns.
- * @param[out] pcode_count Number of @p pcodes.
+ * @param[in,out] patterns Array of patterns to add to.
+ * @param[in,out] pattern_count Count of @p patterns.
  * @return SR error code.
  */
 static int
-augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *node, const pcre2_code ***pcodes,
-        uint32_t *pcode_count)
+augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *node, struct augnode_pattern **patterns,
+        uint32_t *pattern_count)
 {
     const struct lysc_type *type;
     const struct lysc_type_str *stype;
@@ -129,7 +186,7 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
     int err_code, rc;
     uint32_t compile_opts;
     PCRE2_SIZE err_offset;
-    LY_ARRAY_COUNT_TYPE u, v;
+    LY_ARRAY_COUNT_TYPE u;
 
     /* get the type */
     if (node->nodetype & LYD_NODE_INNER) {
@@ -143,10 +200,8 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
     if (type->basetype == LY_TYPE_STRING) {
         /* use the compiled pattern by libyang */
         stype = (const struct lysc_type_str *)type;
-        LY_ARRAY_FOR(stype->patterns, u) {
-            if ((rc = augds_init_auginfo_add_pcode(stype->patterns[u]->code, pcodes, pcode_count))) {
-                return rc;
-            }
+        if ((rc = augds_init_auginfo_add_pattern2(stype->patterns, patterns, pattern_count))) {
+            return rc;
         }
     } else if (type->basetype == LY_TYPE_UINT64) {
         /* use the pattern compiled ourselves */
@@ -173,20 +228,18 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
             }
         }
 
-        if ((rc = augds_init_auginfo_add_pcode(auginfo->pcode_uint64, pcodes, pcode_count))) {
+        if ((rc = augds_init_auginfo_add_pattern(auginfo->pcode_uint64, 0, patterns, pattern_count))) {
             return rc;
         }
     } else if (type->basetype == LY_TYPE_UNION) {
         /* use patterns from all the string types */
         utype = (const struct lysc_type_union *)type;
-        LY_ARRAY_FOR(utype->types, v) {
-            type = utype->types[v];
+        LY_ARRAY_FOR(utype->types, u) {
+            type = utype->types[u];
             if (type->basetype == LY_TYPE_STRING) {
                 stype = (const struct lysc_type_str *)type;
-                LY_ARRAY_FOR(stype->patterns, u) {
-                    if ((rc = augds_init_auginfo_add_pcode(stype->patterns[u]->code, pcodes, pcode_count))) {
-                        return rc;
-                    }
+                if ((rc = augds_init_auginfo_add_pattern2(stype->patterns, patterns, pattern_count))) {
+                    return rc;
                 }
             } else {
                 AUG_LOG_ERRINT_RET;
@@ -242,7 +295,7 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
                 iter = NULL;
                 while ((iter = lys_getnext(iter, node, NULL, 0))) {
                     if (!strcmp(value_path, iter->name)) {
-                        rc = augds_init_auginfo_get_pattern(auginfo, iter, &(*acase)->pcodes, &(*acase)->pcode_count);
+                        rc = augds_init_auginfo_get_pattern(auginfo, iter, &(*acase)->patterns, &(*acase)->pattern_count);
                         break;
                     }
                 }
@@ -251,7 +304,7 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
         } else {
             /* use term node pattern of the value */
             assert((node->nodetype & LYD_NODE_TERM) && (node_type == AUGDS_EXT_NODE_VALUE));
-            rc = augds_init_auginfo_get_pattern(auginfo, node, &(*acase)->pcodes, &(*acase)->pcode_count);
+            rc = augds_init_auginfo_get_pattern(auginfo, node, &(*acase)->patterns, &(*acase)->pattern_count);
         }
 
         return rc;
@@ -336,7 +389,7 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
 
         if (node_type == AUGDS_EXT_NODE_LABEL) {
             /* get the pattern */
-            augds_init_auginfo_get_pattern(auginfo, node, &anode->pcodes, &anode->pcode_count);
+            augds_init_auginfo_get_pattern(auginfo, node, &anode->patterns, &anode->pattern_count);
         } else if ((node_type == AUGDS_EXT_NODE_NONE) && node->parent && (node->parent->nodetype == LYS_CASE)) {
             /* special case handling to be able to properly load these data, there can be more suitable cases if
              * there is a nested choice */

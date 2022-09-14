@@ -68,16 +68,22 @@ struct augnode {
     const char *value_path;         /**< value-yang-path of the augeas-extension in the schema node */
     struct augnode_case {
         const char *data_path;      /**< data-path whose value must match pattern(s) for this node to be created */
-        const pcre2_code **pcodes;  /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
-        uint32_t pcode_count;       /**< count of pcodes */
+        struct augnode_pattern {
+            struct augnode_pattern_group {
+                const pcre2_code *pcode;
+                uint32_t inverted;
+            } *groups;
+            uint32_t group_count;
+        } *patterns;                /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
+        uint32_t pattern_count;     /**< count of patterns */
     } *cases;                       /**< array of nested cases, set only if this case existence cannot be decided
                                          based on its own data-path/pattern */
     uint32_t case_count;
 
     const struct lysc_node *schema; /**< schema node */
     const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */
-    const pcre2_code **pcodes;      /**< optional compiled PCRE2 pattern of the schema pattern matching Augeas labels */
-    uint32_t pcode_count;           /**< count of pcodes */
+    struct augnode_pattern *patterns;   /**< optional compiled PCRE2 patterns of the schema pattern matching Augeas labels */
+    uint32_t pattern_count;         /**< count of patterns */
     uint64_t next_idx;              /**< index to be used for the next list instance, if applicable */
     struct augnode *child;          /**< array of children of this node */
     uint32_t child_count;           /**< number of children */
