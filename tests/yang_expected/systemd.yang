@@ -110,27 +110,20 @@ module systemd {
                 augex:data-path "arguments";
                 presence "Config entry.";
                 list args-list {
-                  key "_id";
+                  key "_seq";
                   min-elements 1;
                   ordered-by user;
-                  leaf _id {
+                  augex:data-path "$$";
+                  augex:value-yang-path "sto-value";
+                  leaf _seq {
                     type uint64;
                     description
-                      "Implicitly generated list key to maintain the order of the augeas data.";
+                      "Key contains some unique value. The order is based on the actual order of list instances.";
                   }
-                  container args {
-                    augex:data-path "$$";
-                    augex:value-yang-path "sto-value";
-                    presence "Config entry.";
-                    leaf args {
-                      mandatory true;
-                      type uint64;
-                    }
-                    leaf sto-value {
-                      mandatory true;
-                      type string {
-                        pattern "[^# \t\n]*[^# \t\n\\\\]";
-                      }
+                  leaf sto-value {
+                    mandatory true;
+                    type string {
+                      pattern "[^# \t\n]*[^# \t\n\\\\]";
                     }
                   }
                 }

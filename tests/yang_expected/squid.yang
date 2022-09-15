@@ -11,27 +11,20 @@ module squid {
 
   grouping parameters-list {
     list parameters-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "sto-to-spc";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container parameters {
-        augex:data-path "$$";
-        augex:value-yang-path "sto-to-spc";
-        presence "Config entry.";
-        leaf parameters {
-          mandatory true;
-          type uint64;
-        }
-        leaf sto-to-spc {
-          mandatory true;
-          type string {
-            pattern "[^# \t\n]+";
-          }
+      leaf sto-to-spc {
+        mandatory true;
+        type string {
+          pattern "[^# \t\n]+";
         }
       }
     }
@@ -2054,27 +2047,20 @@ module squid {
           augex:data-path "extension_methods";
           presence "Config entry.";
           list extension-method-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "word";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container extension-method {
-              augex:data-path "$$";
-              augex:value-yang-path "word";
-              presence "Config entry.";
-              leaf extension-method {
-                mandatory true;
-                type uint64;
-              }
-              leaf word {
-                mandatory true;
-                type string {
-                  pattern "[A-Za-z0-9_.-]+";
-                }
+            leaf word {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
               }
             }
           }

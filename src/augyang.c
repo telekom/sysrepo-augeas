@@ -154,6 +154,18 @@
     YNODE->snode ? YNODE->snode->lens : NULL
 
 /**
+ * @brief Check if ynode is of type YN_LIST and its lense label is of type L_SEQ.
+ *
+ * A 'seq_list' is a special type of list that contains the '_seq' node as a key.
+ * This key is used as a counter in lenses and typically indicates the order of records.
+ *
+ * @param[in] YNODE Pointer to ynode.
+ * @return 1 if ynode is 'seq_list'.
+ */
+#define AY_YNODE_IS_SEQ_LIST(YNODE) \
+    (YNODE && (YNODE->type == YN_LIST) && YNODE->label && (YNODE->label->lens->tag == L_SEQ))
+
+/**
  * @brief Calculate the index value based on the pointer.
  *
  * @param[in] ARRAY array of items.
@@ -4476,6 +4488,12 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
+        } else if (AY_YNODE_IS_SEQ_LIST(node)) {
+            AY_CHECK_MAX_IDENT_SIZE(buffer, label->string->str);
+            strcpy(buffer, label->string->str);
+            AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
+            strcat(buffer, "-list");
+            str = buffer;
         } else if ((tmp = ay_get_lense_name(ctx->mod, label)) && strcmp(tmp, "lns")) {
             /* label can points to L_STAR lense */
             str = tmp;
@@ -4874,7 +4892,7 @@ ay_print_yang_data_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct lens *label;
 
     label = AY_LABEL_LENS(node);
-    if (!label || (node->type == YN_VALUE) || (node->type == YN_KEY) || (node->type == YN_LIST)) {
+    if (!label || (node->type == YN_VALUE) || (node->type == YN_KEY)) {
         return ret;
     }
 
@@ -4907,8 +4925,7 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     value = AY_VALUE_LENS(node);
 
-    if ((node->type == YN_CASE) || (node->type == YN_LIST) || (node->type == YN_KEY) ||
-            (node->type == YN_VALUE)) {
+    if ((node->type == YN_CASE) || (node->type == YN_KEY) || (node->type == YN_VALUE)) {
         return ret;
     } else if (!value) {
         return ret;
@@ -5692,6 +5709,19 @@ ay_print_yang_config(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang description.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] msg Message in yang description.
+ */
+static void
+ay_print_yang_description(struct yprinter_ctx *ctx, char *msg)
+{
+    ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
+    ly_print(ctx->out, "%*s\"%s\";\n", ctx->space + SPACE_INDENT, "", msg);
+}
+
+/**
  * @brief Print yang leaf-list-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -5801,9 +5831,7 @@ ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "/_r-id\";\n");
     ay_print_yang_nesting_end(ctx);
 
-    ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
-    ly_print(ctx->out, "%*s\"Implicitly generated leaf to maintain recursive augeas data.\";\n",
-            ctx->space + SPACE_INDENT, "");
+    ay_print_yang_description(ctx, "Implicitly generated leaf to maintain recursive augeas data.");
     ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     ay_print_yang_nesting_end(ctx);
@@ -5870,10 +5898,13 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
     int ret = 0;
     struct lens *label;
 
-    ly_print(ctx->out, "%*sleaf ", ctx->space, "");
-
-    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
-    AY_CHECK_RET(ret);
+    if (AY_YNODE_IS_SEQ_LIST(node->parent)) {
+        ly_print(ctx->out, "%*sleaf _seq", ctx->space, "");
+    } else {
+        ly_print(ctx->out, "%*sleaf ", ctx->space, "");
+        ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+        AY_CHECK_RET(ret);
+    }
     ay_print_yang_nesting_begin2(ctx, node->id);
     label = AY_LABEL_LENS(node);
 
@@ -5889,7 +5920,14 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_type(ctx, node);
         AY_CHECK_RET(ret);
     }
+
     ay_print_yang_config(ctx, node);
+
+    if (AY_YNODE_IS_SEQ_LIST(node->parent)) {
+        ay_print_yang_description(ctx, "Key contains some unique value. "
+                "The order is based on the actual order of list instances.");
+    }
+
     ay_print_yang_nesting_end(ctx);
 
     return ret;
@@ -5928,6 +5966,41 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
+ * @brief Print yang list with '_seq' key.
+ *
+ * @param[in] ctx Context for printing.
+ * @param[in] node Node 'seq_list' to print. See AY_YNODE_IS_SEQ_LIST.
+ * @return 0 on success.
+ */
+static int
+ay_print_yang_seq_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
+{
+    int ret;
+
+    ly_print(ctx->out, "%*slist ", ctx->space, "");
+    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
+    AY_CHECK_RET(ret);
+    ay_print_yang_nesting_begin2(ctx, node->id);
+
+    ly_print(ctx->out, "%*skey \"_seq\";\n", ctx->space, "");
+    ay_print_yang_minelements(ctx, node);
+    ay_print_yang_config(ctx, node);
+    ay_print_yang_when(ctx, node);
+    ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
+    ret = ay_print_yang_data_path(ctx, node);
+    AY_CHECK_RET(ret);
+    ret = ay_print_yang_value_path(ctx, node);
+    AY_CHECK_RET(ret);
+
+    ret = ay_print_yang_children(ctx, node);
+    AY_CHECK_RET(ret);
+
+    ay_print_yang_nesting_end(ctx);
+
+    return ret;
+}
+
+/**
  * @brief Print yang list-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -5942,6 +6015,9 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     if (node->parent->type == YN_ROOT) {
         ay_print_yang_list_files(ctx, node);
+        return ret;
+    } else if (AY_YNODE_IS_SEQ_LIST(node)) {
+        ay_print_yang_seq_list(ctx, node);
         return ret;
     }
 
@@ -5967,21 +6043,15 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype uint64;\n", ctx->space, "");
-    ly_print(ctx->out, "%*sdescription\n", ctx->space, "");
 
     if (is_lrec) {
-        ly_print(ctx->out, "%*s\"Implicitly generated list key to maintain the recursive augeas data.\";\n",
-                ctx->space + SPACE_INDENT, "");
+        ay_print_yang_description(ctx, "Implicitly generated list key to maintain the recursive augeas data.");
     } else {
-        ly_print(ctx->out, "%*s\"Implicitly generated list key to maintain the order of the augeas data.\";\n",
-                ctx->space + SPACE_INDENT, "");
+        ay_print_yang_description(ctx, "Implicitly generated list key to maintain the order of the augeas data.");
     }
+
     ay_print_yang_nesting_end(ctx);
 
-    ret = ay_print_yang_data_path(ctx, node);
-    AY_CHECK_RET(ret);
-    ret = ay_print_yang_value_path(ctx, node);
-    AY_CHECK_RET(ret);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
 
@@ -7576,7 +7646,9 @@ ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_yn
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if ((node->type != YN_CONTAINER) || !label) {
+    if (!label) {
+        return 0;
+    } else if ((node->type != YN_CONTAINER) && !AY_YNODE_IS_SEQ_LIST(node)) {
         return 0;
     } else if (AY_LABEL_LENS_IS_IDENT(node)) {
         return value ? 1 : 0;
@@ -8638,16 +8710,23 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
             continue;
         }
         assert(list->child);
-        start = list->child->choice ? list->child : ay_ynode_next_choice_group(list->child);
+        child = AY_YNODE_IS_SEQ_LIST(list) ? ay_ynode_inner_nodes(list) : list->child;
+        child = !child ? list->child : child;
+        start = child->choice ? child : ay_ynode_next_choice_group(child);
         if (!start || (start->flags & AY_CHOICE_CREATED)) {
             continue;
         }
         /* Set stop */
         stop = NULL;
-        for (iter = list->parent; iter; iter = iter->parent) {
-            if (iter->snode) {
-                stop = iter->snode;
-                break;
+        if (AY_YNODE_IS_SEQ_LIST(list)) {
+            assert(list->snode);
+            stop = list->snode;
+        } else {
+            for (iter = list->parent; iter; iter = iter->parent) {
+                if (iter->snode) {
+                    stop = iter->snode;
+                    break;
+                }
             }
         }
 
@@ -8667,6 +8746,10 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
                         snode = &branch[j];
                         if (child->choice == snode) {
                             /* This branch is already processed. */
+                            empty_branch = 0;
+                            break;
+                        } else if (list->value && (snode->lens == list->value->lens)) {
+                            /* It is list's value node (value-yang-path). */
                             empty_branch = 0;
                             break;
                         } else if (snode->lens->tag != L_SUBTREE) {
@@ -8773,7 +8856,8 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         } else if ((node->type == YN_VALUE) && ay_yang_type_is_empty(node->value)) {
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if (node->type == YN_LIST) {
-            if (ay_lnode_has_maybe(node->label, 0, 0)) {
+            lnode = AY_YNODE_IS_SEQ_LIST(node) ? node->snode : node->label;
+            if (ay_lnode_has_maybe(lnode, 0, 0)) {
                 node->min_elems = 0;
             }
         } else if (node->type == YN_LEAFLIST) {
@@ -9423,7 +9507,7 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
-        if (node->type != YN_CONTAINER) {
+        if ((node->type != YN_CONTAINER) && !AY_YNODE_IS_SEQ_LIST(node)) {
             continue;
         }
         count = ay_ynode_rule_node_key_and_value(tree, &tree[i]);
@@ -10328,6 +10412,11 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             }
 
             choice = iter->choice;
+
+            if (!choice && AY_YNODE_IS_SEQ_LIST(iter)) {
+                /* This kind of list is 'seq_list'. It is less common and it should be treated like a container.*/
+                continue;
+            }
 
             /* wrapper is list to maintain the order of the augeas data */
             ay_ynode_insert_wrapper(tree, iter);

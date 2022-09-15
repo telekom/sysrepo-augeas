@@ -39,52 +39,45 @@ module automounter {
   }
   grouping location-list {
     list location-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container location {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf location {
-          mandatory true;
+      list entry-host-list {
+        key "_id";
+        ordered-by user;
+        leaf _id {
           type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
         }
-        list entry-host-list {
-          key "_id";
-          ordered-by user;
-          leaf _id {
+        container entry-host {
+          augex:data-path "host";
+          augex:value-yang-path "hostname";
+          presence "Config entry.";
+          leaf hostname {
+            mandatory true;
+            type string {
+              pattern "[^-:#\\\\(\\\\), \n\t][^:#\\\\(\\\\), \n\t]*";
+            }
+          }
+          leaf weight {
             type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container entry-host {
-            augex:data-path "host";
-            augex:value-yang-path "hostname";
-            presence "Config entry.";
-            leaf hostname {
-              mandatory true;
-              type string {
-                pattern "[^-:#\\\\(\\\\), \n\t][^:#\\\\(\\\\), \n\t]*";
-              }
-            }
-            leaf weight {
-              type uint64;
-              augex:data-path "weight";
-            }
+            augex:data-path "weight";
           }
         }
-        leaf path {
-          mandatory true;
-          type string {
-            pattern "[^-+#: \t\n][^#: \t\n]*";
-          }
-          augex:data-path "path";
+      }
+      leaf path {
+        mandatory true;
+        type string {
+          pattern "[^-+#: \t\n][^#: \t\n]*";
         }
+        augex:data-path "path";
       }
     }
   }
@@ -136,34 +129,27 @@ module automounter {
                 augex:data-path "mount";
                 presence "Config entry.";
                 list mount-list {
-                  key "_id";
+                  key "_seq";
                   min-elements 1;
                   ordered-by user;
-                  leaf _id {
+                  augex:data-path "$$";
+                  augex:value-yang-path "entry-mkey";
+                  leaf _seq {
                     type uint64;
                     description
-                      "Implicitly generated list key to maintain the order of the augeas data.";
+                      "Key contains some unique value. The order is based on the actual order of list instances.";
                   }
-                  container mount {
-                    augex:data-path "$$";
-                    augex:value-yang-path "entry-mkey";
+                  leaf entry-mkey {
+                    mandatory true;
+                    type string {
+                      pattern "[^-+#: \t\n][^#: \t\n]*";
+                    }
+                  }
+                  uses opt-list;
+                  container entry-locations {
+                    augex:data-path "location";
                     presence "Config entry.";
-                    leaf mount {
-                      mandatory true;
-                      type uint64;
-                    }
-                    leaf entry-mkey {
-                      mandatory true;
-                      type string {
-                        pattern "[^-+#: \t\n][^#: \t\n]*";
-                      }
-                    }
-                    uses opt-list;
-                    container entry-locations {
-                      augex:data-path "location";
-                      presence "Config entry.";
-                      uses location-list;
-                    }
+                    uses location-list;
                   }
                 }
               }

@@ -30,27 +30,20 @@ module ssh {
   }
   grouping commas-entry-list {
     list commas-entry-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "value-to-comma";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container commas-entry {
-        augex:data-path "$$";
-        augex:value-yang-path "value-to-comma";
-        presence "Config entry.";
-        leaf commas-entry {
-          mandatory true;
-          type uint64;
-        }
-        leaf value-to-comma {
-          mandatory true;
-          type string {
-            pattern "[^, \t\n=][^, \t\n]*";
-          }
+      leaf value-to-comma {
+        mandatory true;
+        type string {
+          pattern "[^, \t\n=][^, \t\n]*";
         }
       }
     }
@@ -76,26 +69,19 @@ module ssh {
             }
           }
           list array-entry-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container array-entry {
-              augex:data-path "$$";
-              augex:value-yang-path "value-to-spc";
-              presence "Config entry.";
-              leaf array-entry {
-                mandatory true;
-                type uint64;
-              }
-              leaf value-to-spc {
-                mandatory true;
-                type string {
-                  pattern "[^ \t\n=][^ \t\n]*";
-                }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n=][^ \t\n]*";
               }
             }
           }
@@ -204,27 +190,20 @@ module ssh {
             }
           }
           list spaces-entry-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container spaces-entry {
-              augex:data-path "$$";
-              augex:value-yang-path "value-to-spc";
-              presence "Config entry.";
-              leaf spaces-entry {
-                mandatory true;
-                type uint64;
-              }
-              leaf value-to-spc {
-                mandatory true;
-                type string {
-                  pattern "[^ \t\n=][^ \t\n]*";
-                }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n=][^ \t\n]*";
               }
             }
           }

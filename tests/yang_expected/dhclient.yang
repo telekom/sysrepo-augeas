@@ -53,27 +53,20 @@ module dhclient {
   }
   grouping stmt-array-list {
     list stmt-array-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "sto-to-spc";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container stmt-array {
-        augex:data-path "$$";
-        augex:value-yang-path "sto-to-spc";
-        presence "Config entry.";
-        leaf stmt-array {
-          mandatory true;
-          type uint64;
-        }
-        leaf sto-to-spc {
-          mandatory true;
-          type string {
-            pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
-          }
+      leaf sto-to-spc {
+        mandatory true;
+        type string {
+          pattern "[^\\\\#,;{}\" \t\n]+|\"[^\\\\#\"\n]+\"";
         }
       }
     }

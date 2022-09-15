@@ -9,36 +9,29 @@ module fai-diskconfig {
 
   augex:augeas-mod-name "FAI_DiskConfig";
 
-  grouping mount-option-list {
+  grouping mount-option {
     list mount-option-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container mount-option {
-        augex:data-path "$$";
-        augex:value-yang-path "value";
-        presence "Config entry.";
-        leaf mount-option {
-          mandatory true;
-          type uint64;
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^,= \t\n]+";
         }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^,= \t\n]+";
-          }
+      }
+      leaf value2 {
+        type string {
+          pattern "[^,= \t\n]+";
         }
-        leaf value2 {
-          type string {
-            pattern "[^,= \t\n]+";
-          }
-          augex:data-path "value";
-        }
+        augex:data-path "value";
       }
     }
   }
@@ -71,53 +64,39 @@ module fai-diskconfig {
   }
   grouping locallist-list {
     list locallist-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container locallist {
-        augex:data-path "$$";
-        augex:value-yang-path "value";
-        presence "Config entry.";
-        leaf locallist {
-          mandatory true;
-          type uint64;
-        }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "([0-9]+)|(all)";
-          }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "([0-9]+)|(all)";
         }
       }
     }
   }
   grouping locallist-list2 {
     list locallist-list {
-      key "_id";
+      key "_seq";
       min-elements 1;
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "integer";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container locallist {
-        augex:data-path "$$";
-        augex:value-yang-path "integer";
-        presence "Config entry.";
-        leaf locallist {
-          mandatory true;
-          type uint64;
-        }
-        leaf integer {
-          mandatory true;
-          type uint64;
-        }
+      leaf integer {
+        mandatory true;
+        type uint64;
       }
     }
   }
@@ -230,7 +209,7 @@ module fai-diskconfig {
     container mount-options {
       augex:data-path "mount_options";
       presence "Config entry.";
-      uses mount-option-list;
+      uses mount-option;
     }
     container fs-options {
       augex:data-path "fs_options";
@@ -279,7 +258,7 @@ module fai-diskconfig {
     container mount-options {
       augex:data-path "mount_options";
       presence "Config entry.";
-      uses mount-option-list;
+      uses mount-option;
     }
     container fs-options {
       augex:data-path "fs_options";
@@ -476,7 +455,7 @@ module fai-diskconfig {
                   container mount-options {
                     augex:data-path "mount_options";
                     presence "Config entry.";
-                    uses mount-option-list;
+                    uses mount-option;
                   }
                   container fs-options {
                     augex:data-path "fs_options";
@@ -645,7 +624,7 @@ module fai-diskconfig {
                 container mount-options {
                   augex:data-path "mount_options";
                   presence "Config entry.";
-                  uses mount-option-list;
+                  uses mount-option;
                 }
                 container fs-options {
                   augex:data-path "fs_options";
@@ -703,7 +682,7 @@ module fai-diskconfig {
                 container mount-options {
                   augex:data-path "mount_options";
                   presence "Config entry.";
-                  uses mount-option-list;
+                  uses mount-option;
                 }
                 container fs-options {
                   augex:data-path "fs_options";

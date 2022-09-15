@@ -252,27 +252,20 @@ module sshd {
             }
           }
           list macs-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container macs {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf macs {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "[^, \t\n=]+";
-                }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n=]+";
               }
             }
           }
@@ -287,27 +280,20 @@ module sshd {
             }
           }
           list ciphers-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container ciphers {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf ciphers {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "[^, \t\n=]+";
-                }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n=]+";
               }
             }
           }
@@ -322,27 +308,20 @@ module sshd {
             }
           }
           list kex-algorithms-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container kex-algorithms {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf kex-algorithms {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "[^, \t\n=]+";
-                }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n=]+";
               }
             }
           }
@@ -357,27 +336,20 @@ module sshd {
             }
           }
           list host-key-algorithms-list {
-            key "_id";
+            key "_seq";
             min-elements 1;
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container host-key-algorithms {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf host-key-algorithms {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "[^, \t\n=]+";
-                }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n=]+";
               }
             }
           }
