@@ -119,18 +119,12 @@ test_load(void **state)
             "          <command>/usr/sbin/httpd</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
-            "              <_id>1</_id>\n"
-            "              <args>\n"
-            "                <args>1</args>\n"
-            "                <sto-value>$OPTIONS</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>1</_seq>\n"
+            "              <sto-value>$OPTIONS</sto-value>\n"
             "            </args-list>\n"
             "            <args-list>\n"
-            "              <_id>2</_id>\n"
-            "              <args>\n"
-            "                <args>2</args>\n"
-            "                <sto-value>-DFOREGROUND</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>2</_seq>\n"
+            "              <sto-value>-DFOREGROUND</sto-value>\n"
             "            </args-list>\n"
             "          </arguments>\n"
             "        </entry-command>\n"
@@ -142,25 +136,16 @@ test_load(void **state)
             "          <command>/usr/sbin/httpd</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
-            "              <_id>1</_id>\n"
-            "              <args>\n"
-            "                <args>1</args>\n"
-            "                <sto-value>$OPTIONS</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>1</_seq>\n"
+            "              <sto-value>$OPTIONS</sto-value>\n"
             "            </args-list>\n"
             "            <args-list>\n"
-            "              <_id>2</_id>\n"
-            "              <args>\n"
-            "                <args>2</args>\n"
-            "                <sto-value>-k</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>2</_seq>\n"
+            "              <sto-value>-k</sto-value>\n"
             "            </args-list>\n"
             "            <args-list>\n"
-            "              <_id>3</_id>\n"
-            "              <args>\n"
-            "                <args>3</args>\n"
-            "                <sto-value>graceful</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>3</_seq>\n"
+            "              <sto-value>graceful</sto-value>\n"
             "            </args-list>\n"
             "          </arguments>\n"
             "        </entry-command>\n"
@@ -172,18 +157,12 @@ test_load(void **state)
             "          <command>/bin/kill</command>\n"
             "          <arguments>\n"
             "            <args-list>\n"
-            "              <_id>1</_id>\n"
-            "              <args>\n"
-            "                <args>1</args>\n"
-            "                <sto-value>-WINCH</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>1</_seq>\n"
+            "              <sto-value>-WINCH</sto-value>\n"
             "            </args-list>\n"
             "            <args-list>\n"
-            "              <_id>2</_id>\n"
-            "              <args>\n"
-            "                <args>2</args>\n"
-            "                <sto-value>${MAINPID}</sto-value>\n"
-            "              </args>\n"
+            "              <_seq>2</_seq>\n"
+            "              <sto-value>${MAINPID}</sto-value>\n"
             "            </args-list>\n"
             "          </arguments>\n"
             "        </entry-command>\n"
@@ -283,7 +262,7 @@ test_store_modify(void **state)
             "/entry-multi/entry-multi-kw", "ReadWritePaths", LYD_NEW_PATH_UPDATE, NULL));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='6']"
-            "/entry-command/arguments/args-list[_id='2']/args/sto-value", "${CHILDPID}", LYD_NEW_PATH_UPDATE, NULL));
+            "/entry-command/arguments/args-list[_seq='2']/sto-value", "${CHILDPID}", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -313,7 +292,7 @@ test_store_remove(void **state)
 
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='5']"
-            "/entry-command/arguments/args-list[_id='2']", 0, &node));
+            "/entry-command/arguments/args-list[_seq='2']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='7']", 0, &node));
     lyd_free_tree(node);

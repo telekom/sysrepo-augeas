@@ -54,27 +54,18 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <record-list>\n"
-            "    <_id>1</_id>\n"
-            "    <record>\n"
-            "      <securetty>1</securetty>\n"
-            "      <word>tty0</word>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>2</_id>\n"
-            "    <record>\n"
-            "      <securetty>2</securetty>\n"
-            "      <word>:0.0</word>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>3</_id>\n"
-            "    <record>\n"
-            "      <securetty>3</securetty>\n"
-            "      <word>console</word>\n"
-            "    </record>\n"
-            "  </record-list>\n"
+            "  <securetty-list>\n"
+            "    <_seq>1</_seq>\n"
+            "    <word>tty0</word>\n"
+            "  </securetty-list>\n"
+            "  <securetty-list>\n"
+            "    <_seq>2</_seq>\n"
+            "    <word>:0.0</word>\n"
+            "  </securetty-list>\n"
+            "  <securetty-list>\n"
+            "    <_seq>3</_seq>\n"
+            "    <word>console</word>\n"
+            "  </securetty-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -89,14 +80,12 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/securetty", "4", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/word", "option", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "securetty-list[_seq='4']/word", "option", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "securetty-list[_seq='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='5']/record/securetty", "5", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='5']/record/word", "colors", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "securetty-list[_seq='5']/word", "colors", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "securetty-list[_seq='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -119,9 +108,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/word", "tty1",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "securetty-list[_seq='1']/word", "tty1",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/word", "cli",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "securetty-list[_seq='3']/word", "cli",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -149,7 +138,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "securetty-list[_seq='2']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

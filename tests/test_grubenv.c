@@ -54,46 +54,31 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <record-list>\n"
-            "    <_id>1</_id>\n"
-            "    <record>\n"
-            "      <target>1</target>\n"
-            "      <name>serial</name>\n"
-            "      <value>1</value>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>2</_id>\n"
-            "    <record>\n"
-            "      <target>2</target>\n"
-            "      <name>serial_speed</name>\n"
-            "      <value>115200</value>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>3</_id>\n"
-            "    <record>\n"
-            "      <target>3</target>\n"
-            "      <name>dummy1</name>\n"
-            "      <value>abc\\\\xyz</value>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>4</_id>\n"
-            "    <record>\n"
-            "      <target>4</target>\n"
-            "      <name>dummy2</name>\n"
-            "      <value>abc\\\nxyz</value>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>5</_id>\n"
-            "    <record>\n"
-            "      <target>5</target>\n"
-            "      <name>dummy3</name>\n"
-            "      <value>abc\\\\uvw\\\nxyz</value>\n"
-            "    </record>\n"
-            "  </record-list>\n"
+            "  <target-list>\n"
+            "    <_seq>1</_seq>\n"
+            "    <name>serial</name>\n"
+            "    <value>1</value>\n"
+            "  </target-list>\n"
+            "  <target-list>\n"
+            "    <_seq>2</_seq>\n"
+            "    <name>serial_speed</name>\n"
+            "    <value>115200</value>\n"
+            "  </target-list>\n"
+            "  <target-list>\n"
+            "    <_seq>3</_seq>\n"
+            "    <name>dummy1</name>\n"
+            "    <value>abc\\\\xyz</value>\n"
+            "  </target-list>\n"
+            "  <target-list>\n"
+            "    <_seq>4</_seq>\n"
+            "    <name>dummy2</name>\n"
+            "    <value>abc\\\nxyz</value>\n"
+            "  </target-list>\n"
+            "  <target-list>\n"
+            "    <_seq>5</_seq>\n"
+            "    <name>dummy3</name>\n"
+            "    <value>abc\\\\uvw\\\nxyz</value>\n"
+            "  </target-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -108,10 +93,9 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='6']/record/target", "6", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='6']/record/name", "foo", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='6']/record/value", "bar", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "target-list[_seq='6']/name", "foo", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "target-list[_seq='6']/value", "bar", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "target-list[_seq='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -132,9 +116,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/name", "parallel",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "target-list[_seq='1']/name", "parallel",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/value", "123",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "target-list[_seq='3']/value", "123",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -162,7 +146,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "target-list[_seq='2']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

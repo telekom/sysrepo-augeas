@@ -54,30 +54,21 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <record-list>\n"
-            "    <_id>1</_id>\n"
-            "    <record>\n"
-            "      <ether>1</ether>\n"
-            "      <mac>54:52:00:01:00:01</mac>\n"
-            "      <ip>192.168.1.1</ip>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>2</_id>\n"
-            "    <record>\n"
-            "      <ether>2</ether>\n"
-            "      <mac>54:52:00:01:00:02</mac>\n"
-            "      <ip>foo.example.com</ip>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>3</_id>\n"
-            "    <record>\n"
-            "      <ether>3</ether>\n"
-            "      <mac>00:16:3e:01:fe:03</mac>\n"
-            "      <ip>bar</ip>\n"
-            "    </record>\n"
-            "  </record-list>\n"
+            "  <ether-list>\n"
+            "    <_seq>1</_seq>\n"
+            "    <mac>54:52:00:01:00:01</mac>\n"
+            "    <ip>192.168.1.1</ip>\n"
+            "  </ether-list>\n"
+            "  <ether-list>\n"
+            "    <_seq>2</_seq>\n"
+            "    <mac>54:52:00:01:00:02</mac>\n"
+            "    <ip>foo.example.com</ip>\n"
+            "  </ether-list>\n"
+            "  <ether-list>\n"
+            "    <_seq>3</_seq>\n"
+            "    <mac>00:16:3e:01:fe:03</mac>\n"
+            "    <ip>bar</ip>\n"
+            "  </ether-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -92,10 +83,9 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/ether", "4", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/mac", "12:34:56:78:9a:bc", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/ip", "localhost", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "ether-list[_seq='4']/mac", "12:34:56:78:9a:bc", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "ether-list[_seq='4']/ip", "localhost", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "ether-list[_seq='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -116,9 +106,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/mac", "55:52:00:01:00:01",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "ether-list[_seq='1']/mac", "55:52:00:01:00:01",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/ip", "foo",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "ether-list[_seq='3']/ip", "foo",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -146,7 +136,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "ether-list[_seq='2']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

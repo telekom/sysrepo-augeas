@@ -54,75 +54,51 @@ test_load(void **state)
     assert_string_equal(str,
             "<" AUG_TEST_MODULE " xmlns=\"aug:" AUG_TEST_MODULE "\">\n"
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
-            "  <record-list>\n"
-            "    <_id>1</_id>\n"
-            "    <record>\n"
-            "      <host>1</host>\n"
-            "      <ipaddr>127.0.0.1</ipaddr>\n"
-            "      <canonical>foo</canonical>\n"
-            "      <alias>foo.example.com</alias>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>2</_id>\n"
-            "    <record>\n"
-            "      <host>2</host>\n"
-            "      <ipaddr>192.168.0.1</ipaddr>\n"
-            "      <canonical>pigiron.example.com</canonical>\n"
-            "      <alias>pigiron</alias>\n"
-            "      <alias>pigiron.example</alias>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>3</_id>\n"
-            "    <record>\n"
-            "      <host>3</host>\n"
-            "      <ipaddr>::1</ipaddr>\n"
-            "      <canonical>localhost</canonical>\n"
-            "      <alias>ipv6-localhost</alias>\n"
-            "      <alias>ipv6-loopback</alias>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>4</_id>\n"
-            "    <record>\n"
-            "      <host>4</host>\n"
-            "      <ipaddr>fe00::0</ipaddr>\n"
-            "      <canonical>ipv6-localnet</canonical>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>5</_id>\n"
-            "    <record>\n"
-            "      <host>5</host>\n"
-            "      <ipaddr>ff00::0</ipaddr>\n"
-            "      <canonical>ipv6-mcastprefix</canonical>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>6</_id>\n"
-            "    <record>\n"
-            "      <host>6</host>\n"
-            "      <ipaddr>ff02::1</ipaddr>\n"
-            "      <canonical>ipv6-allnodes</canonical>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>7</_id>\n"
-            "    <record>\n"
-            "      <host>7</host>\n"
-            "      <ipaddr>ff02::2</ipaddr>\n"
-            "      <canonical>ipv6-allrouters</canonical>\n"
-            "    </record>\n"
-            "  </record-list>\n"
-            "  <record-list>\n"
-            "    <_id>8</_id>\n"
-            "    <record>\n"
-            "      <host>8</host>\n"
-            "      <ipaddr>ff02::3</ipaddr>\n"
-            "      <canonical>ipv6-allhosts</canonical>\n"
-            "    </record>\n"
-            "  </record-list>\n"
+            "  <host-list>\n"
+            "    <_seq>1</_seq>\n"
+            "    <ipaddr>127.0.0.1</ipaddr>\n"
+            "    <canonical>foo</canonical>\n"
+            "    <alias>foo.example.com</alias>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>2</_seq>\n"
+            "    <ipaddr>192.168.0.1</ipaddr>\n"
+            "    <canonical>pigiron.example.com</canonical>\n"
+            "    <alias>pigiron</alias>\n"
+            "    <alias>pigiron.example</alias>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>3</_seq>\n"
+            "    <ipaddr>::1</ipaddr>\n"
+            "    <canonical>localhost</canonical>\n"
+            "    <alias>ipv6-localhost</alias>\n"
+            "    <alias>ipv6-loopback</alias>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>4</_seq>\n"
+            "    <ipaddr>fe00::0</ipaddr>\n"
+            "    <canonical>ipv6-localnet</canonical>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>5</_seq>\n"
+            "    <ipaddr>ff00::0</ipaddr>\n"
+            "    <canonical>ipv6-mcastprefix</canonical>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>6</_seq>\n"
+            "    <ipaddr>ff02::1</ipaddr>\n"
+            "    <canonical>ipv6-allnodes</canonical>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>7</_seq>\n"
+            "    <ipaddr>ff02::2</ipaddr>\n"
+            "    <canonical>ipv6-allrouters</canonical>\n"
+            "  </host-list>\n"
+            "  <host-list>\n"
+            "    <_seq>8</_seq>\n"
+            "    <ipaddr>ff02::3</ipaddr>\n"
+            "    <canonical>ipv6-allhosts</canonical>\n"
+            "  </host-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
 }
@@ -137,16 +113,15 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='9']/record/host", "9", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='9']/record/ipaddr", "10.0.0.1", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='9']/record/canonical", "local-net", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='9']/ipaddr", "10.0.0.1", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='9']/canonical", "local-net", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='6']/record/alias", "6all", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='6']/alias", "6all", 0, &entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/alias", "6loop", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='3']/record/alias[.='ipv6-localhost']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='3']/alias", "6loop", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias[.='ipv6-localhost']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
     /* store new data */
@@ -175,9 +150,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/canonical", "localhost",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='1']/canonical", "localhost",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/ipaddr", "192.168.1.1",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='2']/ipaddr", "192.168.1.1",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -205,11 +180,11 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='4']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='4']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='3']/record/alias[.='ipv6-loopback']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias[.='ipv6-loopback']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/alias[.='pigiron']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/alias[.='pigiron']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

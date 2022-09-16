@@ -159,18 +159,18 @@ augds_store_get_value(const struct lyd_node *diff_node, const struct lyd_node *d
     int rc = SR_ERR_OK;
     char *path = NULL;
     void *mem;
-    const struct lysc_node *cont_schild;
-    struct lyd_node *cont_child = NULL;
+    const struct lysc_node *schild;
+    struct lyd_node *child = NULL;
     size_t len;
     LY_ERR r;
 
-    if (diff_node->schema->nodetype == LYS_CONTAINER) {
+    if (diff_node->schema->nodetype & (LYS_CONTAINER | LYS_LIST)) {
         /* try to find the node with value in diff, but it may be only in data */
-        cont_schild = lysc_node_child(diff_node->schema);
+        schild = lysc_node_child(diff_node->schema);
 
-        if (lyd_child(diff_node) && (lyd_child(diff_node)->schema == cont_schild)) {
+        if (lyd_child(diff_node) && (lyd_child(diff_node)->schema == schild)) {
             /* node is in diff */
-            cont_child = lyd_child(diff_node);
+            child = lyd_child(diff_node);
         } else {
             /* get container path */
             path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
@@ -180,23 +180,23 @@ augds_store_get_value(const struct lyd_node *diff_node, const struct lyd_node *d
 
             /* append first child name */
             len = strlen(path);
-            mem = realloc(path, len + 1 + strlen(cont_schild->name) + 1);
+            mem = realloc(path, len + 1 + strlen(schild->name) + 1);
             if (!mem) {
                 AUG_LOG_ERRMEM_GOTO(rc, cleanup);
             }
             path = mem;
-            sprintf(path + len, "/%s", cont_schild->name);
+            sprintf(path + len, "/%s", schild->name);
 
             /* get it from the diff data */
-            r = lyd_find_path(diff_data, path, 0, &cont_child);
+            r = lyd_find_path(diff_data, path, 0, &child);
             if (r == LY_EINCOMPLETE) {
                 /* we do not care */
-                cont_child = NULL;
+                child = NULL;
             } else if (r && (r != LY_ENOTFOUND)) {
                 AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_data), rc, cleanup);
             }
         }
-        *value = augds_get_term_value(cont_child);
+        *value = augds_get_term_value(child);
     } else {
         /* just get the value of the term node */
         assert(diff_node->schema->nodetype & LYD_NODE_TERM);
@@ -204,7 +204,7 @@ augds_store_get_value(const struct lyd_node *diff_node, const struct lyd_node *d
     }
 
     if (diff_node2) {
-        *diff_node2 = cont_child;
+        *diff_node2 = child;
     }
 
 cleanup:
@@ -262,16 +262,18 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
     struct ly_set *set = NULL;
     uint32_t i;
     char *path = NULL;
+    const char *dpath;
+    enum augds_ext_node_type type;
 
     *aug_index = 0;
 
-    assert(diff_node->schema->nodetype & (LYS_CONTAINER | LYD_NODE_TERM));
+    assert(diff_node->schema->nodetype & (LYS_CONTAINER | LYS_LIST | LYD_NODE_TERM));
     assert((diff_node->schema->nodetype != LYS_CONTAINER) || !aug_label ||
             lysc_node_child(diff_node->schema)->flags & LYS_MAND_TRUE);
 
     if (diff_node->schema->nodetype == LYD_NODE_TERM) {
         sleaf = (struct lysc_node_leaf *)diff_node->schema;
-    } else if ((diff_node->schema->nodetype == LYS_CONTAINER) && aug_label) {
+    } else if ((diff_node->schema->nodetype & (LYS_CONTAINER | LYS_LIST)) && aug_label) {
         sleaf = (struct lysc_node_leaf *)lysc_node_child(diff_node->schema);
         assert(sleaf->nodetype == LYS_LEAF);
     }
@@ -286,9 +288,9 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
     }
 
     /* get path to all the relevant instances */
-    if ((lyd_parent(data_node)->schema->nodetype == LYS_LIST) && lyd_parent(lyd_parent(data_node))) {
-        /* lists have no data-path meaning they are not present in Augeas data so we must take all these YANG data
-         * list instances into consideration */
+    if ((lyd_parent(data_node)->schema->nodetype == LYS_LIST) && !strcmp(LYD_NAME(lyd_first_sibling(data_node)), "_id")) {
+        /* implicit lists have no data-path meaning they are not present in Augeas data so we must take all these
+         * YANG data list instances into consideration */
         path = lyd_path(lyd_parent(data_node), LYD_PATH_STD_NO_LAST_PRED, NULL, 0);
         if (!path) {
             AUG_LOG_ERRMEM_GOTO(rc, cleanup);
@@ -303,6 +305,8 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
         sprintf(path + len, "/%s", LYD_NAME(data_node));
     } else {
         /* assume the node has data-path */
+        augds_node_get_type(data_node->schema, &type, &dpath, NULL);
+        assert(dpath);
         path = lyd_path(data_node, LYD_PATH_STD_NO_LAST_PRED, NULL, 0);
         if (!path) {
             AUG_LOG_ERRMEM_GOTO(rc, cleanup);
@@ -602,11 +606,17 @@ augds_store_anchor(const struct lyd_node *diff_data_node, struct lyd_node **anch
 {
     enum augds_ext_node_type node_type;
     int anchor_child = 0;
+    const char *key_name = "";
 
     assert(lyd_parent(diff_data_node));
 
     if (augds_store_is_userord_list(lyd_parent(diff_data_node))) {
-        /* nodes with data-paths are nested in the user-ordered lists */
+        /* learn key name of the parent list */
+        key_name = LYD_NAME(lyd_first_sibling(diff_data_node));
+    }
+
+    if (!strcmp(key_name, "_id") || !strcmp(key_name, "_r-id")) {
+        /* nodes with data-paths are nested in the implicit user-ordered lists */
         diff_data_node = lyd_parent(diff_data_node);
         anchor_child = 1;
     } else {
