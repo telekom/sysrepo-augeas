@@ -15,26 +15,18 @@ module simplelines {
       type string;
     }
     list line-list {
-      key "_id";
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container line {
-        augex:data-path "$$";
-        augex:value-yang-path "value";
-        presence "Config entry.";
-        leaf line {
-          mandatory true;
-          type uint64;
-        }
-        leaf value {
-          mandatory true;
-          type string {
-            pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
-          }
+      leaf value {
+        type string {
+          pattern "[^# \t\n].*[^ \t\n]|[^# \t\n]";
         }
       }
     }

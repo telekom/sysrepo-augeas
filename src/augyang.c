@@ -8710,7 +8710,7 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
             continue;
         }
         assert(list->child);
-        child = AY_YNODE_IS_SEQ_LIST(list) ? ay_ynode_inner_nodes(list) : list->child;
+        child = AY_YNODE_IS_SEQ_LIST(list) ? list->child->next : list->child;
         child = !child ? list->child : child;
         start = child->choice ? child : ay_ynode_next_choice_group(child);
         if (!start || (start->flags & AY_CHOICE_CREATED)) {
@@ -8718,15 +8718,10 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
         }
         /* Set stop */
         stop = NULL;
-        if (AY_YNODE_IS_SEQ_LIST(list)) {
-            assert(list->snode);
-            stop = list->snode;
-        } else {
-            for (iter = list->parent; iter; iter = iter->parent) {
-                if (iter->snode) {
-                    stop = iter->snode;
-                    break;
-                }
+        for (iter = list; iter; iter = iter->parent) {
+            if (iter->snode && (start->choice > iter->snode)) {
+                stop = iter->snode;
+                break;
             }
         }
 
@@ -8736,6 +8731,8 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
             for (choice = child->choice; choice && (choice != stop); choice = choice->parent) {
                 if (choice->lens->tag != L_UNION) {
                     continue;
+                } else if (choice->lens->tag == L_SUBTREE) {
+                    break;
                 }
                 assert(choice->child);
                 /* Find empty choice branch. */
@@ -9369,6 +9366,8 @@ ay_ynode_more_keys_for_node(struct ay_ynode *tree)
 static void
 ay_ynode_set_choice_for_value(struct ay_ynode *node)
 {
+    const struct ay_lnode *snode;
+
     assert((node->type == YN_VALUE) && node->value && node->parent);
 
     if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) || (ay_lnode_has_attribute(node->value, L_UNION)))) {
@@ -9377,6 +9376,11 @@ ay_ynode_set_choice_for_value(struct ay_ynode *node)
             node->choice = node->next->next->choice;
         } else if (node->next) {
             node->choice = node->next->choice;
+        }
+    } else if (!node->next && AY_YNODE_IS_SEQ_LIST(node->parent)) {
+        for (snode = node->value; snode && (snode->lens->tag != L_SUBTREE); snode = snode->parent) {}
+        if (snode) {
+            node->choice = ay_lnode_has_attribute(snode, L_UNION);
         }
     }
 }
@@ -10413,7 +10417,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
 
             choice = iter->choice;
 
-            if (!choice && AY_YNODE_IS_SEQ_LIST(iter)) {
+            if (AY_YNODE_IS_SEQ_LIST(iter)) {
                 /* This kind of list is 'seq_list'. It is less common and it should be treated like a container.*/
                 continue;
             }

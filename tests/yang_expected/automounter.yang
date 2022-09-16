@@ -87,81 +87,74 @@ module automounter {
       type string;
     }
     list entry-list {
-      key "_id";
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "entry-mkey";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container entry {
-        augex:data-path "$$";
-        augex:value-yang-path "entry-mkey";
-        presence "Config entry.";
-        leaf entry {
-          mandatory true;
-          type uint64;
-        }
-        leaf entry-mkey {
-          mandatory true;
-          type union {
-            type string {
-              pattern "[^-+#: \t\n][^#: \t\n]*";
-            }
-            type string {
-              pattern "\\+";
-            }
+      leaf entry-mkey {
+        mandatory true;
+        type union {
+          type string {
+            pattern "[^-+#: \t\n][^#: \t\n]*";
+          }
+          type string {
+            pattern "\\+";
           }
         }
-        choice ch-entry {
-          mandatory true;
-          case opt-list {
-            when "re-match(entry-mkey, '[^-+#: \t\n][^#: \t\n]*')";
-            uses opt-list;
-            choice ch-opt-list {
-              mandatory true;
-              container entry-locations {
-                augex:data-path "location";
-                presence "Config entry.";
-                uses location-list;
-              }
-              container entry-multimounts {
-                augex:data-path "mount";
-                presence "Config entry.";
-                list mount-list {
-                  key "_seq";
-                  min-elements 1;
-                  ordered-by user;
-                  augex:data-path "$$";
-                  augex:value-yang-path "entry-mkey";
-                  leaf _seq {
-                    type uint64;
-                    description
-                      "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      choice ch-entry-list {
+        mandatory true;
+        case opt-list {
+          when "re-match(entry-mkey, '[^-+#: \t\n][^#: \t\n]*')";
+          uses opt-list;
+          choice ch-opt-list {
+            mandatory true;
+            container entry-locations {
+              augex:data-path "location";
+              presence "Config entry.";
+              uses location-list;
+            }
+            container entry-multimounts {
+              augex:data-path "mount";
+              presence "Config entry.";
+              list mount-list {
+                key "_seq";
+                min-elements 1;
+                ordered-by user;
+                augex:data-path "$$";
+                augex:value-yang-path "entry-mkey";
+                leaf _seq {
+                  type uint64;
+                  description
+                    "Key contains some unique value. The order is based on the actual order of list instances.";
+                }
+                leaf entry-mkey {
+                  mandatory true;
+                  type string {
+                    pattern "[^-+#: \t\n][^#: \t\n]*";
                   }
-                  leaf entry-mkey {
-                    mandatory true;
-                    type string {
-                      pattern "[^-+#: \t\n][^#: \t\n]*";
-                    }
-                  }
-                  uses opt-list;
-                  container entry-locations {
-                    augex:data-path "location";
-                    presence "Config entry.";
-                    uses location-list;
-                  }
+                }
+                uses opt-list;
+                container entry-locations {
+                  augex:data-path "location";
+                  presence "Config entry.";
+                  uses location-list;
                 }
               }
             }
           }
-          leaf map {
-            type string {
-              pattern "[^: \t\n]+";
-            }
-            augex:data-path "map";
-            when "re-match(../entry-mkey, '\\+')";
+        }
+        leaf map {
+          type string {
+            pattern "[^: \t\n]+";
           }
+          augex:data-path "map";
+          when "re-match(../entry-mkey, '\\+')";
         }
       }
     }

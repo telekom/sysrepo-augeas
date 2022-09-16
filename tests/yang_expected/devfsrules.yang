@@ -37,26 +37,18 @@ module devfsrules {
           augex:data-path "id";
         }
         list entry-list {
-          key "_id";
+          key "_seq";
           ordered-by user;
-          leaf _id {
+          augex:data-path "$$";
+          augex:value-yang-path "line-re";
+          leaf _seq {
             type uint64;
             description
-              "Implicitly generated list key to maintain the order of the augeas data.";
+              "Key contains some unique value. The order is based on the actual order of list instances.";
           }
-          container entry {
-            augex:data-path "$$";
-            augex:value-yang-path "line-re";
-            presence "Config entry.";
-            leaf entry {
-              mandatory true;
-              type uint64;
-            }
-            leaf line-re {
-              mandatory true;
-              type string {
-                pattern "[^\\]\\[#; \t\n][^#;\n]*[^#; \t\n]";
-              }
+          leaf line-re {
+            type string {
+              pattern "[^\\]\\[#; \t\n][^#;\n]*[^#; \t\n]";
             }
           }
         }

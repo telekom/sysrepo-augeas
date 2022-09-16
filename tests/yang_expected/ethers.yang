@@ -14,35 +14,28 @@ module ethers {
     leaf config-file {
       type string;
     }
-    list record-list {
-      key "_id";
+    list ether-list {
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container record {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf ether {
-          mandatory true;
-          type uint64;
+      leaf mac {
+        mandatory true;
+        type string {
+          pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
         }
-        leaf mac {
-          mandatory true;
-          type string {
-            pattern "(((((((((([0-9a-fA-F][0-9a-fA-F]?)(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?))(:))([0-9a-fA-F][0-9a-fA-F]?)";
-          }
-          augex:data-path "mac";
+        augex:data-path "mac";
+      }
+      leaf ip {
+        mandatory true;
+        type string {
+          pattern "[^# \n\t]+";
         }
-        leaf ip {
-          mandatory true;
-          type string {
-            pattern "[^# \n\t]+";
-          }
-          augex:data-path "ip";
-        }
+        augex:data-path "ip";
       }
     }
   }

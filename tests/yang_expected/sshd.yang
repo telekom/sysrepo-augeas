@@ -30,30 +30,22 @@ module sshd {
             }
           }
           list accept-env-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container accept-env {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf accept-env {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type union {
-                  type string {
-                    pattern "[^\"' \t\n=]+";
-                  }
-                  type string {
-                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                  }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\"' \t\n=]+";
+                }
+                type string {
+                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
                 }
               }
             }
@@ -69,30 +61,22 @@ module sshd {
             }
           }
           list allow-groups-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container allow-groups {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf allow-groups {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type union {
-                  type string {
-                    pattern "[^\"' \t\n=]+";
-                  }
-                  type string {
-                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                  }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\"' \t\n=]+";
+                }
+                type string {
+                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
                 }
               }
             }
@@ -108,30 +92,22 @@ module sshd {
             }
           }
           list allow-users-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container allow-users {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf allow-users {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type union {
-                  type string {
-                    pattern "[^\"' \t\n=]+";
-                  }
-                  type string {
-                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                  }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\"' \t\n=]+";
+                }
+                type string {
+                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
                 }
               }
             }
@@ -147,30 +123,22 @@ module sshd {
             }
           }
           list deny-groups-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container deny-groups {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf deny-groups {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type union {
-                  type string {
-                    pattern "[^\"' \t\n=]+";
-                  }
-                  type string {
-                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                  }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\"' \t\n=]+";
+                }
+                type string {
+                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
                 }
               }
             }
@@ -213,30 +181,22 @@ module sshd {
             }
           }
           list deny-users-list {
-            key "_id";
+            key "_seq";
             ordered-by user;
-            leaf _id {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
               type uint64;
               description
-                "Implicitly generated list key to maintain the order of the augeas data.";
+                "Key contains some unique value. The order is based on the actual order of list instances.";
             }
-            container deny-users {
-              augex:data-path "$$";
-              augex:value-yang-path "value";
-              presence "Config entry.";
-              leaf deny-users {
-                mandatory true;
-                type uint64;
-              }
-              leaf value {
-                mandatory true;
-                type union {
-                  type string {
-                    pattern "[^\"' \t\n=]+";
-                  }
-                  type string {
-                    pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
-                  }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\"' \t\n=]+";
+                }
+                type string {
+                  pattern "[^\"'\n]*[ \t]+[^\"'\n]*";
                 }
               }
             }

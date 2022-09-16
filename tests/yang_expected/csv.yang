@@ -14,48 +14,33 @@ module csv {
     leaf config-file {
       type string;
     }
-    list lns-semicol {
-      key "_id";
+    list entry-list {
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container entry {
+      list field-list {
+        key "_seq";
+        min-elements 1;
+        ordered-by user;
         augex:data-path "$$";
-        presence "Config entry.";
-        leaf entry {
-          mandatory true;
+        augex:value-yang-path "value";
+        leaf _seq {
           type uint64;
+          description
+            "Key contains some unique value. The order is based on the actual order of list instances.";
         }
-        list field-list {
-          key "_id";
-          min-elements 1;
-          ordered-by user;
-          leaf _id {
-            type uint64;
-            description
-              "Implicitly generated list key to maintain the order of the augeas data.";
-          }
-          container field {
-            augex:data-path "$$";
-            augex:value-yang-path "value";
-            presence "Config entry.";
-            leaf field {
-              mandatory true;
-              type uint64;
+        leaf value {
+          type union {
+            type string {
+              pattern "([^\n\"#;])*";
             }
-            leaf value {
-              mandatory true;
-              type union {
-                type string {
-                  pattern "([^\n\"#;])*";
-                }
-                type string {
-                  pattern "(\"[^\"#]*\")+";
-                }
-              }
+            type string {
+              pattern "(\"[^\"#]*\")+";
             }
           }
         }

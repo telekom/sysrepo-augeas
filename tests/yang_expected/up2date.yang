@@ -15,62 +15,47 @@ module up2date {
       type string;
     }
     list entry-list {
-      key "_id";
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      augex:value-yang-path "key-re";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container entry {
-        augex:data-path "$$";
-        augex:value-yang-path "key-re";
-        presence "Config entry.";
-        leaf entry {
-          mandatory true;
-          type uint64;
+      leaf key-re {
+        mandatory true;
+        type string {
+          pattern "[^=# \t\n]+";
         }
-        leaf key-re {
-          mandatory true;
+      }
+      choice ch-entry-list {
+        container multi-entry {
+          augex:data-path "values";
+          presence "Config entry.";
+          list multi-list {
+            key "_seq";
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value-re";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value-re {
+              type string {
+                pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
+              }
+            }
+          }
+        }
+        leaf value {
           type string {
-            pattern "[^=# \t\n]+";
+            pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
           }
-        }
-        choice ch-entry {
-          container multi-entry {
-            augex:data-path "values";
-            presence "Config entry.";
-            list multi-value-list {
-              key "_id";
-              ordered-by user;
-              leaf _id {
-                type uint64;
-                description
-                  "Implicitly generated list key to maintain the order of the augeas data.";
-              }
-              container multi-value {
-                augex:data-path "$$";
-                augex:value-yang-path "value-re";
-                presence "Config entry.";
-                leaf multi {
-                  mandatory true;
-                  type uint64;
-                }
-                leaf value-re {
-                  mandatory true;
-                  type string {
-                    pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
-                  }
-                }
-              }
-            }
-          }
-          leaf value {
-            type string {
-              pattern "[^ \t\n;][^\n;]*[^ \t\n;]|[^ \t\n;]";
-            }
-            augex:data-path "value";
-          }
+          augex:data-path "value";
         }
       }
     }

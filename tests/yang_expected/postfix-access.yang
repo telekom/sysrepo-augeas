@@ -14,41 +14,34 @@ module postfix-access {
     leaf config-file {
       type string;
     }
-    list record-list {
-      key "_id";
+    list spec-list {
+      key "_seq";
       ordered-by user;
-      leaf _id {
+      augex:data-path "$$";
+      leaf _seq {
         type uint64;
         description
-          "Implicitly generated list key to maintain the order of the augeas data.";
+          "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      container record {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf spec {
-          mandatory true;
-          type uint64;
+      leaf pattern {
+        mandatory true;
+        type string {
+          pattern "([^# \n\t])+";
         }
-        leaf pattern {
-          mandatory true;
-          type string {
-            pattern "([^# \n\t])+";
-          }
-          augex:data-path "pattern";
+        augex:data-path "pattern";
+      }
+      leaf action {
+        mandatory true;
+        type string {
+          pattern "([^# \n\t])+";
         }
-        leaf action {
-          mandatory true;
-          type string {
-            pattern "([^# \n\t])+";
-          }
-          augex:data-path "action";
+        augex:data-path "action";
+      }
+      leaf parameters {
+        type string {
+          pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
         }
-        leaf parameters {
-          type string {
-            pattern "([^# \n\t])|((([^# \n\t])((([^#\n])|(\n[ \t]+))*))([^# \n\t]))";
-          }
-          augex:data-path "parameters";
-        }
+        augex:data-path "parameters";
       }
     }
   }
