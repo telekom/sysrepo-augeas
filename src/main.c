@@ -52,11 +52,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libyang/libyang.h>
+
 #include "augeas.h"
 #include "augyang.h"
 #include "errcode.h"
 #include "list.h"
 #include "syntax.h"
+
+#include "../modules/augeas-extension.h"
 
 /**
  * @brief Result of strlen("/").
@@ -105,6 +109,8 @@ aym_usage(void)
             "  -t, --typecheck    typecheck lenses. Recommended to use during lense development.\n");
     fprintf(stderr,
             "  -v, --verbose HEX  bitmask for various debug outputs\n");
+    fprintf(stderr,
+            "  -y, --yanglint     validates the YANG module\n");
     fprintf(stderr, "\nExample:\n"
             AYM_PROGNAME " passwd backuppchosts\n"
             AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n");
@@ -404,7 +410,7 @@ aym_allocate_filename_buffer(int argc, char **argv, int optind, char *outdir, ch
 int
 main(int argc, char **argv)
 {
-    int opt, ret = 0, ret2 = 0, explicit = 0, show = 0, quiet = 0;
+    int opt, ret = 0, rv, explicit = 0, show = 0, quiet = 0, yanglint = 0;
     struct augeas *aug = NULL;
     char *loadpath = NULL, *str = NULL, *modname, *outdir = NULL;
     const char *dirpath;
@@ -414,6 +420,8 @@ main(int argc, char **argv)
     FILE *file = NULL;
     uint64_t vercode = 0;
     struct module *mod_iter;
+    struct ly_ctx *ctx = NULL;
+    LY_ERR err;
 
     struct option options[] = {
         {"help",      0, 0, 'h'},
@@ -424,12 +432,13 @@ main(int argc, char **argv)
         {"show",      0, 0, 's'},
         {"typecheck", 0, 0, 't'},
         {"verbose",   1, 0, 'v'},
+        {"yanglint",  0, 0, 'y'},
         {0, 0, 0, 0}
     };
     int idx;
     unsigned int flags = AUG_NO_MODL_AUTOLOAD | AUG_NO_LOAD;
 
-    while ((opt = getopt_long(argc, argv, "heI:O:qstv:", options, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "heI:O:qstv:y", options, &idx)) != -1) {
         switch (opt) {
         case 'e':
             explicit = 1;
@@ -451,6 +460,9 @@ main(int argc, char **argv)
             break;
         case 'v':
             ret |= aym_get_vercode(optarg, &vercode);
+            break;
+        case 'y':
+            yanglint = 1;
             break;
         case 'h':
             aym_usage();
@@ -502,14 +514,6 @@ main(int argc, char **argv)
         outdir = ".";
     }
 
-    /* aug_init() */
-    aug = aug_init(NULL, loadpath, flags);
-    if (aug == NULL) {
-        fprintf(stderr, "ERROR: memory exhausted\n");
-        ret = 2;
-        goto cleanup;
-    }
-
     filename = aym_allocate_filename_buffer(argc, argv, optind, outdir, loadpath);
     if (!filename) {
         fprintf(stderr, "ERROR: Allocation of memory failed\n");
@@ -520,6 +524,13 @@ main(int argc, char **argv)
     /* for every entered augeas module generate yang file */
     for (int i = 0; i < argc - optind; i++) {
         modname = argv[optind + i];
+        aug_close(aug);
+        ly_ctx_destroy(ctx);
+        free(str);
+        aug = NULL;
+        str = NULL;
+        ctx = NULL;
+
         /* parse and compile augeas module */
         aym_insert_filename(modname, ".aug", 0, filename);
         // printf("%s\n", filename);
@@ -527,10 +538,18 @@ main(int argc, char **argv)
         dirpath = aym_find_aug_module(loadpath, filename);
         if (!dirpath) {
             fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
-            ret2 = 1;
+            ret = 1;
             continue;
         }
         aym_insert_dirpath(dirpath, filename);
+
+        /* initialize augeas */
+        aug = aug_init(NULL, loadpath, flags);
+        if (aug == NULL) {
+            fprintf(stderr, "ERROR: aug_init memory exhausted\n");
+            ret = 1;
+            goto cleanup;
+        }
 
         if (__aug_load_module_file(aug, filename) == -1) {
             fprintf(stderr, "ERROR: %s\n", aug_error_message(aug));
@@ -540,7 +559,7 @@ main(int argc, char **argv)
                 fprintf(stderr, "ERROR: %s\n", s);
             }
             ret = 1;
-            goto cleanup;
+            continue;
         }
 
         assert(aug->modules);
@@ -550,10 +569,11 @@ main(int argc, char **argv)
         }
 
         /* generate yang module as string */
-        ret = augyang_print_yang(mod, vercode, &str);
-        if (ret) {
+        rv = augyang_print_yang(mod, vercode, &str);
+        if (rv) {
             fprintf(stderr, "%s", augyang_get_error_message(ret));
-            goto cleanup;
+            ret = 1;
+            continue;
         }
 
         if (show) {
@@ -566,14 +586,31 @@ main(int argc, char **argv)
             file = fopen(filename, "w");
             if (!file) {
                 fprintf(stderr, "ERROR: failed to open %s\n", filename);
-                goto cleanup;
+                continue;
             }
             fprintf(file, "%s", str);
             fclose(file);
         }
 
-        free(str);
-        str = NULL;
+        if (yanglint) {
+            err = ly_ctx_new(NULL, 0, &ctx);
+            if (err != LY_SUCCESS) {
+                fprintf(stderr, "ERROR: Failed to create libyang context\n");
+                ret = 1;
+                ctx = NULL;
+                goto cleanup;
+            }
+
+            err = lys_parse_mem(ctx, (const char *)augeas_extension_yang, LYS_IN_YANG, NULL);
+            if (err != LY_SUCCESS) {
+                fprintf(stderr, "ERROR: Failed to parse augeas_extension_yang.\n");
+                ret = 1;
+            }
+
+            if (lys_parse_mem(ctx, str, LYS_IN_YANG, NULL)) {
+                ret = 1;
+            }
+        }
     }
 
 cleanup:
@@ -581,6 +618,7 @@ cleanup:
     aug_close(aug);
     free(loadpath);
     free(filename);
+    ly_ctx_destroy(ctx);
 
-    return ret | ret2;
+    return ret;
 }
