@@ -102,6 +102,8 @@ aym_usage(void)
     fprintf(stderr,
             "  -s, --show         print the generated yang only to stdout and not to the file\n");
     fprintf(stderr,
+            "  -t, --typecheck    typecheck lenses. Recommended to use during lense development.\n");
+    fprintf(stderr,
             "  -v, --verbose HEX  bitmask for various debug outputs\n");
     fprintf(stderr, "\nExample:\n"
             AYM_PROGNAME " passwd backuppchosts\n"
@@ -420,13 +422,14 @@ main(int argc, char **argv)
         {"outdir",    1, 0, 'O'},
         {"quiet",     0, 0, 'q'},
         {"show",      0, 0, 's'},
+        {"typecheck", 0, 0, 't'},
         {"verbose",   1, 0, 'v'},
         {0, 0, 0, 0}
     };
     int idx;
-    unsigned int flags = AUG_TYPE_CHECK | AUG_NO_MODL_AUTOLOAD;
+    unsigned int flags = AUG_NO_MODL_AUTOLOAD | AUG_NO_LOAD;
 
-    while ((opt = getopt_long(argc, argv, "heI:O:qsv:", options, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "heI:O:qstv:", options, &idx)) != -1) {
         switch (opt) {
         case 'e':
             explicit = 1;
@@ -442,6 +445,9 @@ main(int argc, char **argv)
             break;
         case 's':
             show = 1;
+            break;
+        case 't':
+            flags |= AUG_TYPE_CHECK;
             break;
         case 'v':
             ret |= aym_get_vercode(optarg, &vercode);
