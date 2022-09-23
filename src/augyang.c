@@ -208,18 +208,6 @@
 #define AY_CHECK_MAX_IDENT_SIZE(BUFFER, STR) \
     AY_CHECK_COND(strlen(BUFFER) + strlen(STR) + 1 > AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
 
-/* error codes */
-
-#define AYE_MEMORY 1
-#define AYE_LENSE_NOT_FOUND 2
-#define AYE_L_REC 3
-#define AYE_DEBUG_FAILED 4
-#define AYE_IDENT_NOT_FOUND 5
-#define AYE_IDENT_LIMIT 6
-#define AYE_LTREE_NO_ROOT 7
-#define AYE_IDENT_BAD_CHAR 8
-#define AYE_PARSE_FAILED 9
-
 /**
  * @brief Check if lense tag belongs to ynode.label.
  *

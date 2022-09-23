@@ -83,21 +83,40 @@
 #define AYM_PROGNAME "augyang"
 
 /**
+ * @brief Modules for which YANG will not be generated.
+ */
+const char * const ignored_modules[] = {
+    "build.aug",
+    "erlang.aug",
+    "quote.aug",
+    "rx.aug",
+    "sep.aug",
+    "util.aug",
+};
+
+/**
  * @brief Print help to stderr.
  */
 static void
 aym_usage(void)
 {
     fprintf(stderr, "Usage: "AYM_PROGNAME " [OPTIONS] MODULE...\n");
+    fprintf(stderr, "       "AYM_PROGNAME " -a [OPTIONS]\n");
     fprintf(stderr, "Generate YANG module (.yang) from Augeas MODULE (.aug).\n");
     fprintf(stderr, "Information about the YANG format is in the RFC 7950.\n");
     fprintf(stderr, "\nOptions:\n\n");
     fprintf(stderr,
+            "  -a, --all          process all augeas modules in Search DIR;\n"
+            "                     if the root lense is not found, then the module is ignored;\n"
+            "                     (for example rx.aug, build.aug, ...)\n");
+    fprintf(stderr,
             "  -e, --explicit     default value of the -I parameter is not used;\n"
             "                     only the directories specified by the -I parameter are used\n");
     fprintf(stderr,
-            "  -I, --include DIR  search DIR for augeas modules; can be given multiple times;\n"
+            "  -I, --include DIR  Search DIR for augeas modules; can be given multiple times;\n"
             "                     default value: %s\n", AUGEAS_LENSES_DIR);
+    fprintf(stderr,
+            "  -n, --name         print the name of the currently processed module\n");
     fprintf(stderr,
             "  -O, --outdir DIR   directory in which the generated yang file is written;\n"
             "                     default value: ./\n");
@@ -113,7 +132,30 @@ aym_usage(void)
             "  -y, --yanglint     validates the YANG module\n");
     fprintf(stderr, "\nExample:\n"
             AYM_PROGNAME " passwd backuppchosts\n"
-            AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n");
+            AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n"
+            AYM_PROGNAME " -a -I ./mylenses\n");
+}
+
+/**
+ * @brief Check if @p filename should be ignored.
+ *
+ * @param[in] filename Name of augeas module with suffix .aug.
+ * @return 1 if module should be ignored.
+ */
+static ly_bool
+aym_ignore_module(char *filename)
+{
+    uint64_t i;
+    size_t stop;
+
+    stop = sizeof(ignored_modules) / sizeof(ignored_modules[0]);
+    for (i = 0; i < stop; i++) {
+        if (!strcmp(filename, ignored_modules[i])) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 /**
@@ -375,27 +417,300 @@ aym_insert_filename(const char *name, const char *suffix, int dash, char *filena
 }
 
 /**
+ * @brief Iterator over command lines arguments.
+ */
+struct aym_iter_argv{
+    char **argv;        /**< The argv from main function. */
+    int index;          /**< Current index. */
+    int argc;           /**< The argc from main function. */
+};
+
+/**
+ * @brief Initialize iterator over command lines arguments.
+ *
+ * @param[in] argv The argv from main function.
+ * @param[in] argc The argc from main function.
+ * @param[in] optind The optind variable from getopt function.
+ * @param[out] it Iterator to initialize.
+ */
+static void
+aym_module_iter_argv_init(char **argv, int argc, int optind, struct aym_iter_argv *it)
+{
+    assert(argv && it);
+
+    it->argv = argv;
+    it->index = optind - 1;
+    it->argc = argc;
+}
+
+/**
+ * @brief Reset argv iterator.
+ *
+ * @param[in] it Iterator to reset.
+ */
+static void
+aym_module_iter_argv_reset(struct aym_iter_argv *it)
+{
+    assert(it);
+
+    it->index = optind - 1;
+}
+
+/**
+ * @brief Close argv iterator.
+ *
+ * @param[in] it Iterator to close.
+ */
+static void
+aym_module_iter_argv_close(struct aym_iter_argv *it)
+{
+    (void)it;
+}
+
+/**
+ * @brief Move the iterator to the next element.
+ *
+ * @param[in] it Iterator to move.
+ * @return Filename of augeas module (without suffix .aug) or NULL.
+ */
+static char *
+aym_module_iter_argv(struct aym_iter_argv *it)
+{
+    assert(it);
+
+    it->index++;
+    if (it->index < it->argc) {
+        return it->argv[it->index];
+    } else {
+        return NULL;
+    }
+}
+
+/**
+ * @brief Iterate over all files in multiple directories.
+ */
+struct aym_iter_dir{
+    DIR *dir;                   /**< Pointer to the directory stream. */
+    struct dirent *file;        /**< Directory entry in directory stream. */
+    char *loadpath;             /**< Storage of paths to directories. */
+    char *loadpath_iter;        /**< Current path to directory. */
+};
+
+/**
+ * @brief Initialize iterator over all files in multiple directories.
+ *
+ * @param[in] loadpath Storage of paths to directories.
+ * @param[out] it Iterator to initialize.
+ */
+static void
+aym_module_iter_dir_init(char *loadpath, struct aym_iter_dir *it)
+{
+    assert(loadpath && it);
+
+    it->dir = NULL;
+    it->file = NULL;
+    it->loadpath = loadpath;
+    it->loadpath_iter = NULL;
+}
+
+/**
+ * @brief Reset dir iterator.
+ *
+ * @param[in] it Iterator to reset.
+ */
+static void
+aym_module_iter_dir_reset(struct aym_iter_dir *it)
+{
+    assert(it);
+
+    it->dir = NULL;
+    it->file = NULL;
+    it->loadpath_iter = NULL;
+}
+
+/**
+ * @brief Move the iterator to the next element.
+ *
+ * @param[in] it Iterator to move.
+ * @param[out] err Set to 1 if an error occurs.
+ * @return Filename of augeas module (with suffix .aug) or NULL.
+ */
+static char *
+aym_module_iter_dir(struct aym_iter_dir *it, int *err)
+{
+    char *name, *path;
+    size_t len;
+
+    assert(it && err);
+
+    /* Iterate over directories. */
+    for (it->loadpath_iter = !it->dir ? it->loadpath : it->loadpath_iter;
+            it->loadpath_iter;
+            it->loadpath_iter = aym_loadpath_next(it->loadpath_iter)) {
+
+        /* Open a new directory if not set. */
+        if (!it->dir) {
+            /* Temporarily allocate memory space for the directory path. */
+            len = aym_loadpath_pathlen(it->loadpath_iter);
+            path = strndup(it->loadpath_iter, len);
+            if (!path) {
+                fprintf(stderr, "ERROR: Allocation of memory failed\n");
+                *err = 1;
+                return NULL;
+            }
+            /* Open directory stream. */
+            it->dir = opendir(path);
+            /* Release temporary variable. */
+            free(path);
+            if (!it->dir) {
+                assert(it->loadpath_iter);
+                fprintf(stderr, "ERROR: cannot open Search DIR %s\n", it->loadpath_iter);
+                *err = 1;
+                return NULL;
+            }
+        }
+
+        /* Iterate over files. */
+        while ((it->file = readdir(it->dir))) {
+            name = it->file->d_name;
+            if ((strlen(name) > 4) && !strcmp(name + strlen(name) - 4, ".aug")) {
+                /* Return filename of augeas module. */
+                return name;
+            }
+        }
+        closedir(it->dir);
+        it->dir = NULL;
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Close dir iterator.
+ *
+ * @param[in] it Iterator to close.
+ */
+static void
+aym_module_iter_dir_close(struct aym_iter_dir *it)
+{
+    if (it->dir) {
+        closedir(it->dir);
+        it->dir = NULL;
+    }
+}
+
+/**
+ * @brief Type if iterator over augeas modules files.
+ */
+enum aym_iter_type {
+    AYI_ARGV,       /**< Iterator over command lines arguments. */
+    AYI_DIR         /**< Iterate over all files in multiple directories. */
+};
+
+/**
+ * @brief Iterator over augeas modules files.
+ */
+struct aym_iter {
+    enum aym_iter_type type;                    /**< Type of iterator. */
+
+    union {
+        struct aym_iter_argv iter_argv;         /**< Iterator of type AYI_ARGV. */
+        struct aym_iter_dir iter_dir;           /**< Iterator of type AYI_DIR. */
+    };
+    int err;                                    /**< Error value. */
+};
+
+/**
+ * @brief Reset the iterator to point to the first element.
+ *
+ * @param[in] it Iterator to reset.
+ */
+static void
+aym_module_iter_reset(struct aym_iter *it)
+{
+    assert(it);
+
+    switch (it->type) {
+    case AYI_ARGV:
+        aym_module_iter_argv_reset(&it->iter_argv);
+        break;
+    case AYI_DIR:
+        aym_module_iter_dir_reset(&it->iter_dir);
+        break;
+    }
+}
+
+/**
+ * @brief Move the iterator to the next element.
+ *
+ * @param[in] it Iterator to move.
+ * @return Filename of augeas module (with or without suffix .aug) or NULL.
+ */
+static char *
+aym_module_iter(struct aym_iter *it)
+{
+    assert(it);
+
+    switch (it->type) {
+    case AYI_ARGV:
+        return aym_module_iter_argv(&it->iter_argv);
+    case AYI_DIR:
+        return aym_module_iter_dir(&it->iter_dir, &it->err);
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Close iterator.
+ *
+ * @param[in] it Iterator to close.
+ */
+static void
+aym_module_iter_close(struct aym_iter *it)
+{
+    assert(it);
+
+    switch (it->type) {
+    case AYI_ARGV:
+        aym_module_iter_argv_close(&it->iter_argv);
+        break;
+    case AYI_DIR:
+        aym_module_iter_dir_close(&it->iter_dir);
+        break;
+    }
+    it->err = 0;
+}
+
+/**
+ * @brief A 'for' loop through augeas modules.
+ *
+ * @param[in,out] ITER Pointer to iterator struct aym_iter.
+ * @param[out] NAME Name of augeas module (with or without suffix .aug).
+ */
+#define AYM_MODULE_ITER_FOR(ITER, NAME) \
+    aym_module_iter_reset(ITER); \
+    for (NAME = aym_module_iter(ITER); NAME && !ITER->err; NAME = aym_module_iter(ITER))
+
+/**
  * @brief Allocate filename buffer.
  *
  * The function guarantees that it allocates enough space for operations with filename buffer in this source file.
  *
- * @param[in] argc Variable from main.
- * @param[in] argv Variable from main.
- * @param[in] optind Global variable from ::getopt_long().
+ * @param[in] moditer Iterator over augeas modules.
  * @param[in] outdir Option --outdir DIR from command line.
  * @param[in] loadpath Storage of paths.
  * @return Pointer to new allocated buffer or NULL.
  */
 static char *
-aym_allocate_filename_buffer(int argc, char **argv, int optind, char *outdir, char *loadpath)
+aym_allocate_filename_buffer(struct aym_iter *moditer, char *outdir, char *loadpath)
 {
     char *buffer;
     size_t maxpathlen, maxmodname = 0, maxyang, maxaug, buffer_size;
     char *modname;
 
     maxpathlen = aym_loadpath_maxpath(loadpath);
-    for (int i = 0; i < argc - optind; i++) {
-        modname = argv[optind + i];
+    AYM_MODULE_ITER_FOR(moditer, modname) {
         maxmodname = strlen(modname) > maxmodname ? strlen(modname) : maxmodname;
     }
     maxyang = strlen(outdir) + AYM_SLASH_LEN + maxmodname + AYM_SUFF_YANG_LEN;
@@ -410,23 +725,26 @@ aym_allocate_filename_buffer(int argc, char **argv, int optind, char *outdir, ch
 int
 main(int argc, char **argv)
 {
-    int opt, ret = 0, rv, explicit = 0, show = 0, quiet = 0, yanglint = 0;
+    int opt, ret = 0, rv, explicit = 0, show = 0, quiet = 0, yanglint = 0, all = 0, print_name = 0;
     struct augeas *aug = NULL;
     char *loadpath = NULL, *str = NULL, *modname, *outdir = NULL;
     const char *dirpath;
     size_t loadpathlen = 0;
-    struct module *mod;
+    struct module *mod, *mod_iter;
     char *filename = NULL;
     FILE *file = NULL;
     uint64_t vercode = 0;
-    struct module *mod_iter;
     struct ly_ctx *ctx = NULL;
+    struct aym_iter module_name_iter = {0};
+    struct aym_iter *modname_iter = &module_name_iter;
     LY_ERR err;
 
     struct option options[] = {
         {"help",      0, 0, 'h'},
+        {"all",       0, 0, 'a'},
         {"explicit",  0, 0, 'e'},
         {"include",   1, 0, 'I'},
+        {"name",      0, 0, 'n'},
         {"outdir",    1, 0, 'O'},
         {"quiet",     0, 0, 'q'},
         {"show",      0, 0, 's'},
@@ -438,13 +756,19 @@ main(int argc, char **argv)
     int idx;
     unsigned int flags = AUG_NO_MODL_AUTOLOAD | AUG_NO_LOAD;
 
-    while ((opt = getopt_long(argc, argv, "heI:O:qstv:y", options, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "haeI:nO:qstv:y", options, &idx)) != -1) {
         switch (opt) {
+        case 'a':
+            all = 1;
+            break;
         case 'e':
             explicit = 1;
             break;
         case 'I':
             ret |= aym_loadpath_add(&loadpath, &loadpathlen, optarg);
+            break;
+        case 'n':
+            print_name = 1;
             break;
         case 'O':
             outdir = optarg;
@@ -477,21 +801,15 @@ main(int argc, char **argv)
         goto cleanup;
     }
 
-    if (optind >= argc) {
+    if ((optind >= argc) && !all) {
         fprintf(stderr, "ERROR: expected .aug file\n");
         aym_usage();
         goto cleanup;
-    }
-
-    if (!explicit) {
-        /* add default lense directory */
-        ret |= aym_loadpath_add(&loadpath, &loadpathlen, AUGEAS_LENSES_DIR);
-        if (ret) {
-            goto cleanup;
-        }
-    }
-
-    if (show && outdir) {
+    } else if ((optind < argc) && all) {
+        fprintf(stderr, "ERROR: specifying MODULE and option '-a' is not allowed\n");
+        aym_usage();
+        goto cleanup;
+    } else if (show && outdir) {
         fprintf(stderr, "\nERROR: options \'-O\' and \'-s\' should not be entered at the same time.\n\n");
         aym_usage();
         goto cleanup;
@@ -505,6 +823,14 @@ main(int argc, char **argv)
         goto cleanup;
     }
 
+    if (!explicit) {
+        /* add default lense directory */
+        ret = aym_loadpath_add(&loadpath, &loadpathlen, AUGEAS_LENSES_DIR);
+        if (ret) {
+            goto cleanup;
+        }
+    }
+
     if (outdir && !aym_dir_exists(outdir)) {
         fprintf(stderr, "ERROR: cannot open output directory %s\n", outdir);
         ret = 1;
@@ -514,16 +840,26 @@ main(int argc, char **argv)
         outdir = ".";
     }
 
-    filename = aym_allocate_filename_buffer(argc, argv, optind, outdir, loadpath);
+    if (all) {
+        /* Iterator over all augeas modules in directories specified in 'loadpath'. */
+        modname_iter->type = AYI_DIR;
+        aym_module_iter_dir_init(loadpath, &modname_iter->iter_dir);
+    } else {
+        /* Iterator over augeas modules which must be found somewhere in 'loadpath'. */
+        modname_iter->type = AYI_ARGV;
+        aym_module_iter_argv_init(argv, argc, optind, &modname_iter->iter_argv);
+    }
+
+    /* Allocate a buffer large enough to store the path and name of the augeas module. */
+    filename = aym_allocate_filename_buffer(modname_iter, outdir, loadpath);
     if (!filename) {
         fprintf(stderr, "ERROR: Allocation of memory failed\n");
         ret = 1;
         goto cleanup;
     }
 
-    /* for every entered augeas module generate yang file */
-    for (int i = 0; i < argc - optind; i++) {
-        modname = argv[optind + i];
+    /* For every augeas module generate yang file. */
+    AYM_MODULE_ITER_FOR(modname_iter, modname) {
         aug_close(aug);
         ly_ctx_destroy(ctx);
         free(str);
@@ -531,19 +867,33 @@ main(int argc, char **argv)
         str = NULL;
         ctx = NULL;
 
-        /* parse and compile augeas module */
-        aym_insert_filename(modname, ".aug", 0, filename);
-        // printf("%s\n", filename);
-
-        dirpath = aym_find_aug_module(loadpath, filename);
-        if (!dirpath) {
-            fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
-            ret = 1;
+        if (modname_iter->type == AYI_ARGV) {
+            /* Find entered augeas module. */
+            aym_insert_filename(modname, ".aug", 0, filename);
+            dirpath = aym_find_aug_module(loadpath, filename);
+            if (!dirpath) {
+                fprintf(stderr, "ERROR: file %s not found in any directory\n", filename);
+                ret = 1;
+                continue;
+            }
+        } else if ((modname_iter->type == AYI_DIR) && aym_ignore_module(modname)) {
+            /* Augeas module is ignored. */
+            assert(all);
             continue;
+        } else {
+            /* Some module from directory. */
+            assert(modname_iter->type == AYI_DIR);
+            strcpy(filename, modname);
+            dirpath = modname_iter->iter_dir.loadpath_iter;
         }
+        if (print_name) {
+            /* Printing the current name is useful when the program terminates unexpectedly. */
+            fprintf(stdout, "%s\n", modname);
+        }
+        /* Concatenate directory path with filename. */
         aym_insert_dirpath(dirpath, filename);
 
-        /* initialize augeas */
+        /* Initialize augeas context. */
         aug = aug_init(NULL, loadpath, flags);
         if (aug == NULL) {
             fprintf(stderr, "ERROR: aug_init memory exhausted\n");
@@ -551,6 +901,7 @@ main(int argc, char **argv)
             goto cleanup;
         }
 
+        /* Parse and compile augeas module. */
         if (__aug_load_module_file(aug, filename) == -1) {
             fprintf(stderr, "ERROR: %s\n", aug_error_message(aug));
             const char *s = aug_error_details(aug);
@@ -563,24 +914,28 @@ main(int argc, char **argv)
         }
 
         assert(aug->modules);
-        /* get last compiled (current) module */
+        /* Get last compiled (current) module form augeas context. */
         for (mod_iter = aug->modules; mod_iter; mod_iter = mod_iter->next) {
             mod = mod_iter;
         }
 
-        /* generate yang module as string */
+        /* Generate yang module as string. */
         rv = augyang_print_yang(mod, vercode, &str);
-        if (rv) {
-            fprintf(stderr, "%s", augyang_get_error_message(ret));
+        if (all && rv && (rv == AYE_LENSE_NOT_FOUND)) {
+            /* Ignore module that can be auxiliary, eg rx.aug, build.aug... */
+            continue;
+        } else if (rv) {
+            /* Error when generating YANG. */
+            fprintf(stderr, "%s", augyang_get_error_message(rv));
             ret = 1;
             continue;
         }
 
         if (show) {
-            /* write result to stdout */
+            /* Write YANG to stdout. */
             printf("%s", str);
         } else if (!quiet) {
-            /* write result to the yang file */
+            /* Write YANG to the yang file. */
             aym_insert_filename(modname, ".yang", 1, filename);
             aym_insert_dirpath(outdir, filename);
             file = fopen(filename, "w");
@@ -593,6 +948,7 @@ main(int argc, char **argv)
         }
 
         if (yanglint) {
+            /* Validate the YANG module. */
             err = ly_ctx_new(NULL, 0, &ctx);
             if (err != LY_SUCCESS) {
                 fprintf(stderr, "ERROR: Failed to create libyang context\n");
@@ -601,12 +957,14 @@ main(int argc, char **argv)
                 goto cleanup;
             }
 
+            /* Parse augeas extension. */
             err = lys_parse_mem(ctx, (const char *)augeas_extension_yang, LYS_IN_YANG, NULL);
             if (err != LY_SUCCESS) {
                 fprintf(stderr, "ERROR: Failed to parse augeas_extension_yang.\n");
                 ret = 1;
             }
 
+            /* Parse generated YANG module. */
             if (lys_parse_mem(ctx, str, LYS_IN_YANG, NULL)) {
                 ret = 1;
             }
@@ -619,6 +977,7 @@ cleanup:
     free(loadpath);
     free(filename);
     ly_ctx_destroy(ctx);
+    aym_module_iter_close(modname_iter);
 
     return ret;
 }

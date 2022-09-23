@@ -16,11 +16,23 @@
 
 #include <inttypes.h>
 
+/* verbose flags */
 #define AYV_LTREE               0x01
 #define AYV_YTREE               0x02
 #define AYV_YTREE_AFTER_TRANS   0x04
 #define AYV_YNODE_ID_IN_YANG    0x08
 #define AYV_PTREE               0x10
+
+/* error codes */
+#define AYE_MEMORY 1
+#define AYE_LENSE_NOT_FOUND 2
+#define AYE_L_REC 3
+#define AYE_DEBUG_FAILED 4
+#define AYE_IDENT_NOT_FOUND 5
+#define AYE_IDENT_LIMIT 6
+#define AYE_LTREE_NO_ROOT 7
+#define AYE_IDENT_BAD_CHAR 8
+#define AYE_PARSE_FAILED 9
 
 struct module;
 struct augeas;
