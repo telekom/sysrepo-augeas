@@ -48,7 +48,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # set version(s) of the project
 set(AUGYANG_VERSION 1.0.0)
-set(SRDS_AUGEAS_VERSION 1.0.0)
+set(SRDS_AUGEAS_VERSION 1.0.1)
 
 # libyang required version
 set(LIBYANG_DEP_VERSION 2.0.235)
