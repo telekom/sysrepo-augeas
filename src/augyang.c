@@ -7805,6 +7805,11 @@ ay_ynode_rule_node_is_splittable(const struct ay_ynode *tree, const struct ay_yn
     struct lens *label;
     uint64_t count;
 
+    assert(node);
+    if (node->type == YN_ROOT) {
+        return 0;
+    }
+
     label = AY_LABEL_LENS(node);
 
     if ((node->type == YN_ROOT) || !label || (label->tag != L_KEY)) {
