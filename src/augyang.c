@@ -5212,7 +5212,6 @@ ay_print_yang_pattern(struct yprinter_ctx *ctx, const struct ay_ynode *node, con
         return ret;
     } else if (lnode->lens->tag == L_VALUE) {
         ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", lnode->lens->string->str);
-        ay_print_yang_nesting_end(ctx);
         return ret;
     }
 
