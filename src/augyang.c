@@ -4154,14 +4154,18 @@ ay_pattern_identifier(const char *ptoken, uint64_t ptoken_len, uint64_t idx, cha
  * @brief Special allowed patterns are deleted in the @p substr.
  *
  * @param[in,out] substr String to be converted.
- * @param[in] len Length of @p substr.
  */
 static void
-ay_trans_substr_conversion(char *substr, uint64_t len)
+ay_trans_substr_conversion(char *substr)
 {
-    uint64_t i, j;
+    uint64_t i, j, len;
     uint32_t shift;
 
+    if (!substr) {
+        return;
+    }
+
+    len = strlen(substr);
     for (i = 0; i < len; i++) {
         if (ay_ident_pattern_is_valid(&substr[i], &shift)) {
             /* Remove subpattern and replaced it with ' '. */
@@ -4207,7 +4211,7 @@ ay_transl_create_substr(struct ay_transl *tran)
                 ret = AYE_MEMORY;
                 goto clean;
             }
-            ay_trans_substr_conversion(substr, len);
+            ay_trans_substr_conversion(substr);
             tran->substr[idx_cnt] = substr;
             idx_cnt++;
             LY_ARRAY_INCREMENT(tran->substr);
