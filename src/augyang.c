@@ -1301,6 +1301,22 @@ ay_transl_find(struct ay_transl *table, const char *origin)
 }
 
 /**
+ * @brief Release ay_transl.substr in translation record.
+ *
+ * @param[in] entry Record from translation table.
+ */
+static void
+ay_transl_table_substr_free(struct ay_transl *entry)
+{
+    LY_ARRAY_COUNT_TYPE j;
+
+    LY_ARRAY_FOR(entry->substr, j) {
+        free(entry->substr[j]);
+    }
+    LY_ARRAY_FREE(entry->substr);
+}
+
+/**
  * @brief Release translation table.
  *
  * @param[in] table Array of translation records.
@@ -1308,16 +1324,106 @@ ay_transl_find(struct ay_transl *table, const char *origin)
 static void
 ay_transl_table_free(struct ay_transl *table)
 {
-    LY_ARRAY_COUNT_TYPE i, j;
+    LY_ARRAY_COUNT_TYPE i;
 
     LY_ARRAY_FOR(table, i) {
-        LY_ARRAY_FOR(table[i].substr, j) {
-            free(table[i].substr[j]);
-        }
-        LY_ARRAY_FREE(table[i].substr);
+        ay_transl_table_substr_free(&table[i]);
     }
 
     LY_ARRAY_FREE(table);
+}
+
+/**
+ * @brief Check if all bits in the bitset are set to 0.
+ *
+ * @param[in] bitset Bits to check.
+ * @param[in] size Number of bits in @p bitset.
+ * @return 1 if all bits are 0.
+ */
+static ly_bool
+ay_bitset_is_zero(uint8_t *bitset, uint64_t size)
+{
+    uint64_t i;
+
+    for (i = 0; i < size; i++) {
+        if (bitset[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Find the position of the most significant bit.
+ *
+ * @param[in] bitset Array of bits.
+ * @param[in] size Number of bits in @p bitset.
+ * @return Position of most significant bit, or 0 if no bits are set in @p bitset.
+ */
+static uint64_t
+ay_bitset_msb(uint8_t *bitset, uint64_t size)
+{
+    uint64_t i;
+
+    for (i = size; i && !bitset[i - 1]; i--) {}
+    return i ? i : 0;
+}
+
+/**
+ * @brief Set all bits in @p bitset to zero.
+ *
+ * @param[in] bitset Array of bits.
+ * @param[in] size Number of bits in @p bitset.
+ */
+static void
+ay_bitset_clear(uint8_t *bitset, uint64_t size)
+{
+    uint64_t i;
+
+    for (i = 0; i < size; i++) {
+        bitset[i] = 0;
+    }
+}
+
+/**
+ * @brief Set the most significant bit to zero.
+ *
+ * @param[in] bitset Array of bits.
+ * @param[in] size Number of bits in @p bitset.
+ */
+static void
+ay_bitset_clear_msb(uint8_t *bitset, uint64_t size)
+{
+    uint64_t msb;
+
+    msb = ay_bitset_msb(bitset, size);
+    assert(msb);
+    bitset[msb - 1] = 0;
+}
+
+/**
+ * @brief Convert the @p number to the corresponding sequence of bits.
+ *
+ * @param[in] bitset Array of bits.
+ * @param[in] size Number of bits in @p bitset.
+ * @param[in] number Number used to initialize the bitset.
+ */
+static void
+ay_bitset_create_from_uint64(uint8_t *bitset, uint64_t size, uint64_t number)
+{
+    uint64_t i;
+
+    for (i = 0; (i < size) && (i < 64); i++) {
+        if (number & (1 << i)) {
+            bitset[i] = 1;
+        } else {
+            bitset[i] = 0;
+        }
+    }
+    for ( ; (i < size); i++) {
+        bitset[i] = 0;
+    }
 }
 
 /**
@@ -3807,23 +3913,6 @@ ay_lense_pattern_is_label(struct lens *lens)
 }
 
 /**
- * @brief Get next part where should be identifier in the pattern.
- *
- * This function does not validate identifier.
- *
- * @param[in] patt Pointer to some part in the lense pattern.
- * @return Pointer to next identifier.
- */
-const char *
-ay_lense_pattern_next_union(const char *patt)
-{
-    const char *ret;
-
-    ret = strchr(patt, '|');
-    return ret ? ret + 1 : NULL;
-}
-
-/**
  * @brief Check if lense pattern does not have a fairly regular expression,
  * but rather a sequence of identifiers separated by '|'.
  *
@@ -3851,7 +3940,12 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
     for (iter = patt; *iter != '\0'; iter++) {
         switch (*iter) {
         case '(':
+            break;
         case ')':
+            if (*(iter + 1) == '?') {
+                iter++;
+            }
+            break;
         case '|':
         case '\n': /* '\n'-> TODO pattern is probably written wrong -> bugfix lense? */
             continue;
@@ -3869,6 +3963,50 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
 }
 
 /**
+ * @brief Count the number of question marks.
+ *
+ * @param[in] ptoken Subpattern to process.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @return Number of question marks.
+ */
+static uint64_t
+ay_pattern_identifier_qm_count(const char *ptoken, uint64_t ptoken_len)
+{
+    uint64_t i, qm;
+
+    qm = 0;
+    for (i = 0; i < ptoken_len; i++) {
+        if (ptoken[i] == '?') {
+            qm++;
+        }
+    }
+
+    return qm;
+}
+
+/**
+ * @brief Count the number of variations from the pattern based on the question mark symbol.
+ *
+ * @param[in] ptoken Subpattern to process.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @return Number of variations.
+ */
+static uint64_t
+ay_pattern_identifier_qm_variations(const char *ptoken, uint64_t ptoken_len)
+{
+    uint64_t i, qm, ret;
+
+    qm = ay_pattern_identifier_qm_count(ptoken, ptoken_len);
+
+    ret = 1;
+    for (i = 0; i < qm; i++) {
+        ret *= 2;
+    }
+
+    return ret;
+}
+
+/**
  * @brief Count number of identifiers in the lense pattern.
  *
  * @param[in] patt Lense pattern to check.
@@ -3877,18 +4015,19 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
 static uint64_t
 ay_pattern_idents_count(const char *patt)
 {
-    uint64_t ret;
+    uint64_t ret, len;
+    const char *vbar, *prev_vbar;
 
-    ret = 1;
-    patt = ay_lense_pattern_next_union(patt);
-    if (!patt) {
-        return ret;
+    ret = 0;
+    vbar = prev_vbar = patt;
+    while ((vbar = strchr(vbar, '|'))) {
+        vbar++;
+        assert(*vbar);
+        len = vbar - prev_vbar;
+        ret += ay_pattern_identifier_qm_variations(prev_vbar, len);
+        prev_vbar = vbar;
     }
-
-    ret = 2;
-    for (patt = ay_lense_pattern_next_union(patt); patt; patt = ay_lense_pattern_next_union(patt)) {
-        ++ret;
-    }
+    ret += ay_pattern_identifier_qm_variations(prev_vbar, strlen(prev_vbar));
 
     return ret;
 }
@@ -4084,7 +4223,46 @@ ay_pattern_remove_parentheses(const char *patt)
 }
 
 /**
- * @brief Get identifier from union token located in pattern.
+ * @brief Check if the union token can be processed.
+ *
+ * @param[in] ptoken Subpattern to check.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @return 1 if union token can be processed.
+ */
+static ly_bool
+ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
+{
+    uint64_t i, qm, vbar, opbr;
+
+    qm = vbar = opbr = 0;
+    for (i = 0; i < ptoken_len; i++) {
+        switch (ptoken[i]) {
+        case '(':
+            opbr++;
+            break;
+        case ')':
+            if (ptoken[i + 1] == '?') {
+                qm++;
+            }
+            break;
+        case '|':
+            vbar++;
+            break;
+        }
+    }
+
+    if (qm && (qm != opbr)) {
+        return 0;
+    } else if (qm && vbar) {
+        /* There is no algorithm implemented that can process '?' and '|' in @p ptoken. */
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Get identifier from union token located in pattern based on vertical bar ('|').
  *
  * @p ptoken must be in form:
  * a) (prefix1 | prefix2 | ... ) some_name,
@@ -4097,7 +4275,7 @@ ay_pattern_remove_parentheses(const char *patt)
  * @return AYE_IDENT_NOT_FOUND, AYE_IDENT_LIMIT or 0 on success.
  */
 static int
-ay_pattern_identifier(const char *ptoken, uint64_t ptoken_len, uint64_t idx, char *buffer)
+ay_pattern_identifier_vbar_(const char *ptoken, uint64_t ptoken_len, uint64_t idx, char *buffer)
 {
     const char *iter, *start, *stop, *prefix, *name, *postfix, *par;
     uint64_t len1, len2;
@@ -4178,18 +4356,193 @@ ay_trans_substr_conversion(char *substr)
 }
 
 /**
+ * @brief Add identifier to record in translation table.
+ *
+ * @param[in,out] tran Corresponding record from translation table.
+ * @param[in] buffer Buffer containing the identifier.
+ * @return 0 on success.
+ */
+static int
+ay_pattern_identifier_add(struct ay_transl *tran, char *buffer)
+{
+    char *ident;
+
+    if (buffer[0] == '\0') {
+        return 0;
+    }
+
+    ident = strdup(buffer);
+    if (!ident) {
+        return AYE_MEMORY;
+    }
+    ay_trans_substr_conversion(ident);
+    tran->substr[LY_ARRAY_COUNT(tran->substr)] = ident;
+    LY_ARRAY_INCREMENT(tran->substr);
+
+    return 0;
+}
+
+/**
+ * @brief Store all identifiers from union token located in pattern based on vertical bar ('|').
+ *
+ * @param[in] ptoken Union token.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] buffer Buffer for temporary storage of the identifier.
+ * @param[in,out] tran Record from translation table in which the identifiers are stored.
+ * @return 0 on success.
+ */
+static int
+ay_pattern_identifier_vbar(const char *ptoken, uint64_t ptoken_len, char *buffer, struct ay_transl *tran)
+{
+    int ret = 0;
+    uint64_t i;
+
+    for (i = 0; !(ret = ay_pattern_identifier_vbar_(ptoken, ptoken_len, i, buffer)); i++) {
+        AY_CHECK_COND(ret == AYE_IDENT_LIMIT, ret);
+        ret = ay_pattern_identifier_add(tran, buffer);
+        AY_CHECK_RET(ret);
+    }
+
+    ret = ret == AYE_IDENT_NOT_FOUND ? 0 : ret;
+    return ret;
+}
+
+/**
+ * @brief Get identifier from union token located in pattern based on question mark ('?').
+ *
+ * Example:
+ * ptoken is "ab(cd(ef)?)?".
+ * - theoretical total number of variations is 4, so total_vari is 4.
+ * variation | vari | buffer
+ * 1         | 00   | "ab"
+ * 2         | 01   | "abcd"
+ * 3         | 10   | "" (invalid variation, due to dependency between question marks)
+ * 4         | 11   | "abcdef"
+ *
+ * Question mark without parenthesis (etc. abc?) is not supported.
+ *
+ * @param[in] ptoken Union token.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] flag Bitset for temporary storage of flag. It is used for the @p ptoken analysis.
+ * @param[in] vari Bitset of desired variation.
+ * @param[in] total_vari Length of @p flag and @p vari.
+ * @param[out] buffer Buffer in which the identifier is stored.
+ * @return 0 on success.
+ */
+static int
+ay_pattern_identifier_qm_(const char *ptoken, uint64_t ptoken_len, uint8_t *flag, uint8_t *vari, uint64_t total_vari,
+        char *buffer)
+{
+    uint64_t i, j, group, bufidx, msb;
+
+    group = 0;
+    bufidx = 0;
+    for (i = 0; i < ptoken_len; i++) {
+        if (ptoken[i] == '(') {
+            flag[group] = 1;
+            group++;
+        } else if ((ptoken[i] == ')') && (ptoken[i + 1] == '?')) {
+            ay_bitset_clear_msb(flag, total_vari);
+            i++;
+        } else if (ay_bitset_is_zero(flag, total_vari)) {
+            AY_CHECK_COND(bufidx >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            buffer[bufidx++] = ptoken[i];
+        } else if (((msb = ay_bitset_msb(flag, total_vari))) && vari[msb - 1]) {
+            for (j = 0; j < msb; j++) {
+                if (flag[j] && !vari[j]) {
+                    /* This variation is invalid. The question marks
+                     * are nested within each other and one is dependent on the other.
+                     */
+                    buffer[0] = '\0';
+                    return 0;
+                }
+            }
+            AY_CHECK_COND(bufidx >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            buffer[bufidx++] = ptoken[i];
+        }
+    }
+
+    buffer[bufidx] = '\0';
+
+    return 0;
+}
+
+/**
+ * @brief Store all identifiers from union token located in pattern based on question mark ('?').
+ *
+ * @param[in] ptoken Union token.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] buffer Buffer for temporary storage of the identifier.
+ * @param[in,out] tran Record from translation table in which the identifiers are stored.
+ * @return 0 on success.
+ */
+static int
+ay_pattern_identifier_qm(const char *ptoken, uint64_t ptoken_len, char *buffer, struct ay_transl *tran)
+{
+    int ret = 0;
+    uint64_t i, total_vari;
+    uint8_t *flag = NULL, *vari = NULL;
+
+    total_vari = ay_pattern_identifier_qm_variations(ptoken, ptoken_len);
+    flag = malloc(sizeof(uint8_t) * total_vari);
+    vari = malloc(sizeof(uint8_t) * total_vari);
+    if (!flag || !vari) {
+        ret = AYE_MEMORY;
+        goto free;
+    }
+
+    for (i = 0; i < total_vari; i++) {
+        ay_bitset_clear(flag, total_vari);
+        ay_bitset_create_from_uint64(vari, total_vari, i);
+        ret = ay_pattern_identifier_qm_(ptoken, ptoken_len, flag, vari, total_vari, buffer);
+        AY_CHECK_GOTO(ret, free);
+        ret = ay_pattern_identifier_add(tran, buffer);
+        AY_CHECK_GOTO(ret, free);
+    }
+
+free:
+    free(flag);
+    free(vari);
+
+    return ret;
+}
+
+/**
+ * @brief Check if ::ay_pattern_identifier_qm() can be called.
+ *
+ * @param[in] ptoken Subpattern to check.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @return 1 if ay_pattern_identifier_qm() can be called.
+ */
+static ly_bool
+ay_pattern_identifier_is_qm(const char *ptoken, uint64_t ptoken_len)
+{
+    uint64_t i;
+
+    for (i = 0; i < ptoken_len; i++) {
+        if ((ptoken[i] == ')') && (ptoken[i + 1] == '?')) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Create and fill ay_transl.substr LY_ARRAY based on ay_transl.origin.
  *
  * @param[in,out] tran Translation record.
  * @return 0 on success.
+ * @return -1 if pattern cannot be divided into identifiers.
+ * @return Positive number if an error occurs.
  */
 static int
 ay_transl_create_substr(struct ay_transl *tran)
 {
     int ret;
-    uint64_t idx_cnt, cnt, i, len;
+    uint64_t cnt, len;
     const char *ptoken, *patt;
-    char *pattern, *substr;
+    char *pattern;
     char buffer[AY_MAX_IDENT_SIZE];
 
     assert(tran && tran->origin);
@@ -4202,29 +4555,30 @@ ay_transl_create_substr(struct ay_transl *tran)
     AY_CHECK_COND(!pattern, AYE_MEMORY);
 
     ret = 0;
-    idx_cnt = 0;
     patt = pattern;
     while ((ptoken = ay_pattern_union_token(patt, 0, &len))) {
-        for (i = 0; !(ret = ay_pattern_identifier(ptoken, len, i, buffer)); i++) {
-            substr = strdup(buffer);
-            if (!substr) {
-                ret = AYE_MEMORY;
-                goto clean;
-            }
-            ay_trans_substr_conversion(substr);
-            tran->substr[idx_cnt] = substr;
-            idx_cnt++;
-            LY_ARRAY_INCREMENT(tran->substr);
+        if (!ay_pattern_union_token_is_valid(ptoken, len)) {
+            goto fail;
         }
-        AY_CHECK_GOTO(ret == AYE_IDENT_LIMIT, clean);
+        if (ay_pattern_identifier_is_qm(ptoken, len)) {
+            ret = ay_pattern_identifier_qm(ptoken, len, buffer, tran);
+        } else {
+            ret = ay_pattern_identifier_vbar(ptoken, len, buffer, tran);
+        }
+        AY_CHECK_GOTO(ret, clean);
         patt = ptoken + len;
     }
-    ret = ret == AYE_IDENT_NOT_FOUND ? 0 : ret;
 
 clean:
     free(pattern);
 
     return ret;
+
+fail:
+    ay_transl_table_substr_free(tran);
+    tran->substr = NULL;
+    ret = -1;
+    goto clean;
 }
 
 /**
@@ -7150,37 +7504,43 @@ augyang_print_input_terms(struct augeas *aug, const char *filename, char **str)
 static int
 ay_transl_create_pattern_table(struct ay_lnode *tree, struct ay_transl *table)
 {
+    int ret;
     LY_ARRAY_COUNT_TYPE i;
-    struct ay_transl *patt, *dst;
-    uint64_t ret;
+    struct ay_transl *dst;
     char *origin;
-    ly_bool has_idents;
 
     /* Fill ay_transl.origin. */
     LY_ARRAY_FOR(tree, i) {
         if (tree[i].lens->tag != L_KEY) {
             continue;
+        } else if ((tree[i].flags & AY_LNODE_KEY_IS_LABEL) || !ay_lense_pattern_has_idents(NULL, tree[i].lens)) {
+            continue;
         }
-        /* Find if pattern is already in table. */
+
         origin = tree[i].lens->regexp->pattern->str;
-
-        has_idents = !(tree[i].flags & AY_LNODE_KEY_IS_LABEL) && ay_lense_pattern_has_idents(NULL, tree[i].lens);
-        if (has_idents) {
+        if (ay_transl_find(table, origin)) {
+            /* Pattern is already in table. */
             tree[i].flags |= AY_LNODE_KEY_HAS_IDENTS;
+            continue;
         }
 
-        patt = ay_transl_find(table, origin);
-        if (!patt && has_idents) {
-            dst = &table[LY_ARRAY_COUNT(table)];
-            dst->origin = origin;
-            LY_ARRAY_INCREMENT(table);
-        }
-    }
+        dst = &table[LY_ARRAY_COUNT(table)];
+        dst->origin = origin;
 
-    /* Fill ay_transl.substr. */
-    LY_ARRAY_FOR(table, i) {
-        ret = ay_transl_create_substr(&table[i]);
-        AY_CHECK_RET(ret);
+        /* Fill ay_transl.substr. */
+        ret = ay_transl_create_substr(dst);
+        if (ret < 0) {
+            /* Pattern is complex and augyang cannot split the pattern into identifiers. */
+            dst->origin = NULL;
+            continue;
+        } else if (ret > 0) {
+            /* Error */
+            return ret;
+        }
+
+        /* Successfully deriving identifiers. */
+        LY_ARRAY_INCREMENT(table);
+        tree[i].flags |= AY_LNODE_KEY_HAS_IDENTS;
     }
 
     return 0;
