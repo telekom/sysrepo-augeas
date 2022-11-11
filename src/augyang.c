@@ -2537,7 +2537,6 @@ ay_ynode_inner_nodes(const struct ay_ynode *root)
         iter = iter->next;
     }
     if (iter && (iter->type == YN_VALUE)) {
-        assert(iter->value == root->value);
         iter = iter->next;
     }
 
@@ -2701,13 +2700,15 @@ ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id)
  * @return The YN_VALUE node placed as a child or NULL.
  */
 static struct ay_ynode *
-ay_ynode_get_value_node(const struct ay_ynode *tree, const struct ay_ynode *node, const struct ay_lnode *label,
+ay_ynode_get_value_node(const struct ay_ynode *tree, struct ay_ynode *node, const struct ay_lnode *label,
         const struct ay_lnode *value)
 {
     struct ay_ynode *iter, *gr, *valnode;
+    uint64_t i;
 
     valnode = NULL;
-    for (iter = node->child; iter; iter = iter->next) {
+    for (i = 0; i < node->descendants; i++) {
+        iter = &node[i + 1];
         if ((iter->type == YN_VALUE) && (iter->label->lens == label->lens) && (iter->value->lens == value->lens)) {
             valnode = iter;
             break;
@@ -2715,8 +2716,9 @@ ay_ynode_get_value_node(const struct ay_ynode *tree, const struct ay_ynode *node
             gr = ay_ynode_get_grouping(tree, iter->ref);
             assert(gr);
             valnode = ay_ynode_get_value_node(tree, gr, label, value);
-            break;
-
+            if (valnode) {
+                break;
+            }
         }
     }
 
@@ -8307,6 +8309,18 @@ ay_ynode_rule_more_keys_for_node(const struct ay_ynode *tree)
 }
 
 /**
+ * @brief The rule decides the maximum number of nodes that can be dependent on a value.
+ *
+ * @param[in] tree Tree of nodes.
+ * @return Number of nodes to insert.
+ */
+static uint32_t
+ay_ynode_rule_dependence_on_value(const struct ay_ynode *tree)
+{
+    return LY_ARRAY_COUNT(AY_YNODE_ROOT_VALUES(tree));
+}
+
+/**
  * @brief Rule decide how many nodes will be inserted for grouping.
  *
  * @param[in] node to check.
@@ -9194,6 +9208,8 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 iter = node + j + 1;
                 iter->flags |= AY_HINT_MAND_FALSE;
             }
+        } else if (node->when_ref && (node->type != YN_LIST) && (node->type != YN_LEAFLIST)) {
+            node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_LEAF) && node->label && (node->label->flags & AY_LNODE_KEY_NOREGEX)) {
             if (ay_lnode_has_maybe(node->snode, 0, 0) && !ay_ynode_alone_in_choice(node)) {
                 node->flags |= AY_CHOICE_MAND_FALSE;
@@ -10459,6 +10475,139 @@ ay_ynode_merge_cases(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Insert a 'when' statement if the node's existence depends on the YN_VALUE node.
+ *
+ * For example lense:
+ * [ label "user" . (store user_re | store Rx.word . Sep.space . [label "host"]) ]
+ * The 'host' node can only exist if the node's YN_VALUE value is 'Rx.word'.
+ *
+ * @param[in] tree Tree of nodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_dependence_on_value(struct ay_ynode *tree)
+{
+    struct ay_ynode *branch, *iter, *vnode;
+    const struct ay_lnode *con1, *con2, *when_val;
+    struct ay_dnode *values, *key;
+    uint64_t i, j, union_elements, moved_cnt;
+    ly_bool match;
+
+    if (!AY_YNODE_ROOT_VALUES(tree) || !tree->descendants) {
+        return 0;
+    }
+
+    /* Algorithm deals only with values in union. */
+    values = AY_YNODE_ROOT_VALUES(tree);
+    if (LY_ARRAY_COUNT(values) == 0) {
+        return 0;
+    }
+
+    for (i = 0; i < tree->descendants; i++) {
+        branch = &tree[i + 1];
+        if (!branch->choice) {
+            continue;
+        } else if ((branch->type == YN_CASE) && (branch->child->type != YN_VALUE)) {
+            continue;
+        } else if (branch->type != YN_VALUE) {
+            continue;
+        }
+        /* YN_VALUE node must be in choice. */
+
+        vnode = branch->type == YN_CASE ? branch->child : branch;
+        assert(vnode->type == YN_VALUE);
+
+        key = ay_dnode_find(values, vnode->value);
+        if (!key) {
+            /* YN_VALUE node with no union. */
+            continue;
+        }
+
+        /* Count number of elements in union. */
+        union_elements = 0;
+        moved_cnt = 0;
+        AY_DNODE_KEYVAL_FOR(key, j) {
+            ++union_elements;
+        }
+
+        assert(AY_DNODE_IS_KEY(key));
+        /* Looking for a branch that is concatenated with YN_VALUE value. */
+        for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
+                iter && (iter->choice == branch->choice);
+                iter = iter->next) {
+            if ((iter->type == YN_CASE) && (!iter->child->snode)) {
+                continue;
+            } else if ((iter->type == YN_LIST) && !iter->child->snode) {
+                continue;
+            } else if ((iter->type != YN_LIST) && !iter->snode) {
+                /* Concatenation cannot be found without snode. */
+                continue;
+            }
+
+            if (iter->type == YN_LIST) {
+                con1 = ay_lnode_get_last_concat(iter->child->snode, branch->choice);
+            } else {
+                con1 = ay_lnode_get_last_concat(iter->snode, branch->choice);
+            }
+
+            /* Check if 'iter' is concatenated with YN_VALUE node. */
+            match = 0;
+            AY_DNODE_KEYVAL_FOR(key, j) {
+                when_val = key[j].lval;
+                con2 = ay_lnode_get_last_concat(when_val, branch->choice);
+                if (con1 == con2) {
+                    match = 1;
+                    break;
+                }
+            }
+            if (!match) {
+                /* Not in concatenation. */
+                continue;
+            }
+            assert(!iter->when_ref);
+
+            /* Add 'when' reference. */
+            iter->when_ref = vnode->id;
+            iter->when_val = when_val;
+            vnode->flags |= AY_WHEN_TARGET;
+            /* Move 'iter' subtree close to YN_VALUE node (vnode). */
+            if (branch->type == YN_CASE) {
+                /* 'vnode' is in YN_CASE. */
+                assert((branch->descendants >= 2) && branch->child && branch->child->next);
+                iter->choice = AY_YNODE_ROOT_LTREE(tree);
+                iter->flags |= AY_CHOICE_CREATED;
+                ay_ynode_move_subtree_as_last_child(tree, branch, iter);
+            } else {
+                /* Branch is not in YN_CASE. */
+                assert(vnode == branch);
+                /* Create YN_CASE node containing 'vnode' and 'iter'. */
+                iter->choice = AY_YNODE_ROOT_LTREE(tree);
+                iter->flags |= AY_CHOICE_CREATED | AY_CHOICE_MAND_FALSE;
+                ay_ynode_insert_wrapper(tree, vnode);
+                vnode++;
+                branch->type = YN_CASE;
+                branch->choice = branch->child->choice;
+                vnode->choice = NULL;
+                iter = branch < iter ? iter + 1 : iter;
+                ay_ynode_move_subtree_as_last_child(tree, branch, iter);
+            }
+            iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
+            ++moved_cnt;
+        }
+
+        if ((branch->type == YN_CASE) && (moved_cnt == union_elements)) {
+            assert((branch->child == vnode) && (vnode->type == YN_VALUE));
+            vnode->next->flags &= ~AY_CHOICE_MAND_FALSE;
+        }
+        if ((branch->type == YN_CASE) && ay_ynode_alone_in_choice(branch)) {
+            ay_ynode_delete_node(tree, branch);
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief The leafref path must not go outside groupings.
  *
  * @param[in] subtree Subtree to check.
@@ -11546,6 +11695,10 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     /* [label str store lns]*   -> container { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> container { YN_KEY{} YN_VALUE{} } */
     TRANSF(ay_insert_node_key_and_value, ay_ynode_summary2(*tree, ay_ynode_rule_node_key_and_value));
+
+    /* [label str (store lns | store lns2 . [label str2])] -> [label str2] has 'when' reference to lns2 */
+    /* ... */
+    TRANSF(ay_ynode_dependence_on_value, ay_ynode_rule_dependence_on_value(*tree));
 
     ay_ynode_tree_set_mandatory(*tree);
 
