@@ -68,7 +68,6 @@ module dnsmasq {
             augex:value-yang-path "value";
             presence "Config entry.";
             leaf value {
-              mandatory true;
               type string {
                 pattern "[^#/ \t\n]+";
               }

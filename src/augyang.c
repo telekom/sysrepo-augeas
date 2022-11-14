@@ -9208,6 +9208,11 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 iter = node + j + 1;
                 iter->flags |= AY_HINT_MAND_FALSE;
             }
+        } else if ((node->type != YN_KEY) && !(node->flags & AY_HINT_MAND_TRUE) && (node->flags & AY_HINT_MAND_FALSE)) {
+            node->flags |= AY_YNODE_MAND_FALSE;
+        } else if (node->parent && (node->parent->type == YN_CONTAINER) && (node->parent->flags & AY_YNODE_MAND_FALSE)) {
+            node->flags |= AY_YNODE_MAND_FALSE;
+            node->min_elems = 0;
         } else if (node->when_ref && (node->type != YN_LIST) && (node->type != YN_LEAFLIST)) {
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_LEAF) && node->label && (node->label->flags & AY_LNODE_KEY_NOREGEX)) {
@@ -9215,6 +9220,12 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->flags |= AY_CHOICE_MAND_FALSE;
             } else {
                 node->flags |= AY_YNODE_MAND_FALSE;
+            }
+        } else if (node->type == YN_CONTAINER) {
+            if (ay_lnode_has_maybe(node->snode, 0, 1)) {
+                node->flags |= AY_YNODE_MAND_FALSE;
+            } else {
+                node->flags |= AY_YNODE_MAND_TRUE;
             }
         } else if (node->choice && (node->type != YN_CASE) && (node->type != YN_LIST) &&
                 !(ay_ynode_get_first_in_choice(node->parent, node->choice)->flags & AY_CHOICE_MAND_FALSE)) {
@@ -9237,8 +9248,6 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         } else if (node->type == YN_KEY) {
             node->flags &= ~AY_YNODE_MAND_MASK;
             node->flags |= AY_YNODE_MAND_TRUE;
-        } else if (node->type == YN_CONTAINER) {
-            node->flags |= AY_YNODE_MAND_FALSE;
         } else {
             if (ay_lnode_has_maybe(node->snode, 0, 0)) {
                 node->flags |= AY_YNODE_MAND_FALSE;
@@ -9246,13 +9255,6 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             } else {
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
-        }
-
-        /* Exception due to merge_cases. */
-        if ((node->type != YN_KEY) && (node->flags & AY_YNODE_MAND_TRUE) &&
-                !(node->flags & AY_HINT_MAND_TRUE) && (node->flags & AY_HINT_MAND_FALSE)) {
-            node->flags &= ~AY_YNODE_MAND_MASK;
-            node->flags |= AY_YNODE_MAND_FALSE;
         }
     }
 
@@ -10933,8 +10935,9 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list->type = YN_LIST;
             list->min_elems = list->child->min_elems;
             list->choice = choice;
-            list->flags |= list->child->flags & (AY_CHOICE_MAND_FALSE | AY_CHOICE_CREATED);
+            list->flags |= list->child->flags & (AY_CHOICE_MAND_FALSE | AY_CHOICE_CREATED | AY_HINT_MAND_FALSE);
             list->child->flags &= ~AY_CHOICE_MAND_FALSE;
+            list->child->flags &= ~AY_HINT_MAND_FALSE;
             /* Move 'when' data to list. */
             list->when_ref = list->child->when_ref;
             list->when_val = list->child->when_val;

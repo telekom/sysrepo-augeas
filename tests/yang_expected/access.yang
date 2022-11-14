@@ -1,0 +1,190 @@
+module access {
+  yang-version 1.1;
+  namespace "aug:access";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Access";
+
+  list access {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "access";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[+-]";
+          }
+        }
+        list config-entries {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            container user {
+              augex:data-path "user";
+              augex:value-yang-path "user-re";
+              presence "Config entry.";
+              leaf user-re {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[Ee][Xx][Cc][Ee][Pp](([Tt][.0-9A-Z\\\\_a-z-]|[.0-9A-SU-Z\\\\_a-su-z-])[.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx][Cc][Ee]([.0-9A-OQ-Z\\\\_a-oq-z-][.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx][Cc]([.0-9A-DF-Z\\\\_a-df-z-][.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx]([.0-9ABD-Z\\\\_abd-z-][.0-9A-Z\\\\_a-z-]*|())|([Ee][.0-9A-WYZ\\\\_a-wyz-]|[.0-9A-DF-Z\\\\_a-df-z-][.0-9A-Z\\\\_a-z-])[.0-9A-Z\\\\_a-z-]*|[Ee]|[.0-9A-DF-Z\\\\_a-df-z-]";
+                  }
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                }
+              }
+              leaf host {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "host";
+                when "re-match(../user-re, '[A-Za-z0-9_.-]+')";
+              }
+            }
+            leaf group {
+              type string {
+                pattern "[A-Za-z0-9_.\\\\-]+";
+              }
+              augex:data-path "group";
+            }
+            container netgroup {
+              augex:data-path "netgroup";
+              augex:value-yang-path "user-re";
+              presence "Config entry.";
+              leaf user-re {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.\\\\-]+";
+                  pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
+                    modifier invert-match;
+                  }
+                }
+              }
+              leaf nisdomain {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "nisdomain";
+              }
+            }
+          }
+        }
+        container except {
+          augex:data-path "except";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container user {
+                augex:data-path "user";
+                augex:value-yang-path "user-re";
+                presence "Config entry.";
+                leaf user-re {
+                  mandatory true;
+                  type union {
+                    type string {
+                      pattern "[Ee][Xx][Cc][Ee][Pp](([Tt][.0-9A-Z\\\\_a-z-]|[.0-9A-SU-Z\\\\_a-su-z-])[.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx][Cc][Ee]([.0-9A-OQ-Z\\\\_a-oq-z-][.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx][Cc]([.0-9A-DF-Z\\\\_a-df-z-][.0-9A-Z\\\\_a-z-]*|())|[Ee][Xx]([.0-9ABD-Z\\\\_abd-z-][.0-9A-Z\\\\_a-z-]*|())|([Ee][.0-9A-WYZ\\\\_a-wyz-]|[.0-9A-DF-Z\\\\_a-df-z-][.0-9A-Z\\\\_a-z-])[.0-9A-Z\\\\_a-z-]*|[Ee]|[.0-9A-DF-Z\\\\_a-df-z-]";
+                    }
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                  }
+                }
+                leaf host {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "host";
+                  when "re-match(../user-re, '[A-Za-z0-9_.-]+')";
+                }
+              }
+              leaf group {
+                type string {
+                  pattern "[A-Za-z0-9_.\\\\-]+";
+                }
+                augex:data-path "group";
+              }
+              container netgroup {
+                augex:data-path "netgroup";
+                augex:value-yang-path "user-re";
+                presence "Config entry.";
+                leaf user-re {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.\\\\-]+";
+                    pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
+                      modifier invert-match;
+                    }
+                  }
+                }
+                leaf nisdomain {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "nisdomain";
+                }
+              }
+            }
+          }
+        }
+        leaf-list origin {
+          min-elements 1;
+          type string {
+            pattern "[^ \t\n]+";
+            pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
+              modifier invert-match;
+            }
+          }
+          ordered-by user;
+          augex:data-path "origin";
+        }
+        container except2 {
+          augex:data-path "except";
+          presence "Config entry.";
+          leaf-list origin {
+            type string {
+              pattern "[^ \t\n]+";
+              pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
+                modifier invert-match;
+              }
+            }
+            ordered-by user;
+            augex:data-path "origin";
+          }
+        }
+      }
+    }
+  }
+}
