@@ -3997,6 +3997,8 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
 
     for (iter = patt; *iter != '\0'; iter++) {
         switch (*iter) {
+        case '#':
+            break;
         case '(':
             break;
         case ')':

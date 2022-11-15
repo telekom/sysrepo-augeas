@@ -255,11 +255,13 @@ module activemq-xml {
                     }
                     choice ch-att-id-list {
                       mandatory true;
-                      leaf node {
-                        type string {
-                          pattern "#REQUIRED|#IMPLIED";
-                        }
-                        augex:data-path "$$";
+                      leaf required {
+                        type empty;
+                        augex:data-path "#REQUIRED";
+                      }
+                      leaf implied {
+                        type empty;
+                        augex:data-path "#IMPLIED";
                       }
                       leaf fixed {
                         type string {
