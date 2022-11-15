@@ -97,8 +97,8 @@ module rsyslog {
       }
     }
   }
-  grouping entry-list {
-    list entry-list {
+  grouping entries {
+    list entries {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -407,7 +407,7 @@ module rsyslog {
               augex:data-path "program";
             }
           }
-          uses entry-list;
+          uses entries;
         }
         container hostname {
           augex:data-path "hostname";
@@ -436,7 +436,7 @@ module rsyslog {
               augex:data-path "hostname";
             }
           }
-          uses entry-list;
+          uses entries;
         }
       }
     }

@@ -24,9 +24,9 @@ module darkice {
       }
       container record {
         augex:data-path "target";
-        augex:value-yang-path "value";
+        augex:value-yang-path "record-label-re";
         presence "Config entry.";
-        leaf value {
+        leaf record-label-re {
           mandatory true;
           type string {
             pattern "[^\\]\n]+";

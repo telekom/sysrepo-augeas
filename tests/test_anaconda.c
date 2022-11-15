@@ -57,61 +57,61 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>1</_id>\n"
             "    <record>\n"
-            "      <label>General</label>\n"
-            "      <config-entries>\n"
+            "      <record-re>General</record-re>\n"
+            "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
-            "        <node>\n"
-            "          <label>post_install_tools_disabled</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>post_install_tools_disabled</entry-re>\n"
             "          <value>0</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
             "    </record>\n"
             "  </record-list>\n"
             "  <record-list>\n"
             "    <_id>2</_id>\n"
             "    <record>\n"
-            "      <label>DatetimeSpoke</label>\n"
-            "      <config-entries>\n"
+            "      <record-re>DatetimeSpoke</record-re>\n"
+            "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
-            "        <node>\n"
-            "          <label>visited</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>visited</entry-re>\n"
             "          <value>1</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
-            "      <config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
+            "      <entry-re-list>\n"
             "        <_id>2</_id>\n"
-            "        <node>\n"
-            "          <label>changed_timezone</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>changed_timezone</entry-re>\n"
             "          <value>1</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
-            "      <config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
+            "      <entry-re-list>\n"
             "        <_id>3</_id>\n"
-            "        <node>\n"
-            "          <label>changed_ntp</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>changed_ntp</entry-re>\n"
             "          <value>0</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
-            "      <config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
+            "      <entry-re-list>\n"
             "        <_id>4</_id>\n"
-            "        <node>\n"
-            "          <label>changed_timedate</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>changed_timedate</entry-re>\n"
             "          <value>1</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
             "    </record>\n"
             "  </record-list>\n"
             "  <record-list>\n"
             "    <_id>3</_id>\n"
             "    <record>\n"
-            "      <label>KeyboardSpoke</label>\n"
-            "      <config-entries>\n"
+            "      <record-re>KeyboardSpoke</record-re>\n"
+            "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
-            "        <node>\n"
-            "          <label>visited</label>\n"
+            "        <entry-re>\n"
+            "          <entry-re>visited</entry-re>\n"
             "          <value>0</value>\n"
-            "        </node>\n"
-            "      </config-entries>\n"
+            "        </entry-re>\n"
+            "      </entry-re-list>\n"
             "    </record>\n"
             "  </record-list>\n"
             "</" AUG_TEST_MODULE ">\n");
@@ -128,18 +128,18 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/label", "MouseSpoke", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']/"
-            "node/label", "visited", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']/"
-            "node/value", "1", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/record-re", "MouseSpoke", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/entry-re-list[_id='1']/"
+            "entry-re/entry-re", "visited", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/entry-re-list[_id='1']/"
+            "entry-re/value", "1", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/config-entries[_id='2']/"
-            "node/label", "doubleclick_delay", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/config-entries[_id='2']/"
-            "node/value", "300ms", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-re-list[_id='2']/"
+            "entry-re/entry-re", "doubleclick_delay", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-re-list[_id='2']/"
+            "entry-re/value", "300ms", 0, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
@@ -162,10 +162,10 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/config-entries[_id='1']/"
-            "node/value", "1", LYD_NEW_PATH_UPDATE, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-re-list[_id='1']/"
+            "entry-re/value", "1", LYD_NEW_PATH_UPDATE, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/label", "DateAndTimeSpoke",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/record-re", "DateAndTimeSpoke",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -193,7 +193,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='3']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/entry-re-list[_id='3']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='3']", 0, &node));
     lyd_free_tree(node);

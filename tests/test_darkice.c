@@ -57,7 +57,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>1</_id>\n"
             "    <record>\n"
-            "      <value>general</value>\n"
+            "      <record-label-re>general</record-label-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -77,7 +77,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>2</_id>\n"
             "    <record>\n"
-            "      <value>icecast2-0</value>\n"
+            "      <record-label-re>icecast2-0</record-label-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -108,7 +108,7 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/value", "my-section", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/record-label-re", "my-section", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-re-list[_id='1']/"
             "entry-re/entry-re", "logging", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-re-list[_id='1']/"
@@ -144,7 +144,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/value", "icecast5-0",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/record-label-re", "icecast5-0",
             LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/entry-re-list[_id='1']/"
             "entry-re/entry-re", "length", LYD_NEW_PATH_UPDATE, NULL));

@@ -355,11 +355,11 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/reverse", NULL, 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/program-list[_id='1']/"
             "program", "ay_start", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entries[_id='1']/"
             "entry/selector-list[_id='1']/selector/facility", "*", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entries[_id='1']/"
             "entry/selector-list[_id='1']/selector/level", "*", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entries[_id='1']/"
             "entry/action/file", "/root_file", 0, NULL));
 
     /* store new data */

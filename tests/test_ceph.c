@@ -57,7 +57,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>1</_id>\n"
             "    <record>\n"
-            "      <label>global</label>\n"
+            "      <record-re>global</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -210,7 +210,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>2</_id>\n"
             "    <record>\n"
-            "      <label>mon</label>\n"
+            "      <record-re>mon</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -314,7 +314,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>3</_id>\n"
             "    <record>\n"
-            "      <label>mon.alpha</label>\n"
+            "      <record-re>mon.alpha</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -334,7 +334,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>4</_id>\n"
             "    <record>\n"
-            "      <label>mon.beta</label>\n"
+            "      <record-re>mon.beta</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -354,7 +354,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>5</_id>\n"
             "    <record>\n"
-            "      <label>mon.gamma</label>\n"
+            "      <record-re>mon.gamma</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -374,7 +374,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>6</_id>\n"
             "    <record>\n"
-            "      <label>mds</label>\n"
+            "      <record-re>mds</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -422,7 +422,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>7</_id>\n"
             "    <record>\n"
-            "      <label>mds.alpha</label>\n"
+            "      <record-re>mds.alpha</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -435,7 +435,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>8</_id>\n"
             "    <record>\n"
-            "      <label>mds.beta</label>\n"
+            "      <record-re>mds.beta</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -448,7 +448,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>9</_id>\n"
             "    <record>\n"
-            "      <label>osd</label>\n"
+            "      <record-re>osd</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -608,7 +608,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>10</_id>\n"
             "    <record>\n"
-            "      <label>osd.0</label>\n"
+            "      <record-re>osd.0</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -621,7 +621,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>11</_id>\n"
             "    <record>\n"
-            "      <label>osd.1</label>\n"
+            "      <record-re>osd.1</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -634,7 +634,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>12</_id>\n"
             "    <record>\n"
-            "      <label>osd.2</label>\n"
+            "      <record-re>osd.2</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -647,7 +647,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>13</_id>\n"
             "    <record>\n"
-            "      <label>osd.3</label>\n"
+            "      <record-re>osd.3</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -660,7 +660,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>14</_id>\n"
             "    <record>\n"
-            "      <label>client</label>\n"
+            "      <record-re>client</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -715,7 +715,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>15</_id>\n"
             "    <record>\n"
-            "      <label>client.radosgw.gateway</label>\n"
+            "      <record-re>client.radosgw.gateway</record-re>\n"
             "      <entry-re-list>\n"
             "        <_id>1</_id>\n"
             "        <entry-re>\n"
@@ -793,7 +793,7 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='6']/record/entry-re-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='16']/record/label", "mds.omega", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='16']/record/record-re", "mds.omega", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='16']/record/entry-re-list[_id='1']/"
             "entry-re/entry-re", "host", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='16']/record/entry-re-list[_id='1']/"
@@ -825,7 +825,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='15']/record/label",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='15']/record/record-re",
             "client.radosgw.gateway.new", LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='15']/record/entry-re-list[_id='2']/"
             "entry-re/value", "ceph-radosgw-update", LYD_NEW_PATH_UPDATE, NULL));

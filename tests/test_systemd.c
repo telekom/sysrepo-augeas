@@ -57,7 +57,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>1</_id>\n"
             "    <record>\n"
-            "      <label>Unit</label>\n"
+            "      <record-re>Unit</record-re>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <entry-single>\n"
@@ -78,7 +78,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>2</_id>\n"
             "    <record>\n"
-            "      <label>Service</label>\n"
+            "      <record-re>Service</record-re>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <entry-multi>\n"
@@ -186,7 +186,7 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>3</_id>\n"
             "    <record>\n"
-            "      <label>Install</label>\n"
+            "      <record-re>Install</record-re>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <entry-multi>\n"
@@ -222,7 +222,7 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
             "/entry-multi/value", "/etc/sysconfig/apache", 0, &entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/label", "Socket", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/record-re", "Socket", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"
             "/entry-multi/entry-multi-kw", "ListenStream", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"

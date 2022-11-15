@@ -333,6 +333,7 @@ struct ay_lnode {
 
     uint32_t flags;             /**< Various additional information about [lense flags](@ref lenseflags) */
     struct ay_pnode *pnode;     /**< Access to augeas term. Can be NULL. */
+    struct module *mod;         /**< Access to the Augeas module where the ay_lnode.lens is located. */
     struct lens *lens;          /**< Pointer to lense node. Always set. */
 };
 
@@ -912,6 +913,49 @@ ay_get_module(struct augeas *aug, const char *modname, size_t modname_len)
 }
 
 /**
+ * @brief Get module by the filename/path.
+ *
+ * @param[in] aug Augeas context.
+ * @param[in] filename Path to module. Get from lens.info.filename.str.
+ * @return Pointer to module or NULL.
+ */
+static struct module *
+ay_get_module2(struct augeas *aug, const char *filename)
+{
+    struct module *mod = NULL, *mod_iter;
+
+    assert(filename);
+
+    LY_LIST_FOR(aug->modules, mod_iter) {
+        if (!mod_iter->bindings) {
+            continue;
+        }
+        if (!strcmp(mod_iter->bindings->value->info->filename->str, filename)) {
+            mod = mod_iter;
+            break;
+        }
+    }
+
+    return mod;
+}
+
+/**
+ * @brief Get module by lense.
+ *
+ * @param[in] lens Lense to process.
+ * @return Pointer to module or NULL.
+ */
+static struct module *
+ay_get_module_by_lens(struct lens *lens)
+{
+    struct augeas *aug;
+
+    aug = ay_get_augeas_ctx2(lens);
+    assert(aug);
+    return ay_get_module2(aug, lens->info->filename->str);
+}
+
+/**
  * @brief Get lense name from specific module.
  *
  * @param[in] modname Name of the module where to look for @p lens.
@@ -958,26 +1002,32 @@ ay_get_regexp_by_lensname(struct module *mod, char *lensname)
 /**
  * @brief Get lense name.
  *
- * It is probably not possible to find a lense name base on @p lens alone because there is no direct mapping between
- * the module path (lens->regexp->info->filename) and module name (mod->name).
- *
- * @param[in] mod Module in which search the @p lens. If it fails then it is then searched in other predefined modules.
+ * @param[in] mod Module that augyang is currently processing. Takes precedence over lnode.mod when searching.
  * @param[in] lens Lense for which to find the name.
  * @return Lense name or NULL.
  */
 static char *
-ay_get_lense_name(struct module *mod, struct lens *lens)
+ay_get_lense_name(struct module *mod, const struct ay_lnode *lnode)
 {
     static char *ret;
 
-    if (!lens) {
+    if (!lnode) {
         return NULL;
     }
 
-    ret = ay_get_lense_name_by_mod(mod, lens);
-    if (!ret) {
-        ret = ay_get_lense_name_by_modname("Rx", lens);
+    /* First search in @p mod. */
+    ret = ay_get_lense_name_by_mod(mod, lnode->lens);
+    AY_CHECK_RET(ret);
+    ret = ay_get_lense_name_by_modname("Rx", lnode->lens);
+    AY_CHECK_RET(ret);
+
+    if (mod == lnode->mod) {
+        return ret;
     }
+
+    /* Try searching in lnode.mod. */
+    ret = ay_get_lense_name_by_mod(lnode->mod, lnode->lens);
+    AY_CHECK_RET(ret);
 
     return ret;
 }
@@ -990,7 +1040,7 @@ ay_get_lense_name(struct module *mod, struct lens *lens)
  * and it would be a pity not to use them. So even though the identifier isn't quite directly related to the @p node,
  * it's still better than the default name ('config-entries').
  *
- * @param[in] mod Module in which search the @p lens.
+ * @param[in] mod Module that augyang is currently processing. Takes precedence over lnode.mod when searching.
  * @param[in] node Node for which the identifier is to be found.
  * @return Identifier or NULL.
  */
@@ -1031,6 +1081,12 @@ ay_get_spare_lense_name(struct module *mod, const struct ay_ynode *node)
     /* Find a free unused identifier in the module. */
     for (liter = start->parent; liter && (liter != end); liter = liter->parent) {
         LY_LIST_FOR(mod->bindings, bind_iter) {
+            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
+                return bind_iter->ident->str;
+            }
+        }
+        /* Try search in ay_lnode.mod */
+        LY_LIST_FOR(liter->mod->bindings, bind_iter) {
             if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
                 return bind_iter->ident->str;
             }
@@ -4706,7 +4762,7 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
         } else if (iter->type == YN_CASE) {
             continue;
         }
-        if (iter->snode && (str = ay_get_lense_name(ctx->mod, iter->snode->lens))) {
+        if (iter->snode && (str = ay_get_lense_name(ctx->mod, iter->snode))) {
             strcpy(buffer, str);
             break;
         }
@@ -4783,7 +4839,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
 
         if (!buffer[0]) {
             /* Try snode from ex-parent. */
-            str = ay_get_lense_name(ctx->mod, snode);
+            str = ay_get_lense_name(ctx->mod, node->snode);
             if (!str) {
                 ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
                 AY_CHECK_RET(ret);
@@ -4842,7 +4898,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, label)) && strcmp(tmp, "lns")) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label)) && strcmp(tmp, "lns")) {
             /* label can points to L_STAR lense */
             str = tmp;
         } else if (!ay_get_yang_ident_first_descendants(ctx, node, opt, buffer) && buffer[0]) {
@@ -4864,9 +4920,9 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             ret = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
             str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
         } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
@@ -4891,13 +4947,13 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         return ret;
     } else if (node->type == YN_KEY) {
         ident_from_label = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret);
-        if (ident_from_label && (label->tag != L_SEQ) && value && (tmp = ay_get_lense_name(ctx->mod, value))) {
+        if (ident_from_label && (label->tag != L_SEQ) && value && (tmp = ay_get_lense_name(ctx->mod, node->value))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if (ident_from_label) {
             AY_CHECK_RET(ret);
             str = ident_from_label;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
         } else {
             str = "label";
@@ -4906,7 +4962,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ay_get_yang_ident(ctx, node->child, opt, buffer);
         str = buffer;
     } else if (node->type == YN_VALUE) {
-        if ((tmp = ay_get_lense_name(ctx->mod, value))) {
+        if ((tmp = ay_get_lense_name(ctx->mod, node->value))) {
             str = tmp;
         } else {
             str = "value";
@@ -4915,9 +4971,9 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, snode))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
             str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, label))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
         } else {
             str = "node";
@@ -7564,6 +7620,7 @@ ay_lnode_create_tree(struct ay_lnode *root, struct lens *lens, struct ay_lnode *
 
     LY_ARRAY_INCREMENT(root);
     node->lens = lens;
+    node->mod = ay_get_module_by_lens(lens);
     if (ay_lense_pattern_is_label(lens)) {
         node->flags |= AY_LNODE_KEY_IS_LABEL;
     }
