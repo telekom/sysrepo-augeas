@@ -9156,6 +9156,9 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
 
         /* For every choice group in list. */
         for (child = start; child; child = ay_ynode_next_choice_group(child)) {
+            if (child->flags & AY_CHOICE_CREATED) {
+                continue;
+            }
             /* Every possible choice towards the parents. */
             for (choice = child->choice; choice && (choice != stop); choice = choice->parent) {
                 if (choice->lens->tag != L_UNION) {
@@ -10074,6 +10077,10 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
         return 0;
     }
 
+    if (!choice) {
+        choice = AY_YNODE_ROOT_LTREE(tree);
+        ns->flags |= AY_CHOICE_CREATED;
+    }
     if (!ns->choice) {
         ns->flags |= AY_CHOICE_CREATED;
     }
@@ -10082,13 +10089,7 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
         /* Create YN_CASE for ns. */
         ay_ynode_insert_parent_for_rest(tree, ns);
         cas = ns;
-        /* Unify choice. */
-        if (choice) {
-            cas->choice = choice;
-        } else {
-            assert(cas->parent->choice);
-            cas->choice = cas->parent->choice;
-        }
+        cas->choice = choice;
         cas->type = YN_CASE;
         cas->when_ref = cas->child->when_ref;
         cas->when_val = cas->child->when_val;
@@ -10096,7 +10097,7 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
         cas->child->when_val = NULL;
         return 1;
     } else {
-        ns->choice = ns->parent->choice;
+        ns->choice = choice;
         return 0;
     }
 }
@@ -10138,6 +10139,7 @@ static void
 ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
 {
     struct ay_ynode *first1, *first2;
+    ly_bool first1_val_in_choice, first2_val_in_choice;
 
     first1 = br1->type == YN_CASE ? br1->child : br1;
     first2 = br2->type == YN_CASE ? br2->child : br2;
@@ -10151,23 +10153,25 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
         /* Values are identical, so it cannot be distinguished. */
         return;
     }
+    first1_val_in_choice = first1->flags & AY_VALUE_IN_CHOICE;
+    first2_val_in_choice = first2->flags & AY_VALUE_IN_CHOICE;
 
     /* Set 'when' for child. */
-    if (first1->child && !first2->child && first1->value) {
+    if (first1->child && !first2->child && first1->value && !first1_val_in_choice) {
         first1->child->when_ref = first1->id;
         first1->child->when_val = first1->value;
         first1->flags |= AY_WHEN_TARGET;
-    } else if (!first1->child && first2->child && first2->value) {
+    } else if (!first1->child && first2->child && first2->value && !first2_val_in_choice) {
         first2->child->when_ref = first1->id;
         first2->child->when_val = first2->value;
         first1->flags |= AY_WHEN_TARGET;
     } else if (first1->child && first2->child) {
-        if (first1->value) {
+        if (first1->value && !first1_val_in_choice) {
             first1->child->when_ref = first1->id;
             first1->child->when_val = first1->value;
             first1->flags |= AY_WHEN_TARGET;
         }
-        if (first2->value) {
+        if (first2->value && !first2_val_in_choice) {
             first2->child->when_ref = first1->id;
             first2->child->when_val = first2->value;
             first1->flags |= AY_WHEN_TARGET;
@@ -10176,18 +10180,18 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
 
     /* Set 'when' for sibling. */
     if ((br1->type == YN_CASE) && (br2->type == YN_CASE)) {
-        if (first1->value) {
+        if (first1->value && !first1_val_in_choice) {
             first1->next->when_ref = first1->id;
             first1->next->when_val = first1->value;
             first1->flags |= AY_WHEN_TARGET;
         }
-        if (first2->value) {
+        if (first2->value && !first2_val_in_choice) {
             first2->next->when_ref = first1->id;
             first2->next->when_val = first2->value;
             first1->flags |= AY_WHEN_TARGET;
         }
     } else if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
-        if (first2->value) {
+        if (first2->value && !first2_val_in_choice) {
             first2->next->when_ref = first1->id;
             first2->next->when_val = first2->value;
             first1->flags |= AY_WHEN_TARGET;
