@@ -88,24 +88,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -161,24 +146,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -234,24 +204,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -307,24 +262,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -380,24 +320,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -453,24 +378,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -526,24 +436,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -599,24 +494,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -672,24 +552,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -745,24 +610,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -818,24 +668,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {
@@ -891,24 +726,9 @@ module dovecot {
                     "Implicitly generated list key to maintain the order of the augeas data.";
                 }
                 choice ch-config-entries {
-                  container entry {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf keys {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.-]+";
-                        pattern "include|include_try|dict|userdb|passdb|protocol|service|plugin|namespace|map|fields|unix_listener|fifo_listener|inet_listener" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    leaf value {
-                      type string {
-                        pattern "([^ \t\n]+)((([ \t]+)([^ \t\n]+))*)";
-                      }
-                    }
+                  mandatory true;
+                  case entry {
+                    uses entry;
                   }
                   leaf _dict-ref {
                     type leafref {

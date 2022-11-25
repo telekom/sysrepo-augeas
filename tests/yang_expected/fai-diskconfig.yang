@@ -275,6 +275,7 @@ module fai-diskconfig {
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
       choice ch-config-entries {
+        mandatory true;
         container primary {
           augex:data-path "primary";
           presence "Config entry.";
@@ -386,6 +387,7 @@ module fai-diskconfig {
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
               choice ch-config-entries {
+                mandatory true;
                 container lv {
                   augex:data-path "lv";
                   presence "Config entry.";

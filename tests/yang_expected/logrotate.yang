@@ -288,6 +288,7 @@ module logrotate {
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
             choice ch-config-entries {
+              mandatory true;
               leaf schedule {
                 type string {
                   pattern "hourly|daily|weekly|monthly|yearly";

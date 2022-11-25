@@ -222,7 +222,7 @@
  * @param[in] TAG Tag of the lense.
  */
 #define AY_TAG_IS_VALUE(TAG) \
-    ((tag == L_STORE) || (tag == L_VALUE))
+    ((TAG == L_STORE) || (TAG == L_VALUE))
 
 /**
  * @brief Prefix of imported yang module which contains extensions for generated yang module.
@@ -2645,39 +2645,6 @@ ay_ynode_inner_node_alone(const struct ay_ynode *node)
 }
 
 /**
- * @brief Iterate over siblings from @p node and find next choice group.
- *
- * The @p node may or may not be in any choice group.
- * @param[in] node Starting node from which the next choice group will be sought.
- * @return First node in next choice group or NULL.
- */
-static struct ay_ynode *
-ay_ynode_next_choice_group(struct ay_ynode *node)
-{
-    struct ay_ynode *iter;
-
-    if (!node) {
-        return NULL;
-    } else if (node->choice) {
-        /* Leave current choice group. */
-        for (iter = node->next; iter && (iter->choice == node->choice); iter = iter->next) {}
-        if (!iter) {
-            return NULL;
-        }
-        node = iter;
-    }
-
-    /* Find choice group. */
-    for (iter = node; iter; iter = iter->next) {
-        if (iter->choice && iter->next && (iter->choice == iter->next->choice)) {
-            return iter;
-        }
-    }
-
-    return NULL;
-}
-
-/**
  * @brief Check if node is the only one in the choice.
  *
  * @param[in] node Node to check.
@@ -2955,7 +2922,7 @@ ay_ynode_when_value_is_valid(const struct ay_ynode *node)
  * @return 1 for equal.
  */
 static ly_bool
-ay_lnode_lense_equal(struct lens *l1, struct lens *l2)
+ay_lnode_lense_equal(const struct lens *l1, const struct lens *l2)
 {
     char *str1, *str2;
 
@@ -3012,11 +2979,13 @@ static ly_bool
 ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ignore_choice)
 {
     ly_bool alone1, alone2;
+    uint16_t cmp_mask;
 
     assert((n1->type != YN_ROOT) && (n2->type != YN_ROOT));
 
     alone1 = !n1->next && (n1->parent->child == n1);
     alone2 = !n2->next && (n2->parent->child == n2);
+    cmp_mask = ignore_choice ? AY_YNODE_FLAGS_CMP_MASK & ~AY_CHOICE_MAND_FALSE : AY_YNODE_FLAGS_CMP_MASK;
 
     if (n1->descendants != n2->descendants) {
         return 0;
@@ -3036,7 +3005,7 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
         return 0;
     } else if ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) {
         return 0;
-    } else if ((n1->flags & AY_YNODE_FLAGS_CMP_MASK) != (n2->flags & AY_YNODE_FLAGS_CMP_MASK)) {
+    } else if ((n1->flags & cmp_mask) != (n2->flags & cmp_mask)) {
         return 0;
     } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
         return 0;
@@ -3090,11 +3059,64 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
                 return 0;
             }
         }
-
-        return 1;
     }
 
     return 1;
+}
+
+/**
+ * @brief Check if @p subtree contains @p lnode.
+ *
+ * @param[in] subtree Subtree to check.
+ * @param[in] lnode Searched node.
+ * @return 1 if @p subtree contains @p lnode.
+ */
+static ly_bool
+ay_ynode_subtree_contains_lnode(const struct ay_ynode *subtree, const struct ay_lnode *lnode)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_ynode *node;
+
+    if (!lnode) {
+        return 0;
+    }
+
+    for (i = 0; i <= subtree->descendants; i++) {
+        node = &subtree[i];
+
+        if ((node->snode && ay_lnode_lense_equal(node->snode->lens, lnode->lens)) ||
+                (node->label && ay_lnode_lense_equal(node->label->lens, lnode->lens)) ||
+                (node->value && ay_lnode_lense_equal(node->value->lens, lnode->lens))) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Check if any choice branch contains @p lnode.
+ *
+ * @param[in] chnode First branch which will be searched.
+ * @param[in] choice Choice according to which it is iterated over the branches.
+ * @return 1 if choice contains lnode.
+ */
+static ly_bool
+ay_ynode_choice_contains_lnode(const struct ay_ynode *chnode, const struct ay_lnode *choice,
+        const struct ay_lnode *lnode)
+{
+    const struct ay_ynode *branch;
+
+    for (branch = chnode; branch; branch = branch->next) {
+        if (ay_ynode_subtree_contains_lnode(branch, lnode)) {
+            return 1;
+        }
+        if (branch->choice != choice) {
+            break;
+        }
+    }
+
+    return 0;
 }
 
 /**
@@ -7763,7 +7785,7 @@ ay_ynode_add_label_value(struct ay_ynode *forest)
                 j += lnode->descendants;
             } else if (!ynode->label && AY_TAG_IS_LABEL(tag)) {
                 ynode->label = lnode;
-            } else if (!ynode->value && AY_TAG_IS_VALUE(value)) {
+            } else if (!ynode->value && AY_TAG_IS_VALUE(tag)) {
                 ynode->value = lnode;
             }
         }
@@ -9117,10 +9139,126 @@ ay_ynode_unite_choice(struct ay_ynode *tree)
     }
 }
 
+static ly_bool
+ay_lense_is_comment(struct lens *lns)
+{
+    if (lns && (lns->tag == L_LABEL) &&
+            (!strcmp("#comment", lns->string->str) ||
+            !strcmp("!comment", lns->string->str) ||
+            !strcmp("#mcomment", lns->string->str) ||
+            !strcmp("#scomment", lns->string->str))) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static const struct ay_lnode *
+ay_lnode_get_snode_label(const struct ay_lnode *snode)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_lnode *label;
+
+    label = NULL;
+    for (i = 1; i <= snode->descendants; i++) {
+        if (snode[i].lens->tag == L_SUBTREE) {
+            i += snode[i].descendants;
+        } else if (AY_TAG_IS_LABEL(snode[i].lens->tag) || AY_TAG_IS_VALUE(snode[i].lens->tag)) {
+            label = &snode[i];
+            break;
+        }
+    }
+
+    return label;
+}
+
 /**
- * @brief Set YN_LIST mandatory false if children contain choice and one choice branch is empty.
+ * @brief Check if branch is empty due to deleted node.
  *
- * An empty branch in L_UNION is one that contains nodes that will soon be deleted in ynodes (eg comment nodes
+ * @param[in] chnode Group of subtrees in which to search for the deleted node.
+ * @param[in] choice Choice to be searched.
+ * @return 1 if @p choice contains deleted node or L_DEL nodes.
+ */
+static ly_bool
+ay_ynode_mandatory_empty_branch_d2_deleted_node(struct ay_ynode *chnode, const struct ay_lnode *choice)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_lnode *snode, *lnode, *branch, *iter;
+    ly_bool found;
+
+    /* For every branch in choice. */
+    for (branch = choice->child; branch; branch = branch->next) {
+        /* At least one L_SUBTREE must be found in the branch. */
+        found = 0;
+        for (i = 0; i <= branch->descendants; i++) {
+            /* Find first L_SUBTREE. */
+            snode = &branch[i];
+            if (AY_TAG_IS_VALUE(snode->lens->tag)) {
+                for (iter = snode; iter && (iter->lens->tag != L_SUBTREE) && (iter->lens->tag != L_UNION); iter = iter->parent) {}
+                if (iter->lens->tag == L_UNION) {
+                    found = 1;
+                    break;
+                }
+                continue;
+            } else if (snode->lens->tag != L_SUBTREE) {
+                continue;
+            }
+
+            /* Get label for snode. */
+            lnode = ay_lnode_get_snode_label(snode);
+            if (!lnode) {
+                continue;
+            } else if (ay_lense_is_comment(lnode->lens)) {
+                /* Comment nodes are deleted, but they should not affect mandatory statement. */
+                found = 1;
+                break;
+            }
+
+            /* Check if snode has not been deleted. */
+            if (ay_ynode_choice_contains_lnode(chnode, choice, lnode)) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Check if list should be mandatory false because all its children are mandatory false.
+ *
+ * @param[in] list Node of type YN_LIST to check.
+ * @return 1 if list should be mandatory false.
+ */
+static ly_bool
+ay_ynode_mandatory_in_list_children_mandfalse(struct ay_ynode *list)
+{
+    struct ay_ynode *child, *iter;
+
+    for (child = list->child; child; child = child->next) {
+        if (child->choice && (child->flags & AY_CHOICE_MAND_FALSE) && !ay_ynode_alone_in_choice(child)) {
+            assert(child->flags & AY_CHOICE_MAND_FALSE);
+            for (iter = child; iter && (iter->choice == child->choice); iter = iter->next) {}
+            if (!iter) {
+                break;
+            }
+            child = iter;
+        } else {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Set AY_CHOICE_MAND_FALSE flag for choices which contains empty branch.
+ *
+ * An empty branch in L_UNION is one that contains nodes that was deleted (eg comment nodes
  * or nodes without a label). Or, an empty branch is considered to be one that contains only L_DEL nodes.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -9128,107 +9266,160 @@ ay_ynode_unite_choice(struct ay_ynode *tree)
 static void
 ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i, j, k;
-    struct ay_ynode *list, *child, *iter, *start;
-    const struct ay_lnode *choice, *branch, *snode, *label, *stop;
-    ly_bool empty_branch = 0;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *chnode;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        chnode = &tree[i];
+        if (!chnode->choice) {
+            continue;
+        } else if (chnode->flags & (AY_CHOICE_CREATED | AY_CHOICE_MAND_FALSE)) {
+            continue;
+        } else if (chnode != ay_ynode_get_first_in_choice(chnode->parent, chnode->choice)) {
+            continue;
+        }
+
+        if (!(chnode->flags & AY_CHOICE_MAND_FALSE) && ay_ynode_mandatory_empty_branch_d2_deleted_node(chnode, chnode->choice)) {
+            chnode->flags |= AY_CHOICE_MAND_FALSE;
+        }
+    }
+}
+
+/**
+ * @brief Check if list should be mandatory false due to some upper choice which is mandatory false.
+ *
+ * The examined choice statements are probably not in the ynode tree, but in the lnode tree.
+ *
+ * @param[in] list Node of type YN_LIST to check.
+ * @return 1 if list should be mandatory false.
+ */
+static ly_bool
+ay_ynode_mandatory_in_list_upper_choice_mandfalse(struct ay_ynode *list)
+{
+    const struct ay_lnode *start, *stop, *choice;
+
+    if (!list->parent) {
+        return 0;
+    }
+
+    /* Starting position to search. */
+    start = list->child->label;
+    if (list->child->label) {
+        start = list->child->label;
+    } else if (list->child->snode) {
+        start = list->child->snode;
+    } else {
+        return 0;
+    }
+    assert(start);
+
+    /* End position where the search ends. */
+    for (stop = list->parent->snode;
+            stop && (stop->lens->tag != L_SUBTREE) && (stop->lens->tag != L_STAR);
+            stop = stop->parent) {}
+    if (!stop && list->label && (list->label->lens->tag == L_STAR)) {
+        stop = list->label;
+    } else if (!stop) {
+        return 0;
+    }
+
+    /* Search for upper choice. */
+    for (choice = start; choice != stop; choice = choice->parent) {
+        if (choice->lens->tag != L_UNION) {
+            continue;
+        }
+
+        if (ay_ynode_mandatory_empty_branch_d2_deleted_node(list->parent, choice)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Set list mandatory to false under certain conditions.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_mandatory_in_list(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *list;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         list = &tree[i];
-        if ((list->type != YN_LIST) || !list->min_elems) {
+        if (list->type != YN_LIST) {
+            continue;
+        } else if ((list->flags & AY_YNODE_MAND_FALSE) || (list->min_elems == 0)) {
             continue;
         }
-        assert(list->child);
-        child = AY_YNODE_IS_SEQ_LIST(list) ? list->child->next : list->child;
-        child = !child ? list->child : child;
-        start = child->choice ? child : ay_ynode_next_choice_group(child);
-        if (!start || (start->flags & AY_CHOICE_CREATED)) {
+
+        if (ay_ynode_mandatory_in_list_children_mandfalse(list) ||
+                ay_ynode_mandatory_in_list_upper_choice_mandfalse(list)) {
+            list->min_elems = 0;
+            list->flags &= ~AY_YNODE_MAND_MASK;
+            list->flags |= AY_YNODE_MAND_FALSE;
+        }
+    }
+}
+
+/**
+ * @brief Get last node which belongs to choice.
+ *
+ * @param[in] first First node in choice.
+ * @return Last node in choice or @p first;
+ */
+static struct ay_ynode *
+ay_ynode_get_last_in_choice(struct ay_ynode *first)
+{
+    struct ay_ynode *iter;
+    struct ay_ynode *last;
+
+    last = first;
+    for (iter = first; iter && (iter->choice == first->choice); iter = iter->next) {
+        last = iter;
+    }
+
+    return last;
+}
+
+/**
+ * @brief Correction of mandatory statements in choice and list.
+ *
+ * If list has mandatory false and all its children has mandatory false then
+ * choice should has mandatory true because the optionality of that data in choice
+ * is moved to list.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_mandatory_choice_in_list(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *list, *chnode;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        list = &tree[i];
+        /* Get list with mandatory false. */
+        if (list->type != YN_LIST) {
+            continue;
+        } else if ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems) {
             continue;
         }
-        /* Set stop */
-        stop = NULL;
-        for (iter = list; iter; iter = iter->parent) {
-            if (iter->snode && (start->choice > iter->snode)) {
-                stop = iter->snode;
-                break;
-            }
+
+        /* Check if all children has mandatory false. */
+        if (!(list->child->choice && (list->child->flags & AY_CHOICE_MAND_FALSE) &&
+                (chnode = ay_ynode_get_last_in_choice(list->child)) && !chnode->next)) {
+            /* No correction because list contains some node which is not in choice.
+             * And if mandatory in choice will be set to true, additional data would be
+             * incorrectly required, which are actually optional.
+             */
+            continue;
         }
 
-        /* For every choice group in list. */
-        for (child = start; child; child = ay_ynode_next_choice_group(child)) {
-            if (child->flags & AY_CHOICE_CREATED) {
-                continue;
-            }
-            /* Every possible choice towards the parents. */
-            for (choice = child->choice; choice && (choice != stop); choice = choice->parent) {
-                if (choice->lens->tag != L_UNION) {
-                    continue;
-                } else if (choice->lens->tag == L_SUBTREE) {
-                    break;
-                }
-                assert(choice->child);
-                /* Find empty choice branch. */
-                for (branch = choice->child; branch; branch = branch->next) {
-                    empty_branch = 1;
-                    /* For every node in the choice branch. */
-                    for (j = 0; j <= branch->descendants; j++) {
-                        snode = &branch[j];
-                        if (child->choice == snode) {
-                            /* This branch is already processed. */
-                            empty_branch = 0;
-                            break;
-                        } else if (list->value && (snode->lens == list->value->lens)) {
-                            /* It is list's value node (value-yang-path). */
-                            empty_branch = 0;
-                            break;
-                        } else if (snode->lens->tag != L_SUBTREE) {
-                            continue;
-                        }
-
-                        /* Get label for snode. */
-                        label = NULL;
-                        for (k = 1; k <= snode->descendants; k++) {
-                            if (snode[k].lens->tag == L_SUBTREE) {
-                                k += snode[k].descendants;
-                            } else if (AY_TAG_IS_LABEL(snode[k].lens->tag)) {
-                                label = &snode[k];
-                                break;
-                            }
-                        }
-                        if (snode && !label) {
-                            /* The snode without label -> this branch is empty. */
-                            break;
-                        }
-
-                        /* Find snode in the list. */
-                        for (k = 0; k <= list->descendants; k++) {
-                            iter = &list[k];
-                            if (iter->label && ay_lnode_lense_equal(label->lens, iter->label->lens)) {
-                                /* The snode is found so it is not empty branch. */
-                                empty_branch = 0;
-                                break;
-                            }
-                        }
-                        if (!empty_branch) {
-                            /* This branch is not empty. Let's continue with another choice branch. */
-                            break;
-                        }
-                    }
-                    if (empty_branch) {
-                        /* The 'branch' is empty. Let's set min-elements to 0. */
-                        break;
-                    }
-                }
-                if (empty_branch) {
-                    break;
-                }
-            }
-            if (empty_branch) {
-                list->min_elems = 0;
-                list->flags &= ~AY_YNODE_MAND_MASK;
-                break;
-            }
-        }
+        list->child->flags &= ~AY_CHOICE_MAND_FALSE;
     }
 }
 
@@ -9300,12 +9491,21 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         } else if (node->type == YN_LIST) {
             lnode = AY_YNODE_IS_SEQ_LIST(node) ? node->snode : node->label;
             if (ay_lnode_has_maybe(lnode, 0, 0)) {
+                node->flags |= AY_YNODE_MAND_FALSE;
                 node->min_elems = 0;
+            } else if (node->min_elems) {
+                node->flags |= AY_YNODE_MAND_TRUE;
+            } else {
+                node->flags |= AY_YNODE_MAND_FALSE;
             }
         } else if (node->type == YN_LEAFLIST) {
             if (ay_lnode_has_maybe(node->snode, 0, 0)) {
                 node->flags |= AY_YNODE_MAND_FALSE;
                 node->min_elems = 0;
+            } else if (node->min_elems) {
+                node->flags |= AY_YNODE_MAND_TRUE;
+            } else {
+                node->flags |= AY_YNODE_MAND_FALSE;
             }
         } else if (node->type == YN_KEY) {
             node->flags &= ~AY_YNODE_MAND_MASK;
@@ -9320,9 +9520,25 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         }
     }
 
-    ay_ynode_mandatory_empty_branch(tree);
-
     /* TODO: in YN_CASE node should be at least one node with mandatory true (if choice is mandatory true). */
+
+    /* Setting mandatory for list and choice is not so obvious. The ynode tree does not contain all nodes
+     * and also does not contain L_DEL lenses. So the following cases are in ynode tree ignored:
+     * 1. Node is comment.
+     * 2. Empty node. Node has no label.
+     * 3. No nodes. Branch in L_UNION that only contains L_DEL.
+     * But cases 2. and 3. have an effect on mandatory-stmt.
+     * A branch containing empty nodes or no nodes must have choice set to mandatory false.
+     * Also, if choice contains a list with mandatory true and at the same time choice contains cases 1. or 2.,
+     * then the list must be mandatory false because it is actually optional.
+     */
+    ay_ynode_mandatory_empty_branch(tree);
+    ay_ynode_mandatory_in_list(tree);
+
+    /* There is one more rule. If list is mandatory false and its choice is mandatory false,
+     * then it is unnecessary to have this information twice. Therefore, its choice is reset to mandatory true.
+     */
+    ay_ynode_mandatory_choice_in_list(tree);
 }
 
 /**
@@ -9362,11 +9578,7 @@ ay_delete_comment(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iter = &tree[i];
         label = AY_LABEL_LENS(iter);
-        if (label && (label->tag == L_LABEL) &&
-                (!strcmp("#comment", label->string->str) ||
-                !strcmp("!comment", label->string->str) ||
-                !strcmp("#mcomment", label->string->str) ||
-                !strcmp("#scomment", label->string->str))) {
+        if (ay_lense_is_comment(label)) {
             ay_ynode_delete_subtree(tree, &tree[i]);
             i--;
         }
@@ -10090,6 +10302,7 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
         ay_ynode_insert_parent_for_rest(tree, ns);
         cas = ns;
         cas->choice = choice;
+        cas->flags |= AY_CHOICE_CREATED;
         cas->type = YN_CASE;
         cas->when_ref = cas->child->when_ref;
         cas->when_val = cas->child->when_val;
@@ -10098,6 +10311,7 @@ ay_ynode_case_insert(struct ay_ynode *tree, struct ay_ynode *ns, const struct ay
         return 1;
     } else {
         ns->choice = choice;
+        ns->flags |= AY_CHOICE_CREATED;
         return 0;
     }
 }
@@ -10377,6 +10591,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
         /* All children except the first are not mandatory. */
         br1->flags |= AY_CHILDREN_MAND_FALSE;
         br1->choice = br1->child->choice;
+        br1->flags |= AY_CHOICE_CREATED;
         br1->child->choice = NULL;
         ay_ynode_merge_nodes(tree, br1, br2->child->next, 1);
         first1->next->flags |= AY_CHOICE_MAND_FALSE;
@@ -10797,6 +11012,7 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i, j;
     struct ay_ynode *iti, *itj, *grouping, *uses, *inner_nodes, *start;
+    uint16_t choice_mand_false;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iti = &tree[i];
@@ -10821,6 +11037,7 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
             grouping->snode = grouping->parent->snode;
         }
         grouping->type = YN_GROUPING;
+        choice_mand_false = grouping->child->flags & AY_CHOICE_MAND_FALSE;
 
         /* Find, remove duplicate subtree and create YN_USES. */
         start = grouping + grouping->descendants + 1;
@@ -10847,6 +11064,7 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
             /* Set YN_USES. */
             uses->type = YN_USES;
             uses->ref = grouping->id;
+            uses->flags |= choice_mand_false;
         }
         /* iti node is processed */
         iti->ref = 0;
@@ -10857,6 +11075,7 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
         uses->type = YN_USES;
         uses->ref = grouping->id;
         uses->choice = grouping == iti->parent ? iti->choice : grouping->child->choice;
+        uses->flags |= choice_mand_false;
 
         grouping->child->choice = !grouping->child->next ? NULL : grouping->child->choice;
     }
@@ -11016,8 +11235,8 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
             }
 
-            /* for every child in wrapper set type to container */
             for (child = list->child; child; child = child->next) {
+                /* for every child in wrapper set type to container */
                 if (child->type != YN_REC) {
                     child->type = YN_CONTAINER;
                 }
