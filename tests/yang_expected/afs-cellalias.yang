@@ -1,0 +1,45 @@
+module afs-cellalias {
+  yang-version 1.1;
+  namespace "aug:afs-cellalias";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "AFS_cellalias";
+
+  list afs-cellalias {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "target";
+        augex:value-yang-path "target";
+        presence "Config entry.";
+        leaf target {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#]+";
+          }
+        }
+        leaf linkname {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "linkname";
+        }
+      }
+    }
+  }
+}

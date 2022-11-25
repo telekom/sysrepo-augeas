@@ -1,0 +1,83 @@
+module anacron {
+  yang-version 1.1;
+  namespace "aug:anacron";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Anacron";
+
+  list anacron {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container shellvar {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])[0-9][0-9]*\\]|(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])\\]|entry[1-9A-Z_a-z-][1-9A-Z_a-z-]*|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*|())|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*|())|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*|())|(e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*|e|[1-9A-Z_a-df-z-]";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\n]*[^ \t\n]";
+            }
+          }
+        }
+        container entry {
+          augex:data-path "entry";
+          augex:value-yang-path "space-in";
+          presence "Config entry.";
+          choice ch-entry {
+            mandatory true;
+            leaf period {
+              type uint64;
+              augex:data-path "period";
+            }
+            leaf period-name {
+              type string {
+                pattern "monthly";
+              }
+              augex:data-path "period_name";
+            }
+          }
+          leaf delay {
+            mandatory true;
+            type uint64;
+            augex:data-path "delay";
+          }
+          leaf job-identifier {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "job-identifier";
+          }
+          leaf space-in {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+module approx {
+  yang-version 1.1;
+  namespace "aug:approx";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Approx";
+
+  list approx {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list kv-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container kv {
+        augex:data-path "$$";
+        augex:value-yang-path "value-re";
+        presence "Config entry.";
+        leaf key-re {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf value-re {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n](.*[^ \t\n])?";
+          }
+        }
+      }
+    }
+  }
+}

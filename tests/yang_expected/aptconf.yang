@@ -1,0 +1,100 @@
+module aptconf {
+  yang-version 1.1;
+  namespace "aug:aptconf";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "AptConf";
+
+  list aptconf {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-entry {
+        mandatory true;
+        list name-re-list {
+          key "_r-id";
+          config false;
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          container name-re {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf name-re {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z][A-Za-z-]*";
+              }
+            }
+            choice ch-name-re {
+              leaf value {
+                type string {
+                  pattern "[^\"\n]+";
+                }
+              }
+              list entry-noeol {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-entry-noeol {
+                  mandatory true;
+                  leaf _name-re-ref {
+                    type leafref {
+                      path "../../../../name-re-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  leaf elem {
+                    type string {
+                      pattern "[^\"\n]+";
+                    }
+                    augex:data-path "@elem";
+                  }
+                }
+              }
+            }
+          }
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "#include";
+        }
+        container clear {
+          augex:data-path "#clear";
+          presence "Config entry.";
+          leaf-list name {
+            min-elements 1;
+            type string {
+              pattern "[A-Za-z][A-Za-z:-]*";
+            }
+            ordered-by user;
+            augex:data-path "name";
+          }
+        }
+      }
+    }
+  }
+}

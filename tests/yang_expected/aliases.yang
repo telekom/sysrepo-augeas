@@ -1,0 +1,43 @@
+module aliases {
+  yang-version 1.1;
+  namespace "aug:aliases";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Aliases";
+
+  list aliases {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list alias-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf name {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n#:|@]+|\"[^\"|\n]*\"";
+        }
+        augex:data-path "name";
+      }
+      leaf-list value {
+        min-elements 1;
+        type string {
+          pattern "([^|\", \t\n]+)|((\\|([^\", \t\n]+|\"[^\"\n]+\"))|(\"\\|[^\"\n]+\"))";
+        }
+        ordered-by user;
+        augex:data-path "value";
+      }
+    }
+  }
+}
