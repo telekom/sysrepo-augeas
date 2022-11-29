@@ -3875,6 +3875,9 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
         case ')':
             j--;
             break;
+        case '?':
+            j--;
+            break;
         case '\\':
             if ((j == 0) && (ident[i + 1] == '.')) {
                 /* remove '\' and also '.' */
@@ -4027,6 +4030,8 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
             if (*(iter + 1) == '?') {
                 iter++;
             }
+            break;
+        case '?':
             break;
         case '|':
         case '\n': /* '\n'-> TODO pattern is probably written wrong -> bugfix lense? */
@@ -4523,24 +4528,47 @@ ay_pattern_identifier_qm_(const char *ptoken, uint64_t ptoken_len, uint8_t *flag
         if (ptoken[i] == '(') {
             flag[group] = 1;
             group++;
+            continue;
         } else if ((ptoken[i] == ')') && (ptoken[i + 1] == '?')) {
             ay_bitset_clear_msb(flag, total_vari);
             i++;
-        } else if (ay_bitset_is_zero(flag, total_vari)) {
+            continue;
+        } else if (ay_bitset_is_zero(flag, total_vari) && (ptoken[i + 1] != '?')) {
             AY_CHECK_COND(bufidx >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             buffer[bufidx++] = ptoken[i];
-        } else if (((msb = ay_bitset_msb(flag, total_vari))) && vari[msb - 1]) {
-            for (j = 0; j < msb; j++) {
-                if (flag[j] && !vari[j]) {
-                    /* This variation is invalid. The question marks
-                     * are nested within each other and one is dependent on the other.
-                     */
-                    buffer[0] = '\0';
-                    return 0;
-                }
+            continue;
+        } else if ((ptoken[i + 1] == '?') && !vari[group]) {
+            group++;
+            i++;
+            continue;
+        } else if (((msb = ay_bitset_msb(flag, total_vari))) && !vari[msb - 1]) {
+            continue;
+        }
+
+        if ((ptoken[i + 1] == '?') && vari[group]) {
+            flag[group] = 1;
+            msb = group;
+        } else {
+            msb = ay_bitset_msb(flag, total_vari);
+        }
+
+        for (j = 0; j < msb; j++) {
+            if (flag[j] && !vari[j]) {
+                /* This variation is invalid. The question marks
+                 * are nested within each other and one is dependent on the other.
+                 */
+                buffer[0] = '\0';
+                return 0;
             }
-            AY_CHECK_COND(bufidx >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            buffer[bufidx++] = ptoken[i];
+        }
+
+        AY_CHECK_COND(bufidx >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        buffer[bufidx++] = ptoken[i];
+
+        if ((ptoken[i + 1] == '?')) {
+            flag[group] = 0;
+            group++;
+            i++;
         }
     }
 
@@ -4590,27 +4618,6 @@ free:
 }
 
 /**
- * @brief Check if ::ay_pattern_identifier_qm() can be called.
- *
- * @param[in] ptoken Subpattern to check.
- * @param[in] ptoken_len Length of @p ptoken.
- * @return 1 if ay_pattern_identifier_qm() can be called.
- */
-static ly_bool
-ay_pattern_identifier_is_qm(const char *ptoken, uint64_t ptoken_len)
-{
-    uint64_t i;
-
-    for (i = 0; i < ptoken_len; i++) {
-        if ((ptoken[i] == ')') && (ptoken[i + 1] == '?')) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-/**
  * @brief Create and fill ay_transl.substr LY_ARRAY based on ay_transl.origin.
  *
  * @param[in,out] tran Translation record.
@@ -4642,7 +4649,7 @@ ay_transl_create_substr(struct ay_transl *tran)
         if (!ay_pattern_union_token_is_valid(ptoken, len)) {
             goto fail;
         }
-        if (ay_pattern_identifier_is_qm(ptoken, len)) {
+        if (memchr(ptoken, '?', len)) {
             ret = ay_pattern_identifier_qm(ptoken, len, buffer, tran);
         } else {
             ret = ay_pattern_identifier_vbar(ptoken, len, buffer, tran);
@@ -11655,6 +11662,7 @@ ay_ynode_grouping_reduction(struct ay_ynode *tree)
     struct ay_ynode *gr, *uses, *prev, *new, *parent;
     struct ay_ynode data = {0};
     uint32_t ref;
+    ly_bool empty_grouping;
 
     /* For each top-level grouping. */
     for (gr = tree->child; gr->type == YN_GROUPING; gr = gr->next) {
@@ -11675,6 +11683,8 @@ ay_ynode_grouping_reduction(struct ay_ynode *tree)
             /* Nothing special. */
             ref = gr->id;
         }
+
+        empty_grouping = gr->descendants == 0;
 
         /* Find YN_USES which refers to this grouping. */
         for (i = AY_INDEX(tree, gr->next) + 1; i < LY_ARRAY_COUNT(tree); i++) {
@@ -11698,7 +11708,7 @@ ay_ynode_grouping_reduction(struct ay_ynode *tree)
             uses = new->child;
             new->choice = uses->choice;
 
-            if (!ref) {
+            if (!ref || empty_grouping) {
                 /* YN_USES node is deleted because grouping was deleted too. */
                 free(uses->ident);
                 ay_ynode_delete_node(tree, uses);
