@@ -3886,6 +3886,9 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
             } else if (ident[i + 1] == '.') {
                 /* remove '\' but keep '.' */
                 j--;
+            } else if (ident[i + 1] == '-') {
+                /* remove '\' but keep '-' */
+                j--;
             } else {
                 return AYE_IDENT_BAD_CHAR;
             }
@@ -3930,6 +3933,9 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
             ((*ch >= 48) && (*ch <= 57))) { /* 0-9 */
         return 1;
     } else if ((*ch == '\\') && (*(ch + 1) == '.')) {
+        *shift = 1;
+        return 1;
+    } else if ((*ch == '\\') && (*(ch + 1) == '-')) {
         *shift = 1;
         return 1;
     } else {
