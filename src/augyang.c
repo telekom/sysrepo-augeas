@@ -10704,67 +10704,124 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
  * [key lns1 . lns2 ]* | [key lns1 . lns3 ]*   -> [key lns1 (lns2 | lns3)]*
  *
  * @param[in,out] tree Tree of ynodes.
+ * @param[in,out] subtree Current subtree whose immediate children will be processed.
+ * @param[out] merged Flag is set if any merge operation is applied.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_merge_cases_r(struct ay_ynode *tree, struct ay_ynode *subtree, ly_bool *merged)
+{
+    int ret;
+    struct ay_ynode *child, *chn1, *chn2;
+    ly_bool match;
+    int err;
+
+    if (!subtree->child) {
+        return 0;
+    }
+
+    for (child = subtree->child; child; child = child->next) {
+        ret = ay_ynode_merge_cases_r(tree, child, merged);
+        AY_CHECK_RET(ret);
+    }
+
+    /* Iterate over siblings. */
+    chn1 = subtree->child;
+    while (chn1) {
+        if (!chn1->choice) {
+            /* Just continue with the next one. */
+            chn1 = chn1->next;
+            continue;
+        }
+        match = 0;
+        for (chn2 = chn1->next; chn2 && (chn2->choice == chn1->choice); chn2 = chn2->next) {
+            match = ay_ynode_cmp_choice_branches(chn1, chn2);
+            if (!match) {
+                continue;
+            }
+            if (ay_ynode_merge_cases_only_by_value(tree, chn1, chn2, &err)) {
+                AY_CHECK_RET(err);
+                ay_ynode_delete_subtree(tree, chn2);
+            } else {
+                ret = ay_ynode_merge_cases_(tree, chn1, chn2);
+                AY_CHECK_RET(ret);
+            }
+            break;
+        }
+        if (match) {
+            if (ay_ynode_alone_in_choice(chn1) && (chn1->type == YN_CASE)) {
+                /* YN_CASE is useless. */
+                ay_ynode_delete_node(tree, chn1);
+            }
+            if (chn1->when_ref && ay_ynode_alone_in_choice(chn1)) {
+                /* The when reference is meaningless if the node is not in choice. */
+                chn1->when_ref = 0;
+                chn1->when_val = NULL;
+            }
+            *merged = 1;
+            /* Repeat comparing because chn1 can be modified. */
+            continue;
+        }
+        /* Current chn1 is processed. Continue with the next one. */
+        chn1 = chn1->next;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Merge branches to one if the leading nodes have the same label.
+ *
+ * Function is applied as many times as a merge can be performed.
+ *
+ * @param[in,out] tree Tree of ynodes.
  * @return 0 on success.
  */
 static int
 ay_ynode_merge_cases(struct ay_ynode *tree)
 {
     int ret;
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *first_child, *chn1, *chn2;
-    ly_bool match;
-    int err;
+    ly_bool merged;
 
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        /* Get first child. */
-        first_child = &tree[i];
-        if (first_child != first_child->parent->child) {
+    do {
+        merged = 0;
+        ret = ay_ynode_merge_cases_r(tree, tree, &merged);
+        AY_CHECK_RET(ret);
+    } while (merged);
+
+    return 0;
+}
+
+/**
+ * @brief Delete choice branch if is not unique.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_delete_equal_cases(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *chnode, *br1, *br2;
+
+    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
+        chnode = &tree[i + 1];
+        if (!chnode->choice) {
             continue;
         }
-        /* Iterate over siblings. */
-        chn1 = first_child;
-        while (chn1) {
-            if (!chn1->choice) {
-                /* Just continue with the next one. */
-                chn1 = chn1->next;
-                continue;
-            }
-            match = 0;
-            for (chn2 = chn1->next; chn2 && (chn2->choice == chn1->choice); chn2 = chn2->next) {
-                match = ay_ynode_cmp_choice_branches(chn1, chn2);
-                if (!match) {
+        for (br1 = chnode; br1 && (br1->choice == chnode->choice); br1 = br1->next) {
+            for (br2 = br1->next; br2 && (br2->choice == chnode->choice); br2 = br2->next) {
+                if (!ay_ynode_subtree_equal(br1, br2, 1)) {
                     continue;
                 }
-                if (ay_ynode_subtree_equal(chn1, chn2, 1)) {
-                    ay_ynode_delete_subtree(tree, chn2);
-                } else if (ay_ynode_merge_cases_only_by_value(tree, chn1, chn2, &err)) {
-                    AY_CHECK_RET(err);
-                    ay_ynode_delete_subtree(tree, chn2);
-                } else {
-                    ret = ay_ynode_merge_cases_(tree, chn1, chn2);
-                    AY_CHECK_RET(ret);
-                }
-                break;
-            }
-            if (match) {
-                if (ay_ynode_alone_in_choice(chn1) && (chn1->type == YN_CASE)) {
+                ay_ynode_delete_subtree(tree, br2);
+                if (ay_ynode_alone_in_choice(br1) && (br1->type == YN_CASE)) {
                     /* YN_CASE is useless. */
-                    ay_ynode_delete_node(tree, chn1);
+                    ay_ynode_delete_node(tree, br1);
                 }
-                if (chn1->when_ref && ay_ynode_alone_in_choice(chn1)) {
-                    /* The when reference is meaningless if the node is not in choice. */
-                    chn1->when_ref = 0;
-                    chn1->when_val = NULL;
-                }
-                /* Repeat comparing because chn1 can be modified. */
-                continue;
             }
-            /* Current chn1 is processed. Continue with the next one. */
-            chn1 = chn1->next;
         }
     }
 
-    return 0;
 }
 
 /**
@@ -11976,6 +12033,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
      * choice ch { case { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
     TRANSF(ay_ynode_insert_case, ay_ynode_summary(*tree, ay_ynode_rule_insert_case));
+
+    /* If some choice branch is repeated, it is useless and is deleted. */
+    ay_ynode_delete_equal_cases(*tree);
 
     /* ... | [key lns1 . lns2] . lns3 | [key lns1 . lns2] . lns4 | ... ->
      * ... | [key lns1 . lns2] . (lns3 | lns4) | ... */
