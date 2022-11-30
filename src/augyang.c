@@ -8146,7 +8146,7 @@ ay_ynode_rule_insert_case(const struct ay_ynode *node)
         return 0;
     }
 
-    first = ay_ynode_get_first_in_choice(node, node->choice);
+    first = ay_ynode_get_first_in_choice(node->parent, node->choice);
     if (!first) {
         return 0;
     }
