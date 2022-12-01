@@ -6045,7 +6045,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     refnode = NULL;
     path_cnt = 0;
     for (parent = node->parent; parent; parent = parent->parent) {
-        path_cnt = (parent->type != YN_CASE) ? path_cnt + 1 : path_cnt;
+        ++path_cnt;
         if (parent->id == node->when_ref) {
             refnode = parent;
             break;
@@ -9011,8 +9011,8 @@ ay_ynode_copy_subtree(struct ay_ynode *tree, uint32_t dst, uint32_t src)
 static void
 ay_ynode_copy_subtree_when_ref_correction(struct ay_ynode *copied_subtree, struct ay_ynode *original_subtree)
 {
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *iter, *node_ref, *src, *dst;
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_ynode *node_ref, *src, *dst, *node_target;
 
     assert(copied_subtree && original_subtree);
 
@@ -9021,16 +9021,21 @@ ay_ynode_copy_subtree_when_ref_correction(struct ay_ynode *copied_subtree, struc
         if (!node_ref->when_ref) {
             continue;
         }
-        /* Original node with when_ref is found. */
-        assert(original_subtree->type != YN_ROOT);
-        for (iter = node_ref->parent; node_ref != original_subtree->parent; node_ref = node_ref->parent) {
-            if (node_ref->when_ref == iter->id) {
-                /* Correction of when_ref in the copied subtree. */
-                dst = &copied_subtree[AY_INDEX(original_subtree, node_ref)];
-                src = &copied_subtree[AY_INDEX(original_subtree, iter)];
-                dst->when_ref = src->id;
+
+        /* Find 'when' target. */
+        node_target = NULL;
+        for (j = 0; j <= original_subtree->descendants; j++) {
+            node_target = &original_subtree[j];
+            if ((node_ref->when_ref == node_target->id) && (node_target->flags & AY_WHEN_TARGET)) {
+                break;
             }
         }
+        assert(node_target);
+
+        /* Set 'when' in copied_subtree. */
+        dst = &copied_subtree[AY_INDEX(original_subtree, node_ref)];
+        src = &copied_subtree[AY_INDEX(original_subtree, node_target)];
+        dst->when_ref = src->id;
     }
 
 }
@@ -10421,6 +10426,12 @@ ay_ynode_merge_cases_set_when(struct ay_ynode *br1, struct ay_ynode *br2)
         if (first2->value && !first2_val_in_choice) {
             first2->next->when_ref = first1->id;
             first2->next->when_val = first2->value;
+            first1->flags |= AY_WHEN_TARGET;
+        }
+    } else if ((br1->type == YN_CASE) && (br2->type != YN_CASE)) {
+        if (first1->value && !first1_val_in_choice) {
+            first1->next->when_ref = first1->id;
+            first1->next->when_val = first1->value;
             first1->flags |= AY_WHEN_TARGET;
         }
     }
