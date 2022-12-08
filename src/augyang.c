@@ -382,6 +382,7 @@ enum yang_type {
 #define AY_CHOICE_CREATED       0x800   /**< A choice is created by the transform and is not in lense. Or it's in the
                                              lense, but it's moved so it doesn't match the ay_lnode tree. */
 #define AY_WHEN_TARGET          0x1000  /**< A node is the target of some when statement. */
+#define AY_GROUPING_CHOICE      0x2000  /**< Nodes in choice will be in Grouping except for branches containing YN_LEAFREF. */
 
 #define AY_YNODE_FLAGS_CMP_MASK 0xFF    /**< Bitmask to use when comparing ay_ynode.flags. */
 /** @} ynodeflags */
@@ -2806,10 +2807,14 @@ ay_ynode_common_concat(const struct ay_ynode *node1, const struct ay_ynode *node
  * @return Number of internal recursive node.
  */
 static uint64_t
-ay_ynode_subtree_contains_rec(struct ay_ynode *subtree, ly_bool only_one)
+ay_ynode_subtree_contains_rec(const struct ay_ynode *subtree, ly_bool only_one)
 {
     uint64_t i, ret;
-    struct ay_ynode *iter;
+    const struct ay_ynode *iter;
+
+    if (!subtree) {
+        return 0;
+    }
 
     ret = 0;
     for (i = 0; i < subtree->descendants; i++) {
@@ -7178,6 +7183,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         if (node->flags & AY_GROUPING_REDUCTION) {
             ly_print(ctx->out, " gr_reduction");
         }
+        if (node->flags & AY_GROUPING_CHOICE) {
+            ly_print(ctx->out, " gr_choice");
+        }
         if (node->flags & AY_HINT_MAND_TRUE) {
             ly_print(ctx->out, " hint_mand_true");
         }
@@ -8217,6 +8225,25 @@ ay_ynode_cmp_choice_branches(const struct ay_ynode *br1, const struct ay_ynode *
 }
 
 /**
+ * @brief Give the branch in which the YN_LEAFREF is located.
+ *
+ * The YN_REC node is the stop.
+ *
+ * @param[in] leafref Node of type YN_LEAFREF.
+ * @return First node in branch.
+ */
+static struct ay_ynode *
+ay_ynode_leafref_branch(const struct ay_ynode *leafref)
+{
+    struct ay_ynode *iter;
+
+    for (iter = leafref->parent; iter && (iter->parent->type != YN_REC); iter = iter->parent) {}
+    assert(iter && (leafref->parent->type == YN_LIST));
+
+    return iter;
+}
+
+/**
  * @brief Compare choice branches if should be merged and count how many nodes to add.
  *
  * @param[in] tree Tree of ynodes.
@@ -8338,8 +8365,20 @@ ay_ynode_rule_ordered_entries(const struct ay_lnode *tree)
  * @param[in] tree Tree of ynodes.
  * @return Number of nodes to insert.
  */
+static uint32_t
+ay_ynode_rule_recursive_form(const struct ay_ynode *node)
+{
+    return node->type == YN_REC;
+}
+
+/**
+ * @brief Rule decide how many nodes must be inserted to create a recursive form by copy.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return Number of nodes to insert.
+ */
 static uint64_t
-ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
+ay_ynode_rule_recursive_form_by_copy(const struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *iter;
@@ -8364,6 +8403,32 @@ ay_ynode_rule_recursive_form(const struct ay_ynode *tree)
     }
 
     return ret;
+}
+
+/**
+ * @brief Rule decide how many nodes must be inserted to create a recursive form by groupings.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return Number of nodes to insert.
+ */
+static uint64_t
+ay_ynode_rule_create_groupings_recursive_form(const struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_ynode *lf;
+    uint64_t cnt;
+
+    cnt = 0;
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        lf = &tree[i];
+        if (lf->type != YN_LEAFREF) {
+            continue;
+        }
+        cnt++;
+    }
+
+    /* grouping + uses + uses */
+    return cnt * 3;
 }
 
 /**
@@ -10969,6 +11034,114 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Copy nodes from other branches next to leafref node.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] branch Branch in which the leafref is located.
+ * @param[in] listord List which will contain the copied nodes and also contains the leafref.
+ */
+static void
+ay_ynode_recursive_form_by_copy_(struct ay_ynode *tree, struct ay_ynode *branch, struct ay_ynode *listord)
+{
+    struct ay_ynode *iter, *iter2;
+    uint64_t desc;
+
+    /* Copy siblings before branch into listord. */
+    for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
+            iter && (iter->choice == branch->choice) && (iter != branch);
+            iter = iter->next) {
+        if (ay_ynode_subtree_contains_rec(iter, 1)) {
+            continue;
+        }
+        ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
+    }
+
+    /* Copy siblings after branch into listord. */
+    for (iter = branch->next;
+            iter && (iter->choice == branch->choice);
+            iter = iter->next) {
+        if (ay_ynode_subtree_contains_rec(iter, 1)) {
+            continue;
+        }
+        desc = iter->descendants;
+        ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
+        iter += desc + 1;
+    }
+
+    /* Set some choice id. */
+    for (iter = listord->child; iter; iter = iter->next) {
+        iter->choice = AY_YNODE_ROOT_LTREE(tree);
+        iter->flags |= AY_CHOICE_CREATED;
+    }
+
+    /* Remove duplicit YN_LIST node. */
+    for (iter = listord->child; iter; iter = iter->next) {
+        if (iter->type == YN_LIST) {
+            if (iter->choice) {
+                for (iter2 = iter->child; iter2; iter2 = iter2->next) {
+                    iter2->choice = iter->choice;
+                }
+            }
+            ay_ynode_delete_node(tree, iter);
+        }
+    }
+}
+
+/**
+ * @brief Under certain conditions copy nodes from other branches next to leafref node.
+ *
+ * If the nodes are not copied, the AY_GROUPING_CHOICE flag is set.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static int
+ay_ynode_recursive_form_by_copy(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *lf, *iter, *branch, *listord, *first_branch;
+    ly_bool copy_nodes;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        lf = &tree[i];
+        if (lf->type != YN_LEAFREF) {
+            continue;
+        }
+        branch = ay_ynode_leafref_branch(lf);
+        if (!branch->choice) {
+            continue;
+        }
+        listord = lf->parent;
+        first_branch = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
+
+        /* Decide if nodes should be copied. */
+        copy_nodes = 1;
+        for (iter = first_branch; iter && (iter->choice == branch->choice); iter = iter->next) {
+            if (ay_ynode_subtree_contains_rec(iter, 1)) {
+                continue;
+            }
+            if (iter->type == YN_LIST) {
+                copy_nodes = 1;
+                break;
+            } else if (iter->when_ref || !ay_ynode_when_paths_are_valid(iter, 1)) {
+                copy_nodes = 1;
+                break;
+            }
+            copy_nodes = 0;
+        }
+
+        if (copy_nodes) {
+            /* Copy nodes. */
+            ay_ynode_recursive_form_by_copy_(tree, branch, listord);
+        } else {
+            /* Grouping is more suitable. */
+            first_branch->flags |= AY_GROUPING_CHOICE;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief The leafref path must not go outside groupings.
  *
  * @param[in] subtree Subtree to check.
@@ -11006,6 +11179,93 @@ ay_ynode_set_ref_leafref_restriction(struct ay_ynode *subtree)
 }
 
 /**
+ * @brief Check if choice groups can be considered the same.
+ *
+ * @param[in] ch1 First choice group.
+ * @param[in] ch2 Second choice group.
+ * @param[in] ignore_recursive_branch Flag causes branches that contain a leafref to be ignored when comparing.
+ * @return 1 if choice groups are equal.
+ */
+static ly_bool
+ay_ynode_choice_group_equal(struct ay_ynode *ch1, struct ay_ynode *ch2, ly_bool ignore_recursive_branch)
+{
+    ly_bool lf1_check, lf2_check;
+    struct ay_ynode *it1, *it2;
+
+    lf1_check = ignore_recursive_branch && (ch1->flags & AY_GROUPING_CHOICE);
+    lf2_check = ignore_recursive_branch && (ch2->flags & AY_GROUPING_CHOICE);
+    for (it1 = ch1, it2 = ch2;
+            it1 && it2 && (it1->choice == ch1->choice) && (it2->choice == ch2->choice);
+            it1 = it1->next, it2 = it2->next) {
+
+        /* Ignore branches with leafref. */
+        while (lf1_check && ay_ynode_subtree_contains_rec(it1, 1)) {
+            it1 = it1->next;
+        }
+        while (lf2_check && ay_ynode_subtree_contains_rec(it2, 1)) {
+            it2 = it2->next;
+        }
+
+        /* Terminating condition of the for cycle. */
+        if (!(it1 && it2 && (it1->choice == ch1->choice) && (it2->choice == ch2->choice))) {
+            break;
+        }
+
+        /* Compare branches. */
+        if (!ay_ynode_subtree_equal(it1, it2, 1)) {
+            return 0;
+        }
+    }
+
+    if (!it1 && !it2) {
+        return 1;
+    } else if (it1 && it2 && (it1->choice != ch1->choice) && (it2->choice != ch2->choice)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * @brief Set grouping reference in ay_ynode.ref.
+ *
+ * Groupings are created in the ay_ynode_create_groupings_recursive_form().
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_set_ref_recursive_form(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j;
+    struct ay_ynode *grch, *iter, *chnode;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        grch = &tree[i];
+        if (!(grch->flags & AY_GROUPING_CHOICE)) {
+            continue;
+        }
+        /* Tag grouping. */
+        grch->ref = grch->id;
+
+        /* Skip choice nodes. */
+        for (chnode = grch; chnode->next && (chnode->next->choice == grch->choice); chnode = chnode->next) {}
+
+        /* Find such a choice group elsewhere. */
+        for (j = AY_INDEX(tree, chnode) + chnode->descendants + 1; j < LY_ARRAY_COUNT(tree); j++) {
+            iter = &tree[j];
+            if (!iter->choice) {
+                continue;
+            }
+            if (ay_ynode_choice_group_equal(grch, iter, 1)) {
+                /* YN_USED node will be replaced here. */
+                iter->ref = grch->id;
+            }
+            j += iter->descendants;
+        }
+    }
+}
+
+/**
  * @brief Nodes that belong to the same grouping are marked by ay_ynode.ref.
  *
  * This function is preparation before calling ::ay_ynode_create_groupings_toplevel().
@@ -11027,7 +11287,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
             continue;
         } else if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
             continue;
-        } else if (iti->ref) {
+        } else if (iti->ref && (iti->parent->type != YN_REC)) {
             i += iti->descendants;
             continue;
         } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
@@ -11101,6 +11361,9 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
             continue;
         } else if ((iti->type == YN_USES) || (iti->type == YN_LEAFREF)) {
             continue;
+        } else if (iti->type == YN_GROUPING) {
+            i += iti->descendants;
+            continue;
         }
         assert(iti->id == iti->ref);
 
@@ -11159,6 +11422,155 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
         uses->flags |= choice_mand_false;
 
         grouping->child->choice = !grouping->child->next ? NULL : grouping->child->choice;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Insert YN_USES node next to leafref.
+ *
+ * For all leafref nodes.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] first_branch First choice-branch under external YN_REC node.
+ * @param[in] grouping_id Identifier for referencing in YN_USES.
+ *
+ */
+static void
+ay_ynode_leafref_insert_uses(struct ay_ynode *tree, struct ay_ynode *first_branch, uint32_t grouping_id)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *branch, *lf, *uses;
+
+    for (branch = first_branch; branch && (branch->choice == first_branch->choice); branch = branch->next) {
+        for (i = 0; i < branch->descendants; i++) {
+            lf = &branch[i + 1];
+            if (lf->type != YN_LEAFREF) {
+                continue;
+            }
+            ay_ynode_insert_sibling(tree, lf);
+            uses = lf->next;
+            uses->type = YN_USES;
+            uses->ref = grouping_id;
+            uses->choice = lf->choice;
+        }
+    }
+}
+
+/**
+ * @brief Count number of nodes which will be in grouping, but branches with leafref are not counted.
+ *
+ * @param[in] grch First choice node which will be searched.
+ * @return Number of nodes in choice.
+ */
+static uint32_t
+ay_ynode_grouping_choice_count(struct ay_ynode *grch)
+{
+    struct ay_ynode *iter;
+    uint32_t cnt;
+
+    cnt = 0;
+    for (iter = grch; iter && (iter->choice == grch->choice); iter = iter->next) {
+        if (ay_ynode_subtree_contains_rec(iter, 1)) {
+            continue;
+        }
+        cnt++;
+    }
+
+    return cnt;
+}
+
+/**
+ * @brief Create Groupings and Uses nodes for the recursive form.
+ *
+ * Grouping is applied to the choice under the recursive node YN_REC.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_create_groupings_recursive_form(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j, k;
+    struct ay_ynode *grch, *branch, *grouping, *uses, *iter, *prev;
+    uint32_t cnt;
+
+    /* TODO The exact leafref/grouping_choice should be searched for. */
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        grch = &tree[i];
+        if ((grch->ref != grch->id) || !(grch->flags & AY_GROUPING_CHOICE)) {
+            continue;
+        }
+
+        /* This grouping-choice is processed. */
+        grch->ref = 0;
+
+        /* Insert GROUPING node. */
+        if (grch->parent->child == grch) {
+            ay_ynode_insert_child(tree, grch->parent);
+        } else {
+            prev = ay_ynode_get_prev(grch);
+            ay_ynode_insert_sibling(tree, prev);
+        }
+        grouping = grch;
+        grch = grouping->next;
+        grouping->type = YN_GROUPING;
+        grouping->choice = grch->choice;
+        grouping->snode = grouping->parent->snode;
+
+        /* Move branches to the GROUPING (except those containing YN_LEAFREF). */
+        cnt = ay_ynode_grouping_choice_count(grch);
+        for (j = 0; j < cnt; j++) {
+            for (branch = grouping->next; ay_ynode_subtree_contains_rec(branch, 1); branch = branch->next) {}
+            ay_ynode_move_subtree_as_last_child(tree, grouping, branch);
+        }
+
+        /* Add YN_USES next to GROUPING. */
+        ay_ynode_leafref_insert_uses(tree, grouping->next, grouping->id);
+        ay_ynode_insert_sibling(tree, grouping);
+        uses = grouping->next;
+        uses->type = YN_USES;
+        uses->choice = grouping->choice;
+        uses->flags |= grouping->child->flags & AY_CHOICE_MAND_FALSE;
+        uses->ref = grouping->id;
+        if (grouping->child->flags & AY_CHOICE_MAND_FALSE) {
+            uses->flags |= AY_CHOICE_MAND_FALSE;
+            grouping->child->flags &= ~AY_CHOICE_MAND_FALSE;
+        }
+
+        /* Find other nodes to delete and replace them with YN_USES. */
+        for (j = AY_INDEX(tree, uses + 1); j < LY_ARRAY_COUNT(tree); j++) {
+            iter = &tree[j];
+            if (iter->ref != grch->id) {
+                continue;
+            }
+
+            /* Insert YN_USES node. */
+            if (iter->parent->child == iter) {
+                ay_ynode_insert_child(tree, iter->parent);
+                uses = iter->child;
+            } else {
+                prev = ay_ynode_get_prev(iter);
+                ay_ynode_insert_sibling(tree, prev);
+                uses = prev->next;
+            }
+            iter++;
+            uses->type = YN_USES;
+            uses->choice = iter->choice;
+            uses->ref = grouping->id;
+
+            /* Delete branches except those containing YN_LEAFREF. */
+            for (k = 0; k < cnt; k++) {
+                for (branch = uses->next; ay_ynode_subtree_contains_rec(branch, 1); branch = branch->next) {}
+                ay_ynode_delete_subtree(tree, branch);
+            }
+
+            /* Add YN_USES next to YN_LEAFREF if exists. */
+            ay_ynode_leafref_insert_uses(tree, iter, grouping->id);
+        }
+        i += grouping->descendants;
     }
 
     return 0;
@@ -11373,8 +11785,7 @@ ay_ynode_lrec_internal(struct ay_ynode *lrec_ext, const struct ay_ynode *lrec_in
 static void
 ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, struct ay_ynode **lrec_internal)
 {
-    uint64_t desc;
-    struct ay_ynode *listord, *iter, *iter2;
+    struct ay_ynode *listord, *iter;
 
     if ((*lrec_internal)->parent->type != YN_LIST) {
         ay_ynode_insert_parent(tree, *lrec_internal);
@@ -11388,45 +11799,11 @@ ay_ynode_lrec_insert_listord(struct ay_ynode *tree, struct ay_ynode *branch, str
     if (!branch->choice) {
         return;
     }
-    /* Copy siblings before branch into listord. */
-    for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
-            iter && (iter->choice == branch->choice) && (iter != branch);
-            iter = iter->next) {
-        if (ay_ynode_subtree_contains_rec(iter, 1)) {
-            continue;
-        }
-        ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
-    }
-    /* Copy siblings after branch into listord. */
-    for (iter = branch->next;
-            iter && (iter->choice == branch->choice);
-            iter = iter->next) {
-        if (ay_ynode_subtree_contains_rec(iter, 1)) {
-            continue;
-        }
-        desc = iter->descendants;
-        ay_ynode_copy_subtree_as_last_child(tree, listord, iter);
-        iter += desc + 1;
-    }
 
     /* Set some choice id. */
     for (iter = listord->child; iter; iter = iter->next) {
         iter->choice = AY_YNODE_ROOT_LTREE(tree);
         iter->flags |= AY_CHOICE_CREATED;
-    }
-
-    /* Remove duplicit YN_LIST node. */
-    for (iter = listord->child; iter; iter = iter->next) {
-        if (iter->type == YN_LIST) {
-            if (iter->choice) {
-                for (iter2 = iter->child; iter2; iter2 = iter2->next) {
-                    iter2->choice = iter->choice;
-                }
-            }
-            ay_ynode_delete_node(tree, iter);
-            /* Correction of lrec_internal pointer. */
-            (*lrec_internal) = *lrec_internal > iter ? *lrec_internal - 1 : *lrec_internal;
-        }
     }
 
     return;
@@ -12062,7 +12439,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     TRANSF(ay_ynode_ordered_entries, ay_ynode_rule_ordered_entries(AY_YNODE_ROOT_LTREE(*tree)));
 
     /* Apply recursive yang form for recursive lenses. */
-    TRANSF(ay_ynode_recursive_form, ay_ynode_rule_recursive_form(*tree));
+    TRANSF(ay_ynode_recursive_form, ay_ynode_summary(*tree, ay_ynode_rule_recursive_form));
 
     /* [label str store lns]*   -> container { YN_KEY{} } */
     /* [key lns1 store lns2]*   -> container { YN_KEY{} YN_VALUE{} } */
@@ -12074,11 +12451,22 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     ay_ynode_tree_set_mandatory(*tree);
 
+    /* Groupings algorithms. */
+
+    /* It is decided whether the recursive form will be wrapped in groupings, or a nodes will be copied. */
+    TRANSF(ay_ynode_recursive_form_by_copy, ay_ynode_rule_recursive_form_by_copy(*tree));
+
+    /* Find groupings for recursive form. */
+    ay_ynode_set_ref_recursive_form(*tree);
+
     /* Groupings are resolved in functions ay_ynode_set_ref() and ay_ynode_create_groupings_toplevel() */
     /* Link nodes that should be in grouping by number. */
     ay_ynode_set_ref(*tree);
 
-    /* Create groupings and uses-stmt. Grouping are moved to the top-level part of the module. */
+    /* Create groupings and uses-stmt based on recursive form.  */
+    TRANSF(ay_ynode_create_groupings_recursive_form, ay_ynode_rule_create_groupings_recursive_form(*tree));
+
+    /* Create groupings and uses-stmt for containers and lists. */
     TRANSF(ay_ynode_create_groupings_toplevel, ay_ynode_summary(*tree, ay_ynode_rule_create_groupings_toplevel));
 
     /* Delete YN_REC nodes. */
@@ -12090,6 +12478,8 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     /* No other groupings will not be added, so move groupings in front of config-file list. */
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
+
+    /* Chages based on identifier */
 
     /* Transformations based on ynode identifier. */
     AY_CHECK_RV(ay_ynode_transformations_ident(mod, tree));

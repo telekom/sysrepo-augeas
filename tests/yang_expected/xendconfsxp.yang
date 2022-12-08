@@ -9,6 +9,14 @@ module xendconfsxp {
 
   augex:augeas-mod-name "Xendconfsxp";
 
+  grouping item {
+    leaf item {
+      type string {
+        pattern "[A-Za-z0-9_./-]+|\\\"([^\\\\\"\\\\\\\\]|(\\\\.))*\\\"|'([^'\\\\\\\\]|(\\\\.))*'";
+      }
+      augex:data-path "item";
+    }
+  }
   list xendconfsxp {
     key "config-file";
     leaf config-file {
@@ -33,11 +41,8 @@ module xendconfsxp {
         }
         choice ch-sexpr {
           mandatory true;
-          leaf item {
-            type string {
-              pattern "[A-Za-z0-9_./-]+|\\\"([^\\\\\"\\\\\\\\]|(\\\\.))*\\\"|'([^'\\\\\\\\]|(\\\\.))*'";
-            }
-            augex:data-path "item";
+          case item {
+            uses item;
           }
           list array-list {
             key "_r-id";
@@ -68,11 +73,8 @@ module xendconfsxp {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  leaf item {
-                    type string {
-                      pattern "[A-Za-z0-9_./-]+|\\\"([^\\\\\"\\\\\\\\]|(\\\\.))*\\\"|'([^'\\\\\\\\]|(\\\\.))*'";
-                    }
-                    augex:data-path "item";
+                  case item {
+                    uses item;
                   }
                 }
               }

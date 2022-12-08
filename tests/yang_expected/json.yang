@@ -9,12 +9,8 @@ module json {
 
   augex:augeas-mod-name "Json";
 
-  list json {
-    key "config-file";
-    leaf config-file {
-      type string;
-    }
-    choice ch-json {
+  grouping rlns {
+    choice ch-rlns {
       mandatory true;
       leaf string {
         type string {
@@ -27,6 +23,24 @@ module json {
           pattern "-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?";
         }
         augex:data-path "number";
+      }
+      leaf const {
+        type string {
+          pattern "true|false|null";
+        }
+        augex:data-path "const";
+      }
+    }
+  }
+  list json {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    choice ch-json {
+      mandatory true;
+      case rlns {
+        uses rlns;
       }
       list dict-list {
         key "_r-id";
@@ -76,23 +90,8 @@ module json {
                       description
                         "Implicitly generated leaf to maintain recursive augeas data.";
                     }
-                    leaf string {
-                      type string {
-                        pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                      }
-                      augex:data-path "string";
-                    }
-                    leaf number {
-                      type string {
-                        pattern "-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?";
-                      }
-                      augex:data-path "number";
-                    }
-                    leaf const {
-                      type string {
-                        pattern "true|false|null";
-                      }
-                      augex:data-path "const";
+                    case rlns {
+                      uses rlns;
                     }
                   }
                 }
@@ -119,34 +118,13 @@ module json {
                   description
                     "Implicitly generated leaf to maintain recursive augeas data.";
                 }
-                leaf string {
-                  type string {
-                    pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
-                  }
-                  augex:data-path "string";
-                }
-                leaf number {
-                  type string {
-                    pattern "-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?";
-                  }
-                  augex:data-path "number";
-                }
-                leaf const {
-                  type string {
-                    pattern "true|false|null";
-                  }
-                  augex:data-path "const";
+                case rlns {
+                  uses rlns;
                 }
               }
             }
           }
         }
-      }
-      leaf const {
-        type string {
-          pattern "true|false|null";
-        }
-        augex:data-path "const";
       }
     }
   }

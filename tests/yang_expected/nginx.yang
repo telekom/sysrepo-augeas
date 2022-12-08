@@ -9,46 +9,65 @@ module nginx {
 
   augex:augeas-mod-name "Nginx";
 
-  grouping simple {
-    leaf mask {
-      type uint64;
-      augex:data-path "mask";
-    }
-    leaf value {
-      type string {
-        pattern "[^ \t\n;#]([^\";#]|\"[^\"]*\\\")*";
-      }
-    }
-  }
-  grouping server {
-    leaf address {
+  grouping directive {
+    choice ch-directive {
       mandatory true;
-      type string {
-        pattern "[A-Za-z0-9_.:/-]+";
-      }
-      augex:data-path "@address";
-    }
-    list word-list {
-      key "_id";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      container word {
+      container simple {
         augex:data-path "$$";
-        augex:value-yang-path "word";
+        augex:value-yang-path "value";
         presence "Config entry.";
-        leaf id {
+        leaf label {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.:-]+";
+            pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
+              modifier invert-match;
+            }
           }
         }
-        leaf word {
+        leaf mask {
+          type uint64;
+          augex:data-path "mask";
+        }
+        leaf value {
           type string {
-            pattern "[A-Za-z0-9_.:-]+";
+            pattern "[^ \t\n;#]([^\";#]|\"[^\"]*\\\")*";
+          }
+        }
+      }
+      container server {
+        augex:data-path "@server";
+        presence "Config entry.";
+        leaf address {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.:/-]+";
+          }
+          augex:data-path "@address";
+        }
+        list word-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container word {
+            augex:data-path "$$";
+            augex:value-yang-path "word";
+            presence "Config entry.";
+            leaf id {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.:-]+";
+              }
+            }
+            leaf word {
+              type string {
+                pattern "[A-Za-z0-9_.:-]+";
+              }
+            }
           }
         }
       }
@@ -59,7 +78,7 @@ module nginx {
     leaf config-file {
       type string;
     }
-    list directive {
+    list config-entries {
       key "_id";
       ordered-by user;
       leaf _id {
@@ -67,27 +86,10 @@ module nginx {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      choice ch-directive {
+      choice ch-config-entries {
         mandatory true;
-        container simple {
-          augex:data-path "$$";
-          augex:value-yang-path "value";
-          presence "Config entry.";
-          leaf label {
-            mandatory true;
-            type string {
-              pattern "[A-Za-z0-9_.:-]+";
-              pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                modifier invert-match;
-              }
-            }
-          }
-          uses simple;
-        }
-        container server {
-          augex:data-path "@server";
-          presence "Config entry.";
-          uses server;
+        case directive {
+          uses directive;
         }
         list http-list {
           key "_r-id";
@@ -119,25 +121,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -162,25 +147,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -205,25 +173,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -248,25 +199,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -291,25 +225,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -341,25 +258,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -397,25 +297,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -453,25 +336,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -510,25 +376,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -567,25 +416,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
@@ -617,25 +449,8 @@ module nginx {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
-                  container simple {
-                    augex:data-path "$$";
-                    augex:value-yang-path "value";
-                    presence "Config entry.";
-                    leaf label {
-                      mandatory true;
-                      type string {
-                        pattern "[A-Za-z0-9_.:-]+";
-                        pattern "http|events|server|mail|stream|if|location|geo|map|split_clients|upstream" {
-                          modifier invert-match;
-                        }
-                      }
-                    }
-                    uses simple;
-                  }
-                  container server {
-                    augex:data-path "@server";
-                    presence "Config entry.";
-                    uses server;
+                  case directive {
+                    uses directive;
                   }
                 }
               }
