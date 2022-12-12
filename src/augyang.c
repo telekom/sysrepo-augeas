@@ -8142,7 +8142,7 @@ ay_ynode_insert_case_prerequisite(const struct ay_ynode *node1, const struct ay_
  * @brief Rule for inserting YN_CASE node which must wrap some nodes due to the choice statement.
  *
  * @param[in] node Node to check.
- * @return 1 if container should be inserted. Also the function returns 1 only for the first node in the wrap.
+ * @return 1 if container should be inserted.
  */
 static uint32_t
 ay_ynode_rule_insert_case(const struct ay_ynode *node)
@@ -8154,16 +8154,14 @@ ay_ynode_rule_insert_case(const struct ay_ynode *node)
         return 0;
     }
 
-    first = ay_ynode_get_first_in_choice(node->parent, node->choice);
-    if (!first) {
-        return 0;
-    }
-
     /* Every even node can theoretically have a case. */
+    first = ay_ynode_get_first_in_choice(node->parent, node->choice);
     cnt = 1;
+    rank = 0;
     for (iter = first; iter->next && (iter->choice == iter->next->choice); iter = iter->next) {
         if (iter == node) {
             rank = cnt;
+            break;
         }
         cnt++;
     }
