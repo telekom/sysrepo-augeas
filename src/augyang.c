@@ -2978,10 +2978,11 @@ ay_lnode_lense_equal(const struct lens *l1, const struct lens *l2)
  * @param[in] n1 First lense.
  * @param[in] n2 Second lense.
  * @param[in] ignore_choice Flag will cause the 'choice' to be ignored for comparison.
+ * @param[in] ignore_when Flag will cause the 'when' tobe ignored for comparison.
  * @return 1 for equal.
  */
 static ly_bool
-ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ignore_choice)
+ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ignore_choice, ly_bool ignore_when)
 {
     ly_bool alone1, alone2;
     uint16_t cmp_mask;
@@ -3014,7 +3015,7 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
         return 0;
     } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
         return 0;
-    } else if (n1->when_ref != n2->when_ref) {
+    } else if (!ignore_when && (n1->when_ref != n2->when_ref)) {
         return 0;
     }
 
@@ -3027,17 +3028,23 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
  * @param[in] tree1 First subtree to check.
  * @param[in] tree2 Second subtree to check.
  * @param[in] compare_roots Set flag whether the roots of @p tree1 and @p tree2 will be compared.
+ * @param[in] ignore_when Set flag if 'when' should be ignored.
  * @return 1 if subtrees are equal.
  */
 static ly_bool
-ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree2, ly_bool compare_roots)
+ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree2, ly_bool compare_roots,
+        ly_bool ignore_when)
 {
     LY_ARRAY_COUNT_TYPE i;
     const struct ay_ynode *node1, *node2, *inner1, *inner2;
     uint64_t inner_cnt;
 
+    if (tree1 == tree2) {
+        return 1;
+    }
+
     if (compare_roots) {
-        if (!ay_ynode_equal(tree1, tree2, 1)) {
+        if (!ay_ynode_equal(tree1, tree2, 1, ignore_when)) {
             return 0;
         }
         if (tree1->descendants != tree2->descendants) {
@@ -3046,7 +3053,7 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
         for (i = 0; i < tree1->descendants; i++) {
             node1 = &tree1[i + 1];
             node2 = &tree2[i + 1];
-            if (!ay_ynode_equal(node1, node2, 0)) {
+            if (!ay_ynode_equal(node1, node2, 0, ignore_when)) {
                 return 0;
             }
         }
@@ -3060,7 +3067,7 @@ ay_ynode_subtree_equal(const struct ay_ynode *tree1, const struct ay_ynode *tree
         for (i = 0; i < inner_cnt; i++) {
             node1 = &inner1[i];
             node2 = &inner2[i];
-            if (!ay_ynode_equal(node1, node2, 0)) {
+            if (!ay_ynode_equal(node1, node2, 0, ignore_when)) {
                 return 0;
             }
         }
@@ -10726,7 +10733,7 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
         assert(br2->type == YN_CASE);
         /* Check if all sibling subtrees except the first one are equal. */
         for (st1 = first1->next, st2 = first2->next; st1 && st2; st1 = st1->next, st2 = st2->next) {
-            if (!ay_ynode_subtree_equal(st1, st2, 1)) {
+            if (!ay_ynode_subtree_equal(st1, st2, 1, 0)) {
                 return 0;
             }
         }
@@ -10738,7 +10745,7 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
 
     /* Check if first node's children are equal. */
     if ((!first1->child && first2->child) || (first1->child && !first2->child) ||
-            (first1->child && first2->child && !ay_ynode_subtree_equal(first1, first2, 0))) {
+            (first1->child && first2->child && !ay_ynode_subtree_equal(first1, first2, 0, 0))) {
         /* Children of the nodes are different, so the ay_ynode_merge_cases_() function must be called. */
         return 0;
     }
@@ -10884,7 +10891,7 @@ ay_ynode_delete_equal_cases(struct ay_ynode *tree)
         }
         for (br1 = chnode; br1 && (br1->choice == chnode->choice); br1 = br1->next) {
             for (br2 = br1->next; br2 && (br2->choice == chnode->choice); br2 = br2->next) {
-                if (!ay_ynode_subtree_equal(br1, br2, 1)) {
+                if (!ay_ynode_subtree_equal(br1, br2, 1, 0)) {
                     continue;
                 }
                 ay_ynode_delete_subtree(tree, br2);
@@ -10896,6 +10903,99 @@ ay_ynode_delete_equal_cases(struct ay_ynode *tree)
         }
     }
 
+}
+
+/**
+ * @brief Delete useless choice-stmt containing the same branches and 'when' statements with all possible references.
+ *
+ * @param[in,out] tree Tree of ynodes
+ * @return 0 on success.
+ */
+static int
+ay_ynode_delete_useless_choice(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i, j, k;
+    struct ay_ynode *target, *iter, *chnode, *branch;
+    struct ay_dnode *values, *key;
+    ly_bool delete_branches, match;
+    uint64_t union_vals, total_branches;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        target = &tree[i];
+        /* Find target of when-stmt. */
+        if (!(target->flags & AY_WHEN_TARGET)) {
+            continue;
+        }
+
+        /* Get all possible values for target. */
+        values = AY_YNODE_ROOT_VALUES(tree);
+        key = ay_dnode_find(values, target->value);
+        if (!key) {
+            continue;
+        }
+        assert(AY_DNODE_IS_KEY(key));
+
+        /* Count the total number of values. */
+        union_vals = 0;
+        AY_DNODE_KEYVAL_FOR(key, k) {
+            ++union_vals;
+        }
+        assert(union_vals > 1);
+
+        for (j = 0; j < target->parent->descendants; j++) {
+            iter = &target[j + 1];
+            /* Find corresponding nodes with when-references. */
+            if ((iter->when_ref != target->id) || !iter->choice) {
+                continue;
+            }
+
+            /* Node must be in choice-stmt. */
+            chnode = ay_ynode_get_first_in_choice(iter->parent, iter->choice);
+            if ((chnode != iter) || !chnode->next || (chnode->next->choice != chnode->choice)) {
+                continue;
+            }
+
+            /* Chech choice-stmt. */
+            delete_branches = 1;
+            total_branches = 0;
+            for (branch = chnode; branch && (branch->choice == chnode->choice); branch = branch->next) {
+                ++total_branches;
+                /* The 'when' reference must be correct and all branches are the same except fot the when-references. */
+                if ((branch->when_ref != target->id) || !branch->when_val ||
+                        !ay_ynode_subtree_equal(chnode, branch, 1, 1)) {
+                    delete_branches = 0;
+                    break;
+                }
+
+                /* Making sure that 'when' is actually referring to some value. */
+                match = 0;
+                AY_DNODE_KEYVAL_FOR(key, k) {
+                    if (key[k].lval == branch->when_val) {
+                        match = 1;
+                        break;
+                    }
+                }
+                if (!match) {
+                    delete_branches = 0;
+                    break;
+                }
+            }
+            /* Check if all when-values was referenced in branches. */
+            if (!delete_branches || (union_vals != total_branches)) {
+                continue;
+            }
+            /* TODO What if the when-value is repeated and one of the values is therefore omitted? */
+
+            /* Delete choice-stmt and keep one branch/subtree without when-stmt. */
+            for (k = 1; k < total_branches; k++) {
+                ay_ynode_delete_subtree(tree, chnode->next);
+            }
+            chnode->when_ref = 0;
+            chnode->when_val = NULL;
+        }
+    }
+
+    return 0;
 }
 
 /**
@@ -11210,7 +11310,7 @@ ay_ynode_choice_group_equal(struct ay_ynode *ch1, struct ay_ynode *ch2, ly_bool 
         }
 
         /* Compare branches. */
-        if (!ay_ynode_subtree_equal(it1, it2, 1)) {
+        if (!ay_ynode_subtree_equal(it1, it2, 1, 0)) {
             return 0;
         }
     }
@@ -11311,16 +11411,16 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 
             if ((itj->type == YN_CONTAINER) &&
                     ((alone && ay_ynode_inner_node_alone(itj)) || !ay_ynode_inner_nodes(itj)) &&
-                    !children_eq && ay_ynode_subtree_equal(iti, itj, 1)) {
+                    !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 0)) {
                 /* Subtrees including root node are equal. */
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if ((itj->type == YN_LIST) && !children_eq && ay_ynode_subtree_equal(iti, itj, 1)) {
+            } else if ((itj->type == YN_LIST) && !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 0)) {
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if (inner_nodes && inner_nodes->next && ay_ynode_subtree_equal(iti, itj, 0)) {
+            } else if (inner_nodes && inner_nodes->next && ay_ynode_subtree_equal(iti, itj, 0, 0)) {
                 /* Subtrees without root node are equal. */
                 children_eq = 1;
                 itj->ref = iti->id;
@@ -12427,6 +12527,11 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
      * ... | [key lns1 . lns2] . (lns3 | lns4) | ... */
     /* If lns3 or lns4 missing then choice between lns3 and lns4 is not mandatory. */
     TRANSF(ay_ynode_merge_cases, ay_ynode_rule_merge_cases(*tree));
+
+    /* Choice is useless if it has all branches the same except for the different when-stmt,
+     * which actually cover all possible values. Choice and when-stmt is deleted, one branch is left.
+     */
+    ay_ynode_delete_useless_choice(*tree);
 
     /* insert top-level list for storing configure file */
     TRANSF(ay_insert_list_files, 1);
