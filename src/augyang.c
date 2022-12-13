@@ -11431,16 +11431,16 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 
             if ((itj->type == YN_CONTAINER) &&
                     ((alone && ay_ynode_inner_node_alone(itj)) || !ay_ynode_inner_nodes(itj)) &&
-                    !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 0)) {
+                    !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
                 /* Subtrees including root node are equal. */
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if ((itj->type == YN_LIST) && !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 0)) {
+            } else if ((itj->type == YN_LIST) && !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if (inner_nodes && inner_nodes->next && ay_ynode_subtree_equal(iti, itj, 0, 0)) {
+            } else if (inner_nodes && inner_nodes->next && ay_ynode_subtree_equal(iti, itj, 0, 1)) {
                 /* Subtrees without root node are equal. */
                 children_eq = 1;
                 itj->ref = iti->id;
