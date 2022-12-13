@@ -3132,6 +3132,26 @@ ay_ynode_choice_contains_lnode(const struct ay_ynode *chnode, const struct ay_ln
 }
 
 /**
+ * @brief Check if @p node is in choice whose mandatory statement is false.
+ *
+ * @param[in] node Node to check.
+ * @return 1 if node is in choice and mandatory statement for choice is false.
+ */
+static ly_bool
+ay_ynode_choice_has_mand_false(struct ay_ynode *node)
+{
+    struct ay_ynode *chnode;
+
+    if (!node->choice) {
+        return 0;
+    }
+
+    chnode = ay_ynode_get_first_in_choice(node->parent, node->choice);
+
+    return chnode->flags & AY_CHOICE_MAND_FALSE;
+}
+
+/**
  * @brief Check if @p lnode1 and @p lnode2 from ay_dnode dictionary are equal.
  *
  * @param[in] lnode1 First ay_lnode to check.
@@ -9563,13 +9583,13 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->flags |= AY_YNODE_MAND_FALSE;
             }
         } else if (node->type == YN_CONTAINER) {
-            if (ay_lnode_has_maybe(node->snode, 0, 1)) {
+            if (!ay_ynode_choice_has_mand_false(node) && ay_lnode_has_maybe(node->snode, 0, 1)) {
                 node->flags |= AY_YNODE_MAND_FALSE;
             } else {
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
         } else if (node->choice && (node->type != YN_CASE) && (node->type != YN_LIST) &&
-                !(ay_ynode_get_first_in_choice(node->parent, node->choice)->flags & AY_CHOICE_MAND_FALSE)) {
+                !ay_ynode_choice_has_mand_false(node)) {
             /* The mandatory true information is useless because choice is mandatory true. */
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && (node->flags & AY_VALUE_MAND_FALSE)) {
