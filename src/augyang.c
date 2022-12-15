@@ -3981,6 +3981,26 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
 }
 
 /**
+ * @brief Check if @p str is basically a size-insensitive character.
+ *
+ * @param[in] str String or pattern to check.
+ * @return 1 if @p str is the size-insensitive character.
+ */
+static ly_bool
+ay_ident_character_nocase(const char *str)
+{
+    char ch1, ch2;
+
+    /* match pattern like [Aa] */
+    if ((str[0] == '[') && ((ch1 = str[1])) && isupper(ch1) && ((ch2 = str[2])) && islower(ch2) &&
+            (ch1 == toupper(ch2)) && (str[3] == ']')) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Check if string @p str is equal to the allowed pattern.
  *
  * Typically, it is a regular expression related to spaces.
@@ -3995,6 +4015,10 @@ ay_ident_pattern_is_valid(const char *str, uint32_t *shift)
     *shift = 0;
 
     if (!strncmp(str, "[ ]+", 4)) {
+        *shift = 3;
+        return 1;
+    } else if (ay_ident_character_nocase(str)) {
+        /* match pattern like [Aa] */
         *shift = 3;
         return 1;
     } else {
@@ -4086,6 +4110,33 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
 }
 
 /**
+ * @brief Count the total number of variants that can be derived from the \"[Aa][Bb]...\" pattern.
+ *
+ * @param[in] ptoken Subpattern to process.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @return Number of nocase variations.
+ */
+static uint64_t
+ay_pattern_identifier_nocase_variations(const char *ptoken, uint64_t ptoken_len)
+{
+    uint64_t i;
+
+    /* Skip '(' characters. */
+    for (i = 0; (i < ptoken_len) && (ptoken[i] == '('); i++) {}
+    if (!(i < ptoken_len)) {
+        return 0;
+    }
+    ptoken += i;
+    ptoken_len -= i;
+
+    if ((ptoken_len >= 4) && ay_ident_character_nocase(ptoken)) {
+        return 2;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief Count the number of question marks.
  *
  * @param[in] ptoken Subpattern to process.
@@ -4147,6 +4198,7 @@ ay_pattern_idents_count(const char *patt)
         vbar++;
         assert(*vbar);
         len = vbar - prev_vbar;
+        ret += ay_pattern_identifier_nocase_variations(prev_vbar, len);
         ret += ay_pattern_identifier_qm_variations(prev_vbar, len);
         prev_vbar = vbar;
     }
@@ -4357,6 +4409,16 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
 {
     uint64_t i, qm, vbar, opbr;
 
+    /* Check for nocase pattern - ([Aa][Bb]...). */
+    if (ay_ident_character_nocase(ptoken)) {
+        for (i = 4; i < ptoken_len; i += 4) {
+            if (!ay_ident_character_nocase(&ptoken[i])) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+
     qm = vbar = opbr = 0;
     for (i = 0; i < ptoken_len; i++) {
         switch (ptoken[i]) {
@@ -4531,6 +4593,44 @@ ay_pattern_identifier_vbar(const char *ptoken, uint64_t ptoken_len, char *buffer
 }
 
 /**
+ * @brief Add size-insensitive identifiers.
+ *
+ * @param[in] ptoken Subpattern to process.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] buffer Buffer for temporary storage of the identifier.
+ * @param[in,out] tran Record from translation table in which the identifiers are stored.
+ */
+static int
+ay_pattern_identifier_nocase(const char *ptoken, uint64_t ptoken_len, char *buffer, struct ay_transl *tran)
+{
+    int ret;
+    uint64_t i, j;
+
+    /* Add word in upper-case.
+     * [Aa][Ll]...
+     *  ^   ^  ... */
+    for (i = 1, j = 0; i < ptoken_len; i += 4, j++) {
+        buffer[j] = ptoken[i];
+    }
+    buffer[j] = '\0';
+    ret = ay_pattern_identifier_add(tran, buffer);
+    AY_CHECK_RET(ret);
+
+    /* Add word in lower-case.
+     * [Aa][Ll]...
+     *   ^   ^ ... */
+    for (i = 2, j = 0; i < ptoken_len; i += 4, j++) {
+        buffer[j] = ptoken[i];
+    }
+    buffer[j] = '\0';
+
+    ret = ay_pattern_identifier_add(tran, buffer);
+    AY_CHECK_RET(ret);
+
+    return 0;
+}
+
+/**
  * @brief Get identifier from union token located in pattern based on question mark ('?').
  *
  * Example:
@@ -4687,6 +4787,8 @@ ay_transl_create_substr(struct ay_transl *tran)
         }
         if (memchr(ptoken, '?', len)) {
             ret = ay_pattern_identifier_qm(ptoken, len, buffer, tran);
+        } else if (ay_ident_character_nocase(ptoken)) {
+            ret = ay_pattern_identifier_nocase(ptoken, len, buffer, tran);
         } else {
             ret = ay_pattern_identifier_vbar(ptoken, len, buffer, tran);
         }
