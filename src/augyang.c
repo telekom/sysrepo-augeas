@@ -3681,13 +3681,6 @@ ay_regex_try_skip(const char *curr)
     do {
         old = skip;
         switch (skip[0]) {
-        case '\\':
-            switch (skip[1]) {
-            case '$':
-                skip += 2;
-                break;
-            }
-            break;
         case '(':
             parcnt++;
             skip++;
@@ -3820,6 +3813,11 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
             break;
         case '\\':
             switch (ch[1]) {
+            case '$':
+                /* Print only dolar character. */
+                ly_print(out, "$");
+                ch++;
+                break;
             case '[':
             case ']':
                 if (charClassExpr && !charClassEmpty) {

@@ -64,7 +64,7 @@ module passwd {
           leaf username {
             mandatory true;
             type string {
-              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*$?";
             }
           }
           leaf password {
@@ -125,7 +125,7 @@ module passwd {
           leaf username {
             mandatory true;
             type string {
-              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*$?";
             }
           }
           uses nisentry;
@@ -192,7 +192,7 @@ module passwd {
           leaf username {
             mandatory true;
             type string {
-              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*$?";
             }
           }
           uses nisentry;
@@ -204,7 +204,7 @@ module passwd {
           leaf username {
             mandatory true;
             type string {
-              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*";
+              pattern "[_.A-Za-z0-9][-_.A-Za-z0-9]*$?";
             }
           }
           uses nisentry;

@@ -29,7 +29,7 @@ module approx {
         leaf key-re {
           mandatory true;
           type string {
-            pattern "[A-Za-z0-9_.-]+";
+            pattern "$?[A-Za-z0-9_.-]+";
           }
         }
         leaf value-re {
