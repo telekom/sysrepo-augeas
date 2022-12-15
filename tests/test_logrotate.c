@@ -333,7 +333,7 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
-    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));
 
     /* diff */
     assert_int_equal(0, tdiff_files(state,
@@ -369,7 +369,7 @@ test_store_modify(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='2']/rotate", "2", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
-    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));
 
     /* diff */
     assert_int_equal(0, tdiff_files(state,
@@ -405,7 +405,7 @@ test_store_remove(void **state)
     lyd_free_tree(node);
 
     /* store new data */
-    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, st->data));
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));
 
     /* diff */
     assert_int_equal(0, tdiff_files(state,

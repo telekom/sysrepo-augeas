@@ -68,13 +68,16 @@ srpds_aug_destroy(const struct lys_module *mod, sr_datastore_t ds)
 }
 
 static int
-srpds_aug_store(const struct lys_module *mod, sr_datastore_t ds, const struct lyd_node *mod_data)
+srpds_aug_store(const struct lys_module *mod, sr_datastore_t ds, const struct lyd_node *mod_diff,
+        const struct lyd_node *mod_data)
 {
     int rc = SR_ERR_OK;
     struct lyd_node *cur_data = NULL, *diff = NULL, *root;
     struct ly_set *set = NULL;
     char *aug_file = NULL;
     uint32_t i;
+
+    (void)mod_diff;
 
     /* init */
     if ((rc = augds_init(&auginfo, mod, NULL))) {
@@ -253,29 +256,6 @@ srpds_aug_copy(const struct lys_module *mod, sr_datastore_t trg_ds, sr_datastore
     (void)src_ds;
 
     AUG_LOG_ERRINT_RET;
-}
-
-static int
-srpds_aug_update_differ(const struct lys_module *old_mod, const struct lyd_node *old_mod_data,
-        const struct lys_module *new_mod, const struct lyd_node *new_mod_data, int *differ)
-{
-    LY_ERR lyrc;
-
-    (void)old_mod;
-
-    /* check for data difference */
-    lyrc = lyd_compare_siblings(new_mod_data, old_mod_data, LYD_COMPARE_FULL_RECURSION | LYD_COMPARE_DEFAULTS);
-    if (lyrc && (lyrc != LY_ENOT)) {
-        augds_log_errly(new_mod->ctx);
-        return SR_ERR_LY;
-    }
-
-    if (lyrc == LY_ENOT) {
-        *differ = 1;
-    } else {
-        *differ = 0;
-    }
-    return SR_ERR_OK;
 }
 
 static int
@@ -532,7 +512,6 @@ SRPLG_DATASTORE = {
     .running_update_cached_cb = NULL,
     .running_flush_cached_cb = NULL,
     .copy_cb = srpds_aug_copy,
-    .update_differ_cb = srpds_aug_update_differ,
     .candidate_modified_cb = srpds_aug_candidate_modified,
     .candidate_reset_cb = srpds_aug_candidate_reset,
     .access_set_cb = srpds_aug_access_set,
