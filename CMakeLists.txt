@@ -221,6 +221,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/ayg_config.h.in" "${PROJECT_BINARY_DIR
 
 # install latest lenses with our patches
 add_custom_target(install_lens
+        COMMAND cp "${PROJECT_BINARY_DIR}/augeas/src/augeas_ext/lenses/*.aug" "${AUGEAS_LENS_DIR}"
         COMMAND ${PROJECT_SOURCE_DIR}/lens_patch/update_lens.sh "${PROJECT_SOURCE_DIR}/lens_patch" "${AUGEAS_LENS_DIR}"
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
