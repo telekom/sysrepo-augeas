@@ -4438,8 +4438,8 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
 
     if (qm && (qm != opbr)) {
         return 0;
-    } else if (qm && vbar) {
-        /* There is no algorithm implemented that can process '?' and '|' in @p ptoken. */
+    } else if (qm && vbar && (qm != 1)) {
+        /* There is no algorithm implemented that can process several '?' and '|' in @p ptoken. */
         return 0;
     }
 
@@ -4451,7 +4451,8 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
  *
  * @p ptoken must be in form:
  * a) (prefix1 | prefix2 | ... ) some_name,
- * b) Expecting: some_name (postfix1 | postfix2 | ...)
+ * b) some_name (postfix1 | postfix2 | ...)
+ * c) some_name
  *
  * @param[in] ptoken Union pattern token. See ay_pattern_union_token().
  * @param[in] ptoken_len Length of @p ptoken.
@@ -4477,7 +4478,7 @@ ay_pattern_identifier_vbar_(const char *ptoken, uint64_t ptoken_len, uint64_t id
         if (!prefix) {
             return AYE_IDENT_NOT_FOUND;
         }
-        for (iter = start; *iter && (*iter != ')'); iter++) {}
+        for (iter = start; *iter && (*iter != ')') && (*iter != '?'); iter++) {}
         assert(*iter);
         name = iter + 1;
         assert(stop > name);
@@ -4497,6 +4498,7 @@ ay_pattern_identifier_vbar_(const char *ptoken, uint64_t ptoken_len, uint64_t id
             assert(*par == '(');
             postfix = ay_pattern_union_token(par + 1, idx, &len2);
             if (!postfix) {
+                buffer[0] = '\0';
                 return AYE_IDENT_NOT_FOUND;
             }
             AY_CHECK_COND((len1 + len2) >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
@@ -4754,6 +4756,52 @@ free:
 }
 
 /**
+ * @brief Store all identifiers from union token which contains a subpattern with one question mark and vertical bars.
+ *
+ * @p ptoken must be in form:
+ * a) some_name (postfix1 | postfix2 | ...)?
+ * b) (prefix1 | prefix2 | ... )? some_name
+ *
+ * @param[in] ptoken Union token.
+ * @param[in] ptoken_len Length of @p ptoken.
+ * @param[in] buffer Buffer for temporary storage of the identifier.
+ * @param[in,out] tran Record from translation table in which the identifiers are stored.
+ * @return 0 on success.
+ */
+static int
+ay_pattern_identifier_vbar_qm(const char *ptoken, uint64_t ptoken_len, char *buffer, struct ay_transl *tran)
+{
+    int ret;
+    uint64_t len;
+    ly_bool qm_postfix;
+    char *qm, *par;
+
+    qm = memchr(ptoken, '?', ptoken_len);
+    assert(qm);
+    qm_postfix = (ptoken + ptoken_len) == (qm + 1);
+
+    if (qm_postfix) {
+        /* Expecting: some_name (postfix1 | postfix2 | ...)? */
+        ay_pattern_identifier_vbar(ptoken, ptoken_len, buffer, tran);
+        /* Apply '?' subpattern. */
+        par = memchr(ptoken, '(', ptoken_len);
+        len = par - ptoken;
+        AY_CHECK_COND(len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, ptoken, len);
+    } else {
+        /* Expecting: (prefix1 | prefix2 | ... )? some_name */
+        ay_pattern_identifier_vbar(ptoken, ptoken_len, buffer, tran);
+        /* Apply '?' subpattern. */
+        len = ptoken_len - ((qm + 1) - ptoken);
+        AY_CHECK_COND(len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, qm + 1, len);
+    }
+    ret = ay_pattern_identifier_add(tran, buffer);
+
+    return ret;
+}
+
+/**
  * @brief Create and fill ay_transl.substr LY_ARRAY based on ay_transl.origin.
  *
  * @param[in,out] tran Translation record.
@@ -4785,7 +4833,9 @@ ay_transl_create_substr(struct ay_transl *tran)
         if (!ay_pattern_union_token_is_valid(ptoken, len)) {
             goto fail;
         }
-        if (memchr(ptoken, '?', len)) {
+        if (memchr(ptoken, '?', len) && memchr(ptoken, '|', len)) {
+            ret = ay_pattern_identifier_vbar_qm(ptoken, len, buffer, tran);
+        } else if (memchr(ptoken, '?', len)) {
             ret = ay_pattern_identifier_qm(ptoken, len, buffer, tran);
         } else if (ay_ident_character_nocase(ptoken)) {
             ret = ay_pattern_identifier_nocase(ptoken, len, buffer, tran);
