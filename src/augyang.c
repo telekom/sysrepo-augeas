@@ -166,6 +166,20 @@
     (YNODE && (YNODE->type == YN_LIST) && YNODE->label && (YNODE->label->lens->tag == L_SEQ))
 
 /**
+ * @brief Check if ynode was created as an implicit list.
+ *
+ * Such a list is added in case there are two L_STAR nodes above each other.
+ * In other words, two L_STAR belong to an ynode, so an additional implicit
+ * list containing the top star must be inserted.
+ *
+ * @param[in] YNODE Pointer to ynode.
+ * @return 1 if ynode is implicit list.
+ */
+#define AY_YNODE_IS_IMPLICIT_LIST(YNODE) \
+    (YNODE && (YNODE->type == YN_LIST) && YNODE->label && YNODE->snode && (YNODE->label == YNODE->snode) && \
+     (YNODE->label->lens->tag == L_STAR))
+
+/**
  * @brief Calculate the index value based on the pointer.
  *
  * @param[in] ARRAY array of items.
@@ -7376,8 +7390,14 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         if (node->flags & AY_WHEN_TARGET) {
             ly_print(ctx->out, " when_target");
         }
-        ly_print(ctx->out, "\n");
     }
+    if (AY_YNODE_IS_IMPLICIT_LIST(node)) {
+        if (!node->flags) {
+            ly_print(ctx->out, "%*s flags:", ctx->space, "");
+        }
+        ly_print(ctx->out, " implicit_list");
+    }
+    ly_print(ctx->out, "\n");
 
     if (node->min_elems) {
         ly_print(ctx->out, "%*s min_elems: %" PRIu16 "\n", ctx->space, "", node->min_elems);
@@ -8179,6 +8199,7 @@ ay_ynode_get_repetition(const struct ay_ynode *node)
 {
     const struct ay_lnode *ret = NULL, *liter, *lstart, *lstop;
     const struct ay_ynode *yiter;
+    ly_bool impl_list;
 
     if (!node) {
         return ret;
@@ -8194,8 +8215,10 @@ ay_ynode_get_repetition(const struct ay_ynode *node)
     for (yiter = node->parent; yiter && !yiter->snode; yiter = yiter->parent) {}
     lstop = yiter && (yiter->type != YN_ROOT) ? yiter->snode : NULL;
 
+    impl_list = AY_YNODE_IS_IMPLICIT_LIST(node->parent);
+
     for (liter = lstart; liter != lstop; liter = liter->parent) {
-        if (liter->lens->tag == L_STAR) {
+        if ((liter->lens->tag == L_STAR) && (!impl_list || (liter != node->parent->label))) {
             ret = liter;
             break;
         }
@@ -8213,13 +8236,16 @@ ay_ynode_get_repetition(const struct ay_ynode *node)
 static ly_bool
 ay_ynode_rule_list(const struct ay_ynode *node)
 {
-    ly_bool has_value, has_idents;
+    ly_bool has_value, has_idents, impl_list;
+    const struct ay_lnode *star;
     struct lens *label;
 
     label = AY_LABEL_LENS(node);
+    star = ay_ynode_get_repetition(node);
+    impl_list = AY_YNODE_IS_IMPLICIT_LIST(node->parent) && (node->label == star);
     has_value = label && ((label->tag == L_KEY) || (label->tag == L_SEQ)) && node->value;
     has_idents = label && (node->label->flags & AY_LNODE_KEY_NOREGEX);
-    return (node->child || has_value || has_idents) && label && ay_ynode_get_repetition(node);
+    return (node->child || has_value || has_idents) && label && star && !impl_list;
 }
 
 /**
@@ -8248,7 +8274,12 @@ ay_ynode_rule_container(const struct ay_ynode *node)
 static ly_bool
 ay_ynode_rule_leaflist(const struct ay_ynode *node)
 {
-    return !node->child && node->label && ay_ynode_get_repetition(node);
+    ly_bool impl_list;
+    const struct ay_lnode *star;
+
+    star = ay_ynode_get_repetition(node);
+    impl_list = AY_YNODE_IS_IMPLICIT_LIST(node->parent) && (node->label == star);
+    return !node->child && node->label && star && !impl_list;
 }
 
 /**
@@ -8280,6 +8311,8 @@ ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_yn
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
     if (!label) {
+        return 0;
+    } else if (AY_YNODE_IS_IMPLICIT_LIST(node)) {
         return 0;
     } else if ((node->type != YN_CONTAINER) && !AY_YNODE_IS_SEQ_LIST(node)) {
         return 0;
@@ -8314,6 +8347,37 @@ ay_ynode_insert_case_prerequisite(const struct ay_ynode *node1, const struct ay_
     } else {
         return 1;
     }
+}
+
+/**
+ * @brief Rule for inserting the implicit list.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return The maximum number of nodes that can be added.
+ */
+static uint32_t
+ay_ynode_rule_insert_implicit_list(const struct ay_ynode *tree)
+{
+    uint32_t stars;
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_lnode *ltree, *star1, *star2;
+
+    ltree = AY_YNODE_ROOT_LTREE(tree);
+    stars = 0;
+    for (i = 0; i < LY_ARRAY_COUNT(ltree); i++) {
+        star1 = &ltree[i];
+        if (star1->lens->tag != L_STAR) {
+            continue;
+        }
+        for (star2 = star1->parent; star2 && (star2->lens->tag != L_SUBTREE); star2 = star2->parent) {
+            if (star2->lens->tag == L_STAR) {
+                ++stars;
+                break;
+            }
+        }
+    }
+
+    return stars;
 }
 
 /**
@@ -11944,12 +12008,16 @@ ay_ynode_node_split(struct ay_ynode *tree)
 static int
 ay_ynode_ordered_entries(struct ay_ynode *tree)
 {
-    uint64_t i;
+    uint64_t i, j, nodes_cnt;
     struct ay_ynode *parent, *child, *list, *iter;
     const struct ay_lnode *choice, *star;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         parent = &tree[i];
+
+        if (AY_YNODE_IS_IMPLICIT_LIST(parent)) {
+            continue;
+        }
 
         for (iter = parent->child; iter; iter = iter->next) {
             if ((iter->type != YN_LIST) && (iter->type != YN_LEAFLIST) && (iter->type != YN_REC)) {
@@ -11958,6 +12026,8 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                 continue;
             } else if ((iter->type == YN_REC) && (parent->type == YN_LIST) &&
                     (parent->parent->type != YN_ROOT)) {
+                continue;
+            } else if (AY_YNODE_IS_SEQ_LIST(iter) || AY_YNODE_IS_IMPLICIT_LIST(iter)) {
                 continue;
             }
 
@@ -11968,9 +12038,18 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
 
             choice = iter->choice;
 
-            if (AY_YNODE_IS_SEQ_LIST(iter)) {
-                /* This kind of list is 'seq_list'. It is less common and it should be treated like a container.*/
-                continue;
+            /* every next LIST or LEAFLIST or YN_REC move to wrapper */
+            nodes_cnt = 0;
+            for (list = iter->next; list; list = list->next) {
+                if ((choice == list->choice) &&
+                        ((list->type == YN_LIST) || (list->type == YN_LEAFLIST) || (list->type == YN_REC)) &&
+                        (iter->min_elems == list->min_elems) &&
+                        (star == ay_ynode_get_repetition(list))) {
+                    assert(!list->when_ref && !list->when_val);
+                    nodes_cnt++;
+                } else {
+                    break;
+                }
             }
 
             /* wrapper is list to maintain the order of the augeas data */
@@ -11988,18 +12067,16 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             list->child->when_ref = 0;
             list->child->when_val = NULL;
 
-            /* every next LIST or LEAFLIST or YN_REC move to wrapper */
-            while (list->next && (choice == list->next->choice) &&
-                    ((list->next->type == YN_LIST) || (list->next->type == YN_LEAFLIST) || (list->next->type == YN_REC)) &&
-                    (list->min_elems == list->next->min_elems) &&
-                    (star == ay_ynode_get_repetition(list->next))) {
-                assert(!list->next->when_ref && !list->next->when_val);
+            for (j = 0; j < nodes_cnt; j++) {
                 ay_ynode_move_subtree_as_last_child(tree, list, list->next);
             }
 
             for (child = list->child; child; child = child->next) {
-                /* for every child in wrapper set type to container */
-                if (child->type != YN_REC) {
+                if (AY_YNODE_IS_IMPLICIT_LIST(child)) {
+                    /* Implicit list is not needed because nodes are now in list. */
+                    ay_ynode_delete_node(tree, child);
+                } else if ((child->type != YN_REC) && (child->type != YN_CASE)) {
+                    /* for every child in wrapper set type to container */
                     child->type = YN_CONTAINER;
                 }
             }
@@ -12007,6 +12084,76 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
             /* set list label to repetition because an identifier may be available */
             list->label = star;
         }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Insert implicit list roughly at the position where the second L_STAR is located.
+ *
+ * Such a list is added in case there are two L_STAR nodes above each other.
+ * In other words, two L_STAR belong to an ynode, so an additional implicit
+ * list containing the top star must be inserted.
+ *
+ * @param[in,out] Tree tree of ynodes.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_insert_implicit_list(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    uint64_t nodes_cnt, j;
+    const struct ay_lnode *star, *star2;
+    struct ay_ynode *ynode, *iter, *list, *first;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        ynode = &tree[i];
+        if (AY_YNODE_IS_IMPLICIT_LIST(ynode->parent)) {
+            continue;
+        }
+
+        /* Find the first star. */
+        star = ay_lnode_has_attribute(ynode->snode, L_STAR);
+        if (!star) {
+            continue;
+        }
+        /* Find the second star. */
+        star2 = ay_lnode_has_attribute(star, L_STAR);
+        if (!star2) {
+            continue;
+        }
+
+        /* Count the nodes that will be in the implicit list. */
+        star = NULL;
+        first = NULL;
+        nodes_cnt = 0;
+        for (iter = ynode->parent->child; iter; iter = iter->next) {
+            for (star = ay_lnode_has_attribute(iter->snode, L_STAR);
+                    star && (star != star2);
+                    star = ay_lnode_has_attribute(star, L_STAR)) {}
+            if (!star) {
+                break;
+            }
+            first = !first ? iter : first;
+            nodes_cnt++;
+        }
+        if (!nodes_cnt) {
+            continue;
+        }
+
+        /* Insert implicit list. */
+        ay_ynode_insert_wrapper(tree, first);
+        list = first;
+        list->type = YN_LIST;
+        list->label = list->snode = star2;
+
+        for (j = 0; j < nodes_cnt; j++) {
+            ay_ynode_move_subtree_as_last_child(tree, list, list->next);
+        }
+        list->choice = list->child->choice;
+
+        i++;
     }
 
     return 0;
@@ -12534,7 +12681,7 @@ ay_ynode_set_type(struct ay_ynode *tree)
         if (!node->snode) {
             assert(node->type != YN_UNKNOWN);
             continue;
-        } else if (node->type == YN_REC) {
+        } else if ((node->type == YN_REC) || (node->type == YN_LIST)) {
             continue;
         }
 
@@ -12568,6 +12715,10 @@ ay_ynode_trans_insert(struct ay_ynode **tree, int (*insert)(struct ay_ynode *), 
     int ret;
     uint64_t free_space, new_size;
     void *old;
+
+    if (items_count == 0) {
+        return 0;
+    }
 
     free_space = AY_YNODE_ROOT_ARRSIZE(*tree) - LY_ARRAY_COUNT(*tree);
     if (free_space < items_count) {
@@ -12662,6 +12813,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     /* delete unnecessary nodes */
     ay_delete_comment(*tree);
+
+    /* Insert list if two L_STAR belongs to ynode node. */
+    TRANSF(ay_ynode_insert_implicit_list, ay_ynode_rule_insert_implicit_list(*tree));
 
     /* set type */
     ay_ynode_set_type(*tree);
