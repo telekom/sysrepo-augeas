@@ -3732,6 +3732,7 @@ ay_regex_try_skip(const char *curr)
  * complicated. Examples of backslash conversions are in the following table, where augeas regular expression is on
  * the left and yang double-quoted pattern is on the right:
  *
+ * [\]      |   [\\\\]      - match one backslash character
  * [\\]     |   [\\\\]      - match one backslash character
  * \\\\     |   \\\\        - match one backslash character
  * \[       |   \\[         - match character '['
@@ -3820,7 +3821,7 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
                 break;
             case '[':
             case ']':
-                if (charClassExpr && !charClassEmpty) {
+                if (charClassExpr) {
                     /* Write backslash character inside of []. */
                     ly_print(out, "\\\\");
                     ly_print(out, "\\\\");
