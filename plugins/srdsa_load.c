@@ -200,6 +200,7 @@ augds_pattern_label_match(struct augnode_pattern *patterns, uint32_t pattern_cou
             pcre2_match_data_free(match_data);
             if ((r != PCRE2_ERROR_NOMATCH) && (r < 0)) {
                 PCRE2_UCHAR pcre2_errmsg[AUG_PCRE2_MSG_LIMIT] = {0};
+
                 pcre2_get_error_message(r, pcre2_errmsg, AUG_PCRE2_MSG_LIMIT);
 
                 SRPLG_LOG_ERR(srpds_name, "PCRE2 match error (%s).", (const char *)pcre2_errmsg);

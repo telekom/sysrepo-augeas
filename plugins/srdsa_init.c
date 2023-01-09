@@ -220,6 +220,7 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
                     &err_offset, NULL);
             if (!auginfo->pcode_uint64) {
                 PCRE2_UCHAR err_msg[AUG_PCRE2_MSG_LIMIT] = {0};
+
                 pcre2_get_error_message(err_code, err_msg, AUG_PCRE2_MSG_LIMIT);
 
                 SRPLG_LOG_ERR(srpds_name, "Regular expression \"%s\" is not valid (\"%s\": %s).", pattern,
