@@ -4465,9 +4465,10 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
  * @brief Get identifier from union token located in pattern based on vertical bar ('|').
  *
  * @p ptoken must be in form:
- * a) (prefix1 | prefix2 | ... ) some_name,
- * b) some_name (postfix1 | postfix2 | ...)
- * c) some_name
+ * a) (variation1 | variation2 | ... ) postfix,
+ * b) prefix (variation1 | variation2 | ...)
+ * c) prefix (variation1 | variation2) postfix
+ * d) some_string
  *
  * @param[in] ptoken Union pattern token. See ay_pattern_union_token().
  * @param[in] ptoken_len Length of @p ptoken.
@@ -4478,54 +4479,61 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
 static int
 ay_pattern_identifier_vbar_(const char *ptoken, uint64_t ptoken_len, uint64_t idx, char *buffer)
 {
-    const char *iter, *start, *stop, *prefix, *name, *postfix, *par;
-    uint64_t len1, len2;
+    const char *start, *stop, *prefix_end, *postfix_start, *variation;
+    uint64_t prefix_len, vari_len, postfix_len;
 
     stop = ptoken + ptoken_len;
     assert((*stop == '\0') || (*stop == '|'));
 
     start = ptoken;
-
     buffer[0] = '\0';
-    if (*start == '(') {
-        /* Expecting: (prefix1 | prefix2 | ... ) some_name */
-        prefix = ay_pattern_union_token(start + 1, idx, &len1);
-        if (!prefix) {
-            return AYE_IDENT_NOT_FOUND;
-        }
-        for (iter = start; *iter && (*iter != ')') && (*iter != '?'); iter++) {}
-        assert(*iter);
-        name = iter + 1;
-        assert(stop > name);
-        AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-        strncat(buffer, prefix, len1);
-        len2 = stop - name;
-        AY_CHECK_COND((len1 + len2) >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-        strncat(buffer, name, len2);
-    } else {
-        /* Expecting: some_name (postfix1 | postfix2 | ...) */
-        name = start;
-        par = (const char *)memchr(start, '(', stop - start);
-        if (par) {
-            len1 = par - name;
-            AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            strncat(buffer, name, len1);
-            assert(*par == '(');
-            postfix = ay_pattern_union_token(par + 1, idx, &len2);
-            if (!postfix) {
-                buffer[0] = '\0';
-                return AYE_IDENT_NOT_FOUND;
-            }
-            AY_CHECK_COND((len1 + len2) >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            strncat(buffer, postfix, len2);
-        } else if (idx == 0) {
-            len1 = stop - name;
-            AY_CHECK_COND(len1 >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
-            strncat(buffer, name, len1);
+    prefix_end = (const char *)memchr(start, '(', stop - start);
+    /* Find ')'. */
+    postfix_start = (const char *)memchr(start, ')', stop - start);
+    /* Skip '?'. */
+    postfix_start = postfix_start && (*(postfix_start + 1) == '?') ? postfix_start + 1 : postfix_start;
+    /* Check if postfix exists. */
+    postfix_start = postfix_start && (postfix_start + 1 < stop) ? postfix_start + 1 : NULL;
+
+    /* No prefix and no suffix. */
+    if (!prefix_end && !postfix_start) {
+        if (idx == 0) {
+            /* Copy whole string. */
+            AY_CHECK_COND(ptoken_len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+            strncat(buffer, ptoken, ptoken_len);
+            return 0;
         } else {
+            /* No other variation. */
             return AYE_IDENT_NOT_FOUND;
         }
     }
+
+    /* Copy string before (variation1 | variation2) pattern. */
+    if (prefix_end) {
+        prefix_len = prefix_end - start;
+        AY_CHECK_COND(prefix_len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, start, prefix_len);
+    } else {
+        /* string before variation is empty */
+        prefix_len = 0;
+        prefix_end = start;
+    }
+
+    /* Choose variation by @p idx. */
+    variation = ay_pattern_union_token(prefix_end + 1, idx, &vari_len);
+    if (!variation) {
+        buffer[0] = '\0';
+        return AYE_IDENT_NOT_FOUND;
+    }
+    AY_CHECK_COND(prefix_len + vari_len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+    strncat(buffer, variation, vari_len);
+
+    /* Copy string after (variation1 | variation2) pattern. */
+    if (postfix_start) {
+        postfix_len = stop - postfix_start;
+        AY_CHECK_COND(prefix_len + vari_len + postfix_len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+        strncat(buffer, postfix_start, postfix_len);
+    } /* else postfix string is empty */
 
     return 0;
 }
