@@ -7409,6 +7409,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         if (node->flags & AY_CHILDREN_MAND_FALSE) {
             ly_print(ctx->out, " children_mand_false");
         }
+        if (node->flags & AY_VALUE_MAND_FALSE) {
+            ly_print(ctx->out, " value_mand_false");
+        }
         if (node->flags & AY_CHOICE_MAND_FALSE) {
             ly_print(ctx->out, " choice_mand_false");
         }
@@ -7424,9 +7427,6 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         if (node->flags & AY_GROUPING_REDUCTION) {
             ly_print(ctx->out, " gr_reduction");
         }
-        if (node->flags & AY_GROUPING_CHOICE) {
-            ly_print(ctx->out, " gr_choice");
-        }
         if (node->flags & AY_HINT_MAND_TRUE) {
             ly_print(ctx->out, " hint_mand_true");
         }
@@ -7438,6 +7438,9 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         }
         if (node->flags & AY_WHEN_TARGET) {
             ly_print(ctx->out, " when_target");
+        }
+        if (node->flags & AY_GROUPING_CHOICE) {
+            ly_print(ctx->out, " gr_choice");
         }
     }
     if (AY_YNODE_IS_IMPLICIT_LIST(node)) {
