@@ -3555,6 +3555,12 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             } else if (ident[i + 1] == '.') {
                 /* remove '\' but keep '.' */
                 j--;
+            } else if (ident[i + 1] == '+') {
+                len = strlen("plus-");
+                AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+                strcpy(&buffer[j], "plus-");
+                j += len - 1;
+                i++;
             } else {
                 return AYE_IDENT_BAD_CHAR;
             }
@@ -3579,6 +3585,10 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
         }
     }
 
+    if ((j > 0) && (buffer[j - 1] == '-')) {
+        /* Dash as the last character will be removed. */
+        j--;
+    }
     AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
     buffer[j] = '\0';
 
@@ -3959,6 +3969,32 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
 }
 
 /**
+ * @brief Print string and clean up regex-related characters.
+ *
+ * For example, functions is used when printing when-stmt. In that case, the backslashes are deleted.
+ *
+ * @param[in,out] out Output handler for printing.
+ * @param[in] str Input string to print.
+ */
+static void
+ay_print_string_standardized(struct ly_out *out, const char *str)
+{
+    const char *chr;
+
+    assert(str);
+
+    for (chr = str; *chr != '\0'; chr++) {
+        if ((chr[0] == '\\') && (chr[1] == '\\')) {
+            ly_print(out, "\\\\");
+        } else if (chr[0] == '\\') {
+            continue;
+        } else {
+            ly_print(out, "%c", chr[0]);
+        }
+    }
+}
+
+/**
  * @brief Check if character is valid as part of identifier.
  *
  * @param[in] ch Character to check.
@@ -3981,6 +4017,9 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
         *shift = 1;
         return 1;
     } else if ((*ch == '\\') && (*(ch + 1) == '-')) {
+        *shift = 1;
+        return 1;
+    } else if ((*ch == '\\') && (*(ch + 1) == '+')) {
         *shift = 1;
         return 1;
     } else {
@@ -6330,7 +6369,9 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     str = (value->tag == L_VALUE) ? value->string->str : value->regexp->pattern->str;
     if (is_simple && !value->regexp->nocase) {
         /* String is just simple name. */
-        ly_print(ctx->out, "=\'%s\'\";\n", str);
+        ly_print(ctx->out, "=\'", str);
+        ay_print_string_standardized(ctx->out, str);
+        ly_print(ctx->out, "\'\";\n", str);
     } else {
         /* The 'when' expression is more complex, continue with printing of re-match function. */
         ly_print(ctx->out, ", \'");

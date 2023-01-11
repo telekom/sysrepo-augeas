@@ -154,7 +154,7 @@ module automounter {
             pattern "[^: \t\n]+";
           }
           augex:data-path "map";
-          when "re-match(../entry-mkey, '\\+')";
+          when "../entry-mkey='+'";
         }
       }
     }
