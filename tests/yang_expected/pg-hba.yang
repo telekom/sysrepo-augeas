@@ -96,7 +96,7 @@ module pg-hba {
             leaf value {
               mandatory true;
               type string {
-                pattern "[A-Za-z][A-Za-z0-9]+";
+                pattern "[A-Za-z][A-Za-z0-9-]+";
               }
             }
             uses option-list;
@@ -135,7 +135,7 @@ module pg-hba {
             leaf value {
               mandatory true;
               type string {
-                pattern "[A-Za-z][A-Za-z0-9]+";
+                pattern "[A-Za-z][A-Za-z0-9-]+";
               }
             }
             uses option-list;
