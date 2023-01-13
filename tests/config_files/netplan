@@ -1,0 +1,80 @@
+network:
+  ethernets:
+    eth0:
+      match:
+        name: "ESCAPED\a\"'nd"
+        macaddress: 01:23:45:67:A0:C0
+        driver:
+          - driv1
+          -   driv2
+      set-name: my-name
+      wakeonlan: false
+      generic-segmentation-offload: false
+      openvswitch:
+        lacp: passive
+        controller:
+          addresses: [ tcp:127.0.0.1:6653  , "ssl:[fe80::1234%eth0]:6653"]
+        ports:
+          - [patch0-1, patch1-0]
+          - [patch0-2, patch2-0  ]
+        ssl:
+          ca-cert: /path/to/file
+      dhcp4: true
+      addresses:
+        - "10.0.0.15/24":
+            lifetime: 0
+            label: "maas"
+        - "2001:1::1/64"
+      nameservers:
+        search: [lab, home]
+        addresses: [8.8.8.8, "FEDC::1"]
+      optional-addresses: [  aa,  rr d,  "gg"]
+      routes:
+        - to: default
+          via: 172.134.67.1
+          metric: 100
+          on-link: true
+          table: 76
+        - to: default
+          via: 10.0.0.1
+          metric: 100
+          on-link: true
+    switchports:
+      match: {name: "enp2*"}
+  bridges:
+    br0:
+      interfaces: [switchports]
+      parameters:
+        ageing-time: 50
+        hello-time: 10
+    br1:
+      interfaces: []
+  tunnels:
+    tn0:
+      mode: vxlan
+      keys:
+        input: 1234
+        output: 5678
+        private: /path/to/private.key
+      peers:
+        - keys:
+            public: rlbInAj0qV69CysWPQY7KEBnKxpYCpaWqOs/dLevdWc=
+          allowed-ips: [0.0.0.0/0, "2001:fe:ad:de:ad:be:ef:1/24"]
+          keepalive: 23
+          endpoint: 1.2.3.4:5
+        - keys:
+            public: M9nt4YujIOmNrRmpIRTmYSfMdrpvE7u6WkG8FY8WjG4=
+            shared: /some/shared.key
+          allowed-ips: [10.10.10.20/24]
+          keepalive: 22
+          endpoint: 5.4.3.2:1
+  vrfs:
+    vrf20:
+      table: 20
+      interfaces: [ br0 ]
+      routes:
+        - to: default
+          via: 10.10.10.3
+      routing-policy:
+        - from: 10.10.10.42
+  version: 2

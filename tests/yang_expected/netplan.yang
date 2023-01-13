@@ -1,0 +1,3820 @@
+module netplan {
+  yang-version 1.1;
+  namespace "aug:netplan";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Netplan";
+
+  grouping match-opts-lines {
+    list match-opts-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-match-opts-lines {
+        mandatory true;
+        leaf name {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "name";
+        }
+        leaf macaddress {
+          type string {
+            pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+          }
+          augex:data-path "macaddress";
+        }
+        leaf driver-single {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "driver_single";
+        }
+        container driver {
+          augex:data-path "driver";
+          presence "Config entry.";
+          list driver-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "scalar";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf scalar {
+              mandatory true;
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  grouping match-opts-flow {
+    list match-opts-flow {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-match-opts-flow {
+        mandatory true;
+        leaf name {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "name";
+        }
+        leaf macaddress {
+          type string {
+            pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+          }
+          augex:data-path "macaddress";
+        }
+        leaf driver-single {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "driver_single";
+        }
+        container driver {
+          augex:data-path "driver";
+          presence "Config entry.";
+          list driver-list {
+            key "_seq";
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "scalar";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf scalar {
+              mandatory true;
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  grouping addresses-list {
+    list addresses-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping addresses-list2 {
+    list addresses-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping ssl-opts-lines {
+    list ssl-opts-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-ssl-opts-lines {
+        mandatory true;
+        leaf ca-cert {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "ca-cert";
+        }
+        leaf certificate {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "certificate";
+        }
+        leaf private-key {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "private-key";
+        }
+      }
+    }
+  }
+  grouping link-local-list {
+    list link-local-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "link-local";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf link-local {
+        mandatory true;
+        type string {
+          pattern "ipv4|ipv6";
+        }
+      }
+    }
+  }
+  grouping link-local-list2 {
+    list link-local-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "link-local";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf link-local {
+        mandatory true;
+        type string {
+          pattern "ipv4|ipv6";
+        }
+      }
+    }
+  }
+  grouping dhcp-overrides-lines {
+    list dhcp-overrides-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-dhcp-overrides-lines {
+        mandatory true;
+        leaf use-dns {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "use-dns";
+        }
+        leaf use-ntp {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "use-ntp";
+        }
+        leaf send-hostname {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "send-hostname";
+        }
+        leaf use-hostname {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "use-hostname";
+        }
+        leaf use-mtu {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "use-mtu";
+        }
+        leaf hostname {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "hostname";
+        }
+        leaf use-routes {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "use-routes";
+        }
+        leaf route-metric {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "route-metric";
+        }
+        leaf use-domains {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "use-domains";
+        }
+      }
+    }
+  }
+  grouping addresses-list3 {
+    list addresses-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      container addresses-lines {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf identifier {
+          mandatory true;
+          type string {
+            pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf lifetime {
+              type string {
+                pattern "forever|0";
+              }
+              augex:data-path "lifetime";
+            }
+            leaf label {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "label";
+            }
+          }
+        }
+      }
+    }
+  }
+  grouping search-list {
+    list search-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping nameservers-flow {
+    list nameservers-flow {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-nameservers-flow {
+        mandatory true;
+        container addresses {
+          augex:data-path "addresses";
+          presence "Config entry.";
+          uses addresses-list2;
+        }
+        container search {
+          augex:data-path "search";
+          presence "Config entry.";
+          uses search-list;
+        }
+      }
+    }
+  }
+  grouping optional-addresses-list {
+    list optional-addresses-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping optional-addresses-list2 {
+    list optional-addresses-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping routes-list {
+    list routes-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      container routes {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf routes {
+          mandatory true;
+          type uint64;
+        }
+        list routes-opts-lines {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-routes-opts-lines {
+            mandatory true;
+            leaf from {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "from";
+            }
+            leaf to {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "to";
+            }
+            leaf via {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "via";
+            }
+            leaf on-link {
+              type string {
+                pattern "true|false";
+              }
+              augex:data-path "on-link";
+            }
+            leaf metric {
+              type uint64;
+              augex:data-path "metric";
+            }
+            leaf type {
+              type string {
+                pattern "unicast|anycast|blackhole|broadcast|local|multicast|nat|prohibit|throw|unreachable|xresolve";
+              }
+              augex:data-path "type";
+            }
+            leaf scope {
+              type string {
+                pattern "global|link|host";
+              }
+              augex:data-path "scope";
+            }
+            leaf table {
+              type uint64;
+              augex:data-path "table";
+            }
+            leaf mtu {
+              type uint64;
+              augex:data-path "mtu";
+            }
+            leaf congestion-window {
+              type uint64;
+              augex:data-path "congestion-window";
+            }
+            leaf advertised-receive-window {
+              type uint64;
+              augex:data-path "advertised-receive-window";
+            }
+          }
+        }
+      }
+    }
+  }
+  grouping routing-policy-list {
+    list routing-policy-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      container routing-policy {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf routing-policy {
+          mandatory true;
+          type uint64;
+        }
+        list routing-policy-opts-lines {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-routing-policy-opts-lines {
+            mandatory true;
+            leaf from {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "from";
+            }
+            leaf to {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "to";
+            }
+            leaf table {
+              type uint64;
+              augex:data-path "table";
+            }
+            leaf priority {
+              type uint64;
+              augex:data-path "priority";
+            }
+            leaf mark {
+              type uint64;
+              augex:data-path "mark";
+            }
+            leaf type-of-service {
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+              augex:data-path "type-of-service";
+            }
+          }
+        }
+      }
+    }
+  }
+  grouping auth-opts-lines {
+    list auth-opts-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-auth-opts-lines {
+        mandatory true;
+        leaf key-management {
+          type string {
+            pattern "none|psk|eap|802\\.1x";
+          }
+          augex:data-path "key-management";
+        }
+        leaf password {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "password";
+        }
+        leaf method {
+          type string {
+            pattern "peap|t?tls";
+          }
+          augex:data-path "method";
+        }
+        leaf identity {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "identity";
+        }
+        leaf anonymous-identity {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "anonymous-identity";
+        }
+        leaf ca-certificate {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "ca-certificate";
+        }
+        leaf client-certificate {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "client-certificate";
+        }
+        leaf client-key {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "client-key";
+        }
+        leaf client-key-password {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "client-key-password";
+        }
+        leaf phase2-auth {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "phase2-auth";
+        }
+      }
+    }
+  }
+  grouping interfaces-list {
+    list interfaces-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping interfaces-list2 {
+    list interfaces-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "scalar";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf scalar {
+        mandatory true;
+        type string {
+          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+        }
+      }
+    }
+  }
+  grouping tunnel-keys-lines {
+    list tunnel-keys-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-tunnel-keys-lines {
+        mandatory true;
+        leaf input {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "input";
+        }
+        leaf output {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "output";
+        }
+        leaf private {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "private";
+        }
+      }
+    }
+  }
+  grouping peer-keys-lines {
+    list peer-keys-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-peer-keys-lines {
+        mandatory true;
+        leaf public {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "public";
+        }
+        leaf shared {
+          type string {
+            pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+          }
+          augex:data-path "shared";
+        }
+      }
+    }
+  }
+  grouping openvswitch-opts-lines {
+    list openvswitch-opts-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-openvswitch-opts-lines {
+        mandatory true;
+        leaf lacp {
+          type string {
+            pattern "active|passive|off";
+          }
+          augex:data-path "lacp";
+        }
+        leaf fail-mode {
+          type string {
+            pattern "secure|standalone";
+          }
+          augex:data-path "fail-mode";
+        }
+        leaf mcast-snooping {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "mcast-snooping";
+        }
+        container protocols {
+          augex:data-path "protocols";
+          presence "Config entry.";
+          list protocols-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "openvswitch-protocols";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf openvswitch-protocols {
+              mandatory true;
+              type string {
+                pattern "OpenFlow1[0-6]";
+              }
+            }
+          }
+        }
+        container protocols-f {
+          augex:data-path "protocols_f";
+          presence "Config entry.";
+          list protocols-list {
+            key "_seq";
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "openvswitch-protocols";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf openvswitch-protocols {
+              mandatory true;
+              type string {
+                pattern "OpenFlow1[0-6]";
+              }
+            }
+          }
+        }
+        leaf rstp {
+          type string {
+            pattern "true|false";
+          }
+          augex:data-path "rstp";
+        }
+        container controller {
+          augex:data-path "controller";
+          presence "Config entry.";
+          list controller-opts-lines {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-controller-opts-lines {
+              mandatory true;
+              container addresses {
+                augex:data-path "addresses";
+                presence "Config entry.";
+                uses addresses-list;
+              }
+              container addresses-f {
+                augex:data-path "addresses_f";
+                presence "Config entry.";
+                uses addresses-list2;
+              }
+              leaf connection-mode {
+                type string {
+                  pattern "in-band|out-of-band";
+                }
+                augex:data-path "connection-mode";
+              }
+            }
+          }
+        }
+        container controller-f {
+          augex:data-path "controller_f";
+          presence "Config entry.";
+          list controller-opts-flow {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-controller-opts-flow {
+              mandatory true;
+              container addresses {
+                augex:data-path "addresses";
+                presence "Config entry.";
+                uses addresses-list2;
+              }
+              leaf connection-mode {
+                type string {
+                  pattern "in-band|out-of-band";
+                }
+                augex:data-path "connection-mode";
+              }
+            }
+          }
+        }
+        container ports {
+          augex:data-path "ports";
+          presence "Config entry.";
+          list ports-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            list ports-list {
+              key "_seq";
+              ordered-by user;
+              augex:data-path "$$";
+              augex:value-yang-path "scalar";
+              leaf _seq {
+                type uint64;
+                description
+                  "Key contains some unique value. The order is based on the actual order of list instances.";
+              }
+              leaf scalar {
+                mandatory true;
+                type string {
+                  pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                }
+              }
+            }
+          }
+        }
+        container ssl {
+          augex:data-path "ssl";
+          presence "Config entry.";
+          uses ssl-opts-lines;
+        }
+        container ssl-f {
+          augex:data-path "ssl_f";
+          presence "Config entry.";
+          uses ssl-opts-lines;
+        }
+      }
+    }
+  }
+  grouping nameservers-lines {
+    list nameservers-lines {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-nameservers-lines {
+        mandatory true;
+        container addresses {
+          augex:data-path "addresses";
+          presence "Config entry.";
+          uses addresses-list;
+        }
+        container addresses-f {
+          augex:data-path "addresses_f";
+          presence "Config entry.";
+          uses addresses-list2;
+        }
+        container search {
+          augex:data-path "search";
+          presence "Config entry.";
+          list search-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "scalar";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf scalar {
+              mandatory true;
+              type string {
+                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+              }
+            }
+          }
+        }
+        container search-f {
+          augex:data-path "search_f";
+          presence "Config entry.";
+          uses search-list;
+        }
+      }
+    }
+  }
+  list netplan {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    leaf yaml {
+      type union {
+        type empty;
+        type string {
+          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+        }
+      }
+      augex:data-path "@yaml";
+    }
+    container network {
+      augex:data-path "network";
+      presence "Config entry.";
+      list config-entries {
+        key "_id";
+        min-elements 1;
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        choice ch-config-entries {
+          mandatory true;
+          leaf version {
+            type string {
+              pattern "1|2";
+            }
+            augex:data-path "version";
+          }
+          container ethernets {
+            augex:data-path "ethernets";
+            presence "Config entry.";
+            list ethernets {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-ethernets {
+                mandatory true;
+                leaf renderer {
+                  type string {
+                    pattern "networkd|NetworkManager|sriov";
+                  }
+                  augex:data-path "renderer";
+                }
+                container identifier {
+                  augex:data-path "$$";
+                  presence "Config entry.";
+                  leaf identifier {
+                    mandatory true;
+                    type string {
+                      pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                    }
+                  }
+                  list ethernet-opts {
+                    key "_id";
+                    min-elements 1;
+                    ordered-by user;
+                    leaf _id {
+                      type uint64;
+                      description
+                        "Implicitly generated list key to maintain the order of the augeas data.";
+                    }
+                    choice ch-ethernet-opts {
+                      mandatory true;
+                      container match {
+                        augex:data-path "match";
+                        presence "Config entry.";
+                        uses match-opts-lines;
+                      }
+                      container match-f {
+                        augex:data-path "match_f";
+                        presence "Config entry.";
+                        uses match-opts-flow;
+                      }
+                      leaf set-name {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "set-name";
+                      }
+                      leaf wakeonlan {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "wakeonlan";
+                      }
+                      leaf emit-lldp {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "emit-lldp";
+                      }
+                      leaf receive-checksum-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "receive-checksum-offload";
+                      }
+                      leaf transmit-checksum-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "transmit-checksum-offload";
+                      }
+                      leaf tcp-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "tcp-segmentation-offload";
+                      }
+                      leaf tcp6-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "tcp6-segmentation-offload";
+                      }
+                      leaf generic-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "generic-segmentation-offload";
+                      }
+                      leaf generic-receive-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "generic-receive-offload";
+                      }
+                      leaf large-receive-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "large-receive-offload";
+                      }
+                      container openvswitch {
+                        augex:data-path "openvswitch";
+                        presence "Config entry.";
+                        uses openvswitch-opts-lines;
+                      }
+                      leaf renderer {
+                        type string {
+                          pattern "networkd|NetworkManager|sriov";
+                        }
+                        augex:data-path "renderer";
+                      }
+                      leaf dhcp4 {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "dhcp4";
+                      }
+                      leaf dhcp6 {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "dhcp6";
+                      }
+                      leaf ipv6-mtu {
+                        type uint64;
+                        augex:data-path "ipv6-mtu";
+                      }
+                      leaf ipv6-privacy {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "ipv6-privacy";
+                      }
+                      container link-local {
+                        augex:data-path "link-local";
+                        presence "Config entry.";
+                        uses link-local-list;
+                      }
+                      container link-local-f {
+                        augex:data-path "link-local_f";
+                        presence "Config entry.";
+                        uses link-local-list2;
+                      }
+                      leaf ignore-carrier {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "ignore-carrier";
+                      }
+                      leaf critical {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "critical";
+                      }
+                      leaf dhcp-identifier {
+                        type string {
+                          pattern "mac|duid";
+                        }
+                        augex:data-path "dhcp-identifier";
+                      }
+                      container dhcp4-overrides {
+                        augex:data-path "dhcp4-overrides";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp4-overrides-f {
+                        augex:data-path "dhcp4-overrides_f";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp6-overrides {
+                        augex:data-path "dhcp6-overrides";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp6-overrides-f {
+                        augex:data-path "dhcp6-overrides_f";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      leaf accept-ra {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "accept-ra";
+                      }
+                      container addresses {
+                        augex:data-path "addresses";
+                        presence "Config entry.";
+                        uses addresses-list3;
+                      }
+                      leaf ipv6-address-generation {
+                        type string {
+                          pattern "eui64|stable-privacy";
+                        }
+                        augex:data-path "ipv6-address-generation";
+                      }
+                      leaf ipv6-address-token {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "ipv6-address-token";
+                      }
+                      leaf gateway4 {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "gateway4";
+                      }
+                      leaf gateway6 {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "gateway6";
+                      }
+                      container nameservers {
+                        augex:data-path "nameservers";
+                        presence "Config entry.";
+                        uses nameservers-lines;
+                      }
+                      container nameservers-f {
+                        augex:data-path "nameservers_f";
+                        presence "Config entry.";
+                        uses nameservers-flow;
+                      }
+                      leaf macaddress {
+                        type string {
+                          pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                        }
+                        augex:data-path "macaddress";
+                      }
+                      leaf mtu {
+                        type uint64;
+                        augex:data-path "mtu";
+                      }
+                      leaf optional {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "optional";
+                      }
+                      container optional-addresses {
+                        augex:data-path "optional-addresses";
+                        presence "Config entry.";
+                        uses optional-addresses-list;
+                      }
+                      container optional-addresses-f {
+                        augex:data-path "optional-addresses_f";
+                        presence "Config entry.";
+                        uses optional-addresses-list2;
+                      }
+                      leaf activation-mode {
+                        type string {
+                          pattern "manual|off";
+                        }
+                        augex:data-path "activation-mode";
+                      }
+                      container routes {
+                        augex:data-path "routes";
+                        presence "Config entry.";
+                        uses routes-list;
+                      }
+                      container routing-policy {
+                        augex:data-path "routing-policy";
+                        presence "Config entry.";
+                        uses routing-policy-list;
+                      }
+                      leaf neigh-suppress {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "neigh-suppress";
+                      }
+                      container auth {
+                        augex:data-path "auth";
+                        presence "Config entry.";
+                        uses auth-opts-lines;
+                      }
+                      container auth-f {
+                        augex:data-path "auth_f";
+                        presence "Config entry.";
+                        uses auth-opts-lines;
+                      }
+                      leaf link {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "link";
+                      }
+                      leaf virtual-function-count {
+                        type uint64;
+                        augex:data-path "virtual-function-count";
+                      }
+                      leaf embedded-switch-mode {
+                        type string {
+                          pattern "switchdev|legacy";
+                        }
+                        augex:data-path "embedded-switch-mode";
+                      }
+                      leaf delay-virtual-functions-rebind {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "delay-virtual-functions-rebind";
+                      }
+                      leaf infiniband-mode {
+                        type string {
+                          pattern "datagram|connected";
+                        }
+                        augex:data-path "infiniband-mode";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container modems {
+            augex:data-path "modems";
+            presence "Config entry.";
+            list modems-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container modems {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list modem-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-modem-opts {
+                    mandatory true;
+                    container match {
+                      augex:data-path "match";
+                      presence "Config entry.";
+                      uses match-opts-lines;
+                    }
+                    container match-f {
+                      augex:data-path "match_f";
+                      presence "Config entry.";
+                      uses match-opts-flow;
+                    }
+                    leaf set-name {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "set-name";
+                    }
+                    leaf wakeonlan {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "wakeonlan";
+                    }
+                    leaf emit-lldp {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "emit-lldp";
+                    }
+                    leaf receive-checksum-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "receive-checksum-offload";
+                    }
+                    leaf transmit-checksum-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "transmit-checksum-offload";
+                    }
+                    leaf tcp-segmentation-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "tcp-segmentation-offload";
+                    }
+                    leaf tcp6-segmentation-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "tcp6-segmentation-offload";
+                    }
+                    leaf generic-segmentation-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "generic-segmentation-offload";
+                    }
+                    leaf generic-receive-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "generic-receive-offload";
+                    }
+                    leaf large-receive-offload {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "large-receive-offload";
+                    }
+                    container openvswitch {
+                      augex:data-path "openvswitch";
+                      presence "Config entry.";
+                      uses openvswitch-opts-lines;
+                    }
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    leaf apn {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "apn";
+                    }
+                    leaf auto-config {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "auto-config";
+                    }
+                    leaf device-id {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "device-id";
+                    }
+                    leaf network-id {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "network-id";
+                    }
+                    leaf number {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "number";
+                    }
+                    leaf password {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "password";
+                    }
+                    leaf pin {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "pin";
+                    }
+                    leaf sim-id {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "sim-id";
+                    }
+                    leaf sim-operator-id {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "sim-operator-id";
+                    }
+                    leaf username {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "username";
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container wifis {
+            augex:data-path "wifis";
+            presence "Config entry.";
+            list wifis-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container wifis {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                choice ch-wifis {
+                  mandatory true;
+                  list wifi-opts {
+                    key "_id";
+                    ordered-by user;
+                    leaf _id {
+                      type uint64;
+                      description
+                        "Implicitly generated list key to maintain the order of the augeas data.";
+                    }
+                    choice ch-wifi-opts {
+                      mandatory true;
+                      container match {
+                        augex:data-path "match";
+                        presence "Config entry.";
+                        uses match-opts-lines;
+                      }
+                      container match-f {
+                        augex:data-path "match_f";
+                        presence "Config entry.";
+                        uses match-opts-flow;
+                      }
+                      leaf set-name {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "set-name";
+                      }
+                    }
+                  }
+                  container wakeonlan {
+                    augex:data-path "wakeonlan";
+                    augex:value-yang-path "bool";
+                    presence "Config entry.";
+                    leaf bool {
+                      type string {
+                        pattern "true|false";
+                      }
+                    }
+                    list wakeonlan-list {
+                      key "_seq";
+                      min-elements 1;
+                      ordered-by user;
+                      augex:data-path "$$";
+                      augex:value-yang-path "wakeonlan";
+                      leaf _seq {
+                        type uint64;
+                        description
+                          "Key contains some unique value. The order is based on the actual order of list instances.";
+                      }
+                      leaf wakeonlan {
+                        type string {
+                          pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
+                        }
+                      }
+                    }
+                  }
+                  list wifi-opts2 {
+                    key "_id";
+                    ordered-by user;
+                    leaf _id {
+                      type uint64;
+                      description
+                        "Implicitly generated list key to maintain the order of the augeas data.";
+                    }
+                    choice ch-wifi-opts2 {
+                      mandatory true;
+                      leaf emit-lldp {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "emit-lldp";
+                      }
+                      leaf receive-checksum-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "receive-checksum-offload";
+                      }
+                      leaf transmit-checksum-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "transmit-checksum-offload";
+                      }
+                      leaf tcp-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "tcp-segmentation-offload";
+                      }
+                      leaf tcp6-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "tcp6-segmentation-offload";
+                      }
+                      leaf generic-segmentation-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "generic-segmentation-offload";
+                      }
+                      leaf generic-receive-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "generic-receive-offload";
+                      }
+                      leaf large-receive-offload {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "large-receive-offload";
+                      }
+                      container openvswitch {
+                        augex:data-path "openvswitch";
+                        presence "Config entry.";
+                        uses openvswitch-opts-lines;
+                      }
+                      leaf renderer {
+                        type string {
+                          pattern "networkd|NetworkManager|sriov";
+                        }
+                        augex:data-path "renderer";
+                      }
+                      leaf dhcp4 {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "dhcp4";
+                      }
+                      leaf dhcp6 {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "dhcp6";
+                      }
+                      leaf ipv6-mtu {
+                        type uint64;
+                        augex:data-path "ipv6-mtu";
+                      }
+                      leaf ipv6-privacy {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "ipv6-privacy";
+                      }
+                      container link-local {
+                        augex:data-path "link-local";
+                        presence "Config entry.";
+                        uses link-local-list;
+                      }
+                      container link-local-f {
+                        augex:data-path "link-local_f";
+                        presence "Config entry.";
+                        uses link-local-list2;
+                      }
+                      leaf ignore-carrier {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "ignore-carrier";
+                      }
+                      leaf critical {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "critical";
+                      }
+                      leaf dhcp-identifier {
+                        type string {
+                          pattern "mac|duid";
+                        }
+                        augex:data-path "dhcp-identifier";
+                      }
+                      container dhcp4-overrides {
+                        augex:data-path "dhcp4-overrides";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp4-overrides-f {
+                        augex:data-path "dhcp4-overrides_f";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp6-overrides {
+                        augex:data-path "dhcp6-overrides";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      container dhcp6-overrides-f {
+                        augex:data-path "dhcp6-overrides_f";
+                        presence "Config entry.";
+                        uses dhcp-overrides-lines;
+                      }
+                      leaf accept-ra {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "accept-ra";
+                      }
+                      container addresses {
+                        augex:data-path "addresses";
+                        presence "Config entry.";
+                        uses addresses-list3;
+                      }
+                      leaf ipv6-address-generation {
+                        type string {
+                          pattern "eui64|stable-privacy";
+                        }
+                        augex:data-path "ipv6-address-generation";
+                      }
+                      leaf ipv6-address-token {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "ipv6-address-token";
+                      }
+                      leaf gateway4 {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "gateway4";
+                      }
+                      leaf gateway6 {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "gateway6";
+                      }
+                      container nameservers {
+                        augex:data-path "nameservers";
+                        presence "Config entry.";
+                        uses nameservers-lines;
+                      }
+                      container nameservers-f {
+                        augex:data-path "nameservers_f";
+                        presence "Config entry.";
+                        uses nameservers-flow;
+                      }
+                      leaf macaddress {
+                        type string {
+                          pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                        }
+                        augex:data-path "macaddress";
+                      }
+                      leaf mtu {
+                        type uint64;
+                        augex:data-path "mtu";
+                      }
+                      leaf optional {
+                        type string {
+                          pattern "true|false";
+                        }
+                        augex:data-path "optional";
+                      }
+                      container optional-addresses {
+                        augex:data-path "optional-addresses";
+                        presence "Config entry.";
+                        uses optional-addresses-list;
+                      }
+                      container optional-addresses-f {
+                        augex:data-path "optional-addresses_f";
+                        presence "Config entry.";
+                        uses optional-addresses-list2;
+                      }
+                      leaf activation-mode {
+                        type string {
+                          pattern "manual|off";
+                        }
+                        augex:data-path "activation-mode";
+                      }
+                      container routes {
+                        augex:data-path "routes";
+                        presence "Config entry.";
+                        uses routes-list;
+                      }
+                      container routing-policy {
+                        augex:data-path "routing-policy";
+                        presence "Config entry.";
+                        uses routing-policy-list;
+                      }
+                      leaf neigh-suppress {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "neigh-suppress";
+                      }
+                      container access-points {
+                        augex:data-path "access-points";
+                        presence "Config entry.";
+                        list access-points-lines {
+                          key "_id";
+                          min-elements 1;
+                          ordered-by user;
+                          leaf _id {
+                            type uint64;
+                            description
+                              "Implicitly generated list key to maintain the order of the augeas data.";
+                          }
+                          choice ch-access-points-lines {
+                            mandatory true;
+                            leaf password {
+                              type string {
+                                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                              }
+                              augex:data-path "password";
+                            }
+                            leaf mode {
+                              type string {
+                                pattern "infrastructure|ap|adhoc";
+                              }
+                              augex:data-path "mode";
+                            }
+                            leaf bssid {
+                              type string {
+                                pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                              }
+                              augex:data-path "bssid";
+                            }
+                            leaf band {
+                              type string {
+                                pattern "5Ghz|2\\.4Ghz";
+                              }
+                              augex:data-path "band";
+                            }
+                            leaf channel {
+                              type uint64;
+                              augex:data-path "channel";
+                            }
+                            leaf hidden {
+                              type string {
+                                pattern "true|false";
+                              }
+                              augex:data-path "hidden";
+                            }
+                          }
+                        }
+                      }
+                      container wakeonlan-f {
+                        augex:data-path "wakeonlan_f";
+                        presence "Config entry.";
+                        list wakeonlan-list {
+                          key "_seq";
+                          ordered-by user;
+                          augex:data-path "$$";
+                          augex:value-yang-path "wakeonlan";
+                          leaf _seq {
+                            type uint64;
+                            description
+                              "Key contains some unique value. The order is based on the actual order of list instances.";
+                          }
+                          leaf wakeonlan {
+                            mandatory true;
+                            type string {
+                              pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
+                            }
+                          }
+                        }
+                      }
+                      leaf regulatory-domain {
+                        type string {
+                          pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                        }
+                        augex:data-path "regulatory-domain";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container bridges {
+            augex:data-path "bridges";
+            presence "Config entry.";
+            list bridges-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container bridges {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list bridge-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-bridge-opts {
+                    mandatory true;
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    container interfaces {
+                      augex:data-path "interfaces";
+                      presence "Config entry.";
+                      uses interfaces-list;
+                    }
+                    container interfaces-f {
+                      augex:data-path "interfaces_f";
+                      presence "Config entry.";
+                      uses interfaces-list2;
+                    }
+                    container parameters {
+                      augex:data-path "parameters";
+                      presence "Config entry.";
+                      list bridge-parameters-lines {
+                        key "_id";
+                        min-elements 1;
+                        ordered-by user;
+                        leaf _id {
+                          type uint64;
+                          description
+                            "Implicitly generated list key to maintain the order of the augeas data.";
+                        }
+                        choice ch-bridge-parameters-lines {
+                          mandatory true;
+                          leaf aging-time {
+                            type uint64;
+                            augex:data-path "aging-time";
+                          }
+                          leaf ageing-time {
+                            type uint64;
+                            augex:data-path "ageing-time";
+                          }
+                          leaf priority {
+                            type uint64;
+                            augex:data-path "priority";
+                          }
+                          leaf port-priority {
+                            type uint64;
+                            augex:data-path "port-priority";
+                          }
+                          leaf forward-delay {
+                            type uint64;
+                            augex:data-path "forward-delay";
+                          }
+                          leaf hello-time {
+                            type uint64;
+                            augex:data-path "hello-time";
+                          }
+                          leaf max-age {
+                            type uint64;
+                            augex:data-path "max-age";
+                          }
+                          leaf path-cost {
+                            type string {
+                              pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                            }
+                            augex:data-path "path-cost";
+                          }
+                          leaf stp {
+                            type string {
+                              pattern "true|false";
+                            }
+                            augex:data-path "stp";
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container bonds {
+            augex:data-path "bonds";
+            presence "Config entry.";
+            list bonds-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container bonds {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list bond-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-bond-opts {
+                    mandatory true;
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    container interfaces {
+                      augex:data-path "interfaces";
+                      presence "Config entry.";
+                      uses interfaces-list;
+                    }
+                    container interfaces-f {
+                      augex:data-path "interfaces_f";
+                      presence "Config entry.";
+                      uses interfaces-list2;
+                    }
+                    container parameters {
+                      augex:data-path "parameters";
+                      presence "Config entry.";
+                      list bond-parameters {
+                        key "_id";
+                        min-elements 1;
+                        ordered-by user;
+                        leaf _id {
+                          type uint64;
+                          description
+                            "Implicitly generated list key to maintain the order of the augeas data.";
+                        }
+                        choice ch-bond-parameters {
+                          mandatory true;
+                          leaf mode {
+                            type string {
+                              pattern "balance-rr|active-backup|balance-xor|broadcast|802\\.3ad|balance-tlb|balance-alb|active-backup\n        |balance-tcp|balance-slb";
+                            }
+                            augex:data-path "mode";
+                          }
+                          leaf lacp-rate {
+                            type string {
+                              pattern "slow|fast";
+                            }
+                            augex:data-path "lacp-rate";
+                          }
+                          leaf mii-monitor-interval {
+                            type uint64;
+                            augex:data-path "mii-monitor-interval";
+                          }
+                          leaf min-links {
+                            type uint64;
+                            augex:data-path "min-links";
+                          }
+                          leaf transmit-hash-policy {
+                            type string {
+                              pattern "layer2|layer3\\+4|layer2\\+3|encap2\\+3|encap3\\+4";
+                            }
+                            augex:data-path "transmit-hash-policy";
+                          }
+                          leaf ad-select {
+                            type string {
+                              pattern "stable|bandwidth|count";
+                            }
+                            augex:data-path "ad-select";
+                          }
+                          leaf all-slaves-active {
+                            type string {
+                              pattern "true|false";
+                            }
+                            augex:data-path "all-slaves-active";
+                          }
+                          leaf arp-interval {
+                            type uint64;
+                            augex:data-path "arp-interval";
+                          }
+                          container arp-ip-targets {
+                            augex:data-path "arp-ip-targets";
+                            presence "Config entry.";
+                            list arp-ip-targets-list {
+                              key "_seq";
+                              min-elements 1;
+                              ordered-by user;
+                              augex:data-path "$$";
+                              augex:value-yang-path "scalar";
+                              leaf _seq {
+                                type uint64;
+                                description
+                                  "Key contains some unique value. The order is based on the actual order of list instances.";
+                              }
+                              leaf scalar {
+                                mandatory true;
+                                type string {
+                                  pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                                }
+                              }
+                            }
+                          }
+                          container arp-ip-targets-f {
+                            augex:data-path "arp-ip-targets_f";
+                            presence "Config entry.";
+                            list arp-ip-targets-list {
+                              key "_seq";
+                              ordered-by user;
+                              augex:data-path "$$";
+                              augex:value-yang-path "scalar";
+                              leaf _seq {
+                                type uint64;
+                                description
+                                  "Key contains some unique value. The order is based on the actual order of list instances.";
+                              }
+                              leaf scalar {
+                                mandatory true;
+                                type string {
+                                  pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                                }
+                              }
+                            }
+                          }
+                          leaf arp-validate {
+                            type string {
+                              pattern "none|active|backup|all";
+                            }
+                            augex:data-path "arp-validate";
+                          }
+                          leaf arp-all-targets {
+                            type string {
+                              pattern "any|all";
+                            }
+                            augex:data-path "arp-all-targets";
+                          }
+                          leaf up-delay {
+                            type uint64;
+                            augex:data-path "up-delay";
+                          }
+                          leaf down-delay {
+                            type uint64;
+                            augex:data-path "down-delay";
+                          }
+                          leaf fail-over-mac-policy {
+                            type string {
+                              pattern "none|active|follow";
+                            }
+                            augex:data-path "fail-over-mac-policy";
+                          }
+                          leaf gratuitous-arp {
+                            type uint64;
+                            augex:data-path "gratuitous-arp";
+                          }
+                          leaf packets-per-slave {
+                            type uint64;
+                            augex:data-path "packets-per-slave";
+                          }
+                          leaf primary-reselect-policy {
+                            type string {
+                              pattern "always|better|failure";
+                            }
+                            augex:data-path "primary-reselect-policy";
+                          }
+                          leaf resend-igmp {
+                            type uint64;
+                            augex:data-path "resend-igmp";
+                          }
+                          leaf learn-packet-interval {
+                            type string {
+                              pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                            }
+                            augex:data-path "learn-packet-interval";
+                          }
+                          leaf primary {
+                            type string {
+                              pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                            }
+                            augex:data-path "primary";
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container tunnels {
+            augex:data-path "tunnels";
+            presence "Config entry.";
+            list tunnels-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container tunnels {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list tunnel-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-tunnel-opts {
+                    mandatory true;
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    leaf mode {
+                      type string {
+                        pattern "sit|gre|ip6gre|ipip|ipip6|ip6ip6|vti|vti6|wireguard|vxlan|gretap|ip6gretap|isatap";
+                      }
+                      augex:data-path "mode";
+                    }
+                    leaf local {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "local";
+                    }
+                    leaf remote {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "remote";
+                    }
+                    leaf ttl {
+                      type uint64;
+                      augex:data-path "ttl";
+                    }
+                    leaf key {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "key";
+                    }
+                    container keys {
+                      augex:data-path "keys";
+                      presence "Config entry.";
+                      uses tunnel-keys-lines;
+                    }
+                    container keys-f {
+                      augex:data-path "keys_f";
+                      presence "Config entry.";
+                      uses tunnel-keys-lines;
+                    }
+                    leaf mark {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "mark";
+                    }
+                    leaf port {
+                      type string {
+                        pattern "(auto)|([0-9]+)";
+                      }
+                      augex:data-path "port";
+                    }
+                    container peers {
+                      augex:data-path "peers";
+                      presence "Config entry.";
+                      list peers-list {
+                        key "_seq";
+                        min-elements 1;
+                        ordered-by user;
+                        augex:data-path "$$";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        container peers {
+                          augex:data-path "$$";
+                          presence "Config entry.";
+                          leaf peers {
+                            mandatory true;
+                            type uint64;
+                          }
+                          list config-entries {
+                            key "_id";
+                            min-elements 1;
+                            ordered-by user;
+                            leaf _id {
+                              type uint64;
+                              description
+                                "Implicitly generated list key to maintain the order of the augeas data.";
+                            }
+                            choice ch-config-entries {
+                              mandatory true;
+                              leaf endpoint {
+                                type string {
+                                  pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                                }
+                                augex:data-path "endpoint";
+                              }
+                              container allowed-ips {
+                                augex:data-path "allowed-ips";
+                                presence "Config entry.";
+                                list allowed-ips-list {
+                                  key "_seq";
+                                  min-elements 1;
+                                  ordered-by user;
+                                  augex:data-path "$$";
+                                  augex:value-yang-path "scalar";
+                                  leaf _seq {
+                                    type uint64;
+                                    description
+                                      "Key contains some unique value. The order is based on the actual order of list instances.";
+                                  }
+                                  leaf scalar {
+                                    mandatory true;
+                                    type string {
+                                      pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                                    }
+                                  }
+                                }
+                              }
+                              container allowed-ips-f {
+                                augex:data-path "allowed-ips_f";
+                                presence "Config entry.";
+                                list allowed-ips-list {
+                                  key "_seq";
+                                  ordered-by user;
+                                  augex:data-path "$$";
+                                  augex:value-yang-path "scalar";
+                                  leaf _seq {
+                                    type uint64;
+                                    description
+                                      "Key contains some unique value. The order is based on the actual order of list instances.";
+                                  }
+                                  leaf scalar {
+                                    mandatory true;
+                                    type string {
+                                      pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                                    }
+                                  }
+                                }
+                              }
+                              leaf keepalive {
+                                type uint64;
+                                augex:data-path "keepalive";
+                              }
+                              container keys {
+                                augex:data-path "keys";
+                                presence "Config entry.";
+                                uses peer-keys-lines;
+                              }
+                              container keys-f {
+                                augex:data-path "keys_f";
+                                presence "Config entry.";
+                                uses peer-keys-lines;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    leaf id {
+                      type uint64;
+                      augex:data-path "id";
+                    }
+                    leaf link {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "link";
+                    }
+                    leaf type-of-service {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "type-of-service";
+                    }
+                    leaf mac-learning {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "mac-learning";
+                    }
+                    leaf aging {
+                      type uint64;
+                      augex:data-path "aging";
+                    }
+                    leaf ageing {
+                      type uint64;
+                      augex:data-path "ageing";
+                    }
+                    leaf limit {
+                      type uint64;
+                      augex:data-path "limit";
+                    }
+                    leaf arp-proxy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "arp-proxy";
+                    }
+                    container notifications {
+                      augex:data-path "notifications";
+                      presence "Config entry.";
+                      list notifications-list {
+                        key "_seq";
+                        min-elements 1;
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-notifications";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-notifications {
+                          mandatory true;
+                          type string {
+                            pattern "l[23]-miss";
+                          }
+                        }
+                      }
+                    }
+                    container notifications-f {
+                      augex:data-path "notifications_f";
+                      presence "Config entry.";
+                      list notifications-list {
+                        key "_seq";
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-notifications";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-notifications {
+                          mandatory true;
+                          type string {
+                            pattern "l[23]-miss";
+                          }
+                        }
+                      }
+                    }
+                    leaf short-circuit {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "short-circuit";
+                    }
+                    container checksums {
+                      augex:data-path "checksums";
+                      presence "Config entry.";
+                      list checksums-list {
+                        key "_seq";
+                        min-elements 1;
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-checksum";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-checksum {
+                          mandatory true;
+                          type string {
+                            pattern "udp|zero-udp6-[tr]x|remote-[tr]x";
+                          }
+                        }
+                      }
+                    }
+                    container checksums-f {
+                      augex:data-path "checksums_f";
+                      presence "Config entry.";
+                      list checksums-list {
+                        key "_seq";
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-checksum";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-checksum {
+                          mandatory true;
+                          type string {
+                            pattern "udp|zero-udp6-[tr]x|remote-[tr]x";
+                          }
+                        }
+                      }
+                    }
+                    container extensions {
+                      augex:data-path "extensions";
+                      presence "Config entry.";
+                      list extensions-list {
+                        key "_seq";
+                        min-elements 1;
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-extension";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-extension {
+                          mandatory true;
+                          type string {
+                            pattern "group-policy|generic-protocol";
+                          }
+                        }
+                      }
+                    }
+                    container extensions-f {
+                      augex:data-path "extensions_f";
+                      presence "Config entry.";
+                      list extensions-list {
+                        key "_seq";
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "tunnel-extension";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf tunnel-extension {
+                          mandatory true;
+                          type string {
+                            pattern "group-policy|generic-protocol";
+                          }
+                        }
+                      }
+                    }
+                    container port-range {
+                      augex:data-path "port-range";
+                      presence "Config entry.";
+                      list port-range-list {
+                        key "_seq";
+                        min-elements 1;
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "number";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf number {
+                          mandatory true;
+                          type uint64;
+                        }
+                      }
+                    }
+                    container port-range-f {
+                      augex:data-path "port-range_f";
+                      presence "Config entry.";
+                      list port-range-list {
+                        key "_seq";
+                        ordered-by user;
+                        augex:data-path "$$";
+                        augex:value-yang-path "number";
+                        leaf _seq {
+                          type uint64;
+                          description
+                            "Key contains some unique value. The order is based on the actual order of list instances.";
+                        }
+                        leaf number {
+                          mandatory true;
+                          type uint64;
+                        }
+                      }
+                    }
+                    leaf flow-label {
+                      type uint64;
+                      augex:data-path "flow-label";
+                    }
+                    leaf do-not-fragment {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "do-not-fragment";
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container vlans {
+            augex:data-path "vlans";
+            presence "Config entry.";
+            list vlans-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container vlans {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list vlan-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-vlan-opts {
+                    mandatory true;
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    leaf id {
+                      type uint64;
+                      augex:data-path "id";
+                    }
+                    leaf link {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "link";
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container vrfs {
+            augex:data-path "vrfs";
+            presence "Config entry.";
+            list vrfs-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container vrfs {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list vrf-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-vrf-opts {
+                    mandatory true;
+                    leaf renderer {
+                      type string {
+                        pattern "networkd|NetworkManager|sriov";
+                      }
+                      augex:data-path "renderer";
+                    }
+                    leaf dhcp4 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp4";
+                    }
+                    leaf dhcp6 {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "dhcp6";
+                    }
+                    leaf ipv6-mtu {
+                      type uint64;
+                      augex:data-path "ipv6-mtu";
+                    }
+                    leaf ipv6-privacy {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ipv6-privacy";
+                    }
+                    container link-local {
+                      augex:data-path "link-local";
+                      presence "Config entry.";
+                      uses link-local-list;
+                    }
+                    container link-local-f {
+                      augex:data-path "link-local_f";
+                      presence "Config entry.";
+                      uses link-local-list2;
+                    }
+                    leaf ignore-carrier {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "ignore-carrier";
+                    }
+                    leaf critical {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "critical";
+                    }
+                    leaf dhcp-identifier {
+                      type string {
+                        pattern "mac|duid";
+                      }
+                      augex:data-path "dhcp-identifier";
+                    }
+                    container dhcp4-overrides {
+                      augex:data-path "dhcp4-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp4-overrides-f {
+                      augex:data-path "dhcp4-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides {
+                      augex:data-path "dhcp6-overrides";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    container dhcp6-overrides-f {
+                      augex:data-path "dhcp6-overrides_f";
+                      presence "Config entry.";
+                      uses dhcp-overrides-lines;
+                    }
+                    leaf accept-ra {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "accept-ra";
+                    }
+                    container addresses {
+                      augex:data-path "addresses";
+                      presence "Config entry.";
+                      uses addresses-list3;
+                    }
+                    leaf ipv6-address-generation {
+                      type string {
+                        pattern "eui64|stable-privacy";
+                      }
+                      augex:data-path "ipv6-address-generation";
+                    }
+                    leaf ipv6-address-token {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "ipv6-address-token";
+                    }
+                    leaf gateway4 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway4";
+                    }
+                    leaf gateway6 {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "gateway6";
+                    }
+                    container nameservers {
+                      augex:data-path "nameservers";
+                      presence "Config entry.";
+                      uses nameservers-lines;
+                    }
+                    container nameservers-f {
+                      augex:data-path "nameservers_f";
+                      presence "Config entry.";
+                      uses nameservers-flow;
+                    }
+                    leaf macaddress {
+                      type string {
+                        pattern "[0-9a-fA-F]{2}(((:[0-9a-fA-F]{2}){5})|((:[0-9a-fA-F]{2}){19}))";
+                      }
+                      augex:data-path "macaddress";
+                    }
+                    leaf mtu {
+                      type uint64;
+                      augex:data-path "mtu";
+                    }
+                    leaf optional {
+                      type string {
+                        pattern "true|false";
+                      }
+                      augex:data-path "optional";
+                    }
+                    container optional-addresses {
+                      augex:data-path "optional-addresses";
+                      presence "Config entry.";
+                      uses optional-addresses-list;
+                    }
+                    container optional-addresses-f {
+                      augex:data-path "optional-addresses_f";
+                      presence "Config entry.";
+                      uses optional-addresses-list2;
+                    }
+                    leaf activation-mode {
+                      type string {
+                        pattern "manual|off";
+                      }
+                      augex:data-path "activation-mode";
+                    }
+                    container routes {
+                      augex:data-path "routes";
+                      presence "Config entry.";
+                      uses routes-list;
+                    }
+                    container routing-policy {
+                      augex:data-path "routing-policy";
+                      presence "Config entry.";
+                      uses routing-policy-list;
+                    }
+                    leaf neigh-suppress {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "neigh-suppress";
+                    }
+                    leaf table {
+                      type uint64;
+                      augex:data-path "table";
+                    }
+                    container interfaces {
+                      augex:data-path "interfaces";
+                      presence "Config entry.";
+                      uses interfaces-list;
+                    }
+                    container interfaces-f {
+                      augex:data-path "interfaces_f";
+                      presence "Config entry.";
+                      uses interfaces-list2;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container network-manager {
+            augex:data-path "network-manager";
+            presence "Config entry.";
+            list network-manager-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container network-manager {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf identifier {
+                  mandatory true;
+                  type string {
+                    pattern "((([^\\]\t\n !\"%&'*:>@\\[`\\\\{|\\\\}-])([!-9;-~]*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                  }
+                }
+                list network-manager-opts {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-network-manager-opts {
+                    mandatory true;
+                    leaf name {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "name";
+                    }
+                    leaf uuid {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "uuid";
+                    }
+                    leaf stable-id {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "stable-id";
+                    }
+                    leaf device {
+                      type string {
+                        pattern "(((([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*))((([\t ]+)(([^\\]\t\n !\"#%&'*,>@\\[`\\\\{|\\\\}])([!\"$-+.-\\\\^-|~-]*)))*))|('(''|[\t -&\\\\(-~])*'))|(\"([\\\\]([0abtnvfre \"/\\\\N_LP]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})|[\\]\t\n !#-\\[^-~])*\")";
+                      }
+                      augex:data-path "device";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
