@@ -81,6 +81,12 @@ module inputrc {
                   description
                     "Implicitly generated leaf to maintain recursive augeas data.";
                 }
+                leaf include {
+                  type string {
+                    pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                  }
+                  augex:data-path "@include";
+                }
                 case variable {
                   uses variable;
                 }
@@ -124,6 +130,12 @@ module inputrc {
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";
                   }
+                  leaf include {
+                    type string {
+                      pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                    }
+                    augex:data-path "@include";
+                  }
                   case variable {
                     uses variable;
                   }
@@ -149,6 +161,12 @@ module inputrc {
               }
             }
           }
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "@include";
         }
         case variable {
           uses variable;
