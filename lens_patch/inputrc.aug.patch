@@ -1,5 +1,5 @@
---- ../../../Downloads/inputrc.aug	2023-01-16 13:20:41.772611288 +0100
-+++ augeas/src/augeas_ext/lenses/inputrc.aug	2023-01-16 13:19:39.764443515 +0100
+--- inputrc_old.aug	2023-01-16 13:20:41.772611288 +0100
++++ inputrc_new.aug	2023-01-16 13:19:39.764443515 +0100
 @@ -40,18 +40,23 @@
                 . key (Rx.word - "entry") . Sep.space
                 . store Rx.word . Util.eol ]
