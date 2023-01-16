@@ -388,7 +388,7 @@ enum yang_type {
 #define AY_CHILDREN_MAND_FALSE  0x008   /**< All children must be mandatory false. */
 #define AY_VALUE_MAND_FALSE     0x010   /**< The YN_VALUE node must be mandatory false. */
 #define AY_VALUE_IN_CHOICE      0x020   /**< YN_VALUE of node must be in choice statement. */
-#define AY_GROUPING_CHILDREN    0x040   /**< The ay_ynode.ref only affects children. */
+#define AY_GROUPING_CHILDREN    0x040   /**< Grouping is applied to the subtree except the root. */
 #define AY_CONFIG_FALSE         0x080   /**< Print 'config false' for this node. */
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
 #define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
@@ -11663,7 +11663,8 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i, j, start;
     struct ay_ynode *iti, *itj, *inner_nodes;
-    ly_bool children_eq, subtree_eq, alone;
+    ly_bool subtree_eq, alone, splittable;
+    uint64_t children_eq;
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get default subtree. */
@@ -11673,6 +11674,7 @@ ay_ynode_set_ref(struct ay_ynode *tree)
         } else if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
             continue;
         } else if (iti->ref && (iti->parent->type != YN_REC)) {
+            /* Grouping has already been evaluated. */
             i += iti->descendants;
             continue;
         } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
@@ -11684,12 +11686,14 @@ ay_ynode_set_ref(struct ay_ynode *tree)
         /* Find subtrees which are the same. */
         subtree_eq = 0;
         children_eq = 0;
+        splittable = 0;
         alone = ay_ynode_inner_node_alone(iti);
         inner_nodes = ay_ynode_inner_nodes(iti);
         start = i + iti->descendants + 1;
         for (j = start; j < LY_ARRAY_COUNT(tree); j++) {
             itj = &tree[j];
             if (itj->ref) {
+                /* Grouping has already been evaluated. */
                 j += itj->descendants;
                 continue;
             } else if (itj->when_ref || !ay_ynode_when_paths_are_valid(itj, 1)) {
@@ -11698,24 +11702,44 @@ ay_ynode_set_ref(struct ay_ynode *tree)
 
             if ((itj->type == YN_CONTAINER) &&
                     ((alone && ay_ynode_inner_node_alone(itj)) || !ay_ynode_inner_nodes(itj)) &&
-                    !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
+                    ay_ynode_subtree_equal(iti, itj, 1, 1)) {
                 /* Subtrees including root node are equal. */
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if ((itj->type == YN_LIST) && !children_eq && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
+            } else if ((itj->type == YN_LIST) && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
+                /* Subtrees including root node are equal. */
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
-            } else if (inner_nodes && inner_nodes->next && ay_ynode_subtree_equal(iti, itj, 0, 1)) {
+            } else if (inner_nodes && ay_ynode_subtree_equal(iti, itj, 0, 1)) {
                 /* Subtrees without root node are equal. */
-                children_eq = 1;
+                splittable = splittable || ay_ynode_rule_node_is_splittable(tree, itj) ? 1 : 0;
+                children_eq++;
                 itj->ref = iti->id;
+                itj->flags |= AY_GROUPING_CHILDREN;
                 j += itj->descendants;
             }
         }
 
-        /* Setting 'iti->ref' and flag AY_GROUPING_CHILDREN. */
+        /* Correction. If its inner_node has no siblings, no grouping is applied, because it is too 'poor'.
+         * In other words, grouping is not applied because it is not worth it. But if any of the matched subtrees was
+         * splittable, then it can be 'poor', because the subtree repeats too often. */
+        if (!splittable && children_eq && !inner_nodes->next) {
+            for (j = start; j < LY_ARRAY_COUNT(tree); j++) {
+                itj = &tree[j];
+                if ((itj->ref != iti->id) || !(itj->flags & AY_GROUPING_CHILDREN)) {
+                    continue;
+                }
+
+                children_eq--;
+                itj->ref = 0;
+                itj->flags &= ~AY_GROUPING_CHILDREN;
+            }
+        }
+
+        /* Setting 'iti->ref' and flag AY_GROUPING_CHILDREN. If grouping is to be applied to the entire subtree
+         * including the root, there must not be a subtree that has a different root.*/
         if ((subtree_eq && children_eq) || (!subtree_eq && children_eq)) {
             iti->ref = iti->id;
             iti->flags |= AY_GROUPING_CHILDREN;
