@@ -237,7 +237,7 @@ srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpa
     }
 
     /* assume valid */
-    assert(!lyd_validate_module(mod_data, augmod->mod, 0, NULL));
+    assert(!lyd_validate_module(mod_data, augmod->mod, LYD_VALIDATE_NO_STATE, NULL));
 
 cleanup:
     free(files);
