@@ -36,6 +36,18 @@ module star {
           }
           augex:data-path "STAR_FIFOSIZE_MAX";
         }
+        leaf star-fsync {
+          type string {
+            pattern "N";
+          }
+          augex:data-path "STAR_FSYNC";
+        }
+        leaf star-secure-links {
+          type string {
+            pattern "N";
+          }
+          augex:data-path "STAR_SECURE_LINKS";
+        }
         container archive {
           augex:data-path "$$";
           presence "Config entry.";

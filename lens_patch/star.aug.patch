@@ -1,0 +1,19 @@
+--- ../../Downloads/star.aug	2023-01-17 11:00:20.131533318 +0100
++++ star.aug	2023-01-17 10:58:55.614998424 +0100
+@@ -18,13 +18,15 @@
+ 
+ let size  = Build.key_value_line "STAR_FIFOSIZE" Sep.space_equal ( store /[0-9x*.a-z]+/ )
+ let size_max   = Build.key_value_line "STAR_FIFOSIZE_MAX" Sep.space_equal ( store /[0-9x*.a-z]+/ )
++let fsync = Build.key_value_line "STAR_FSYNC" Sep.space_equal ( store /N/ )
++let secure_links = Build.key_value_line "STAR_SECURE_LINKS" Sep.space_equal ( store /N/ )
+ let archive = Build.key_value_line ( "archive". /[0-7]/ ) Sep.equal
+                ( [ label "device" . sto_to_tab ] . Sep.tab .
+                  [ label "block" . sto_to_tab ] . Sep.tab .
+                  [ label "size" . sto_to_tab ] . ( Sep.tab .
+                  [ label "istape" . sto_to_tab ] )? )
+ 
+-let lns = ( size | size_max | archive | Util.comment | Util.empty )*
++let lns = ( size | size_max | fsync | secure_links | archive | Util.comment | Util.empty )*
+ 
+ let filter = incl "/etc/default/star"
+ 
