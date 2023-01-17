@@ -10900,7 +10900,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
             first1->flags |= AY_CHILDREN_MAND_FALSE;
         }
 
-        first1->type = YN_CONTAINER;
+        first1->type = (first1->type == YN_LIST) ? YN_LIST : YN_CONTAINER;
         ay_ynode_merge_nodes(tree, first1, first2->child, 1);
         first1->child->flags |= AY_CHOICE_MAND_FALSE;
     } else {
