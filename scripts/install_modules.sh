@@ -30,6 +30,8 @@ for LENS in "$@"; do
         continue
     fi
 
+    echo "-- Installing Augeas YANG module $LENS..."
+
     # store startup data of the module in a file
     TMPFILE=`mktemp -u`.xml
     "$BINARY_DIR/ay_startup" $LENS > "$TMPFILE"
