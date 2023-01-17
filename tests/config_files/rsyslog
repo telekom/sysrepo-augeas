@@ -20,3 +20,40 @@ authpriv.*                                              /var/log/secure
 *.emerg :omusrmsg:*
 *.emerg :omusrmsg:foo,bar
 *.emerg | /dev/xconsole
+
+###
+# print most important on tty10 and on the xconsole pipe
+#
+if	( \
+	    /* kernel up to warning except of firewall  */ \
+	    ($syslogfacility-text == 'kern')      and      \
+	    ($syslogseverity <= 4 /* warning */ ) and not  \
+	    ($msg contains 'IN=' and $msg contains 'OUT=') \
+	) or ( \
+	    /* up to errors except of facility authpriv */ \
+	    ($syslogseverity <= 3 /* errors  */ ) and not  \
+	    ($syslogfacility-text == 'authpriv')           \
+	) \
+then {
+	/dev/tty10
+	|/dev/xconsole
+}
+
+# enable this, if you want that root is informed
+# immediately, e.g. of logins
+#*.alert				root
+
+
+#
+# Additional filter rules
+#
+$IncludeConfig /etc/rsyslog.d/*.frule
+
+
+#
+# email-messages
+#
+mail.* -/var/log/mail
+mail.info -/var/log/mail.info
+mail.warning -/var/log/mail.warn
+mail.err /var/log/mail.err

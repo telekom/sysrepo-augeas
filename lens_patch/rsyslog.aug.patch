@@ -1,0 +1,24 @@
+--- ../../Downloads/rsyslog.aug	2023-01-16 16:28:46.889808493 +0100
++++ rsyslog.aug	2023-01-17 10:02:13.440611228 +0100
+@@ -87,7 +87,20 @@
+   in [ label "filter" . prop_name . sep . prop_oper . sep . prop_val .
+        Sep.space . actions . Util.eol ]
+ 
+-let entries = ( Syslog.empty | Util.comment | entry | macro | config_object | prop_filter )*
++let space_ln = del /[ \t]+([\]\n[ \t]*)?/ " "
++
++let condition_expr = /[^()]*(\([^()]*\))?[^()]*((\([^()]*\))?[^()]*)*/
++let condition = [ label "condition" . Util.del_str "(" . store condition_expr . Util.del_str ")" ]
++                . [ space_ln . key /(and|or)([ \t]+not)?/ . space_ln
++                . Util.del_str "(" . store condition_expr . Util.del_str ")" ]*
++
++(* View: if *)
++let if = [ key "if" . Sep.space . condition . space_ln
++         . [ key "then" . Sep.space . Util.del_str "{" . Util.eol
++         . ( Util.comment | [del /[ \t]*/ "   " . label "cmd" . store /[^# \t\n][^\n]*[^ \t\n]/ . Util.eol] )+
++         . Util.del_str "}" . Util.eol ] ]
++
++let entries = ( Syslog.empty | Util.comment | entry | macro | config_object | prop_filter | if )*
+ 
+ let lns = entries . ( program | hostname )*
+ 

@@ -368,6 +368,63 @@ module rsyslog {
           }
           uses action-list;
         }
+        container if {
+          augex:data-path "if";
+          presence "Config entry.";
+          leaf condition {
+            mandatory true;
+            type string {
+              pattern "[^()]*(\\([^()]*\\))?[^()]*((\\([^()]*\\))?[^()]*)*";
+            }
+            augex:data-path "condition";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container node {
+              augex:data-path "$$";
+              augex:value-yang-path "condition-expr";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "(and|or)([ \t]+not)?";
+                }
+              }
+              leaf condition-expr {
+                mandatory true;
+                type string {
+                  pattern "[^()]*(\\([^()]*\\))?[^()]*((\\([^()]*\\))?[^()]*)*";
+                }
+              }
+            }
+          }
+          container then {
+            augex:data-path "then";
+            presence "Config entry.";
+            list cmd-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf cmd {
+                type string {
+                  pattern "[^# \t\n][^\n]*[^ \t\n]";
+                }
+                augex:data-path "cmd";
+              }
+            }
+          }
+        }
       }
     }
     list config-entries {
