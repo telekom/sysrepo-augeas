@@ -389,7 +389,7 @@ enum yang_type {
 #define AY_VALUE_MAND_FALSE     0x010   /**< The YN_VALUE node must be mandatory false. */
 #define AY_VALUE_IN_CHOICE      0x020   /**< YN_VALUE of node must be in choice statement. */
 #define AY_GROUPING_CHILDREN    0x040   /**< Grouping is applied to the subtree except the root. */
-#define AY_CONFIG_FALSE         0x080   /**< Print 'config false' for this node. */
+/* #define AY_FREE_FLAG         0x080 */
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
 #define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
 #define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
@@ -6381,20 +6381,6 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Print yang config-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] node Node to process.
- */
-static void
-ay_print_yang_config(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    if (node->flags & AY_CONFIG_FALSE) {
-        ly_print(ctx->out, "%*sconfig false;\n", ctx->space, "");
-    }
-}
-
-/**
  * @brief Print yang description.
  *
  * @param[in] ctx Context for printing.
@@ -6427,7 +6413,6 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_minelements(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
-    ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ret = ay_print_yang_data_path(ctx, node);
@@ -6472,7 +6457,6 @@ ay_print_yang_leaf(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_mandatory(ctx, node);
     ret = ay_print_yang_type(ctx, node);
     AY_CHECK_RET(ret);
-    ay_print_yang_config(ctx, node);
     ret = ay_print_yang_data_path(ctx, node);
     AY_CHECK_RET(ret);
     ret = ay_print_yang_value_path(ctx, node);
@@ -6518,7 +6502,6 @@ ay_print_yang_leafref(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ay_print_yang_nesting_end(ctx);
 
     ay_print_yang_description(ctx, "Implicitly generated leaf to maintain recursive augeas data.");
-    ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
@@ -6607,8 +6590,6 @@ ay_print_yang_leaf_key(struct yprinter_ctx *ctx, struct ay_ynode *node)
         AY_CHECK_RET(ret);
     }
 
-    ay_print_yang_config(ctx, node);
-
     if (AY_YNODE_IS_SEQ_LIST(node->parent)) {
         ay_print_yang_description(ctx, "Key contains some unique value. "
                 "The order is based on the actual order of list instances.");
@@ -6640,7 +6621,6 @@ ay_print_yang_list_files(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ly_print(ctx->out, "%*sleaf config-file", ctx->space, "");
     ay_print_yang_nesting_begin(ctx);
     ly_print(ctx->out, "%*stype string;\n", ctx->space, "");
-    ay_print_yang_config(ctx, node);
     ay_print_yang_nesting_end(ctx);
 
     ret = ay_print_yang_children(ctx, node);
@@ -6670,7 +6650,6 @@ ay_print_yang_seq_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     ly_print(ctx->out, "%*skey \"_seq\";\n", ctx->space, "");
     ay_print_yang_minelements(ctx, node);
-    ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
     ret = ay_print_yang_data_path(ctx, node);
@@ -6719,7 +6698,6 @@ ay_print_yang_list(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ly_print(ctx->out, "%*skey \"_id\";\n", ctx->space, "");
     }
     ay_print_yang_minelements(ctx, node);
-    ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     if (is_lrec) {
         ly_print(ctx->out, "%*sleaf _r-id", ctx->space, "");
@@ -6780,7 +6758,6 @@ ay_print_yang_container(struct yprinter_ctx *ctx, struct ay_ynode *node)
     ret = ay_print_yang_value_path(ctx, node);
     AY_CHECK_RET(ret);
     ay_print_yang_presence(ctx, node);
-    ay_print_yang_config(ctx, node);
     ay_print_yang_when(ctx, node);
     ret = ay_print_yang_children(ctx, node);
     AY_CHECK_RET(ret);
@@ -7420,9 +7397,6 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
         }
         if (node->flags & AY_GROUPING_CHILDREN) {
             ly_print(ctx->out, " gr_children");
-        }
-        if (node->flags & AY_CONFIG_FALSE) {
-            ly_print(ctx->out, " conf_false");
         }
         if (node->flags & AY_GROUPING_REDUCTION) {
             ly_print(ctx->out, " gr_reduction");
@@ -12344,7 +12318,6 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
                 /* Some list is present. */
                 listrec = branch;
                 listrec->snode = lrec_external->snode;
-                listrec->flags |= AY_CONFIG_FALSE;
                 lrec_internal->ref = listrec->id;
             } else if (!listrec) {
                 /* Create listrec. */
@@ -12354,7 +12327,6 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
                 listrec->type = YN_LIST;
                 listrec->choice = listrec->child->choice;
                 listrec->snode = lrec_external->snode;
-                listrec->flags |= AY_CONFIG_FALSE;
                 lrec_internal->ref = listrec->id;
             } else if (prev_branch == branch) {
                 /* More lrec_internals in one branch. */

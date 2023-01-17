@@ -80,7 +80,6 @@ module httpd {
         }
         list node-list {
           key "_r-id";
-          config false;
           leaf _r-id {
             type uint64;
             description

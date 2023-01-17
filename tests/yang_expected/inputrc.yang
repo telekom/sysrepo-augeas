@@ -48,7 +48,6 @@ module inputrc {
         mandatory true;
         list if-list {
           key "_r-id";
-          config false;
           leaf _r-id {
             type uint64;
             description
