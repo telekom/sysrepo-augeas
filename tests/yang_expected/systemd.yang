@@ -61,7 +61,7 @@ module systemd {
               presence "Config entry.";
               leaf value {
                 type string {
-                  pattern "([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\])(((\\\\\n)([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\]))*)";
+                  pattern "([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\])((([ \t]*\\\\\n[ \t]*)([^# \t\n\\\\][^#\n\\\\]*[^# \t\n\\\\]|[^# \t\n\\\\]))*)";
                 }
                 augex:data-path "value";
               }
@@ -72,7 +72,7 @@ module systemd {
               leaf entry-multi-kw {
                 mandatory true;
                 type string {
-                  pattern "Descriptio((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|Descripti([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Descript([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Descrip([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|Descri([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|Descr([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Desc([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Des([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|De([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|Environmen((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|Environme([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Environm([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|Environ([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|Enviro([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Envir([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Envi([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Env([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Exec([.0-9_-][.0-9A-Z_a-z-]*|[A-Za-z]|())|Exe([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|(Ex[.0-9A-Z_a-df-z-]|En[.0-9A-Z_a-uw-z-]|(E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|Ex|En|E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-]";
+                  pattern "Descriptio((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|Descripti([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Descript([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Descrip([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|Descri([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|Descr([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|Desc([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Des([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|De([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|Environmen((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|Environme([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Environm([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|Environ([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|Enviro([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|Envir([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|Envi([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|Env([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ExecP(aths|())|Exec([.0-9_-][.0-9A-Z_a-z-]*|[A-OQ-Za-z]|())|Exe([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|(Ex[.0-9A-Z_a-df-z-]|En[.0-9A-Z_a-uw-z-]|(E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|Ex|En|E[.0-9A-Z_a-mo-wyz-]|D[.0-9A-Z_a-df-z-]|[A-CF-Za-z][.0-9A-Z_a-z-]";
                 }
               }
               leaf-list value {
@@ -89,7 +89,7 @@ module systemd {
               leaf entry-command-kw {
                 mandatory true;
                 type string {
-                  pattern "Exec[A-Za-z][A-Za-z0-9._-]+";
+                  pattern "ExecPath((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|ExecPat([.0-9A-Z_a-gi-z-][.0-9A-Z_a-z-]*|())|(ExecPa[.0-9A-Z_a-su-z-]|(ExecP[.0-9A-Z_b-z-]|Exec[A-OQ-Za-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|ExecPa|ExecP[.0-9A-Z_b-z-]|Exec[A-OQ-Za-z][.0-9A-Z_a-z-]";
                 }
               }
               leaf ignoreexit {

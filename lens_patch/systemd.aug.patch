@@ -1,0 +1,32 @@
+--- ../../Downloads/systemd.aug	2023-01-17 11:00:11.603479328 +0100
++++ systemd.aug	2023-01-17 12:05:19.639282924 +0100
+@@ -45,7 +45,7 @@
+ let entry_single_kw  = "Description"
+ 
+ (* Variable: entry_command_kw *)
+-let entry_command_kw = /Exec[A-Za-z][A-Za-z0-9._-]+/
++let entry_command_kw = /Exec[A-Za-z][A-Za-z0-9._-]+/ - /ExecPaths/
+ 
+ (* Variable: entry_env_kw *)
+ let entry_env_kw     = "Environment"
+@@ -60,9 +60,8 @@
+ 
+ (* View: sto_value_single
+    Support multiline values with a backslash *)
+-let sto_value_single = Util.del_opt_ws ""
+-                       . store (value_single_re
+-                                . (/\\\\\n/ . value_single_re)*)
++let sto_value_single = del /[ \t]*(\\\\\n[ \t]*)*/ ""
++                       . store ( value_single_re . (/[ \t]*\\\\\n[ \t]*/ . value_single_re)* )
+ 
+ (* View: sto_value *)
+ let sto_value = store /[^# \t\n]*[^# \t\n\\]/
+@@ -107,7 +106,7 @@
+ (* View: entry_command
+    Entry that takes a space separated set of values (the default) *)
+ let entry_multi  = entry_fn entry_multi_kw
+-                     ( Util.del_opt_ws ""
++                     ( del /[ \t]*(\\\\\n[ \t]*)*/ ""
+                        . Build.opt_list entry_value value_sep )?
+ 
+ (* View: entry_command_flags
