@@ -43,9 +43,7 @@ module toml {
         augex:data-path "float";
       }
       leaf bool {
-        type string {
-          pattern "true|false";
-        }
+        type boolean;
         augex:data-path "bool";
       }
       leaf datetime {
@@ -110,9 +108,7 @@ module toml {
               augex:data-path "float";
             }
             leaf bool {
-              type string {
-                pattern "true|false";
-              }
+              type boolean;
               augex:data-path "bool";
             }
             leaf datetime {
@@ -190,9 +186,7 @@ module toml {
             augex:data-path "float";
           }
           leaf bool {
-            type string {
-              pattern "true|false";
-            }
+            type boolean;
             augex:data-path "bool";
           }
           leaf datetime {

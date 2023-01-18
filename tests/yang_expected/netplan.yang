@@ -242,33 +242,23 @@ module netplan {
       choice ch-dhcp-overrides-lines {
         mandatory true;
         leaf use-dns {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "use-dns";
         }
         leaf use-ntp {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "use-ntp";
         }
         leaf send-hostname {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "send-hostname";
         }
         leaf use-hostname {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "use-hostname";
         }
         leaf use-mtu {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "use-mtu";
         }
         leaf hostname {
@@ -278,9 +268,7 @@ module netplan {
           augex:data-path "hostname";
         }
         leaf use-routes {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "use-routes";
         }
         leaf route-metric {
@@ -476,9 +464,7 @@ module netplan {
               augex:data-path "via";
             }
             leaf on-link {
-              type string {
-                pattern "true|false";
-              }
+              type boolean;
               augex:data-path "on-link";
             }
             leaf metric {
@@ -781,9 +767,7 @@ module netplan {
           augex:data-path "fail-mode";
         }
         leaf mcast-snooping {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "mcast-snooping";
         }
         container protocols {
@@ -830,9 +814,7 @@ module netplan {
           }
         }
         leaf rstp {
-          type string {
-            pattern "true|false";
-          }
+          type boolean;
           augex:data-path "rstp";
         }
         container controller {
@@ -998,15 +980,6 @@ module netplan {
     leaf config-file {
       type string;
     }
-    leaf yaml {
-      type union {
-        type empty;
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-        }
-      }
-      augex:data-path "@yaml";
-    }
     container network {
       augex:data-path "network";
       presence "Config entry.";
@@ -1026,6 +999,12 @@ module netplan {
               pattern "1|2";
             }
             augex:data-path "version";
+          }
+          leaf renderer {
+            type string {
+              pattern "networkd|NetworkManager|sriov";
+            }
+            augex:data-path "renderer";
           }
           container ethernets {
             augex:data-path "ethernets";
@@ -1084,57 +1063,39 @@ module netplan {
                         augex:data-path "set-name";
                       }
                       leaf wakeonlan {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "wakeonlan";
                       }
                       leaf emit-lldp {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "emit-lldp";
                       }
                       leaf receive-checksum-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "receive-checksum-offload";
                       }
                       leaf transmit-checksum-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "transmit-checksum-offload";
                       }
                       leaf tcp-segmentation-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "tcp-segmentation-offload";
                       }
                       leaf tcp6-segmentation-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "tcp6-segmentation-offload";
                       }
                       leaf generic-segmentation-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "generic-segmentation-offload";
                       }
                       leaf generic-receive-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "generic-receive-offload";
                       }
                       leaf large-receive-offload {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "large-receive-offload";
                       }
                       container openvswitch {
@@ -1149,15 +1110,11 @@ module netplan {
                         augex:data-path "renderer";
                       }
                       leaf dhcp4 {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "dhcp4";
                       }
                       leaf dhcp6 {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "dhcp6";
                       }
                       leaf ipv6-mtu {
@@ -1165,9 +1122,7 @@ module netplan {
                         augex:data-path "ipv6-mtu";
                       }
                       leaf ipv6-privacy {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "ipv6-privacy";
                       }
                       container link-local {
@@ -1181,15 +1136,11 @@ module netplan {
                         uses link-local-list2;
                       }
                       leaf ignore-carrier {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "ignore-carrier";
                       }
                       leaf critical {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "critical";
                       }
                       leaf dhcp-identifier {
@@ -1219,9 +1170,7 @@ module netplan {
                         uses dhcp-overrides-lines;
                       }
                       leaf accept-ra {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "accept-ra";
                       }
                       container addresses {
@@ -1274,9 +1223,7 @@ module netplan {
                         augex:data-path "mtu";
                       }
                       leaf optional {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "optional";
                       }
                       container optional-addresses {
@@ -1338,9 +1285,7 @@ module netplan {
                         augex:data-path "embedded-switch-mode";
                       }
                       leaf delay-virtual-functions-rebind {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                         augex:data-path "delay-virtual-functions-rebind";
                       }
                       leaf infiniband-mode {
@@ -1404,57 +1349,39 @@ module netplan {
                       augex:data-path "set-name";
                     }
                     leaf wakeonlan {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "wakeonlan";
                     }
                     leaf emit-lldp {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "emit-lldp";
                     }
                     leaf receive-checksum-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "receive-checksum-offload";
                     }
                     leaf transmit-checksum-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "transmit-checksum-offload";
                     }
                     leaf tcp-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "tcp-segmentation-offload";
                     }
                     leaf tcp6-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "tcp6-segmentation-offload";
                     }
                     leaf generic-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "generic-segmentation-offload";
                     }
                     leaf generic-receive-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "generic-receive-offload";
                     }
                     leaf large-receive-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "large-receive-offload";
                     }
                     container openvswitch {
@@ -1469,15 +1396,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -1485,9 +1408,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -1501,15 +1422,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -1539,9 +1456,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -1594,9 +1509,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -1638,9 +1551,7 @@ module netplan {
                       augex:data-path "apn";
                     }
                     leaf auto-config {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "auto-config";
                     }
                     leaf device-id {
@@ -1749,9 +1660,7 @@ module netplan {
                       augex:value-yang-path "bool";
                       presence "Config entry.";
                       leaf bool {
-                        type string {
-                          pattern "true|false";
-                        }
+                        type boolean;
                       }
                       list wakeonlan-list {
                         key "_seq";
@@ -1772,51 +1681,35 @@ module netplan {
                       }
                     }
                     leaf emit-lldp {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "emit-lldp";
                     }
                     leaf receive-checksum-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "receive-checksum-offload";
                     }
                     leaf transmit-checksum-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "transmit-checksum-offload";
                     }
                     leaf tcp-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "tcp-segmentation-offload";
                     }
                     leaf tcp6-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "tcp6-segmentation-offload";
                     }
                     leaf generic-segmentation-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "generic-segmentation-offload";
                     }
                     leaf generic-receive-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "generic-receive-offload";
                     }
                     leaf large-receive-offload {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "large-receive-offload";
                     }
                     container openvswitch {
@@ -1831,15 +1724,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -1847,9 +1736,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -1863,15 +1750,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -1901,9 +1784,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -1956,9 +1837,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -2036,9 +1915,7 @@ module netplan {
                             augex:data-path "channel";
                           }
                           leaf hidden {
-                            type string {
-                              pattern "true|false";
-                            }
+                            type boolean;
                             augex:data-path "hidden";
                           }
                         }
@@ -2115,15 +1992,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -2131,9 +2004,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -2147,15 +2018,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -2185,9 +2052,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -2240,9 +2105,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -2336,9 +2199,7 @@ module netplan {
                             augex:data-path "path-cost";
                           }
                           leaf stp {
-                            type string {
-                              pattern "true|false";
-                            }
+                            type boolean;
                             augex:data-path "stp";
                           }
                         }
@@ -2388,15 +2249,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -2404,9 +2261,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -2420,15 +2275,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -2458,9 +2309,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -2513,9 +2362,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -2607,9 +2454,7 @@ module netplan {
                             augex:data-path "ad-select";
                           }
                           leaf all-slaves-active {
-                            type string {
-                              pattern "true|false";
-                            }
+                            type boolean;
                             augex:data-path "all-slaves-active";
                           }
                           leaf arp-interval {
@@ -2762,15 +2607,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -2778,9 +2619,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -2794,15 +2633,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -2832,9 +2667,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -2887,9 +2720,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -3090,9 +2921,7 @@ module netplan {
                       augex:data-path "type-of-service";
                     }
                     leaf mac-learning {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "mac-learning";
                     }
                     leaf aging {
@@ -3108,9 +2937,7 @@ module netplan {
                       augex:data-path "limit";
                     }
                     leaf arp-proxy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "arp-proxy";
                     }
                     container notifications {
@@ -3157,9 +2984,7 @@ module netplan {
                       }
                     }
                     leaf short-circuit {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "short-circuit";
                     }
                     container checksums {
@@ -3292,9 +3117,7 @@ module netplan {
                       augex:data-path "flow-label";
                     }
                     leaf do-not-fragment {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "do-not-fragment";
                     }
                   }
@@ -3341,15 +3164,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -3357,9 +3176,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -3373,15 +3190,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -3411,9 +3224,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -3466,9 +3277,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {
@@ -3557,15 +3366,11 @@ module netplan {
                       augex:data-path "renderer";
                     }
                     leaf dhcp4 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp4";
                     }
                     leaf dhcp6 {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "dhcp6";
                     }
                     leaf ipv6-mtu {
@@ -3573,9 +3378,7 @@ module netplan {
                       augex:data-path "ipv6-mtu";
                     }
                     leaf ipv6-privacy {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ipv6-privacy";
                     }
                     container link-local {
@@ -3589,15 +3392,11 @@ module netplan {
                       uses link-local-list2;
                     }
                     leaf ignore-carrier {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "ignore-carrier";
                     }
                     leaf critical {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "critical";
                     }
                     leaf dhcp-identifier {
@@ -3627,9 +3426,7 @@ module netplan {
                       uses dhcp-overrides-lines;
                     }
                     leaf accept-ra {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "accept-ra";
                     }
                     container addresses {
@@ -3682,9 +3479,7 @@ module netplan {
                       augex:data-path "mtu";
                     }
                     leaf optional {
-                      type string {
-                        pattern "true|false";
-                      }
+                      type boolean;
                       augex:data-path "optional";
                     }
                     container optional-addresses {

@@ -239,9 +239,7 @@ module ldif {
                 }
               }
               leaf criticality {
-                type string {
-                  pattern "true|false";
-                }
+                type boolean;
                 augex:data-path "criticality";
               }
               container value {

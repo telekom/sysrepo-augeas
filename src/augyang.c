@@ -6058,7 +6058,7 @@ static int
 ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
 {
     int ret = 0;
-    const char *ident = NULL, *type;
+    const char *ident = NULL, *type, *pattern;
     const char *filename = NULL;
     size_t len = 0;
 
@@ -6077,6 +6077,23 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
     }
 
     type = ay_get_yang_type_by_lense_name("Rx", ident);
+
+    if (!type) {
+        pattern = reg->regexp->pattern->str;
+        if (!strcmp("[0-9]+", pattern)) {
+            type = "uint64";
+        } else if (!strcmp("[-+]?[0-9]+", pattern)) {
+            type = "int64";
+        } else if (!strcmp("[-]?[0-9]+", pattern)) {
+            type = "int64";
+        } else if (!strcmp("true|false", pattern) || !strcmp("(true|false)", pattern) ||
+                !strcmp("false|true", pattern) || !strcmp("(false|true)", pattern)) {
+            type = "boolean";
+        } else {
+            type = NULL;
+        }
+    }
+
     if (type) {
         ly_print(ctx->out, "%*stype %s;\n", ctx->space, "", type);
     } else {
