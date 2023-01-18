@@ -575,6 +575,7 @@ let network_manager = subtree_key_mapping_lines identifier indent3 network_manag
 (* View: network *)
 let network = subtree_key_mapping_lines "network" indent1
         ( subtree_key_inlines "version" (store /(1|2)/)
+        | subtree_key_inlines "renderer" (store renderer)
         | subtree_key_mapping_lines "ethernets" indent2 ethernets
         | subtree_key_mapping_lines "modems" indent2 modems
         | subtree_key_mapping_lines "wifis" indent2 wifis
@@ -585,15 +586,11 @@ let network = subtree_key_mapping_lines "network" indent1
         | subtree_key_mapping_lines "vrfs" indent2 vrfs
         | subtree_key_mapping_lines "network-manager" indent2 network_manager )
 
-(* View: header *)
-let header = [ label "@yaml" . Util.del_str "---"
-        . ( Sep.space . store Rx.space_in )? . Util.eol ]
-
 (*
  * View: lns
  *   The netplan lens
  *)
-let lns = (( Util.empty | Util.comment_noindent )* . header)? . network . nl
+let lns = ( Util.empty | Util.comment_noindent )* . network . nl
 
 (* Variable: filter *)
 let filter = incl "/etc/netplan/*.yaml"
