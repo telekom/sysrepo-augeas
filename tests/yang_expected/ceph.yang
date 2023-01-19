@@ -25,13 +25,13 @@ module ceph {
       container record {
         augex:data-path "$$";
         presence "Config entry.";
-        leaf record-re {
+        leaf record {
           mandatory true;
           type string {
             pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|())|#comme([^\\]\n/n][^\\]\n/]*|())|#comm([^\\]\n/e][^\\]\n/]*|())|#com([^\\]\n/m][^\\]\n/]*|())|#co([^\\]\n/m][^\\]\n/]*|())|#c([^\\]\n/o][^\\]\n/]*|())|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
           }
         }
-        list entry-re-list {
+        list entry-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -39,11 +39,11 @@ module ceph {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container entry-re {
+          container entry {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf entry-re {
+            leaf entry {
               mandatory true;
               type string {
                 pattern "[A-Za-z0-9_.-][A-Za-z0-9 _.-]*[A-Za-z0-9_.-]";

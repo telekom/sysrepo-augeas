@@ -14,9 +14,9 @@ module access {
       mandatory true;
       container user {
         augex:data-path "user";
-        augex:value-yang-path "user-re";
+        augex:value-yang-path "user";
         presence "Config entry.";
-        leaf user-re {
+        leaf user {
           mandatory true;
           type union {
             type string {
@@ -32,7 +32,7 @@ module access {
             pattern "[A-Za-z0-9_.-]+";
           }
           augex:data-path "host";
-          when "re-match(../user-re, '[A-Za-z0-9_.-]+')";
+          when "re-match(../user, '[A-Za-z0-9_.-]+')";
         }
       }
       leaf group {
@@ -43,9 +43,9 @@ module access {
       }
       container netgroup {
         augex:data-path "netgroup";
-        augex:value-yang-path "user-re";
+        augex:value-yang-path "user";
         presence "Config entry.";
-        leaf user-re {
+        leaf user {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_.\\\\-]+";

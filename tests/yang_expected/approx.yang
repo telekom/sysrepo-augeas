@@ -24,15 +24,15 @@ module approx {
       }
       container kv {
         augex:data-path "$$";
-        augex:value-yang-path "value-re";
+        augex:value-yang-path "value";
         presence "Config entry.";
-        leaf key-re {
+        leaf key {
           mandatory true;
           type string {
             pattern "$?[A-Za-z0-9_.-]+";
           }
         }
-        leaf value-re {
+        leaf value {
           mandatory true;
           type string {
             pattern "[^ \t\n](.*[^ \t\n])?";

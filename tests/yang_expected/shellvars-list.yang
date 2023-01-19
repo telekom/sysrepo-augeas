@@ -25,7 +25,7 @@ module shellvars-list {
       container kv {
         augex:data-path "$$";
         presence "Config entry.";
-        leaf key-re {
+        leaf key {
           mandatory true;
           type string {
             pattern "[A-Za-z0-9_]+";

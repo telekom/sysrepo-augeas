@@ -230,9 +230,9 @@ module ldif {
             }
             container change-control {
               augex:data-path "control";
-              augex:value-yang-path "ldapoid-re";
+              augex:value-yang-path "ldapoid";
               presence "Config entry.";
-              leaf ldapoid-re {
+              leaf ldapoid {
                 mandatory true;
                 type string {
                   pattern "[0-9][0-9\\\\.]*";

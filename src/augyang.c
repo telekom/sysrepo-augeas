@@ -3589,6 +3589,10 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
         /* Dash as the last character will be removed. */
         j--;
     }
+    if ((j > 3) && !strncmp("-re", &buffer[j - 3], 3)) {
+        /* The abbreviation is "-re" probably means regular expression. The substring is redundant. */
+        j -= 3;
+    }
     AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
     buffer[j] = '\0';
 

@@ -24,7 +24,7 @@ module vmware-config {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "double-opt-re";
+        augex:value-yang-path "double-opt";
         presence "Config entry.";
         leaf word {
           mandatory true;
@@ -32,7 +32,7 @@ module vmware-config {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf double-opt-re {
+        leaf double-opt {
           mandatory true;
           type string {
             pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";

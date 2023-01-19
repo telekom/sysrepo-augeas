@@ -24,7 +24,7 @@ module activemq-conf {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "any-opt-re";
+        augex:value-yang-path "any-opt";
         presence "Config entry.";
         leaf word {
           mandatory true;
@@ -32,7 +32,7 @@ module activemq-conf {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf any-opt-re {
+        leaf any-opt {
           type string {
             pattern "[^\n\t \"']([^\n\"']*[^\n\t \"'])?";
           }

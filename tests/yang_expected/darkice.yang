@@ -24,15 +24,15 @@ module darkice {
       }
       container record {
         augex:data-path "target";
-        augex:value-yang-path "record-label-re";
+        augex:value-yang-path "record-label";
         presence "Config entry.";
-        leaf record-label-re {
+        leaf record-label {
           mandatory true;
           type string {
             pattern "[^\\]\n]+";
           }
         }
-        list entry-re-list {
+        list entry-list {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -40,11 +40,11 @@ module darkice {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container entry-re {
+          container entry {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf entry-re {
+            leaf entry {
               mandatory true;
               type string {
                 pattern "[A-Za-z0-9][A-Za-z0-9._-]*";

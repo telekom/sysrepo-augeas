@@ -235,7 +235,7 @@ module ssh {
           augex:data-path "$$";
           augex:value-yang-path "value-to-spc";
           presence "Config entry.";
-          leaf key-re {
+          leaf key {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9]+";

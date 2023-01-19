@@ -61,39 +61,39 @@ test_load(void **state)
             "      <id>30</id>\n"
             "      <entry-list>\n"
             "        <_seq>1</_seq>\n"
-            "        <line-re>add include $devfsrules_hide_all</line-re>\n"
+            "        <line>add include $devfsrules_hide_all</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>2</_seq>\n"
-            "        <line-re>add include $devfsrules_unhide_basic</line-re>\n"
+            "        <line>add include $devfsrules_unhide_basic</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>3</_seq>\n"
-            "        <line-re>add include $devfsrules_unhide_login</line-re>\n"
+            "        <line>add include $devfsrules_unhide_login</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>4</_seq>\n"
-            "        <line-re>add path 'ulpt*' mode 0660 group printscan unhide</line-re>\n"
+            "        <line>add path 'ulpt*' mode 0660 group printscan unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>5</_seq>\n"
-            "        <line-re>add path 'unlpt*' mode 0660 group printscan unhide</line-re>\n"
+            "        <line>add path 'unlpt*' mode 0660 group printscan unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>6</_seq>\n"
-            "        <line-re>add path 'ugen2.8' mode 0660 group printscan unhide</line-re>\n"
+            "        <line>add path 'ugen2.8' mode 0660 group printscan unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>7</_seq>\n"
-            "        <line-re>add path usb unhide</line-re>\n"
+            "        <line>add path usb unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>8</_seq>\n"
-            "        <line-re>add path usbctl unhide</line-re>\n"
+            "        <line>add path usbctl unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>9</_seq>\n"
-            "        <line-re>add path 'usb/2.8.0' mode 0660 group printscan unhide</line-re>\n"
+            "        <line>add path 'usb/2.8.0' mode 0660 group printscan unhide</line>\n"
             "      </entry-list>\n"
             "    </record>\n"
             "  </record-list>\n"
@@ -104,31 +104,31 @@ test_load(void **state)
             "      <id>30</id>\n"
             "      <entry-list>\n"
             "        <_seq>1</_seq>\n"
-            "        <line-re>add include $devfsrules_hide_all</line-re>\n"
+            "        <line>add include $devfsrules_hide_all</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>2</_seq>\n"
-            "        <line-re>add include $devfsrules_unhide_basic</line-re>\n"
+            "        <line>add include $devfsrules_unhide_basic</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>3</_seq>\n"
-            "        <line-re>add include $devfsrules_unhide_login</line-re>\n"
+            "        <line>add include $devfsrules_unhide_login</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>4</_seq>\n"
-            "        <line-re>add path 'ugen2.8' mode 0660 group scan unhide</line-re>\n"
+            "        <line>add path 'ugen2.8' mode 0660 group scan unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>5</_seq>\n"
-            "        <line-re>add path usb unhide</line-re>\n"
+            "        <line>add path usb unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>6</_seq>\n"
-            "        <line-re>add path usbctl unhide</line-re>\n"
+            "        <line>add path usbctl unhide</line>\n"
             "      </entry-list>\n"
             "      <entry-list>\n"
             "        <_seq>7</_seq>\n"
-            "        <line-re>add path 'usb/2.8.0' mode 0660 group scan unhide</line-re>\n"
+            "        <line>add path 'usb/2.8.0' mode 0660 group scan unhide</line>\n"
             "      </entry-list>\n"
             "    </record>\n"
             "  </record-list>\n"
@@ -150,12 +150,12 @@ test_store_add(void **state)
             0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/id", "20", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-list[_seq='1']/"
-            "line-re", "add path mydev unhide", 0, NULL));
+            "line", "add path mydev unhide", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/entry-list[_seq='8']/"
-            "line-re", "add include $var", 0, &entries));
+            "line", "add include $var", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/entry-list[_seq='3']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -184,7 +184,7 @@ test_store_modify(void **state)
             "devfsrules_jail_unhide_usb_printer", LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/id", "25",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/entry-list[_seq='4']/line-re",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/entry-list[_seq='4']/line",
             "add path 'ugen2.8' mode 0600 unhide", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */

@@ -82,7 +82,7 @@ module dnsmasq {
           augex:data-path "$$";
           augex:value-yang-path "sto-to-eol";
           presence "Config entry.";
-          leaf entry-re {
+          leaf entry {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+";

@@ -24,24 +24,24 @@ module aptconf {
       }
       choice ch-entry {
         mandatory true;
-        list name-re-list {
+        list name-list {
           key "_r-id";
           leaf _r-id {
             type uint64;
             description
               "Implicitly generated list key to maintain the recursive augeas data.";
           }
-          container name-re {
+          container name {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf name-re {
+            leaf name {
               mandatory true;
               type string {
                 pattern "[A-Za-z][A-Za-z-]*";
               }
             }
-            choice ch-name-re {
+            choice ch-name {
               leaf value {
                 type string {
                   pattern "[^\"\n]+";
@@ -57,9 +57,9 @@ module aptconf {
                 }
                 choice ch-entry-noeol {
                   mandatory true;
-                  leaf _name-re-ref {
+                  leaf _name-ref {
                     type leafref {
-                      path "../../../../name-re-list/_r-id";
+                      path "../../../../name-list/_r-id";
                     }
                     description
                       "Implicitly generated leaf to maintain recursive augeas data.";

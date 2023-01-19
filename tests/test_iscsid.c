@@ -57,57 +57,57 @@ test_load(void **state)
             "  <kv-list>\n"
             "    <_id>1</_id>\n"
             "    <kv>\n"
-            "      <key-re>isns.address</key-re>\n"
-            "      <value-re>127.0.0.1</value-re>\n"
+            "      <key>isns.address</key>\n"
+            "      <value>127.0.0.1</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>2</_id>\n"
             "    <kv>\n"
-            "      <key-re>isns.port</key-re>\n"
-            "      <value-re>3260</value-re>\n"
+            "      <key>isns.port</key>\n"
+            "      <value>3260</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>3</_id>\n"
             "    <kv>\n"
-            "      <key-re>node.session.auth.authmethod</key-re>\n"
-            "      <value-re>CHAP</value-re>\n"
+            "      <key>node.session.auth.authmethod</key>\n"
+            "      <value>CHAP</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>4</_id>\n"
             "    <kv>\n"
-            "      <key-re>node.session.auth.username</key-re>\n"
-            "      <value-re>someuser1</value-re>\n"
+            "      <key>node.session.auth.username</key>\n"
+            "      <value>someuser1</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>5</_id>\n"
             "    <kv>\n"
-            "      <key-re>node.session.auth.password</key-re>\n"
-            "      <value-re>somep$31#$^&amp;7!</value-re>\n"
+            "      <key>node.session.auth.password</key>\n"
+            "      <value>somep$31#$^&amp;7!</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>6</_id>\n"
             "    <kv>\n"
-            "      <key-re>discovery.sendtargets.auth.authmethod</key-re>\n"
-            "      <value-re>CHAP</value-re>\n"
+            "      <key>discovery.sendtargets.auth.authmethod</key>\n"
+            "      <value>CHAP</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>7</_id>\n"
             "    <kv>\n"
-            "      <key-re>discovery.sendtargets.auth.username</key-re>\n"
-            "      <value-re>someuser3</value-re>\n"
+            "      <key>discovery.sendtargets.auth.username</key>\n"
+            "      <value>someuser3</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "  <kv-list>\n"
             "    <_id>8</_id>\n"
             "    <kv>\n"
-            "      <key-re>discovery.sendtargets.auth.password</key-re>\n"
-            "      <value-re>_09+7)(,./?;'p[]</value-re>\n"
+            "      <key>discovery.sendtargets.auth.password</key>\n"
+            "      <value>_09+7)(,./?;'p[]</value>\n"
             "    </kv>\n"
             "  </kv-list>\n"
             "</" AUG_TEST_MODULE ">\n");
@@ -124,8 +124,8 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='9']/kv/key-re", "my.var", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='9']/kv/value-re", "val", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='9']/kv/key", "my.var", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='9']/kv/value", "val", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "kv-list[_id='6']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -147,9 +147,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='3']/kv/key-re", "node.session.auth",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='3']/kv/key", "node.session.auth",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='7']/kv/value-re", "nobody",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "kv-list[_id='7']/kv/value", "nobody",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
