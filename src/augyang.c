@@ -10411,7 +10411,7 @@ ay_ynode_more_keys_for_node(struct ay_ynode *tree)
  * @param[in,out] node Node to process.
  */
 static void
-ay_ynode_set_choice_for_value(struct ay_ynode *node)
+ay_ynode_set_choice_for_value(const struct ay_ynode *tree, struct ay_ynode *node)
 {
     const struct ay_lnode *snode;
 
@@ -10421,8 +10421,11 @@ ay_ynode_set_choice_for_value(struct ay_ynode *node)
         if (node->next->type == YN_GROUPING) {
             assert(node->next->next->type == YN_USES);
             node->choice = node->next->next->choice;
-        } else if (node->next) {
+        } else if (node->next && node->next->choice) {
             node->choice = node->next->choice;
+        } else if (node->next && !node->next->choice && ay_ynode_rule_node_is_splittable(tree, node->next)) {
+            node->choice = AY_YNODE_ROOT_LTREE(tree);
+            node->flags |= AY_CHOICE_CREATED;
         }
     } else if (!node->next && AY_YNODE_IS_SEQ_LIST(node->parent)) {
         for (snode = node->value; snode && (snode->lens->tag != L_SUBTREE); snode = snode->parent) {}
@@ -10571,7 +10574,7 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
                 value->label = node->label;
                 value->value = node->value;
                 value->flags |= (node->flags & AY_VALUE_MAND_FALSE);
-                ay_ynode_set_choice_for_value(value);
+                ay_ynode_set_choice_for_value(tree, value);
             }
         } else {
             assert(node->label);
@@ -10594,7 +10597,7 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
                 value->label = node->label;
                 value->value = node->value;
                 value->flags |= (node->flags & AY_VALUE_MAND_FALSE);
-                ay_ynode_set_choice_for_value(value);
+                ay_ynode_set_choice_for_value(tree, value);
             }
         }
     }
@@ -10935,7 +10938,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
             first1->value = first2->value;
             first1->flags |= AY_VALUE_IN_CHOICE;
         }
-        first1->child->flags |= AY_CHOICE_MAND_FALSE;
+        first1->child->flags |= (first1->flags & AY_VALUE_IN_CHOICE) ? 0 : AY_CHOICE_MAND_FALSE;
     } else if (!first1->child && first2->child) {
         /* Merge values. */
         if (first1->value && first2->value && !ay_lnode_lense_equal(first1->value->lens, first2->value->lens)) {
@@ -10952,7 +10955,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
 
         first1->type = (first1->type == YN_LIST) ? YN_LIST : YN_CONTAINER;
         ay_ynode_merge_nodes(tree, first1, first2->child, 1);
-        first1->child->flags |= AY_CHOICE_MAND_FALSE;
+        first1->child->flags |= (first1->flags & AY_VALUE_IN_CHOICE) ? 0 : AY_CHOICE_MAND_FALSE;
     } else {
         assert((first1->child && first2->child) || (!first1->child && !first2->child));
         /* TODO: if they both have children, then where to place the values? It must be placed
