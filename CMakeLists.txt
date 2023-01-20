@@ -223,6 +223,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/ayg_config.h.in" "${PROJECT_BINARY_DIR
 add_custom_target(install_lens
         COMMAND cp "${PROJECT_BINARY_DIR}/augeas/src/augeas_ext/lenses/*.aug" "${AUGEAS_LENS_DIR}"
         COMMAND ${PROJECT_SOURCE_DIR}/lens_patch/update_lens.sh "${PROJECT_SOURCE_DIR}/lens_patch" "${AUGEAS_LENS_DIR}"
+        DEPENDS augeas_ext
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 # generate correct lists of lenses and YANG modules
