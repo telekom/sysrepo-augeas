@@ -980,15 +980,6 @@ module netplan {
     leaf config-file {
       type string;
     }
-    leaf yaml {
-      type union {
-        type empty;
-        type string {
-          pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-        }
-      }
-      augex:data-path "@yaml";
-    }
     container network {
       augex:data-path "network";
       presence "Config entry.";
@@ -1008,6 +999,12 @@ module netplan {
               pattern "1|2";
             }
             augex:data-path "version";
+          }
+          leaf renderer {
+            type string {
+              pattern "networkd|NetworkManager|sriov";
+            }
+            augex:data-path "renderer";
           }
           container ethernets {
             augex:data-path "ethernets";
