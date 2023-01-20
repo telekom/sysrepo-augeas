@@ -10667,8 +10667,7 @@ ay_ynode_insert_case(struct ay_ynode *tree)
             }
         }
         /* In the end, the case is alone, so it will be deleted. */
-        if (ay_ynode_alone_in_choice(cas)) {
-            cas->child->choice = cas->choice;
+        if (ay_ynode_alone_in_choice(cas) && (ay_lnode_has_attribute(cas->parent->value, L_UNION) != cas->choice)) {
             ay_ynode_delete_node(tree, cas);
             continue;
         }
