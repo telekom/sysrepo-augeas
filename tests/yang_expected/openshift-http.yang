@@ -39,7 +39,7 @@ module openshift-http {
           }
           augex:data-path "arg";
         }
-        container arg-wordlist {
+        container wordlist {
           augex:data-path "wordlist";
           presence "Config entry.";
           leaf-list arg {

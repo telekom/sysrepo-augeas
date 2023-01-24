@@ -24,7 +24,7 @@ module mysql {
       }
       choice ch-config-entries {
         mandatory true;
-        container record {
+        container target {
           augex:data-path "target";
           augex:value-yang-path "record-label";
           presence "Config entry.";

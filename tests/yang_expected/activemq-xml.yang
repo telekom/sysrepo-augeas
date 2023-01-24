@@ -67,7 +67,7 @@ module activemq-xml {
     }
   }
   grouping attributes {
-    container attributes {
+    container attribute {
       augex:data-path "#attribute";
       presence "Config entry.";
       uses nmtoken-list;
@@ -88,10 +88,10 @@ module activemq-xml {
       }
       choice ch-doc {
         mandatory true;
-        container prolog {
+        container declaration {
           augex:data-path "#declaration";
           presence "Config entry.";
-          container attributes {
+          container attribute {
             augex:data-path "#attribute";
             presence "Config entry.";
             list nmtoken-list {
@@ -330,7 +330,7 @@ module activemq-xml {
             }
           }
         }
-        container pi-instruction {
+        container pi {
           augex:data-path "#pi";
           presence "Config entry.";
           uses pi-instruction;
@@ -355,7 +355,7 @@ module activemq-xml {
               pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
             }
           }
-          container attributes {
+          container attribute {
             augex:data-path "#attribute";
             presence "Config entry.";
             uses nmtoken-list;
@@ -404,7 +404,7 @@ module activemq-xml {
                 }
                 uses attributes;
               }
-              container pi-instruction {
+              container pi {
                 augex:data-path "#pi";
                 presence "Config entry.";
                 uses pi-instruction;
@@ -449,7 +449,7 @@ module activemq-xml {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container pi-instruction {
+      container pi {
         augex:data-path "#pi";
         presence "Config entry.";
         uses pi-instruction;

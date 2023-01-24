@@ -312,7 +312,7 @@ module chrony {
           presence "Config entry.";
           uses allowdeny;
         }
-        container log-list {
+        container log {
           augex:data-path "log";
           presence "Config entry.";
           list config-entries {
@@ -357,7 +357,7 @@ module chrony {
             }
           }
         }
-        container bcast {
+        container broadcast {
           augex:data-path "broadcast";
           presence "Config entry.";
           leaf interval {
@@ -377,7 +377,7 @@ module chrony {
             augex:data-path "port";
           }
         }
-        container fdrift {
+        container fallbackdrift {
           augex:data-path "fallbackdrift";
           presence "Config entry.";
           leaf min {
@@ -391,7 +391,7 @@ module chrony {
             augex:data-path "max";
           }
         }
-        container istepslew {
+        container initstepslew {
           augex:data-path "initstepslew";
           presence "Config entry.";
           leaf threshold {
@@ -442,7 +442,7 @@ module chrony {
             }
           }
         }
-        container email {
+        container mailonchange {
           augex:data-path "mailonchange";
           presence "Config entry.";
           leaf emailaddress {

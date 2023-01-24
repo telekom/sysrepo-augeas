@@ -22,7 +22,7 @@ module aptcacherngsecurity {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container record {
+      container admin-auth {
         augex:data-path "AdminAuth";
         presence "Config entry.";
         container authpair {

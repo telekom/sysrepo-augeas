@@ -64,7 +64,7 @@ module toml {
         }
         augex:data-path "time";
       }
-      container array-norec {
+      container array {
         augex:data-path "array";
         presence "Config entry.";
         list norec {
@@ -207,7 +207,7 @@ module toml {
             }
             augex:data-path "time";
           }
-          container array-rec {
+          container array {
             augex:data-path "array";
             presence "Config entry.";
             list ch-string-list {

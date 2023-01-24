@@ -56,7 +56,7 @@ module automounter {
           description
             "Implicitly generated list key to maintain the order of the augeas data.";
         }
-        container entry-host {
+        container host {
           augex:data-path "host";
           augex:value-yang-path "hostname";
           presence "Config entry.";
@@ -114,12 +114,12 @@ module automounter {
           uses opt-list;
           choice ch-opt-list {
             mandatory true;
-            container entry-locations {
+            container location {
               augex:data-path "location";
               presence "Config entry.";
               uses location-list;
             }
-            container entry-multimounts {
+            container mount {
               augex:data-path "mount";
               presence "Config entry.";
               list mount-list {
@@ -140,7 +140,7 @@ module automounter {
                   }
                 }
                 uses opt-list;
-                container entry-locations {
+                container location {
                   augex:data-path "location";
                   presence "Config entry.";
                   uses location-list;

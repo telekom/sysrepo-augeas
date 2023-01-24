@@ -22,11 +22,11 @@ module authorized-keys {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container authorized-key {
+      container key {
         augex:data-path "key";
         augex:value-yang-path "no-spaces";
         presence "Config entry.";
-        container key-options {
+        container options {
           augex:data-path "options";
           presence "Config entry.";
           list option {

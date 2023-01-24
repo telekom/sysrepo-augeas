@@ -31,7 +31,7 @@ module up2date {
         }
       }
       choice ch-entry-list {
-        container multi-entry {
+        container values {
           augex:data-path "values";
           presence "Config entry.";
           list multi-list {

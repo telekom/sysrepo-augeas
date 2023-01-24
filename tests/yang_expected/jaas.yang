@@ -22,7 +22,7 @@ module jaas {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container login-module {
+      container login {
         augex:data-path "login";
         augex:value-yang-path "word";
         presence "Config entry.";

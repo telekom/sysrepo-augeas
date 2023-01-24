@@ -76,7 +76,7 @@ module access {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container entry {
+      container access {
         augex:data-path "access";
         augex:value-yang-path "value";
         presence "Config entry.";

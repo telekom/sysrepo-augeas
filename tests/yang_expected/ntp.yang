@@ -193,7 +193,7 @@ module ntp {
           }
           uses command-record;
         }
-        container fudge-record {
+        container fudge {
           augex:data-path "fudge";
           augex:value-yang-path "word";
           presence "Config entry.";
@@ -203,7 +203,7 @@ module ntp {
               pattern "[^,# \n\t]+";
             }
           }
-          choice ch-fudge-record {
+          choice ch-fudge {
             leaf refid {
               type string {
                 pattern "[^,# \n\t]+";
@@ -218,11 +218,11 @@ module ntp {
             }
           }
         }
-        container restrict-record {
+        container restrict {
           augex:data-path "restrict";
           augex:value-yang-path "value";
           presence "Config entry.";
-          choice ch-restrict-record {
+          choice ch-restrict {
             leaf ipv6 {
               type empty;
               augex:data-path "ipv6";
@@ -298,7 +298,7 @@ module ntp {
           }
           augex:data-path "ntpsigndsocket";
         }
-        container statistics-record {
+        container statistics {
           augex:data-path "statistics";
           presence "Config entry.";
           list statistics-opts {
@@ -330,7 +330,7 @@ module ntp {
             }
           }
         }
-        container filegen-record {
+        container filegen {
           augex:data-path "filegen";
           augex:value-yang-path "word";
           presence "Config entry.";

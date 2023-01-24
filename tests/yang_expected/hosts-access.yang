@@ -10,7 +10,7 @@ module hosts-access {
   augex:augeas-mod-name "Hosts_Access";
 
   grouping daemon {
-    container daemon {
+    container process {
       augex:data-path "process";
       augex:value-yang-path "list-item";
       presence "Config entry.";

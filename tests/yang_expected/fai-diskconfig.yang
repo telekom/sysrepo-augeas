@@ -464,7 +464,7 @@ module fai-diskconfig {
                     uses fs-options;
                   }
                 }
-                container volume-vg {
+                container vg {
                   augex:data-path "vg";
                   presence "Config entry.";
                   leaf name {
@@ -571,7 +571,7 @@ module fai-diskconfig {
                     description
                       "Implicitly generated list key to maintain the order of the augeas data.";
                   }
-                  container disk-with-opt {
+                  container disk {
                     augex:data-path "disk";
                     augex:value-yang-path "value";
                     presence "Config entry.";
@@ -647,7 +647,7 @@ module fai-diskconfig {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              container volume-tmpfs {
+              container tmpfs {
                 augex:data-path "tmpfs";
                 presence "Config entry.";
                 container mountpoint {

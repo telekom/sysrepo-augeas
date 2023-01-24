@@ -118,7 +118,7 @@ module passwd {
             augex:data-path "shell";
           }
         }
-        container nisentry {
+        container nis {
           augex:data-path "@nis";
           augex:value-yang-path "username";
           presence "Config entry.";
@@ -185,7 +185,7 @@ module passwd {
             augex:data-path "shell";
           }
         }
-        container nisuserplus {
+        container plus-nisuser {
           augex:data-path "@+nisuser";
           augex:value-yang-path "username";
           presence "Config entry.";
@@ -197,7 +197,7 @@ module passwd {
           }
           uses nisentry;
         }
-        container nisuserminus {
+        container minus-nisuser {
           augex:data-path "@-nisuser";
           augex:value-yang-path "username";
           presence "Config entry.";

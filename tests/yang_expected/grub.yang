@@ -251,7 +251,7 @@ module grub {
             }
           }
         }
-        container password-arg {
+        container password {
           augex:data-path "password";
           augex:value-yang-path "value";
           presence "Config entry.";
@@ -487,7 +487,7 @@ module grub {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container boot {
+      container title {
         augex:data-path "title";
         augex:value-yang-path "value-to-eol";
         presence "Config entry.";
@@ -663,7 +663,7 @@ module grub {
                 uses kernel;
               }
             }
-            container map-line {
+            container map {
               augex:data-path "map";
               presence "Config entry.";
               leaf from {
@@ -689,7 +689,7 @@ module grub {
               type empty;
               augex:data-path "makeactive";
             }
-            container password-arg {
+            container password {
               augex:data-path "password";
               augex:value-yang-path "value";
               presence "Config entry.";

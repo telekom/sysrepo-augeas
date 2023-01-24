@@ -52,7 +52,7 @@ module bbhosts {
           }
           augex:data-path "fqdn";
         }
-        container host-opts {
+        container probes {
           augex:data-path "probes";
           presence "Config entry.";
           list host-test {
@@ -703,7 +703,7 @@ module bbhosts {
                 }
                 augex:data-path "url";
               }
-              container host-test-downtime {
+              container downtime {
                 augex:data-path "DOWNTIME";
                 presence "Config entry.";
                 leaf-list probe {

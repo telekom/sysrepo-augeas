@@ -46,7 +46,7 @@ module php {
     leaf config-file {
       type string;
     }
-    container record-anon {
+    container anon {
       augex:data-path ".anon";
       presence "Config entry.";
       uses record-anon;

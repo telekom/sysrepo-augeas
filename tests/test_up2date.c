@@ -149,7 +149,7 @@ test_load(void **state)
             "  <entry-list>\n"
             "    <_seq>20</_seq>\n"
             "    <key>disallowConfChanges</key>\n"
-            "    <multi-entry>\n"
+            "    <values>\n"
             "      <multi-list>\n"
             "        <_seq>1</_seq>\n"
             "        <value>noReboot</value>\n"
@@ -174,7 +174,7 @@ test_load(void **state)
             "        <_seq>6</_seq>\n"
             "        <value>disallowConfChanges</value>\n"
             "      </multi-list>\n"
-            "    </multi-entry>\n"
+            "    </values>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_seq>21</_seq>\n"
@@ -276,11 +276,11 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/key", "myMultiVariable", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/multi-entry/multi-list[_seq='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/values/multi-list[_seq='1']/"
             "value", "value-a", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/multi-entry/multi-list[_seq='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/values/multi-list[_seq='2']/"
             "value", "value-b", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/multi-entry/multi-list[_seq='3']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='38']/values/multi-list[_seq='3']/"
             "value", "value-c", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_seq='34']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
@@ -305,7 +305,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='20']/multi-entry/multi-list[_seq='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='20']/values/multi-list[_seq='2']/"
             "value", "sslClientCert", LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_seq='34']/key", "staging",
             LYD_NEW_PATH_UPDATE, NULL));
@@ -343,7 +343,7 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_seq='30']/value", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_seq='20']/multi-entry/multi-list[_seq='5']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_seq='20']/values/multi-list[_seq='5']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_seq='7']", 0, &node));
     lyd_free_tree(node);

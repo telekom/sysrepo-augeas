@@ -69,7 +69,7 @@ test_load(void **state)
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>3</_id>\n"
-            "    <service>\n"
+            "    <check>\n"
             "      <value-list>\n"
             "        <_id>1</_id>\n"
             "        <value>\n"
@@ -91,11 +91,11 @@ test_load(void **state)
             "          <sto-to-spc>failed port 22 protocol ssh then restart</sto-to-spc>\n"
             "        </value>\n"
             "      </value-list>\n"
-            "    </service>\n"
+            "    </check>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
-            "    <service>\n"
+            "    <check>\n"
             "      <value-list>\n"
             "        <_id>1</_id>\n"
             "        <value>\n"
@@ -124,7 +124,7 @@ test_load(void **state)
             "          <sto-to-spc>program \"/usr/local/apache2/bin/apachectl stop\"</sto-to-spc>\n"
             "        </value>\n"
             "      </value-list>\n"
-            "    </service>\n"
+            "    </check>\n"
             "  </config-entries>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -140,13 +140,13 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/service/value-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/check/value-list[_id='1']/"
             "value/word", "process", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/service/value-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/check/value-list[_id='1']/"
             "value/sto-to-spc", "flask", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/service/value-list[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/check/value-list[_id='2']/"
             "value/word", "if", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/service/value-list[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/check/value-list[_id='2']/"
             "value/sto-to-spc", "flask needed", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
@@ -183,7 +183,7 @@ test_store_modify(void **state)
     /* modify some values */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/set/value/word", "signal",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/service/value-list[_id='3']/value/sto-to-spc",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/check/value-list[_id='3']/value/sto-to-spc",
             "failed port 22 protocol ssh then stop", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -211,7 +211,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/service/value-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/check/value-list[_id='2']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     lyd_free_tree(node);

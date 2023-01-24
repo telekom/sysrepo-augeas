@@ -53,7 +53,7 @@ module cgrules {
       }
       choice ch-config-entries {
         mandatory true;
-        container user-record {
+        container user {
           augex:data-path "user";
           augex:value-yang-path "name";
           presence "Config entry.";
@@ -65,7 +65,7 @@ module cgrules {
           }
           uses ctrl-key-list;
         }
-        container group-record {
+        container group {
           augex:data-path "group";
           augex:value-yang-path "name";
           presence "Config entry.";

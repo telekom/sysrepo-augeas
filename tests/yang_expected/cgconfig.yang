@@ -90,12 +90,12 @@ module cgconfig {
       }
       choice ch-config-entries {
         mandatory true;
-        container mount-data {
+        container mount {
           augex:data-path "mount";
           presence "Config entry.";
           uses mount-point-list;
         }
-        container group-data {
+        container group {
           augex:data-path "group";
           augex:value-yang-path "id";
           presence "Config entry.";
@@ -115,18 +115,18 @@ module cgconfig {
             }
             choice ch-config-entries {
               mandatory true;
-              container perm-info {
+              container perm {
                 augex:data-path "perm";
                 presence "Config entry.";
-                choice ch-perm-info {
+                choice ch-perm {
                   container case {
                     presence "Config entry.";
-                    container t-info {
+                    container task {
                       augex:data-path "task";
                       presence "Config entry.";
                       uses t-info;
                     }
-                    container a-info {
+                    container admin {
                       augex:data-path "admin";
                       presence "Config entry.";
                       uses t-info;
@@ -134,12 +134,12 @@ module cgconfig {
                   }
                   container case2 {
                     presence "Config entry.";
-                    container a-info {
+                    container admin {
                       augex:data-path "admin";
                       presence "Config entry.";
                       uses t-info;
                     }
-                    container t-info {
+                    container task {
                       augex:data-path "task";
                       presence "Config entry.";
                       uses t-info;
@@ -147,7 +147,7 @@ module cgconfig {
                   }
                 }
               }
-              container controller-info {
+              container controller {
                 augex:data-path "controller";
                 augex:value-yang-path "cont-name";
                 presence "Config entry.";

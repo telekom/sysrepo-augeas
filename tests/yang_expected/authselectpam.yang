@@ -114,7 +114,7 @@ module authselectpam {
                     }
                     augex:data-path "feature";
                   }
-                  container authselect-feature-group {
+                  container feature-group {
                     augex:data-path "feature_group";
                     presence "Config entry.";
                     leaf feature {

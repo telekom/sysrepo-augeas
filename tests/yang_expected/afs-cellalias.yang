@@ -22,7 +22,7 @@ module afs-cellalias {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container entry {
+      container target {
         augex:data-path "target";
         augex:value-yang-path "target";
         presence "Config entry.";

@@ -342,7 +342,7 @@ module rsyslog {
           presence "Config entry.";
           uses config-object-param-list;
         }
-        container prop-filter {
+        container filter {
           augex:data-path "filter";
           presence "Config entry.";
           leaf property {

@@ -462,7 +462,7 @@ module kdump {
             }
           }
         }
-        container mod-options {
+        container options {
           augex:data-path "options";
           presence "Config entry.";
           container mdl-options {

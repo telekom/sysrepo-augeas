@@ -22,7 +22,7 @@ module gtkbookmarks {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container entry {
+      container bookmark {
         augex:data-path "bookmark";
         augex:value-yang-path "no-spaces";
         presence "Config entry.";

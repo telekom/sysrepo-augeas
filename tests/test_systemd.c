@@ -60,9 +60,9 @@ test_load(void **state)
             "      <record>Unit</record>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
-            "        <entry-single>\n"
+            "        <description>\n"
             "          <value>The Apache HTTP Server</value>\n"
-            "        </entry-single>\n"
+            "        </description>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>2</_id>\n"
@@ -95,7 +95,7 @@ test_load(void **state)
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>3</_id>\n"
-            "        <entry-env>\n"
+            "        <environment>\n"
             "          <env-key-list>\n"
             "            <_id>1</_id>\n"
             "            <env-key>\n"
@@ -110,7 +110,7 @@ test_load(void **state)
             "              <value>\"\"</value>\n"
             "            </env-key>\n"
             "          </env-key-list>\n"
-            "        </entry-env>\n"
+            "        </environment>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>4</_id>\n"
@@ -256,7 +256,7 @@ test_store_modify(void **state)
 
     /* modify some values */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry-single/value", "Apache", LYD_NEW_PATH_UPDATE, NULL));
+            "/description/value", "Apache", LYD_NEW_PATH_UPDATE, NULL));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
             "/entry-multi/entry-multi-kw", "ReadWritePaths", LYD_NEW_PATH_UPDATE, NULL));

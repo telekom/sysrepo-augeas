@@ -56,29 +56,29 @@ test_load(void **state)
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <entry-list>\n"
             "    <_id>1</_id>\n"
-            "    <entry>\n"
+            "    <bookmark>\n"
             "      <no-spaces>ftp://user@myftp.com/somedir</no-spaces>\n"
-            "    </entry>\n"
+            "    </bookmark>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>2</_id>\n"
-            "    <entry>\n"
+            "    <bookmark>\n"
             "      <no-spaces>file:///home/rpinson/Ubuntu%20One</no-spaces>\n"
             "      <label>Ubuntu One</label>\n"
-            "    </entry>\n"
+            "    </bookmark>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>3</_id>\n"
-            "    <entry>\n"
+            "    <bookmark>\n"
             "      <no-spaces>ftp://user@myftp.com/somedir</no-spaces>\n"
-            "    </entry>\n"
+            "    </bookmark>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>4</_id>\n"
-            "    <entry>\n"
+            "    <bookmark>\n"
             "      <no-spaces>file:///home/rpinson/Ubuntu%20Two</no-spaces>\n"
             "      <label>Ubuntu Two</label>\n"
-            "    </entry>\n"
+            "    </bookmark>\n"
             "  </entry-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -94,18 +94,18 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/no-spaces", "file:///etc/passwd",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/bookmark/no-spaces", "file:///etc/passwd",
             0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/label", "passwd", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/bookmark/label", "passwd", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='6']/entry/no-spaces", "scp:///me@mydomain.com/home",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='6']/bookmark/no-spaces", "scp:///me@mydomain.com/home",
             0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='3']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='3']/entry/label", "myftp", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='3']/bookmark/label", "myftp", 0, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));
@@ -129,9 +129,9 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='1']/entry/no-spaces",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='1']/bookmark/no-spaces",
             "ftp://nobody@ftp.com/dir", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='2']/entry/label", "Ubuntu",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='2']/bookmark/label", "Ubuntu",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -159,7 +159,7 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='1']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/entry/label", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/bookmark/label", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

@@ -53,7 +53,7 @@ module debctrl {
                 }
                 choice ch-config-entries {
                   mandatory true;
-                  container version-depends {
+                  container version {
                     augex:data-path "version";
                     presence "Config entry.";
                     leaf relation {
@@ -71,7 +71,7 @@ module debctrl {
                       augex:data-path "number";
                     }
                   }
-                  container arch-depends {
+                  container arch {
                     augex:data-path "arch";
                     presence "Config entry.";
                     leaf prefix {

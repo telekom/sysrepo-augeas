@@ -4984,13 +4984,16 @@ ay_ynode_get_ident_from_transl_table(const struct ay_ynode *tree, const struct a
  * @param[in] node Node to process.
  * @param[in] opt Where the identifier will be placed.
  * @param[out] buffer Identifier can be written to the @p buffer and in this case return value points to @p buffer.
+ * @param[out] standardized Flag is set to 1 if string in @p buffer is standardized. In other words the function
+ * ay_get_ident_standardized() was called.
  * @param[out] erc Error code is 0 on success.
  * @return Exact identifier, pointer to @p buffer or NULL.
  */
 static const char *
 ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node, enum ay_ident_dst opt, char *buffer,
-        int *erc)
+        ly_bool *standardized, int *erc)
 {
+    char *str;
     struct lens *label;
 
     if (*erc) {
@@ -5003,22 +5006,37 @@ ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node,
         return NULL;
     }
 
+    str = NULL;
     if ((label->tag == L_LABEL) || (label->tag == L_SEQ)) {
-        return label->string->str;
+        str = label->string->str;
     } else if (node->label->flags & AY_LNODE_KEY_IS_LABEL) {
         if ((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH)) {
             /* remove backslashes */
             ay_string_remove_characters(label->regexp->pattern->str, '\\', buffer);
             return buffer;
         } else {
-            /* It is assumed that the ay_get_ident_standardized() will be called later. */
-            return label->regexp->pattern->str;
+            str = label->regexp->pattern->str;
         }
     } else if (node->label->flags & AY_LNODE_KEY_HAS_IDENTS) {
         *erc = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
         return buffer;
     } else {
         return NULL;
+    }
+
+    assert(str);
+    if ((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH)) {
+        ay_get_ident_standardized(str, opt, 0, buffer);
+        if (buffer[0]) {
+            /* Name is valid and standardized. */
+            *standardized = 1;
+            return buffer;
+        } else {
+            /* String is not suitable. Contains only special characters, e.g. @. */
+            return NULL;
+        }
+    } else {
+        return str;
     }
 }
 
@@ -5083,6 +5101,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     uint64_t len = 0;
     ly_bool internal = 0;
     ly_bool ch_tag = 0;
+    ly_bool stand = 0;
 
     tree = ctx->tree;
     snode = AY_SNODE_LENS(node);
@@ -5092,7 +5111,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     /* Identifier priorities should work as follows:
      *
      * YN_CONTAINER yang-ident:
-     * has_idents, lense_name(snode), lense_name(label), LABEL, SEQ, is_label, "cont"
+     * has_idents, "label not in YN_KEY", lense_name(snode), lense_name(label), LABEL, SEQ, is_label, "cont"
      * data-path:
      * LABEL, SEQ, is_label, has_idents, "$$"
      * value-yang-path:
@@ -5205,11 +5224,15 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             ret = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
+        } else if ((node->child->type != YN_KEY) &&
+                (tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
+            AY_CHECK_RET(ret);
+            str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
+        } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if (!node->label) {
@@ -5220,7 +5243,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -5231,7 +5254,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ret = ay_get_yang_ident(ctx, node->child->next, AY_IDENT_NODE_NAME, buffer);
         return ret;
     } else if (node->type == YN_KEY) {
-        ident_from_label = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret);
+        ident_from_label = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret);
         if (ident_from_label && (label->tag != L_SEQ) && value && (tmp = ay_get_lense_name(ctx->mod, node->value))) {
             AY_CHECK_RET(ret);
             str = tmp;
@@ -5253,7 +5276,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "value";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_NODE_NAME)) {
-        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
@@ -5264,7 +5287,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &ret))) {
+        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
         } else {
@@ -5278,7 +5301,10 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     }
 
     if ((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH)) {
-        ret = ay_get_ident_standardized(str, opt, internal, buffer);
+        if (!stand) {
+            ret = ay_get_ident_standardized(str, opt, internal, buffer);
+        }
+        assert(buffer[0]);
     } else if (buffer != str) {
         assert((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH));
         strcpy(buffer, str);

@@ -51,7 +51,7 @@ module dhcpd {
         }
         augex:data-path "deny-members-of";
       }
-      container stmt-option1 {
+      container option {
         augex:data-path "option";
         presence "Config entry.";
         container stmt-option-basic {
@@ -90,7 +90,7 @@ module dhcpd {
           }
         }
       }
-      container stmt-option2 {
+      container rfc-code {
         augex:data-path "rfc-code";
         presence "Config entry.";
         leaf label {
@@ -106,7 +106,7 @@ module dhcpd {
           }
           augex:data-path "code";
         }
-        choice ch-stmt-option2 {
+        choice ch-rfc-code {
           mandatory true;
           leaf type {
             type string {
@@ -137,7 +137,7 @@ module dhcpd {
           }
         }
       }
-      container stmt-hardware {
+      container hardware {
         augex:data-path "hardware";
         presence "Config entry.";
         leaf type {
@@ -155,7 +155,7 @@ module dhcpd {
           augex:data-path "address";
         }
       }
-      container stmt-range {
+      container range {
         augex:data-path "range";
         presence "Config entry.";
         leaf flag {
@@ -786,10 +786,10 @@ module dhcpd {
         type empty;
         augex:data-path "secondary";
       }
-      container stmt-match {
+      container match {
         augex:data-path "match";
         presence "Config entry.";
-        choice ch-stmt-match {
+        choice ch-match {
           mandatory true;
           case function {
             container function {
@@ -806,7 +806,7 @@ module dhcpd {
                   }
                 }
               }
-              container fct-args {
+              container args {
                 augex:data-path "args";
                 presence "Config entry.";
                 leaf-list arg {
@@ -832,7 +832,7 @@ module dhcpd {
               when "re-match(../function/fct, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
             }
           }
-          container stmt-match-ifopt {
+          container option {
             augex:data-path "option";
             augex:value-yang-path "word";
             presence "Config entry.";
@@ -856,7 +856,7 @@ module dhcpd {
           }
         }
       }
-      container stmt-subclass {
+      container subclass {
         augex:data-path "subclass";
         presence "Config entry.";
         leaf name {
@@ -882,7 +882,7 @@ module dhcpd {
           augex:data-path "value";
         }
       }
-      container stmt-set {
+      container set {
         augex:data-path "set";
         augex:value-yang-path "word";
         presence "Config entry.";

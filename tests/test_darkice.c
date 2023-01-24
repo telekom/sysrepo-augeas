@@ -56,7 +56,7 @@ test_load(void **state)
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <record-list>\n"
             "    <_id>1</_id>\n"
-            "    <record>\n"
+            "    <target>\n"
             "      <record-label>general</record-label>\n"
             "      <entry-list>\n"
             "        <_id>1</_id>\n"
@@ -72,11 +72,11 @@ test_load(void **state)
             "          <value>5</value>\n"
             "        </entry>\n"
             "      </entry-list>\n"
-            "    </record>\n"
+            "    </target>\n"
             "  </record-list>\n"
             "  <record-list>\n"
             "    <_id>2</_id>\n"
-            "    <record>\n"
+            "    <target>\n"
             "      <record-label>icecast2-0</record-label>\n"
             "      <entry-list>\n"
             "        <_id>1</_id>\n"
@@ -92,7 +92,7 @@ test_load(void **state)
             "          <value>vorbis</value>\n"
             "        </entry>\n"
             "      </entry-list>\n"
-            "    </record>\n"
+            "    </target>\n"
             "  </record-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -108,19 +108,19 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/record-label", "my-section", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/target/record-label", "my-section", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/target/entry-list[_id='1']/"
             "entry/entry", "logging", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/target/entry-list[_id='1']/"
             "entry/value", "none", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/entry-list[_id='3']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/target/entry-list[_id='3']/"
             "entry/entry", "foo", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/entry-list[_id='3']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/target/entry-list[_id='3']/"
             "entry/value", "bar", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/entry-list[_id='1']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/target/entry-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -144,11 +144,11 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/record-label", "icecast5-0",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/target/record-label", "icecast5-0",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/entry-list[_id='1']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/target/entry-list[_id='1']/"
             "entry/entry", "length", LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/entry-list[_id='2']/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/target/entry-list[_id='2']/"
             "entry/value", "10", LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */
@@ -180,7 +180,7 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/entry-list[_id='2']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/target/entry-list[_id='2']", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

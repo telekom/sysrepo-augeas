@@ -56,7 +56,7 @@ module systemd {
           }
           choice ch-config-entries {
             mandatory true;
-            container entry-single {
+            container description {
               augex:data-path "Description";
               presence "Config entry.";
               leaf value {
@@ -128,7 +128,7 @@ module systemd {
                 }
               }
             }
-            container entry-env {
+            container environment {
               augex:data-path "Environment";
               presence "Config entry.";
               list env-key-list {

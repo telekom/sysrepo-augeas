@@ -62,7 +62,7 @@ module inetd {
       }
       choice ch-config-entries {
         mandatory true;
-        container service-line {
+        container service {
           augex:data-path "service";
           augex:value-yang-path "value";
           presence "Config entry.";
@@ -140,7 +140,7 @@ module inetd {
             uses argument;
           }
         }
-        container rpc-line {
+        container rpc-service {
           augex:data-path "rpc_service";
           augex:value-yang-path "value";
           presence "Config entry.";
@@ -212,7 +212,7 @@ module inetd {
             uses argument;
           }
         }
-        container default-listen-address {
+        container address {
           augex:data-path "address";
           presence "Config entry.";
           list addrseq-list {

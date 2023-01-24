@@ -23,7 +23,7 @@ module keepalived {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container static-ipaddress-field {
+      container ipaddr {
         augex:data-path "ipaddr";
         augex:value-yang-path "value";
         presence "Config entry.";
@@ -233,7 +233,7 @@ module keepalived {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container static-routes-field {
+            container route {
               augex:data-path "route";
               presence "Config entry.";
               leaf src {
@@ -913,7 +913,7 @@ module keepalived {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container virtual-server-group-field {
+            container vip {
               augex:data-path "vip";
               presence "Config entry.";
               container ipaddr {

@@ -297,7 +297,7 @@ module ssh {
               pattern "(?i)Match";
             }
           }
-          container match-cond {
+          container condition {
             augex:data-path "Condition";
             presence "Config entry.";
             list condition-entry {

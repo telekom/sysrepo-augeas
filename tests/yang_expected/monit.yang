@@ -54,7 +54,7 @@ module monit {
           }
           augex:data-path "include";
         }
-        container service {
+        container check {
           augex:data-path "check";
           presence "Config entry.";
           list value-list {

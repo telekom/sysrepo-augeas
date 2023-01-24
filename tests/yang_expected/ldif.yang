@@ -93,7 +93,7 @@ module ldif {
         }
         uses include;
       }
-      container ldif-content {
+      container content {
         augex:data-path "@content";
         presence "Config entry.";
         list sep-record {
@@ -168,7 +168,7 @@ module ldif {
           uses include;
         }
       }
-      container ldif-changes {
+      container changes {
         augex:data-path "@changes";
         presence "Config entry.";
         list sep-record {
@@ -228,7 +228,7 @@ module ldif {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container change-control {
+            container control {
               augex:data-path "control";
               augex:value-yang-path "ldapoid";
               presence "Config entry.";

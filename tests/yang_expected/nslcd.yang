@@ -43,10 +43,10 @@ module nslcd {
       }
       choice ch-config-entries {
         mandatory true;
-        container map-entry {
+        container map {
           augex:data-path "map";
           presence "Config entry.";
-          choice ch-map-entry {
+          choice ch-map {
             mandatory true;
             container alias {
               augex:data-path "alias";
@@ -365,10 +365,10 @@ module nslcd {
             }
           }
         }
-        container filter-entry {
+        container filter {
           augex:data-path "filter";
           presence "Config entry.";
-          choice ch-filter-entry {
+          choice ch-filter {
             mandatory true;
             leaf alias {
               type string {

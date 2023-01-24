@@ -56,10 +56,10 @@ test_load(void **state)
             "  <config-file>" AUG_CONFIG_FILES_DIR "/" AUG_TEST_MODULE "</config-file>\n"
             "  <config-entries>\n"
             "    <_id>1</_id>\n"
-            "    <listen>\n"
+            "    <listen-on>\n"
             "      <address>*</address>\n"
             "      <rtable>5</rtable>\n"
-            "    </listen>\n"
+            "    </listen-on>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>2</_id>\n"
@@ -129,7 +129,7 @@ test_store_add(void **state)
 
     /* add some lists */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='1']", 0, &node));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/listen/address",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='10']/listen-on/address",
             "2001::fe25:1", 0, &new));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, new));
 

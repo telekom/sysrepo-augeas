@@ -22,7 +22,7 @@ module limits {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container entry {
+      container domain {
         augex:data-path "domain";
         augex:value-yang-path "value";
         presence "Config entry.";

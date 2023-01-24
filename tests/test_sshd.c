@@ -331,7 +331,7 @@ test_load(void **state)
             "    <_id>1</_id>\n"
             "    <match>\n"
             "      <match>Match</match>\n"
-            "      <match-cond>\n"
+            "      <condition>\n"
             "        <condition-entry>\n"
             "          <_id>1</_id>\n"
             "          <node>\n"
@@ -339,7 +339,7 @@ test_load(void **state)
             "            <value>anoncvs</value>\n"
             "          </node>\n"
             "        </condition-entry>\n"
-            "      </match-cond>\n"
+            "      </condition>\n"
             "      <settings>\n"
             "        <config-entries>\n"
             "          <_id>1</_id>\n"
@@ -430,7 +430,7 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "match-list[_id='1']/match/match-cond/"
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "match-list[_id='1']/match/condition/"
             "condition-entry[_id='1']/node/value", "nobody", LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "match-list[_id='1']/match/settings/"
             "config-entries[_id='2']/other-entry/value", "yes", LYD_NEW_PATH_UPDATE, NULL));

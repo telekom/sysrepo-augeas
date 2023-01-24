@@ -22,7 +22,7 @@ module jmxaccess {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container access-entry {
+      container user {
         augex:data-path "user";
         presence "Config entry.";
         leaf username {

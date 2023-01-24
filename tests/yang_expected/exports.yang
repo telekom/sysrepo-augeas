@@ -22,7 +22,7 @@ module exports {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container entry {
+      container dir {
         augex:data-path "dir";
         augex:value-yang-path "value";
         presence "Config entry.";

@@ -829,7 +829,7 @@ module krb5 {
             }
           }
         }
-        container instance-mapping {
+        container instancemapping {
           augex:data-path "instancemapping";
           presence "Config entry.";
           list name-list {

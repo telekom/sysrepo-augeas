@@ -249,7 +249,7 @@ module mke2fs {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container fs-types-record {
+            container filesystem {
               augex:data-path "filesystem";
               augex:value-yang-path "word";
               presence "Config entry.";

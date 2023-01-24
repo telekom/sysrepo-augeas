@@ -45,7 +45,7 @@ module ntpd {
       }
       choice ch-config-entries {
         mandatory true;
-        container listen {
+        container listen-on {
           augex:data-path "listen on";
           presence "Config entry.";
           leaf address {
