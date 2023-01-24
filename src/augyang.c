@@ -265,6 +265,8 @@
 #define AY_PNODE_REG_MINUS      0x2     /**< Terms subtree contains a regular expression with a minus operation. */
 #define AY_PNODE_REG_UNMIN      0x4     /**< Terms subtree contains a regular expression starting with the A_UNION
                                              operation and there is a minus operation in one of the branches. */
+#define AY_PNODE_FOR_SNODE      0x08    /**< A pnode is assigned to some ay_ynode.snode. */
+#define AY_PNODE_FOR_SNODES     0x10    /**< This pnode is assigned for more than one snode. */
 /** @} pnodeflags */
 
 /**
@@ -2073,6 +2075,106 @@ ay_regex_is_long(const char *regex)
 }
 
 /**
+ * @brief For snode, find the correct pnode to use as a name.
+ *
+ * @param[in] pnode whose 'struct info' is the same as for snode.
+ * @return pnode from which to derive the name or NULL.
+ */
+static struct ay_pnode *
+ay_lnode_snode_get_pnode(struct ay_pnode *pnode)
+{
+    struct ay_pnode *iter, *prev, *ret;
+
+    /* Must come from the correct LET without parameter. */
+    ret = NULL;
+    prev = pnode;
+    for (iter = pnode->parent; iter && (iter->term->tag != A_BIND); iter = iter->parent) {
+        if ((iter->term->tag == A_LET) && (iter->child->term->tag == A_FUNC) &&
+                (prev != iter->child) && (prev->term->tag != A_FUNC)) {
+            ret = iter->child;
+            break;
+        } else if (iter->term->tag == A_BRACKET) {
+            break;
+        }
+        prev = iter;
+    }
+    assert(iter);
+
+    if (ret && (ret->bind->child->term->tag == A_LET)) {
+        return ret;
+    } else if (iter->child->term->tag == A_LET) {
+        assert(iter->term->tag == A_BIND);
+        return iter;
+    } else {
+        return NULL;
+    }
+}
+
+/**
+ * @brief Find suitable pnode for regex shorthand.
+ *
+ * Applied to regex that use minus, which can be shortened with yang 'invert-match' statement.
+ *
+ * @param[in] ptree Tree of pnodes.
+ * @param[in] node the lnode for which the pnode is to be found.
+ * @return pnode or NULL.
+ */
+static struct ay_pnode *
+ay_pnode_for_regex(struct augeas *aug, struct ay_pnode *ptree, struct ay_lnode *node)
+{
+    struct ay_pnode *pnode;
+
+    if ((node->lens->tag != L_STORE) && (node->lens->tag != L_KEY)) {
+        return NULL;
+    } else if (!ay_regex_is_long(node->lens->regexp->pattern->str)) {
+        return NULL;
+    }
+
+    pnode = ay_pnode_find_by_info(ptree, node->lens->info);
+    if (!pnode || (pnode->term->tag != A_APP)) {
+        return NULL;
+    }
+
+    pnode = pnode->child->next;
+    ay_pnode_set_ref(aug, ptree, pnode);
+    pnode = ay_pnode_ref_apply(pnode);
+    ay_pnode_swap_rep_minus(pnode);
+
+    /* TODO For AY_PNODE_REG_UNMIN form of regex, there can be more minuses. */
+    if (!ay_pnode_is_simple_minus_regex(pnode)) {
+        return NULL;
+    }
+
+    return pnode;
+}
+
+/**
+ * @brief Find suitable pnode for snode.
+ *
+ * The pnode will be used for yang node name.
+ *
+ * @param[in] ptree Tree of pnodes.
+ * @param[in] node the lnode for which the pnode is to be found.
+ * @return pnode or NULL.
+ */
+static struct ay_pnode *
+ay_pnode_for_snode(struct ay_pnode *ptree, struct ay_lnode *node)
+{
+    struct ay_pnode *pnode;
+
+    if (node->lens->tag != L_SUBTREE) {
+        return NULL;
+    }
+    pnode = ay_pnode_find_by_info(ptree, node->lens->info);
+    if (!pnode) {
+        return NULL;
+    }
+    pnode = ay_lnode_snode_get_pnode(pnode);
+
+    return pnode;
+}
+
+/**
  * @brief For every lnode set parsed node.
  *
  * The root of the pnode tree is stored in the root of the lnode node.
@@ -2092,33 +2194,49 @@ ay_lnode_set_pnode(struct ay_lnode *tree, struct ay_pnode *ptree)
     aug = ay_get_augeas_ctx2(tree->lens);
     LY_ARRAY_FOR(tree, i) {
         iter = &tree[i];
-        if ((iter->lens->tag != L_STORE) && (iter->lens->tag != L_KEY)) {
-            continue;
-        } else if (!ay_regex_is_long(iter->lens->regexp->pattern->str)) {
-            continue;
+        if ((pnode = ay_pnode_for_regex(aug, ptree, iter))) {
+            iter->pnode = pnode;
+            pnode->flags |= AY_PNODE_REG_MINUS;
+        } else if ((pnode = ay_pnode_for_snode(ptree, iter))) {
+            iter->pnode = pnode;
+            /* flag is set in ay_ynode_snode_unique_pnode(). */
         }
-
-        pnode = ay_pnode_find_by_info(ptree, iter->lens->info);
-        if (!pnode || (pnode->term->tag != A_APP)) {
-            continue;
-        }
-
-        pnode = pnode->child->next;
-        ay_pnode_set_ref(aug, ptree, pnode);
-        pnode = ay_pnode_ref_apply(pnode);
-        ay_pnode_swap_rep_minus(pnode);
-
-        /* TODO For AY_PNODE_REG_UNMIN form of regex, there can be more minuses. */
-        if (!ay_pnode_is_simple_minus_regex(pnode)) {
-            continue;
-        }
-        pnode->flags |= AY_PNODE_REG_MINUS;
-        iter->pnode = pnode;
     }
 
     /* Store root of pnode tree in lnode. */
     assert((tree->lens->tag != L_STORE) && (tree->lens->tag != L_KEY));
     tree->pnode = ptree;
+}
+
+/**
+ * @brief Determine if a pnode is used for just one snode.
+ *
+ * If it belonged to more snode, then it should not be used to get a name,
+ * because the name is probably misleading.
+ *
+ * TODO: this function is possibly unnecessary.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_snode_unique_pnode(struct ay_ynode *tree)
+{
+    struct ay_ynode *iter;
+    struct ay_pnode *pnode;
+    LY_ARRAY_COUNT_TYPE i;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if (!iter->snode || !iter->snode->pnode) {
+            continue;
+        }
+        pnode = iter->snode->pnode;
+        if (pnode->flags & AY_PNODE_FOR_SNODE) {
+            pnode->flags |= AY_PNODE_FOR_SNODES;
+        } else {
+            pnode->flags |= AY_PNODE_FOR_SNODE;
+        }
+    }
 }
 
 /**
@@ -5083,6 +5201,37 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
 }
 
 /**
+ * @brief Try to find snode name from pnode.
+ *
+ * @param[in] node Node for which a name is sought.
+ * @return pointer to name or NULL.
+ */
+static char *
+ay_ynode_snode_name(struct ay_ynode *node)
+{
+    struct ay_pnode *pnode;
+    char *name;
+
+    if (!node->snode || !node->snode->pnode) {
+        return NULL;
+    }
+
+    pnode = node->snode->pnode;
+    if (!(pnode->flags & AY_PNODE_FOR_SNODE) || (pnode->flags & AY_PNODE_FOR_SNODES)) {
+        return NULL;
+    }
+
+    name = NULL;
+    if (pnode->term->tag == A_FUNC) {
+        name = pnode->term->param->name->str;
+    } else if (pnode->term->tag == A_BIND) {
+        name = pnode->term->bname;
+    }
+
+    return name;
+}
+
+/**
  * @brief Evaluate the identifier for the node.
  *
  * @param[in] ctx Current printing context.
@@ -5229,6 +5378,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             AY_CHECK_RET(ret);
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
+            str = tmp;
+        } else if ((tmp = ay_ynode_snode_name(node))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
@@ -5902,7 +6053,6 @@ ay_print_yang_pattern_minus(struct yprinter_ctx *ctx, const struct ay_pnode *reg
 {
     int ret;
 
-    assert(regex->term->tag == A_MINUS);
     ret = ay_print_yang_pattern_by_pnode_regex(ctx, regex->child);
     AY_CHECK_RET(ret);
     ly_print(ctx->out, ";\n");
@@ -5930,7 +6080,7 @@ ay_print_yang_pattern(struct yprinter_ctx *ctx, const struct ay_ynode *node, con
     int ret = 0;
     const char *subpatt;
 
-    if (!(node->flags & AY_WHEN_TARGET) && lnode->pnode) {
+    if (!(node->flags & AY_WHEN_TARGET) && lnode->pnode && (lnode->pnode->term->tag == A_MINUS)) {
         ay_print_yang_pattern_minus(ctx, lnode->pnode);
         return ret;
     } else if (lnode->lens->tag == L_VALUE) {
@@ -11707,6 +11857,51 @@ ay_ynode_set_ref_recursive_form(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Unset ay_lnode.pnode pointer if it is evaluated that it must not be used.
+ *
+ * During a grouping search, subtree nodes can be the same, but their names can be different.
+ * And it would be confusing if a name were used in an unrelated place.
+ *
+ * @param[in] subt Subtree which can contain YN_GROUPING nodes.
+ * @param[in] del_subt Subtree which will be deleted.
+ * @param[in] compare_roots Flag set to 1 if roots of subtrees must also be compared.
+ */
+static void
+ay_ynode_snode_unset_pnode(struct ay_ynode *subt, struct ay_ynode *del_subt, ly_bool compare_roots)
+{
+    LY_ARRAY_COUNT_TYPE i, j, stop;
+    struct ay_ynode *iti, *itj;
+    struct ay_lnode *snode;
+
+    if (!compare_roots) {
+        /* Skip root nodes. */
+        stop = subt->descendants;
+        subt++;
+        del_subt = ay_ynode_inner_nodes(del_subt);
+    } else {
+        stop = subt->descendants + 1;
+    }
+    for (i = 0, j = 0; i < stop; i++, j++) {
+        iti = &subt[i];
+        itj = &del_subt[j];
+        if (iti->type == YN_GROUPING) {
+            /* Skip grouping node. */
+            j--;
+            continue;
+        } else if (!iti->snode || !iti->snode->pnode) {
+            continue;
+        }
+        assert(iti->type == itj->type);
+
+        if (iti->snode->pnode != itj->snode->pnode) {
+            /* This pnode should not be used. */
+            snode = (struct ay_lnode *)iti->snode;
+            snode->pnode = NULL;
+        }
+    }
+}
+
+/**
  * @brief Nodes that belong to the same grouping are marked by ay_ynode.ref.
  *
  * This function is preparation before calling ::ay_ynode_create_groupings_toplevel().
@@ -11859,10 +12054,12 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
             /* Create YN_USES at 'itj' node. */
             if (iti->flags & AY_GROUPING_CHILDREN) {
                 /* YN_USES for children. */
+                ay_ynode_snode_unset_pnode(grouping, itj, 0);
                 ay_ynode_delete_children(tree, itj, 1);
                 uses = ay_ynode_insert_child_last(tree, itj);
             } else {
                 /* YN_USES for subtree (itj node). */
+                ay_ynode_snode_unset_pnode(grouping, itj, 1);
                 ay_ynode_delete_children(tree, itj, 0);
                 uses = itj;
                 uses->snode = uses->label = uses->value = NULL;
@@ -13037,7 +13234,9 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     /* No other groupings will not be added, so move groupings in front of config-file list. */
     AY_CHECK_RV(ay_ynode_groupings_ahead(*tree));
 
-    /* Chages based on identifier */
+    /* Changes based on identifier */
+
+    ay_ynode_snode_unique_pnode(*tree);
 
     /* Transformations based on ynode identifier. */
     AY_CHECK_RV(ay_ynode_transformations_ident(mod, tree));

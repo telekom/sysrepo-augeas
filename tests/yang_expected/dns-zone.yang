@@ -78,7 +78,7 @@ module dns-zone {
         mandatory true;
         type union {
           type string {
-            pattern "IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|S|I|[A-HJ-LO-RT-Z]";
+            pattern "IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|I|[A-HJ-LO-RT-Z]|S";
           }
           type string {
             pattern "MX";
@@ -99,7 +99,7 @@ module dns-zone {
         mandatory true;
         container case3 {
           presence "Config entry.";
-          when "re-match(../type, 'IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|S|I|[A-HJ-LO-RT-Z]')";
+          when "re-match(../type, 'IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|I|[A-HJ-LO-RT-Z]|S')";
           leaf rdata {
             type string {
               pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";

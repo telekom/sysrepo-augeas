@@ -300,7 +300,7 @@ module ssh {
           container condition {
             augex:data-path "Condition";
             presence "Config entry.";
-            list condition-entry {
+            list condition-entry-list {
               key "_id";
               min-elements 1;
               ordered-by user;
@@ -309,7 +309,7 @@ module ssh {
                 description
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
-              container node {
+              container condition-entry {
                 augex:data-path "$$";
                 augex:value-yang-path "value";
                 presence "Config entry.";

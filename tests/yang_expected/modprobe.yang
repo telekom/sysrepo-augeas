@@ -61,7 +61,7 @@ module modprobe {
               pattern "[^# \t\n\\\\\\\\]+";
             }
           }
-          list word-list {
+          list option-list {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -69,7 +69,7 @@ module modprobe {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container word {
+            container option {
               augex:data-path "$$";
               augex:value-yang-path "value";
               presence "Config entry.";

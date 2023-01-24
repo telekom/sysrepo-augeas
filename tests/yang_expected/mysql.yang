@@ -34,7 +34,7 @@ module mysql {
               pattern "[^\\]\n]+";
             }
           }
-          list config-entries {
+          list entry-list {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -42,7 +42,7 @@ module mysql {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container node {
+            container entry {
               augex:data-path "$$";
               augex:value-yang-path "value";
               presence "Config entry.";

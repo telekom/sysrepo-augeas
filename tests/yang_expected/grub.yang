@@ -31,23 +31,32 @@ module grub {
       augex:data-path "file";
     }
   }
-  grouping kernel {
-    container node {
-      augex:data-path "$$";
-      augex:value-yang-path "value";
-      presence "Config entry.";
-      leaf label {
-        mandatory true;
-        type string {
-          pattern "[A-Za-z0-9_.$\\\\+-]+";
-          pattern "type|no-mem-option" {
-            modifier invert-match;
+  grouping kernel-args-list {
+    list kernel-args-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container kernel-args {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.$\\\\+-]+";
+            pattern "type|no-mem-option" {
+              modifier invert-match;
+            }
           }
         }
-      }
-      leaf value {
-        type string {
-          pattern "([^ \t\n])*";
+        leaf value {
+          type string {
+            pattern "([^ \t\n])*";
+          }
         }
       }
     }
@@ -587,16 +596,7 @@ module grub {
                 }
                 augex:data-path "@path";
               }
-              list kernel-list {
-                key "_id";
-                ordered-by user;
-                leaf _id {
-                  type uint64;
-                  description
-                    "Implicitly generated list key to maintain the order of the augeas data.";
-                }
-                uses kernel;
-              }
+              uses kernel-args-list;
             }
             container chainloader {
               augex:data-path "chainloader";
@@ -652,16 +652,7 @@ module grub {
                 }
                 augex:data-path "@path";
               }
-              list kernel-list {
-                key "_id";
-                ordered-by user;
-                leaf _id {
-                  type uint64;
-                  description
-                    "Implicitly generated list key to maintain the order of the augeas data.";
-                }
-                uses kernel;
-              }
+              uses kernel-args-list;
             }
             container map {
               augex:data-path "map";

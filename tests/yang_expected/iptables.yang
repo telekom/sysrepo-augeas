@@ -148,7 +148,7 @@ module iptables {
             augex:data-path "set";
           }
         }
-        container node {
+        container any-param {
           augex:data-path "$$";
           augex:value-yang-path "value";
           presence "Config entry.";
