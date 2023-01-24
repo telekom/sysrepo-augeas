@@ -1,0 +1,112 @@
+module cron-user {
+  yang-version 1.1;
+  namespace "aug:cron-user";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Cron_User";
+
+  list cron-user {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container shellvar {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])[0-9][0-9]*\\]|(entry([1-9A-Z_a-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*\\[|\\[)[0-9]|((e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*\\[|e\\[|[1-9A-Z_a-df-z-]\\[)[0-9])\\]|entry[1-9A-Z_a-z-][1-9A-Z_a-z-]*|entr([1-9A-Z_a-xz-][1-9A-Z_a-z-]*|())|ent([1-9A-Z_a-qs-z-][1-9A-Z_a-z-]*|())|en([1-9A-Z_a-su-z-][1-9A-Z_a-z-]*|())|(e[1-9A-Z_a-mo-z-]|[1-9A-Z_a-df-z-][1-9A-Z_a-z-])[1-9A-Z_a-z-]*|e|[1-9A-Z_a-df-z-]";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\n]*[^ \t\n]";
+            }
+          }
+        }
+        container entry {
+          augex:data-path "entry";
+          augex:value-yang-path "space-in";
+          presence "Config entry.";
+          leaf prefix {
+            type string {
+              pattern "-";
+            }
+            augex:data-path "prefix";
+          }
+          choice ch-entry {
+            mandatory true;
+            container time {
+              augex:data-path "time";
+              presence "Config entry.";
+              leaf minute {
+                mandatory true;
+                type string {
+                  pattern "[0-9*][0-9/,*-]*";
+                }
+                augex:data-path "minute";
+              }
+              leaf hour {
+                mandatory true;
+                type string {
+                  pattern "[0-9*][0-9/,*-]*";
+                }
+                augex:data-path "hour";
+              }
+              leaf dayofmonth {
+                mandatory true;
+                type string {
+                  pattern "[0-9*][0-9/,*-]*";
+                }
+                augex:data-path "dayofmonth";
+              }
+              leaf month {
+                mandatory true;
+                type string {
+                  pattern "(([0-9*][0-9/,*-]*)|([A-Za-z]{3}))(((-)(([0-9*][0-9/,*-]*)|([A-Za-z]{3}))){0,1})";
+                }
+                augex:data-path "month";
+              }
+              leaf dayofweek {
+                mandatory true;
+                type string {
+                  pattern "(([0-9*][0-9/,*-]*)|([A-Za-z]{3}))(((-)(([0-9*][0-9/,*-]*)|([A-Za-z]{3}))){0,1})";
+                }
+                augex:data-path "dayofweek";
+              }
+            }
+            leaf schedule {
+              type string {
+                pattern "(((((((reboot)|(yearly))|(annually))|(monthly))|(weekly))|(daily))|(midnight))|(hourly)";
+              }
+              augex:data-path "schedule";
+            }
+          }
+          leaf space-in {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+          }
+        }
+      }
+    }
+  }
+}

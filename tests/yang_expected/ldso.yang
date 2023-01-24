@@ -1,0 +1,58 @@
+module ldso {
+  yang-version 1.1;
+  namespace "aug:ldso";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "LdSo";
+
+  list ldso {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf path {
+          type string {
+            pattern "[^# \t\n][^ \t\n]*";
+          }
+          augex:data-path "path";
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include";
+        }
+        container hwcap {
+          augex:data-path "hwcap";
+          presence "Config entry.";
+          leaf bit {
+            mandatory true;
+            type uint64;
+            augex:data-path "bit";
+          }
+          leaf name {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "name";
+          }
+        }
+      }
+    }
+  }
+}

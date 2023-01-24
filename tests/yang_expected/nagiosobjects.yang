@@ -1,0 +1,63 @@
+module nagiosobjects {
+  yang-version 1.1;
+  namespace "aug:nagiosobjects";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "NagiosObjects";
+
+  list nagiosobjects {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list object-def-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container object-def {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf keyword {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_]+";
+          }
+        }
+        list object-field-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container object-field {
+            augex:data-path "$$";
+            augex:value-yang-path "space-in";
+            presence "Config entry.";
+            leaf keyword {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_]+";
+              }
+            }
+            leaf space-in {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

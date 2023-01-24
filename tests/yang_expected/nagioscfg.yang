@@ -1,0 +1,90 @@
+module nagioscfg {
+  yang-version 1.1;
+  namespace "aug:nagioscfg";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "NagiosCfg";
+
+  list nagioscfg {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container param {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_]+";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n][^\n=]*[^ \t\n]|[^ \t\n]";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container node {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_]+";
+                }
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n][^\n=]*[^ \t\n]|[^ \t\n]";
+                }
+              }
+            }
+          }
+        }
+        container macro {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "$[A-Za-z0-9]+$";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "([A-Za-z0-9_.-]+)|([^ \t\n]+)";
+            }
+          }
+        }
+      }
+    }
+  }
+}

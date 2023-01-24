@@ -1,0 +1,127 @@
+module authorized-keys {
+  yang-version 1.1;
+  namespace "aug:authorized-keys";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Authorized_Keys";
+
+  list authorized-keys {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list authorized-key-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container authorized-key {
+        augex:data-path "key";
+        augex:value-yang-path "no-spaces";
+        presence "Config entry.";
+        container key-options {
+          augex:data-path "options";
+          presence "Config entry.";
+          list option {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-option {
+              mandatory true;
+              leaf command {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "command";
+              }
+              leaf environment {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "environment";
+              }
+              leaf from {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "from";
+              }
+              leaf permitopen {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "permitopen";
+              }
+              leaf principals {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "principals";
+              }
+              leaf tunnel {
+                type string {
+                  pattern "((\\\\\")?[^\\\\\n\"]*)+";
+                }
+                augex:data-path "tunnel";
+              }
+              leaf cert-authority {
+                type empty;
+                augex:data-path "cert-authority";
+              }
+              leaf no-agent-forwarding {
+                type empty;
+                augex:data-path "no-agent-forwarding";
+              }
+              leaf no-port-forwarding {
+                type empty;
+                augex:data-path "no-port-forwarding";
+              }
+              leaf no-pty {
+                type empty;
+                augex:data-path "no-pty";
+              }
+              leaf no-user-rc {
+                type empty;
+                augex:data-path "no-user-rc";
+              }
+              leaf no-x11-forwarding {
+                type empty;
+                augex:data-path "no-X11-forwarding";
+              }
+            }
+          }
+        }
+        leaf type {
+          mandatory true;
+          type string {
+            pattern "(ecdsa-sha2-nistp[0-9]+)|(ssh-[a-z0-9]+)";
+          }
+          augex:data-path "type";
+        }
+        leaf no-spaces {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n]+";
+          }
+        }
+        leaf comment {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "comment";
+        }
+      }
+    }
+  }
+}

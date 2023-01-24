@@ -1,0 +1,782 @@
+module opendkim {
+  yang-version 1.1;
+  namespace "aug:opendkim";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Opendkim";
+
+  list opendkim {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf auto-restart-count {
+          type uint64;
+          augex:data-path "AutoRestartCount";
+        }
+        leaf clock-drift {
+          type uint64;
+          augex:data-path "ClockDrift";
+        }
+        leaf dnstimeout {
+          type uint64;
+          augex:data-path "DNSTimeout";
+        }
+        leaf ldapkeepalive-idle {
+          type uint64;
+          augex:data-path "LDAPKeepaliveIdle";
+        }
+        leaf ldapkeepalive-interval {
+          type uint64;
+          augex:data-path "LDAPKeepaliveInterval";
+        }
+        leaf ldapkeepalive-probes {
+          type uint64;
+          augex:data-path "LDAPKeepaliveProbes";
+        }
+        leaf ldaptimeout {
+          type uint64;
+          augex:data-path "LDAPTimeout";
+        }
+        leaf maximum-headers {
+          type uint64;
+          augex:data-path "MaximumHeaders";
+        }
+        leaf maximum-signatures-to-verify {
+          type uint64;
+          augex:data-path "MaximumSignaturesToVerify";
+        }
+        leaf maximum-signed-bytes {
+          type uint64;
+          augex:data-path "MaximumSignedBytes";
+        }
+        leaf milter-debug {
+          type uint64;
+          augex:data-path "MilterDebug";
+        }
+        leaf minimum-key-bits {
+          type uint64;
+          augex:data-path "MinimumKeyBits";
+        }
+        leaf signature-ttl {
+          type uint64;
+          augex:data-path "SignatureTTL";
+        }
+        leaf umask {
+          type uint64;
+          augex:data-path "UMask";
+        }
+        leaf add-all-signature-results {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "AddAllSignatureResults";
+        }
+        leaf adspno-such-domain {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "ADSPNoSuchDomain";
+        }
+        leaf allow-sha1-only {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "AllowSHA1Only";
+        }
+        leaf always-add-arheader {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "AlwaysAddARHeader";
+        }
+        leaf authserv-idwith-job-id {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "AuthservIDWithJobID";
+        }
+        leaf auto-restart {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "AutoRestart";
+        }
+        leaf background {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "Background";
+        }
+        leaf capture-unknown-errors {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "CaptureUnknownErrors";
+        }
+        leaf diagnostics {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "Diagnostics";
+        }
+        leaf disable-adsp {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "DisableADSP";
+        }
+        leaf disable-crypto-init {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "DisableCryptoInit";
+        }
+        leaf dnsconnect {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "DNSConnect";
+        }
+        leaf fix-crlf {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "FixCRLF";
+        }
+        leaf identity-header-remove {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "IdentityHeaderRemove";
+        }
+        leaf ldapdisable-cache {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "LDAPDisableCache";
+        }
+        leaf ldapsoft-start {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "LDAPSoftStart";
+        }
+        leaf ldapuse-tls {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "LDAPUseTLS";
+        }
+        leaf multiple-signatures {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "MultipleSignatures";
+        }
+        leaf no-header-b {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "NoHeaderB";
+        }
+        leaf quarantine {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "Quarantine";
+        }
+        leaf query-cache {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "QueryCache";
+        }
+        leaf remove-arall {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "RemoveARAll";
+        }
+        leaf remove-old-signatures {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "RemoveOldSignatures";
+        }
+        leaf resolver-tracing {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "ResolverTracing";
+        }
+        leaf selector-header-remove {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SelectorHeaderRemove";
+        }
+        leaf send-adspreports {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SendADSPReports";
+        }
+        leaf send-reports {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SendReports";
+        }
+        leaf software-header {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SoftwareHeader";
+        }
+        leaf strict-headers {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "StrictHeaders";
+        }
+        leaf strict-test-mode {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "StrictTestMode";
+        }
+        leaf sub-domains {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SubDomains";
+        }
+        leaf syslog {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "Syslog";
+        }
+        leaf syslog-success {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "SyslogSuccess";
+        }
+        leaf vbr-trusted-certifiers-only {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "VBR-TrustedCertifiersOnly";
+        }
+        leaf weak-syntax-checks {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "WeakSyntaxChecks";
+        }
+        leaf log-why {
+          type string {
+            pattern "[Tt]rue|[Ff]alse|[Yy]es|[Nn]o|1|0";
+          }
+          augex:data-path "LogWhy";
+        }
+        leaf adspaction {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ADSPAction";
+        }
+        leaf authserv-id {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "AuthservID";
+        }
+        leaf auto-restart-rate {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "AutoRestartRate";
+        }
+        leaf base-directory {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "BaseDirectory";
+        }
+        leaf bogus-key {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "BogusKey";
+        }
+        leaf bogus-policy {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "BogusPolicy";
+        }
+        leaf canonicalization {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Canonicalization";
+        }
+        leaf change-root-directory {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ChangeRootDirectory";
+        }
+        leaf diagnostic-directory {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "DiagnosticDirectory";
+        }
+        leaf final-policy-script {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "FinalPolicyScript";
+        }
+        leaf identity-header {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "IdentityHeader";
+        }
+        leaf include {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Include";
+        }
+        leaf key-file {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "KeyFile";
+        }
+        leaf ldapauth-mechanism {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPAuthMechanism";
+        }
+        leaf ldapauth-name {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPAuthName";
+        }
+        leaf ldapauth-realm {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPAuthRealm";
+        }
+        leaf ldapauth-user {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPAuthUser";
+        }
+        leaf ldapbind-password {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPBindPassword";
+        }
+        leaf ldapbind-user {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LDAPBindUser";
+        }
+        leaf minimum {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Minimum";
+        }
+        leaf mode {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Mode";
+        }
+        leaf mtacommand {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "MTACommand";
+        }
+        leaf nameservers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Nameservers";
+        }
+        leaf on-bad-signature {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-BadSignature";
+        }
+        leaf on-default {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-Default";
+        }
+        leaf on-dnserror {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-DNSError";
+        }
+        leaf on-internal-error {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-InternalError";
+        }
+        leaf on-key-not-found {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-KeyNotFound";
+        }
+        leaf on-no-signature {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-NoSignature";
+        }
+        leaf on-policy-error {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-PolicyError";
+        }
+        leaf on-security {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-Security";
+        }
+        leaf on-signature-error {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "On-SignatureError";
+        }
+        leaf pid-file {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "PidFile";
+        }
+        leaf replace-rules {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ReplaceRules";
+        }
+        leaf report-address {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ReportAddress";
+        }
+        leaf report-bcc-address {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ReportBccAddress";
+        }
+        leaf resolver-configuration {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ResolverConfiguration";
+        }
+        leaf screen-policy-script {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ScreenPolicyScript";
+        }
+        leaf select-canonicalization-header {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SelectCanonicalizationHeader";
+        }
+        leaf selector {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Selector";
+        }
+        leaf selector-header {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SelectorHeader";
+        }
+        leaf sender-macro {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SenderMacro";
+        }
+        leaf setup-policy-script {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SetupPolicyScript";
+        }
+        leaf signature-algorithm {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SignatureAlgorithm";
+        }
+        leaf smtpuri {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SMTPURI";
+        }
+        leaf socket {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Socket";
+        }
+        leaf statistics-name {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "StatisticsName";
+        }
+        leaf statistics-prefix {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "StatisticsPrefix";
+        }
+        leaf syslog-facility {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SyslogFacility";
+        }
+        leaf temporary-directory {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "TemporaryDirectory";
+        }
+        leaf test-public-keys {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "TestPublicKeys";
+        }
+        leaf trust-anchor-file {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "TrustAnchorFile";
+        }
+        leaf unprotected-key {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "UnprotectedKey";
+        }
+        leaf unprotected-policy {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "UnprotectedPolicy";
+        }
+        leaf user-id {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "UserID";
+        }
+        leaf vbr-certifiers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "VBR-Certifiers";
+        }
+        leaf vbr-purge-fields {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "VBR-PurgeFields";
+        }
+        leaf vbr-trusted-certifiers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "VBR-TrustedCertifiers";
+        }
+        leaf vbr-type {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "VBR-Type";
+        }
+        leaf body-length-db {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "BodyLengthDB";
+        }
+        leaf domain {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "Domain";
+        }
+        leaf dont-sign-mail-to {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "DontSignMailTo";
+        }
+        leaf exempt-domains {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ExemptDomains";
+        }
+        leaf external-ignore-list {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ExternalIgnoreList";
+        }
+        leaf internal-hosts {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "InternalHosts";
+        }
+        leaf key-table {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "KeyTable";
+        }
+        leaf local-adsp {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "LocalADSP";
+        }
+        leaf macro-list {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "MacroList";
+        }
+        leaf mta {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "MTA";
+        }
+        leaf must-be-signed {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "MustBeSigned";
+        }
+        leaf omit-headers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "OmitHeaders";
+        }
+        leaf oversign-headers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "OversignHeaders";
+        }
+        leaf peer-list {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "PeerList";
+        }
+        leaf popdbfile {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "POPDBFile";
+        }
+        leaf remove-arfrom {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "RemoveARFrom";
+        }
+        leaf resign-mail-to {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "ResignMailTo";
+        }
+        leaf sender-headers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SenderHeaders";
+        }
+        leaf sign-headers {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SignHeaders";
+        }
+        leaf signing-table {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "SigningTable";
+        }
+        leaf trust-signatures-from {
+          type string {
+            pattern "[0-9a-zA-Z/][^ \t\n#]+";
+          }
+          augex:data-path "TrustSignaturesFrom";
+        }
+      }
+    }
+  }
+}

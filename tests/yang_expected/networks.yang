@@ -1,0 +1,63 @@
+module networks {
+  yang-version 1.1;
+  namespace "aug:networks";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Networks";
+
+  list networks {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list network-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf name {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "name";
+      }
+      leaf number {
+        mandatory true;
+        type string {
+          pattern "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))((((\\.)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)))((((\\.)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)))(((\\.)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))){0,1})){0,1})){0,1})";
+        }
+        augex:data-path "number";
+      }
+      container aliases {
+        augex:data-path "aliases";
+        presence "Config entry.";
+        list alias-list {
+          key "_seq";
+          ordered-by user;
+          augex:data-path "$$";
+          augex:value-yang-path "word";
+          leaf _seq {
+            type uint64;
+            description
+              "Key contains some unique value. The order is based on the actual order of list instances.";
+          }
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+        }
+      }
+    }
+  }
+}

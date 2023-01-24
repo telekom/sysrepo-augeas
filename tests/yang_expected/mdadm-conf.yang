@@ -1,0 +1,335 @@
+module mdadm-conf {
+  yang-version 1.1;
+  namespace "aug:mdadm-conf";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Mdadm_conf";
+
+  grouping pol-options {
+    list pol-options {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container value-no-eq-sl {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value-no-eq-sl {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#=/]+";
+          }
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#]+";
+          }
+        }
+      }
+    }
+  }
+  list mdadm-conf {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container device {
+          augex:data-path "device";
+          presence "Config entry.";
+          list dev-devices {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-dev-devices {
+              mandatory true;
+              leaf containers {
+                type empty;
+                augex:data-path "containers";
+              }
+              leaf partitions {
+                type empty;
+                augex:data-path "partitions";
+              }
+              leaf name {
+                type string {
+                  pattern "[^ \t\n#]+";
+                  pattern "(?i)containers|partitions" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "name";
+              }
+            }
+          }
+        }
+        container array {
+          augex:data-path "array";
+          presence "Config entry.";
+          list arr-options {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-arr-options {
+              mandatory true;
+              leaf devicename {
+                type string {
+                  pattern "[^ \t\n#=]+";
+                }
+                augex:data-path "devicename";
+              }
+              leaf auto {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "auto";
+              }
+              leaf bitmap {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "bitmap";
+              }
+              leaf container {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "container";
+              }
+              leaf devices {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "devices";
+              }
+              leaf disks {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "disks";
+              }
+              leaf level {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "level";
+              }
+              leaf member {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "member";
+              }
+              leaf metadata {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "metadata";
+              }
+              leaf name {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "name";
+              }
+              leaf num-devices {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "num-devices";
+              }
+              leaf spare-group {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "spare-group";
+              }
+              leaf spares {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "spares";
+              }
+              leaf super-minor {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "super-minor";
+              }
+              leaf uuid {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "uuid";
+              }
+            }
+          }
+        }
+        container mailaddr {
+          augex:data-path "mailaddr";
+          presence "Config entry.";
+          leaf-list value {
+            type string {
+              pattern "[^ \t\n#]+";
+            }
+            ordered-by user;
+            augex:data-path "value";
+          }
+        }
+        container mailfrom {
+          augex:data-path "mailfrom";
+          presence "Config entry.";
+          leaf-list value {
+            type string {
+              pattern "[^ \t\n#]+";
+            }
+            ordered-by user;
+            augex:data-path "value";
+          }
+        }
+        container program {
+          augex:data-path "program";
+          presence "Config entry.";
+          leaf-list value {
+            type string {
+              pattern "[^ \t\n#]+";
+            }
+            ordered-by user;
+            augex:data-path "value";
+          }
+        }
+        container create {
+          augex:data-path "create";
+          presence "Config entry.";
+          list cre-options {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-cre-options {
+              mandatory true;
+              leaf auto {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "auto";
+              }
+              leaf owner {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "owner";
+              }
+              leaf group {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "group";
+              }
+              leaf mode {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "mode";
+              }
+              leaf metadata {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "metadata";
+              }
+              leaf symlinks {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "symlinks";
+              }
+            }
+          }
+        }
+        container homehost {
+          augex:data-path "homehost";
+          presence "Config entry.";
+          leaf-list value {
+            type string {
+              pattern "[^ \t\n#]+";
+            }
+            ordered-by user;
+            augex:data-path "value";
+          }
+        }
+        container auto {
+          augex:data-path "auto";
+          presence "Config entry.";
+          list aut-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-aut-list {
+              mandatory true;
+              leaf plus {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "+";
+              }
+              leaf minus {
+                type string {
+                  pattern "[^ \t\n#]+";
+                }
+                augex:data-path "-";
+              }
+              leaf homehost {
+                type empty;
+                augex:data-path "homehost";
+              }
+            }
+          }
+        }
+        container policy {
+          augex:data-path "policy";
+          presence "Config entry.";
+          uses pol-options;
+        }
+        container part-policy {
+          augex:data-path "part-policy";
+          presence "Config entry.";
+          uses pol-options;
+        }
+      }
+    }
+  }
+}

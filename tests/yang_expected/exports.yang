@@ -1,0 +1,66 @@
+module exports {
+  yang-version 1.1;
+  namespace "aug:exports";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Exports";
+
+  list exports {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "dir";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n#]*";
+          }
+        }
+        list client-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container client {
+            augex:data-path "client";
+            augex:value-yang-path "client";
+            presence "Config entry.";
+            leaf client {
+              mandatory true;
+              type string {
+                pattern "[\\]\\[a-zA-Z0-9.@*?/:-]+";
+              }
+            }
+            leaf-list option {
+              type string {
+                pattern "[^,)]*";
+              }
+              ordered-by user;
+              augex:data-path "option";
+            }
+          }
+        }
+      }
+    }
+  }
+}

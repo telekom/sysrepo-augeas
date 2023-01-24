@@ -1,0 +1,75 @@
+module gdm {
+  yang-version 1.1;
+  namespace "aug:gdm";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Gdm";
+
+  grouping entry-list {
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf entry {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9][A-Za-z0-9._-]*";
+          }
+        }
+        leaf value {
+          type union {
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+        }
+      }
+    }
+  }
+  list gdm {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    container record-anon {
+      augex:data-path ".anon";
+      presence "Config entry.";
+      uses entry-list;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "#comme[^\\]\n/n][^\\]\n/][^\\]\n/]*|#comme[^\\]\n/n]|#comme|#co[^\\]\n/m][^\\]\n/][^\\]\n/]*|#co[^\\]\n/m]|#co|#comm[^\\]\n/e][^\\]\n/][^\\]\n/]*|#comm[^\\]\n/e]|#comm|#c[^\\]\n/o][^\\]\n/][^\\]\n/]*|#c[^\\]\n/o]|#c|(#comment[^\\]\n/][^\\]\n/]|#commen[^\\]\n/t][^\\]\n/])[^\\]\n/]*|#comment[^\\]\n/]|#commen[^\\]\n/t]|#commen|#com[^\\]\n/m][^\\]\n/][^\\]\n/]*|#com[^\\]\n/m]|#com|#[^\\]\n/c]([^\\]\n/][^\\]\n/]*|())|\\.ano((n[^\\]\n/]|[^\\]\n/n])[^\\]\n/]*|())|\\.an([^\\]\n/o][^\\]\n/]*|())|(\\.a[^\\]\n/n]|(\\.[^\\]\n/a]|[^\\]\n#./][^\\]\n/])[^\\]\n/])[^\\]\n/]*|\\.a|\\.[^\\]\n/a]|[^\\]\n#./][^\\]\n/]|\\.|[^\\]\n#./]|#";
+          }
+        }
+        uses entry-list;
+      }
+    }
+  }
+}

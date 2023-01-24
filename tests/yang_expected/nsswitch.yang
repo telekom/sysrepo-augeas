@@ -1,0 +1,93 @@
+module nsswitch {
+  yang-version 1.1;
+  namespace "aug:nsswitch";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Nsswitch";
+
+  list nsswitch {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list database-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container database {
+        augex:data-path "database";
+        augex:value-yang-path "database-kw";
+        presence "Config entry.";
+        leaf database-kw {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        list config-entries {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf service {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              augex:data-path "service";
+            }
+            container reaction {
+              augex:data-path "reaction";
+              presence "Config entry.";
+              list status-list {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container status {
+                  augex:data-path "status";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf negate {
+                    type empty;
+                    augex:data-path "negate";
+                  }
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "((([Ss][Uu][Cc][Cc][Ee][Ss][Ss])|([Nn][Oo][Tt][Ff][Oo][Uu][Nn][Dd]))|([Uu][Nn][Aa][Vv][Aa][Ii][Ll]))|([Tt][Rr][Yy][Aa][Gg][Aa][Ii][Nn])";
+                    }
+                  }
+                  leaf action {
+                    mandatory true;
+                    type string {
+                      pattern "(([Rr][Ee][Tt][Uu][Rr][Nn])|([Cc][Oo][Nn][Tt][Ii][Nn][Uu][Ee]))|([Mm][Ee][Rr][Gg][Ee])";
+                    }
+                    augex:data-path "action";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

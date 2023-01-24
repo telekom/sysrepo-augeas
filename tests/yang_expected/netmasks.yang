@@ -1,0 +1,43 @@
+module netmasks {
+  yang-version 1.1;
+  namespace "aug:netmasks";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Netmasks";
+
+  list netmasks {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list network-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf network {
+        mandatory true;
+        type inet:ipv4-address-no-zone;
+        augex:data-path "network";
+      }
+      leaf netmask {
+        mandatory true;
+        type inet:ipv4-address-no-zone;
+        augex:data-path "netmask";
+      }
+    }
+  }
+}

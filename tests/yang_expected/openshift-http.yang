@@ -1,0 +1,158 @@
+module openshift-http {
+  yang-version 1.1;
+  namespace "aug:openshift-http";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "OpenShift_Http";
+
+  grouping perl-section {
+    leaf perl {
+      type string {
+        pattern "[^<]*";
+      }
+      augex:data-path "Perl";
+    }
+  }
+  grouping directive {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf arg {
+          type union {
+            type string {
+              pattern "([^{\"' \t\n]|\\\\.)([^ \t\n]|\\\\.)*[^ \t\n\\\\]|[^{\"' \t\n\\\\]";
+            }
+            type string {
+              pattern "(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\"))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
+            }
+          }
+          augex:data-path "arg";
+        }
+        container arg-wordlist {
+          augex:data-path "wordlist";
+          presence "Config entry.";
+          leaf-list arg {
+            min-elements 1;
+            type string {
+              pattern "(((([^\\\\ '\"},\t\n]|[^ '\"},\t\n]+[^\\\\ '\"},\t\n]))+)|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
+            }
+            ordered-by user;
+            augex:data-path "arg";
+          }
+        }
+      }
+    }
+    leaf arg {
+      type string {
+        pattern "((\")(((([^ \t\"\\\\\n]|[^\"\\\\\n]+[^ \t\"\\\\\n]))|(\\\\(.|\n)))*))(([^ \t\"\\\\\n]|[^\"\\\\\n]+[^ \t\"\\\\\n]))";
+      }
+      augex:data-path "arg";
+    }
+  }
+  list openshift-http {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case perl-section {
+          uses perl-section;
+        }
+        list node-list {
+          key "_r-id";
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          container node {
+            augex:data-path "$$";
+            presence "Config entry.";
+            leaf label {
+              mandatory true;
+              type string {
+                pattern "(?i)[a-z][a-z0-9._-]*";
+                pattern "(?i)perl" {
+                  modifier invert-match;
+                }
+              }
+            }
+            leaf-list arg {
+              type string {
+                pattern "((((([^\\\\ '\"\t\n>]|[^ '\"\t\n>]+[^\\\\ \t\n>])|\\\\\"|\\\\'|\\\\ )+)|([<>=]?=))|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
+              }
+              ordered-by user;
+              augex:data-path "arg";
+            }
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-config-entries {
+                mandatory true;
+                leaf _node-ref {
+                  type leafref {
+                    path "../../../../node-list/_r-id";
+                  }
+                  description
+                    "Implicitly generated leaf to maintain recursive augeas data.";
+                }
+                case perl-section {
+                  uses perl-section;
+                }
+                container directive {
+                  augex:data-path "directive";
+                  augex:value-yang-path "word";
+                  presence "Config entry.";
+                  leaf word {
+                    mandatory true;
+                    type string {
+                      pattern "(?i)[a-z][a-z0-9._-]*";
+                    }
+                  }
+                  uses directive;
+                }
+              }
+            }
+          }
+        }
+        container directive {
+          augex:data-path "directive";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "(?i)[a-z][a-z0-9._-]*";
+            }
+          }
+          uses directive;
+        }
+      }
+    }
+  }
+}

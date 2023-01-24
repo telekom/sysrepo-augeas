@@ -1,0 +1,123 @@
+module aptpreferences {
+  yang-version 1.1;
+  namespace "aug:aptpreferences";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "AptPreferences";
+
+  list aptpreferences {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      list entries {
+        key "_id";
+        min-elements 1;
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        choice ch-entries {
+          mandatory true;
+          leaf explanation {
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+            augex:data-path "Explanation";
+          }
+          leaf package {
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+            augex:data-path "Package";
+          }
+          leaf pin-priority {
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+            augex:data-path "Pin-Priority";
+          }
+          container pin {
+            augex:data-path "Pin";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf value {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "release";
+                }
+                type string {
+                  pattern "version";
+                }
+                type string {
+                  pattern "origin";
+                }
+              }
+            }
+            choice ch-pin {
+              mandatory true;
+              list pin-keys-list {
+                key "_id";
+                min-elements 1;
+                when "../value='release'";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container pin-keys {
+                  augex:data-path "$$";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "[aclnov]";
+                    }
+                  }
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[^, \t\n][^,\n]*[^, \t\n]|[^, \t\n]";
+                    }
+                  }
+                }
+              }
+              leaf version {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "version";
+                when "../value='version'";
+              }
+              leaf origin {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "origin";
+                when "../value='origin'";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

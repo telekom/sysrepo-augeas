@@ -1,0 +1,51 @@
+module clamav {
+  yang-version 1.1;
+  namespace "aug:clamav";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Clamav";
+
+  list clamav {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf example {
+          type empty;
+          augex:data-path "Example";
+        }
+        container clamd-entry {
+          augex:data-path "$$";
+          augex:value-yang-path "space-in";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z][A-Za-z0-9]+";
+            }
+          }
+          leaf space-in {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+            }
+          }
+        }
+      }
+    }
+  }
+}

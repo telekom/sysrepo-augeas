@@ -1,0 +1,58 @@
+module gshadow {
+  yang-version 1.1;
+  namespace "aug:gshadow";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Gshadow";
+
+  list gshadow {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf password {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.!*-]*";
+          }
+          augex:data-path "password";
+        }
+        leaf-list admin {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "admin";
+        }
+        leaf-list member {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "member";
+        }
+      }
+    }
+  }
+}

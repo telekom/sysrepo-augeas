@@ -1,0 +1,163 @@
+module lokkit {
+  yang-version 1.1;
+  namespace "aug:lokkit";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Lokkit";
+
+  list lokkit {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf selinux {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "selinux";
+        }
+        leaf selinuxtype {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "selinuxtype";
+        }
+        leaf addmodule {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "addmodule";
+        }
+        leaf removemodule {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "removemodule";
+        }
+        leaf block-icmp {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "block-icmp";
+        }
+        leaf enabled {
+          type empty;
+          augex:data-path "enabled";
+        }
+        leaf disabled {
+          type empty;
+          augex:data-path "disabled";
+        }
+        leaf service {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "service";
+        }
+        container port {
+          augex:data-path "port";
+          presence "Config entry.";
+          leaf start {
+            mandatory true;
+            type uint64;
+            augex:data-path "start";
+          }
+          leaf end {
+            type uint64;
+            augex:data-path "end";
+          }
+          leaf protocol {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+            }
+            augex:data-path "protocol";
+          }
+        }
+        leaf trust {
+          type string {
+            pattern "[a-zA-Z0-9_?.+:!-]+";
+          }
+          augex:data-path "trust";
+        }
+        leaf masq {
+          type string {
+            pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+          }
+          augex:data-path "masq";
+        }
+        container custom-rules {
+          augex:data-path "custom-rules";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf type {
+            type string {
+              pattern "ipv4|ipv6";
+            }
+            augex:data-path "type";
+          }
+          leaf table {
+            type string {
+              pattern "mangle|nat|filter";
+            }
+            augex:data-path "table";
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n:=][^ \t\n:]*";
+            }
+          }
+        }
+        container forward-port {
+          augex:data-path "forward-port";
+          presence "Config entry.";
+          leaf if {
+            type string {
+              pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+            }
+            augex:data-path "if";
+          }
+          leaf port {
+            type string {
+              pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+            }
+            augex:data-path "port";
+          }
+          leaf proto {
+            type string {
+              pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+            }
+            augex:data-path "proto";
+          }
+          leaf toport {
+            type string {
+              pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
+            }
+            augex:data-path "toport";
+          }
+          leaf toaddr {
+            type string {
+              pattern "[0-9.]+";
+            }
+            augex:data-path "toaddr";
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+module jaas {
+  yang-version 1.1;
+  namespace "aug:jaas";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Jaas";
+
+  list jaas {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list login-module-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container login-module {
+        augex:data-path "login";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        list content {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container login-module-class {
+            augex:data-path "loginModuleClass";
+            augex:value-yang-path "word";
+            presence "Config entry.";
+            leaf word {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+            }
+            container flag {
+              augex:data-path "flag";
+              augex:value-yang-path "word";
+              presence "Config entry.";
+              leaf word {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+              }
+              list module-option-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container module-option {
+                  augex:data-path "$$";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf word {
+                    mandatory true;
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                  }
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "(('[^\n']*')|(\"[^\n\"]*\"))|((true|false))";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

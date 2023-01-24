@@ -1,0 +1,951 @@
+module krb5 {
+  yang-version 1.1;
+  namespace "aug:krb5";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Krb5";
+
+  grouping name-list {
+    list name-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container name {
+        augex:data-path "$$";
+        augex:value-yang-path "value-br";
+        presence "Config entry.";
+        leaf name {
+          mandatory true;
+          type string {
+            pattern "includedi((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|included([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|(i[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|i|[.0-9A-Z_a-hj-z-]";
+          }
+        }
+        leaf value-br {
+          mandatory true;
+          type string {
+            pattern "[^;# \t\n{}]+";
+          }
+        }
+      }
+    }
+  }
+  grouping gr {
+    container node {
+      augex:data-path "$$";
+      augex:value-yang-path "value-br";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "applicatio((n[.0-9A-Z_a-z-]|[.0-9A-Z_a-mo-z-])[.0-9A-Z_a-z-]*|())|applicati([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|applicat([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|applica([.0-9A-Z_a-su-z-][.0-9A-Z_a-z-]*|())|applic([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|appli([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|appl([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|app([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|ap([.0-9A-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|included[.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|included[.0-9A-Z_a-hj-z-]|included|include[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|include[.0-9A-Z_a-ce-z-]|includ[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|includ[.0-9A-Z_a-df-z-]|includ|(includedir[.0-9A-Z_a-z-][.0-9A-Z_a-z-]|includedi[.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|includedir[.0-9A-Z_a-z-]|includedi[.0-9A-Z_a-qs-z-]|includedi|inclu[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|inclu[.0-9A-Z_a-ce-z-]|inclu|incl[.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|incl[.0-9A-Z_a-tv-z-]|incl|inc[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|inc[.0-9A-Z_a-km-z-]|inc|in[.0-9A-Z_abd-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|in[.0-9A-Z_abd-z-]|in|i[.0-9A-Z_a-mo-z-]([.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|())|real((m[.0-9A-Z_a-z-]|[.0-9A-Z_a-ln-z-])[.0-9A-Z_a-z-]*|())|rea([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|(re[.0-9A-Z_b-z-]|(r[.0-9A-Z_a-df-z-]|a[.0-9A-Z_a-oq-z-]|[.0-9A-Z_b-hj-qs-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|re|r[.0-9A-Z_a-df-z-]|a[.0-9A-Z_a-oq-z-]|[.0-9A-Z_b-hj-qs-z-][.0-9A-Z_a-z-]|i|a|[.0-9A-Z_b-hj-qs-z-]|r";
+        }
+      }
+      leaf value-br {
+        mandatory true;
+        type string {
+          pattern "[^;# \t\n{}]+";
+        }
+      }
+    }
+  }
+  grouping gr-list {
+    list gr-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses gr;
+    }
+  }
+  grouping name-list2 {
+    list name-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container name {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf name {
+          mandatory true;
+          type string {
+            pattern "includedi((r[.0-9A-Z_a-z-]|[.0-9A-Z_a-qs-z-])[.0-9A-Z_a-z-]*|())|included([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|include[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|includ([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|inclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|incl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|inc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|in([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|(i[.0-9A-Z_a-mo-z-]|[.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|i|[.0-9A-Z_a-hj-z-]";
+          }
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^;# \t\n]+";
+          }
+        }
+      }
+    }
+  }
+  grouping ch-file {
+    choice ch-file {
+      mandatory true;
+      leaf file {
+        type string {
+          pattern "[^;# \t\n]+";
+        }
+        augex:data-path "file";
+      }
+      leaf stderr {
+        type empty;
+        augex:data-path "stderr";
+      }
+      leaf console {
+        type empty;
+        augex:data-path "console";
+      }
+      leaf device {
+        type string {
+          pattern "[^;# \t\n]+";
+        }
+        augex:data-path "device";
+      }
+      container syslog {
+        augex:data-path "syslog";
+        presence "Config entry.";
+        leaf severity {
+          type string {
+            pattern "[A-Za-z0-9]+";
+          }
+          augex:data-path "severity";
+        }
+        leaf facility {
+          type string {
+            pattern "[A-Za-z0-9]+";
+          }
+          augex:data-path "facility";
+        }
+      }
+    }
+  }
+  grouping gr2 {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container host {
+          augex:data-path "host";
+          presence "Config entry.";
+          uses name-list;
+        }
+        container plain {
+          augex:data-path "plain";
+          presence "Config entry.";
+          uses name-list;
+        }
+      }
+    }
+  }
+  list krb5 {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container libdefaults {
+          augex:data-path "libdefaults";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container case {
+                presence "Config entry.";
+                container node {
+                  augex:data-path "$$";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn][Cc][Tt][Yy][Pp][Ee](([Ss][.0-9A-Z_a-z-]|[.0-9A-RT-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn][Cc][Tt][Yy][Pp]([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn][Cc][Tt][Yy]([.0-9A-OQ-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn][Cc][Tt]([.0-9A-XZ_a-xz-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn][Cc]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee][Nn]([.0-9ABD-Z_abd-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_[Ee]([.0-9A-MO-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]_([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg][Ss]([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn][Cc][Tt][Yy][Pp][Ee](([Ss][.0-9A-Z_a-z-]|[.0-9A-RT-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn][Cc][Tt][Yy][Pp]([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn][Cc][Tt][Yy]([.0-9A-OQ-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn][Cc][Tt]([.0-9A-XZ_a-xz-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn][Cc]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee][Nn]([.0-9ABD-Z_abd-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_[Ee]([.0-9A-MO-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]_([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk][Tt]([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Kk]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt][Gg]([.0-9A-RT-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_[Tt]([.0-9A-FH-JL-Z_a-fh-jl-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]_([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu][Ll]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa][Uu]([.0-9A-KM-Z_a-km-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff][Aa]([.0-9A-TV-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee][Ff]([.0-9B-Z_b-z-][.0-9A-Z_a-z-]*|())|[Dd][Ee]([.0-9A-EG-Z_a-eg-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn][Cc][Tt][Yy][Pp][Ee](([Ss][.0-9A-Z_a-z-]|[.0-9A-RT-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn][Cc][Tt][Yy][Pp]([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn][Cc][Tt][Yy]([.0-9A-OQ-Z_a-oq-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn][Cc][Tt]([.0-9A-XZ_a-xz-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn][Cc]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee][Nn]([.0-9ABD-Z_abd-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_[Ee]([.0-9A-MO-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]_([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee][Dd]([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt][Ee]([.0-9A-CE-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt][Tt]([.0-9A-DF-Z_a-df-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii][Tt]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm][Ii]([.0-9A-SU-Z_a-su-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr][Mm]([.0-9A-HJ-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee][Rr]([.0-9A-LN-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|[Pp][Ee]([.0-9A-QS-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|includ[.0-9A-Z_a-df-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|includ[.0-9A-Z_a-df-z-]|includ|i[.0-9A-Z_a-mo-z-]([.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|())|inclu[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|inclu[.0-9A-Z_a-ce-z-]|inclu|incl[.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|incl[.0-9A-Z_a-tv-z-]|incl|include[.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|include[.0-9A-Z_a-ce-z-]|inc[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|inc[.0-9A-Z_a-km-z-]|inc|in[.0-9A-Z_abd-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|in[.0-9A-Z_abd-z-]|in|(includedir[.0-9A-Z_a-z-][.0-9A-Z_a-z-]|includedi[.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|includedir[.0-9A-Z_a-z-]|includedi[.0-9A-Z_a-qs-z-]|includedi|included[.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-][.0-9A-Z_a-z-]*|included[.0-9A-Z_a-hj-z-]|included|v4_name_conver((t[.0-9A-Z_a-z-]|[.0-9A-Z_a-su-z-])[.0-9A-Z_a-z-]*|())|v4_name_conve([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|v4_name_conv([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|v4_name_con([.0-9A-Z_a-uw-z-][.0-9A-Z_a-z-]*|())|v4_name_co([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|v4_name_c([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|v4_name_([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|v4_name([.0-9A-Za-z-][.0-9A-Z_a-z-]*|())|v4_nam([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|v4_na([.0-9A-Z_a-ln-z-][.0-9A-Z_a-z-]*|())|v4_n([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|v4_([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|(v4[.0-9A-Za-z-]|(v[.0-35-9A-Z_a-z-]|[Pp][.0-9A-DF-Z_a-df-z-]|[Dd][.0-9A-DF-Z_a-df-z-]|[.0-9A-CE-OQ-Z_a-ce-hj-oq-uw-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|v4|v[.0-35-9A-Z_a-z-]|[Pp][.0-9A-DF-Z_a-df-z-]|[Dd][.0-9A-DF-Z_a-df-z-]|[.0-9A-CE-OQ-Z_a-ce-hj-oq-uw-z-][.0-9A-Z_a-z-]|v|[Dd]|[Pp]|[.0-9A-CE-OQ-Z_a-ce-hj-oq-uw-z-]|i";
+                    }
+                  }
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[^;# \t\n]+";
+                    }
+                  }
+                }
+              }
+              container case2 {
+                presence "Config entry.";
+                leaf-list permitted-enctypes {
+                  min-elements 1;
+                  type string {
+                    pattern "[a-zA-Z0-9-]{3,}";
+                  }
+                  ordered-by user;
+                  augex:data-path "permitted_enctypes";
+                }
+                leaf eol {
+                  mandatory true;
+                  type empty;
+                  augex:data-path "#eol";
+                }
+              }
+              container case3 {
+                presence "Config entry.";
+                leaf-list default-tgs-enctypes {
+                  min-elements 1;
+                  type string {
+                    pattern "[a-zA-Z0-9-]{3,}";
+                  }
+                  ordered-by user;
+                  augex:data-path "default_tgs_enctypes";
+                }
+                leaf eol {
+                  mandatory true;
+                  type empty;
+                  augex:data-path "#eol";
+                }
+              }
+              container case4 {
+                presence "Config entry.";
+                leaf-list default-tkt-enctypes {
+                  min-elements 1;
+                  type string {
+                    pattern "[a-zA-Z0-9-]{3,}";
+                  }
+                  ordered-by user;
+                  augex:data-path "default_tkt_enctypes";
+                }
+                leaf eol {
+                  mandatory true;
+                  type empty;
+                  augex:data-path "#eol";
+                }
+              }
+              container case5 {
+                presence "Config entry.";
+                container v4-name-convert {
+                  augex:data-path "v4_name_convert";
+                  presence "Config entry.";
+                  uses gr2;
+                }
+              }
+            }
+          }
+        }
+        container login {
+          augex:data-path "login";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container node {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "(krb[45]_get_tickets|krb4_convert|krb_run_aklog)|(aklog_path|accept_passwd)";
+                }
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+              }
+            }
+          }
+        }
+        container appdefaults {
+          augex:data-path "appdefaults";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              case gr {
+                uses gr;
+              }
+              container realm {
+                augex:data-path "realm";
+                augex:value-yang-path "realm";
+                presence "Config entry.";
+                leaf realm {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Z0-9][.a-zA-Z0-9-]*";
+                  }
+                }
+                uses gr-list;
+              }
+              container application {
+                augex:data-path "application";
+                augex:value-yang-path "app";
+                presence "Config entry.";
+                leaf app {
+                  mandatory true;
+                  type string {
+                    pattern "[a-z][a-zA-Z0-9_]*";
+                  }
+                }
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    container realm {
+                      augex:data-path "realm";
+                      augex:value-yang-path "realm";
+                      presence "Config entry.";
+                      leaf realm {
+                        mandatory true;
+                        type string {
+                          pattern "[A-Z0-9][.a-zA-Z0-9-]*";
+                        }
+                      }
+                      uses gr-list;
+                    }
+                    case gr {
+                      uses gr;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container realms {
+          augex:data-path "realms";
+          presence "Config entry.";
+          list realm-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container realm {
+              augex:data-path "realm";
+              augex:value-yang-path "realm-anycase";
+              presence "Config entry.";
+              leaf realm-anycase {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9][.a-zA-Z0-9-]*";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf kdc {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "kdc";
+                  }
+                  leaf admin-server {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "admin_server";
+                  }
+                  leaf database-module {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "database_module";
+                  }
+                  leaf default-domain {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "default_domain";
+                  }
+                  leaf v4-realm {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "v4_realm";
+                  }
+                  leaf auth-to-local {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "auth_to_local";
+                  }
+                  leaf auth-to-local-names {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "auth_to_local_names";
+                  }
+                  leaf master-kdc {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "master_kdc";
+                  }
+                  leaf kpasswd-server {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "kpasswd_server";
+                  }
+                  leaf admin-server2 {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "admin_server";
+                  }
+                  leaf ticket-lifetime {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "ticket_lifetime";
+                  }
+                  leaf pkinit-anchors {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "pkinit_anchors";
+                  }
+                  leaf pkinit-identities {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "pkinit_identities";
+                  }
+                  leaf pkinit-identity {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "pkinit_identity";
+                  }
+                  leaf pkinit-pool {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "pkinit_pool";
+                  }
+                  leaf krb524-server {
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                    augex:data-path "krb524_server";
+                  }
+                  container v4-instance-convert {
+                    augex:data-path "v4_instance_convert";
+                    presence "Config entry.";
+                    uses name-list;
+                  }
+                  container v4-name-convert {
+                    augex:data-path "v4_name_convert";
+                    presence "Config entry.";
+                    uses gr2;
+                  }
+                }
+              }
+            }
+          }
+        }
+        container domain-realm {
+          augex:data-path "domain_realm";
+          presence "Config entry.";
+          uses name-list2;
+        }
+        container logging {
+          augex:data-path "logging";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container kdc {
+                augex:data-path "kdc";
+                presence "Config entry.";
+                uses ch-file;
+              }
+              container admin-server {
+                augex:data-path "admin_server";
+                presence "Config entry.";
+                uses ch-file;
+              }
+              container default {
+                augex:data-path "default";
+                presence "Config entry.";
+                uses ch-file;
+              }
+            }
+          }
+        }
+        container capaths {
+          augex:data-path "capaths";
+          presence "Config entry.";
+          list realm-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container realm {
+              augex:data-path "$$";
+              presence "Config entry.";
+              leaf realm {
+                mandatory true;
+                type string {
+                  pattern "[A-Z0-9][.a-zA-Z0-9-]*";
+                }
+              }
+              list realm-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container realm {
+                  augex:data-path "$$";
+                  augex:value-yang-path "value-br";
+                  presence "Config entry.";
+                  leaf realm {
+                    mandatory true;
+                    type string {
+                      pattern "[A-Z0-9][.a-zA-Z0-9-]*";
+                    }
+                  }
+                  leaf value-br {
+                    mandatory true;
+                    type string {
+                      pattern "[^;# \t\n{}]+";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container dbdefaults {
+          augex:data-path "dbdefaults";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf database-module {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "database_module";
+              }
+              leaf ldap-kerberos-container-dn {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_kerberos_container_dn";
+              }
+              leaf ldap-kdc-dn {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_kdc_dn";
+              }
+              leaf ldap-kadmind-dn {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_kadmind_dn";
+              }
+              leaf ldap-service-password-file {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_service_password_file";
+              }
+              leaf ldap-servers {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_servers";
+              }
+              leaf ldap-conns-per-server {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "ldap_conns_per_server";
+              }
+            }
+          }
+        }
+        container dbmodules {
+          augex:data-path "dbmodules";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf db-module-dir {
+                type string {
+                  pattern "[^;# \t\n]+";
+                }
+                augex:data-path "db_module_dir";
+              }
+              container realm {
+                augex:data-path "realm";
+                augex:value-yang-path "realm";
+                presence "Config entry.";
+                leaf realm {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Z0-9][.a-zA-Z0-9-]*";
+                  }
+                }
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf database-name {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "database_name";
+                    }
+                    leaf db-library {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "db_library";
+                    }
+                    leaf disable-last-success {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "disable_last_success";
+                    }
+                    leaf disable-lockout {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "disable_lockout";
+                    }
+                    leaf ldap-conns-per-server {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_conns_per_server";
+                    }
+                    leaf ldap-kdc-dn {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kdc_dn";
+                    }
+                    leaf ldap-kadmind-dn {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kadmind_dn";
+                    }
+                    leaf ldap-kdc-sasl-mech {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kdc_sasl_mech";
+                    }
+                    leaf ldap-kadmind-sasl-mech {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kadmind_sasl_mech";
+                    }
+                    leaf ldap-kdc-sasl-authcid {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kdc_sasl_authcid";
+                    }
+                    leaf ldap-kadmind-sasl-authcid {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kadmind_sasl_authcid";
+                    }
+                    leaf ldap-kdc-sasl-authzid {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kdc_sasl_authzid";
+                    }
+                    leaf ldap-kadmind-sasl-authzid {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kadmind_sasl_authzid";
+                    }
+                    leaf ldap-kdc-sasl-realm {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kdc_sasl_realm";
+                    }
+                    leaf ldap-kadmind-sasl-realm {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kadmind_sasl_realm";
+                    }
+                    leaf ldap-kerberos-container-dn {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_kerberos_container_dn";
+                    }
+                    leaf ldap-servers {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_servers";
+                    }
+                    leaf ldap-service-password-file {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "ldap_service_password_file";
+                    }
+                    leaf mapsize {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "mapsize";
+                    }
+                    leaf max-readers {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "max_readers";
+                    }
+                    leaf nosync {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "nosync";
+                    }
+                    leaf unlockiter {
+                      type string {
+                        pattern "[^;# \t\n{}]+";
+                      }
+                      augex:data-path "unlockiter";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container instance-mapping {
+          augex:data-path "instancemapping";
+          presence "Config entry.";
+          list name-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container name {
+              augex:data-path "$$";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[.a-zA-Z0-9_-]+";
+                  pattern "include(dir)?" {
+                    modifier invert-match;
+                  }
+                }
+              }
+              list mapping-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container mapping {
+                  augex:data-path "mapping";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[a-zA-Z0-9/*]+";
+                    }
+                  }
+                  leaf value2 {
+                    mandatory true;
+                    type string {
+                      pattern "[^;# \t\n{}]*";
+                    }
+                    augex:data-path "value";
+                  }
+                }
+              }
+            }
+          }
+        }
+        container kdc {
+          augex:data-path "kdc";
+          presence "Config entry.";
+          list profile-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf profile {
+              type string {
+                pattern "[^;# \t\n]+";
+              }
+              augex:data-path "profile";
+            }
+          }
+        }
+        container pam {
+          augex:data-path "pam";
+          presence "Config entry.";
+          uses name-list2;
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include";
+        }
+        leaf includedir {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "includedir";
+        }
+        container plugins {
+          augex:data-path "plugins";
+          presence "Config entry.";
+          list name-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container name {
+              augex:data-path "$$";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[.a-zA-Z0-9_-]+";
+                  pattern "include(dir)?" {
+                    modifier invert-match;
+                  }
+                }
+              }
+              uses name-list;
+            }
+          }
+        }
+      }
+    }
+  }
+}

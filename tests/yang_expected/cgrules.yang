@@ -1,0 +1,83 @@
+module cgrules {
+  yang-version 1.1;
+  namespace "aug:cgrules";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Cgrules";
+
+  grouping ctrl-key-list {
+    list ctrl-key-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container ctrl-key {
+        augex:data-path "$$";
+        augex:value-yang-path "ctrl-value";
+        presence "Config entry.";
+        leaf ctrl-key {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n/]+";
+          }
+        }
+        leaf ctrl-value {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n]+";
+          }
+        }
+      }
+    }
+  }
+  list cgrules {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container user-record {
+          augex:data-path "user";
+          augex:value-yang-path "name";
+          presence "Config entry.";
+          leaf name {
+            mandatory true;
+            type string {
+              pattern "[^@%# \t\n][^ \t\n]*";
+            }
+          }
+          uses ctrl-key-list;
+        }
+        container group-record {
+          augex:data-path "group";
+          augex:value-yang-path "name";
+          presence "Config entry.";
+          leaf name {
+            mandatory true;
+            type string {
+              pattern "[^@%# \t\n][^ \t\n]*";
+            }
+          }
+          uses ctrl-key-list;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,120 @@
+module automaster {
+  yang-version 1.1;
+  namespace "aug:automaster";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Automaster";
+
+  list automaster {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list map-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "mount";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf mount {
+        mandatory true;
+        type union {
+          type string {
+            pattern "[^+ \t\n#]+";
+          }
+          type string {
+            pattern "\\+";
+          }
+        }
+      }
+      leaf type {
+        type union {
+          type string {
+            pattern "lda((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|ld([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|(l[.0-9A-Z_a-ce-z-]|[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|l|[.0-9A-Z_a-km-z-]";
+          }
+          type string {
+            pattern "ldap";
+          }
+        }
+        augex:data-path "type";
+      }
+      choice ch-type {
+        mandatory true;
+        container case {
+          presence "Config entry.";
+          when "re-match(../type, 'lda((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|ld([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|(l[.0-9A-Z_a-ce-z-]|[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|l|[.0-9A-Z_a-km-z-]')";
+          leaf format {
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "format";
+          }
+          leaf map {
+            mandatory true;
+            type string {
+              pattern "[^: \t\n]+";
+            }
+            augex:data-path "map";
+          }
+        }
+        container case2 {
+          presence "Config entry.";
+          when "../type='ldap'";
+          leaf format {
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "format";
+          }
+          leaf host {
+            type string {
+              pattern "[^:# \n\t]+";
+            }
+            augex:data-path "host";
+          }
+          leaf map {
+            mandatory true;
+            type string {
+              pattern "[^:# \n\t]+";
+            }
+            augex:data-path "map";
+          }
+        }
+      }
+      list opt-list {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        container opt {
+          augex:data-path "opt";
+          augex:value-yang-path "optlabel";
+          presence "Config entry.";
+          leaf optlabel {
+            mandatory true;
+            type string {
+              pattern "[^,#= \n\t]+";
+            }
+          }
+          leaf value {
+            type string {
+              pattern "[^,# \n\t]+";
+            }
+            augex:data-path "value";
+          }
+        }
+      }
+    }
+  }
+}

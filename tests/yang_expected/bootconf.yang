@@ -1,0 +1,193 @@
+module bootconf {
+  yang-version 1.1;
+  namespace "aug:bootconf";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "BootConf";
+
+  list bootconf {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container boot {
+          augex:data-path "boot";
+          presence "Config entry.";
+          leaf image {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "image";
+          }
+          leaf arg {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "arg";
+          }
+        }
+        leaf echo {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "echo";
+        }
+        leaf ls {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "ls";
+        }
+        container machine {
+          augex:data-path "machine";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf comaddr {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "comaddr";
+              }
+              leaf memory {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "memory";
+              }
+              leaf diskinfo {
+                type empty;
+                augex:data-path "diskinfo";
+              }
+              leaf regs {
+                type empty;
+                augex:data-path "regs";
+              }
+            }
+          }
+        }
+        container set {
+          augex:data-path "set";
+          presence "Config entry.";
+          choice ch-set {
+            mandatory true;
+            leaf addr {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "addr";
+            }
+            leaf debug {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "debug";
+            }
+            leaf device {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "device";
+            }
+            leaf howto {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "howto";
+            }
+            leaf image {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "image";
+            }
+            leaf timeout {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "timeout";
+            }
+            leaf tty {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+                }
+              }
+              augex:data-path "tty";
+            }
+          }
+        }
+        container stty {
+          augex:data-path "stty";
+          presence "Config entry.";
+          leaf device {
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "device";
+          }
+          leaf speed {
+            type uint64;
+            augex:data-path "speed";
+          }
+        }
+        leaf help {
+          type empty;
+          augex:data-path "help";
+        }
+        leaf time {
+          type empty;
+          augex:data-path "time";
+        }
+        leaf reboot {
+          type empty;
+          augex:data-path "reboot";
+        }
+      }
+    }
+  }
+}

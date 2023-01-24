@@ -1,0 +1,945 @@
+module keepalived {
+  yang-version 1.1;
+  namespace "aug:keepalived";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Keepalived";
+
+  grouping static-ipaddress-field-list {
+    list static-ipaddress-field-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container static-ipaddress-field {
+        augex:data-path "ipaddr";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[0-9.-]+";
+          }
+        }
+        leaf prefixlen {
+          type int64;
+          augex:data-path "prefixlen";
+        }
+        leaf dev {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "dev";
+        }
+      }
+    }
+  }
+  grouping word-list {
+    list word-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container word {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+      }
+    }
+  }
+  grouping gr {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf connect-timeout {
+          type int64;
+          augex:data-path "connect_timeout";
+        }
+        leaf connect-port {
+          type int64;
+          augex:data-path "connect_port";
+        }
+        leaf nb-get-retry {
+          type int64;
+          augex:data-path "nb_get_retry";
+        }
+        leaf delay-before-retry {
+          type int64;
+          augex:data-path "delay_before_retry";
+        }
+        container url {
+          augex:data-path "url";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf digest {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "digest";
+              }
+              leaf status-code {
+                type int64;
+                augex:data-path "status_code";
+              }
+              leaf path {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "path";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  list keepalived {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container global-defs {
+          augex:data-path "global_defs";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container notification-email {
+                augex:data-path "notification_email";
+                presence "Config entry.";
+                list email-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  leaf email {
+                    type string {
+                      pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "email";
+                  }
+                }
+              }
+              leaf notification-email-from {
+                type string {
+                  pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "notification_email_from";
+              }
+              leaf smtp-server {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "smtp_server";
+              }
+              leaf lvs-id {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "lvs_id";
+              }
+              leaf router-id {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "router_id";
+              }
+              leaf vrrp-mcast-group4 {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "vrrp_mcast_group4";
+              }
+              leaf smtp-connect-timeout {
+                type int64;
+                augex:data-path "smtp_connect_timeout";
+              }
+              leaf vrrp-mcast-group6 {
+                type inet:ipv6-address-no-zone;
+                augex:data-path "vrrp_mcast_group6";
+              }
+            }
+          }
+        }
+        container static-ipaddress {
+          augex:data-path "static_ipaddress";
+          presence "Config entry.";
+          uses static-ipaddress-field-list;
+        }
+        container static-routes {
+          augex:data-path "static_routes";
+          presence "Config entry.";
+          list static-routes-field-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container static-routes-field {
+              augex:data-path "route";
+              presence "Config entry.";
+              leaf src {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "src";
+              }
+              leaf to {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "to";
+              }
+              leaf dev {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "dev";
+              }
+            }
+          }
+        }
+        container vrrp-sync-group {
+          augex:data-path "vrrp_sync_group";
+          augex:value-yang-path "sto-word";
+          presence "Config entry.";
+          leaf sto-word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf notify-master {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_master";
+              }
+              leaf notify-backup {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_backup";
+              }
+              leaf notify-fault {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_fault";
+              }
+              leaf notify-stop {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_stop";
+              }
+              leaf notify-deleted {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_deleted";
+              }
+              leaf notify {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify";
+              }
+              leaf smtp-alert {
+                type empty;
+                augex:data-path "smtp_alert";
+              }
+              container group {
+                augex:data-path "group";
+                presence "Config entry.";
+                uses word-list;
+              }
+            }
+          }
+        }
+        container vrrp-instance {
+          augex:data-path "vrrp_instance";
+          augex:value-yang-path "sto-word";
+          presence "Config entry.";
+          leaf sto-word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf state {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "state";
+              }
+              leaf interface {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "interface";
+              }
+              leaf lvs-sync-daemon-interface {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "lvs_sync_daemon_interface";
+              }
+              leaf virtual-router-id {
+                type int64;
+                augex:data-path "virtual_router_id";
+              }
+              leaf priority {
+                type int64;
+                augex:data-path "priority";
+              }
+              leaf advert-int {
+                type int64;
+                augex:data-path "advert_int";
+              }
+              leaf garp-master-delay {
+                type int64;
+                augex:data-path "garp_master_delay";
+              }
+              leaf garp-master-repeat {
+                type int64;
+                augex:data-path "garp_master_repeat";
+              }
+              leaf garp-master-refresh {
+                type int64;
+                augex:data-path "garp_master_refresh";
+              }
+              leaf garp-master-refresh-repeat {
+                type int64;
+                augex:data-path "garp_master_refresh_repeat";
+              }
+              leaf notify-master {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_master";
+              }
+              leaf notify-backup {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_backup";
+              }
+              leaf notify-fault {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_fault";
+              }
+              leaf notify-stop {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_stop";
+              }
+              leaf notify-deleted {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify_deleted";
+              }
+              leaf notify {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "notify";
+              }
+              leaf mcast-src-ip {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "mcast_src_ip";
+              }
+              leaf unicast-src-ip {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "unicast_src_ip";
+              }
+              leaf smtp-alert {
+                type empty;
+                augex:data-path "smtp_alert";
+              }
+              leaf nopreempt {
+                type empty;
+                augex:data-path "nopreempt";
+              }
+              leaf ha-suspend {
+                type empty;
+                augex:data-path "ha_suspend";
+              }
+              leaf debug {
+                type empty;
+                augex:data-path "debug";
+              }
+              leaf use-vmac {
+                type empty;
+                augex:data-path "use_vmac";
+              }
+              leaf vmac-xmit-base {
+                type empty;
+                augex:data-path "vmac_xmit_base";
+              }
+              leaf native-ipv6 {
+                type empty;
+                augex:data-path "native_ipv6";
+              }
+              leaf dont-track-primary {
+                type empty;
+                augex:data-path "dont_track_primary";
+              }
+              leaf preempt-delay {
+                type empty;
+                augex:data-path "preempt_delay";
+              }
+              container authentication {
+                augex:data-path "authentication";
+                presence "Config entry.";
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf auth-type {
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                      }
+                      augex:data-path "auth_type";
+                    }
+                    leaf auth-pass {
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                      }
+                      augex:data-path "auth_pass";
+                    }
+                  }
+                }
+              }
+              container virtual-ipaddress {
+                augex:data-path "virtual_ipaddress";
+                presence "Config entry.";
+                uses static-ipaddress-field-list;
+              }
+              container track-interface {
+                augex:data-path "track_interface";
+                presence "Config entry.";
+                uses word-list;
+              }
+              container track-script {
+                augex:data-path "track_script";
+                presence "Config entry.";
+                uses word-list;
+              }
+              container unicast-peer {
+                augex:data-path "unicast_peer";
+                presence "Config entry.";
+                uses static-ipaddress-field-list;
+              }
+            }
+          }
+        }
+        container vrrp-script {
+          augex:data-path "vrrp_script";
+          augex:value-yang-path "sto-word";
+          presence "Config entry.";
+          leaf sto-word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf script {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "script";
+              }
+              leaf interval {
+                type int64;
+                augex:data-path "interval";
+              }
+              leaf weight {
+                type int64;
+                augex:data-path "weight";
+              }
+              leaf fall {
+                type int64;
+                augex:data-path "fall";
+              }
+              leaf raise {
+                type int64;
+                augex:data-path "raise";
+              }
+            }
+          }
+        }
+        container virtual-server {
+          augex:data-path "virtual_server";
+          presence "Config entry.";
+          leaf ip {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "ip";
+          }
+          leaf port {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "port";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf delay-loop {
+                type int64;
+                augex:data-path "delay_loop";
+              }
+              leaf persistence-timeout {
+                type int64;
+                augex:data-path "persistence_timeout";
+              }
+              leaf quorum {
+                type int64;
+                augex:data-path "quorum";
+              }
+              leaf hysteresis {
+                type int64;
+                augex:data-path "hysteresis";
+              }
+              leaf lb-algo {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "lb_algo";
+              }
+              leaf lb-kind {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "lb_kind";
+              }
+              leaf nat-mask {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "nat_mask";
+              }
+              leaf protocol {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "protocol";
+              }
+              leaf persistence-granularity {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "persistence_granularity";
+              }
+              leaf virtualhost {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "virtualhost";
+              }
+              leaf ops {
+                type empty;
+                augex:data-path "ops";
+              }
+              leaf ha-suspend {
+                type empty;
+                augex:data-path "ha_suspend";
+              }
+              leaf alpha {
+                type empty;
+                augex:data-path "alpha";
+              }
+              leaf omega {
+                type empty;
+                augex:data-path "omega";
+              }
+              leaf quorum-up {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "quorum_up";
+              }
+              leaf quorum-down {
+                type string {
+                  pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                }
+                augex:data-path "quorum_down";
+              }
+              container sorry-server {
+                augex:data-path "sorry_server";
+                presence "Config entry.";
+                leaf ip {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "ip";
+                }
+                leaf port {
+                  mandatory true;
+                  type int64;
+                  augex:data-path "port";
+                }
+              }
+              container real-server {
+                augex:data-path "real_server";
+                presence "Config entry.";
+                leaf ip {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "ip";
+                }
+                leaf port {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "port";
+                }
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf weight {
+                      type int64;
+                      augex:data-path "weight";
+                    }
+                    leaf inhibit-on-failure {
+                      type empty;
+                      augex:data-path "inhibit_on_failure";
+                    }
+                    leaf notify-up {
+                      type string {
+                        pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                      }
+                      augex:data-path "notify_up";
+                    }
+                    leaf notify-down {
+                      type string {
+                        pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                      }
+                      augex:data-path "notify_down";
+                    }
+                    container tcp-check {
+                      augex:data-path "TCP_CHECK";
+                      presence "Config entry.";
+                      list config-entries {
+                        key "_id";
+                        ordered-by user;
+                        leaf _id {
+                          type uint64;
+                          description
+                            "Implicitly generated list key to maintain the order of the augeas data.";
+                        }
+                        choice ch-config-entries {
+                          mandatory true;
+                          leaf bindto {
+                            type string {
+                              pattern "[A-Za-z0-9_.-]+";
+                            }
+                            augex:data-path "bindto";
+                          }
+                          leaf connect-timeout {
+                            type int64;
+                            augex:data-path "connect_timeout";
+                          }
+                          leaf connect-port {
+                            type int64;
+                            augex:data-path "connect_port";
+                          }
+                        }
+                      }
+                    }
+                    container misc-check {
+                      augex:data-path "MISC_CHECK";
+                      presence "Config entry.";
+                      list config-entries {
+                        key "_id";
+                        ordered-by user;
+                        leaf _id {
+                          type uint64;
+                          description
+                            "Implicitly generated list key to maintain the order of the augeas data.";
+                        }
+                        choice ch-config-entries {
+                          mandatory true;
+                          leaf misc-timeout {
+                            type int64;
+                            augex:data-path "misc_timeout";
+                          }
+                          leaf misc-dynamic {
+                            type empty;
+                            augex:data-path "misc_dynamic";
+                          }
+                          leaf misc-path {
+                            type string {
+                              pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                            }
+                            augex:data-path "misc_path";
+                          }
+                        }
+                      }
+                    }
+                    container smtp-check {
+                      augex:data-path "SMTP_CHECK";
+                      presence "Config entry.";
+                      list config-entries {
+                        key "_id";
+                        ordered-by user;
+                        leaf _id {
+                          type uint64;
+                          description
+                            "Implicitly generated list key to maintain the order of the augeas data.";
+                        }
+                        choice ch-config-entries {
+                          mandatory true;
+                          leaf connect-ip {
+                            type string {
+                              pattern "[A-Za-z0-9_.-]+";
+                            }
+                            augex:data-path "connect_ip";
+                          }
+                          leaf bindto {
+                            type string {
+                              pattern "[A-Za-z0-9_.-]+";
+                            }
+                            augex:data-path "bindto";
+                          }
+                          leaf connect-timeout {
+                            type int64;
+                            augex:data-path "connect_timeout";
+                          }
+                          leaf retry {
+                            type int64;
+                            augex:data-path "retry";
+                          }
+                          leaf delay-before-retry {
+                            type int64;
+                            augex:data-path "delay_before_retry";
+                          }
+                          leaf helo-name {
+                            type string {
+                              pattern "[^#! \t\n][^#!\n]*[^#! \t\n]|[^#! \t\n]";
+                            }
+                            augex:data-path "helo_name";
+                          }
+                          container host {
+                            augex:data-path "host";
+                            presence "Config entry.";
+                            list config-entries {
+                              key "_id";
+                              ordered-by user;
+                              leaf _id {
+                                type uint64;
+                                description
+                                  "Implicitly generated list key to maintain the order of the augeas data.";
+                              }
+                              choice ch-config-entries {
+                                mandatory true;
+                                leaf connect-ip {
+                                  type string {
+                                    pattern "[A-Za-z0-9_.-]+";
+                                  }
+                                  augex:data-path "connect_ip";
+                                }
+                                leaf bindto {
+                                  type string {
+                                    pattern "[A-Za-z0-9_.-]+";
+                                  }
+                                  augex:data-path "bindto";
+                                }
+                                leaf connect-port {
+                                  type int64;
+                                  augex:data-path "connect_port";
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    container http-get {
+                      augex:data-path "HTTP_GET";
+                      presence "Config entry.";
+                      uses gr;
+                    }
+                    container ssl-get {
+                      augex:data-path "SSL_GET";
+                      presence "Config entry.";
+                      uses gr;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container virtual-server-group {
+          augex:data-path "virtual_server_group";
+          augex:value-yang-path "sto-word";
+          presence "Config entry.";
+          leaf sto-word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          list virtual-server-group-field-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container virtual-server-group-field {
+              augex:data-path "vip";
+              presence "Config entry.";
+              container ipaddr {
+                augex:data-path "ipaddr";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[0-9.-]+";
+                  }
+                }
+                leaf prefixlen {
+                  type int64;
+                  augex:data-path "prefixlen";
+                }
+              }
+              leaf port {
+                mandatory true;
+                type int64;
+                augex:data-path "port";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

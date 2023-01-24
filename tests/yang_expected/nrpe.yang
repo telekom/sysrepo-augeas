@@ -1,0 +1,93 @@
+module nrpe {
+  yang-version 1.1;
+  namespace "aug:nrpe";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Nrpe";
+
+  list nrpe {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container command {
+          augex:data-path "command";
+          presence "Config entry.";
+          container node {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf label {
+              mandatory true;
+              type string {
+                pattern "[^\\]/\n]+";
+              }
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^\n]+";
+              }
+            }
+          }
+        }
+        container include {
+          augex:data-path "include";
+          presence "Config entry.";
+          leaf file {
+            mandatory true;
+            type string {
+              pattern "[^=\n\t ]+";
+            }
+            augex:data-path "file";
+          }
+        }
+        container include-dir {
+          augex:data-path "include_dir";
+          presence "Config entry.";
+          leaf dir {
+            mandatory true;
+            type string {
+              pattern "[^=\n\t ]+";
+            }
+            augex:data-path "dir";
+          }
+        }
+        container item {
+          augex:data-path "$$";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf item {
+            mandatory true;
+            type string {
+              pattern "[^#=\n\t/ ]+";
+              pattern "command\\[[^\\]/\n]+\\]|include|include_dir" {
+                modifier invert-match;
+              }
+            }
+          }
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[^=\n\t ]+";
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+module jmxaccess {
+  yang-version 1.1;
+  namespace "aug:jmxaccess";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "JMXAccess";
+
+  list jmxaccess {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list access-entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container access-entry {
+        augex:data-path "user";
+        presence "Config entry.";
+        leaf username {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "username";
+        }
+        leaf access {
+          mandatory true;
+          type string {
+            pattern "(?i)readonly|readwrite";
+          }
+          augex:data-path "access";
+        }
+      }
+    }
+  }
+}

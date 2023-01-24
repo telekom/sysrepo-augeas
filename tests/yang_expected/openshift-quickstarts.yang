@@ -1,0 +1,130 @@
+module openshift-quickstarts {
+  yang-version 1.1;
+  namespace "aug:openshift-quickstarts";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "OpenShift_Quickstarts";
+
+  grouping rlns {
+    choice ch-rlns {
+      mandatory true;
+      leaf string {
+        type string {
+          pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
+        }
+        augex:data-path "string";
+      }
+      leaf number {
+        type string {
+          pattern "-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?";
+        }
+        augex:data-path "number";
+      }
+      leaf const {
+        type string {
+          pattern "true|false|null";
+        }
+        augex:data-path "const";
+      }
+    }
+  }
+  list openshift-quickstarts {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    choice ch-openshift-quickstarts {
+      mandatory true;
+      case rlns {
+        uses rlns;
+      }
+      list dict-list {
+        key "_r-id";
+        leaf _r-id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the recursive augeas data.";
+        }
+        choice ch-dict-list {
+          mandatory true;
+          container dict {
+            augex:data-path "dict";
+            presence "Config entry.";
+            list entry-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container entry {
+                augex:data-path "entry";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "([^\\\\\"]|\\\\[\"/bfnrtu\\\\])*";
+                  }
+                }
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf _dict-ref {
+                      type leafref {
+                        path "../../../../../../dict-list/_r-id";
+                      }
+                      description
+                        "Implicitly generated leaf to maintain recursive augeas data.";
+                    }
+                    case rlns {
+                      uses rlns;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container array {
+            augex:data-path "array";
+            presence "Config entry.";
+            list config-entries {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-config-entries {
+                mandatory true;
+                leaf _dict-ref {
+                  type leafref {
+                    path "../../../../dict-list/_r-id";
+                  }
+                  description
+                    "Implicitly generated leaf to maintain recursive augeas data.";
+                }
+                case rlns {
+                  uses rlns;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

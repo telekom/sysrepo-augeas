@@ -1,0 +1,186 @@
+module authselectpam {
+  yang-version 1.1;
+  namespace "aug:authselectpam";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "AuthselectPam";
+
+  list authselectpam {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf include {
+          type string {
+            pattern "([^# \t\n\\\\]|\\\\.)+";
+          }
+          augex:data-path "include";
+        }
+        container record-svc {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf record {
+            mandatory true;
+            type uint64;
+          }
+          leaf optional {
+            type empty;
+            augex:data-path "optional";
+          }
+          leaf type {
+            mandatory true;
+            type string {
+              pattern "(?i)auth|session|account|password";
+            }
+            augex:data-path "type";
+          }
+          leaf control {
+            mandatory true;
+            type string {
+              pattern "\\[[^\\]#\n]*\\]|[a-zA-Z]+";
+            }
+            augex:data-path "control";
+          }
+          leaf module {
+            mandatory true;
+            type string {
+              pattern "([^# \t\n\\\\]|\\\\.)+";
+            }
+            augex:data-path "module";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container authselect-conditional {
+                augex:data-path "authselect_conditional";
+                augex:value-yang-path "authselect-conditional-type";
+                presence "Config entry.";
+                leaf authselect-conditional-type {
+                  mandatory true;
+                  type string {
+                    pattern "continue if|stop if|include if|exclude if|imply|if";
+                  }
+                }
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf and {
+                      type empty;
+                      augex:data-path "and";
+                    }
+                    leaf or {
+                      type empty;
+                      augex:data-path "or";
+                    }
+                    leaf not {
+                      type empty;
+                      augex:data-path "not";
+                    }
+                  }
+                }
+                choice ch-authselect-conditional {
+                  mandatory true;
+                  leaf feature {
+                    type string {
+                      pattern "[a-z0-9-]+";
+                    }
+                    augex:data-path "feature";
+                  }
+                  container authselect-feature-group {
+                    augex:data-path "feature_group";
+                    presence "Config entry.";
+                    leaf feature {
+                      mandatory true;
+                      type string {
+                        pattern "[a-z0-9-]+";
+                      }
+                      augex:data-path "feature";
+                    }
+                    list config-entries {
+                      key "_id";
+                      min-elements 1;
+                      ordered-by user;
+                      leaf _id {
+                        type uint64;
+                        description
+                          "Implicitly generated list key to maintain the order of the augeas data.";
+                      }
+                      choice ch-config-entries {
+                        mandatory true;
+                        leaf and {
+                          type empty;
+                          augex:data-path "and";
+                        }
+                        leaf or {
+                          type empty;
+                          augex:data-path "or";
+                        }
+                        leaf not {
+                          type empty;
+                          augex:data-path "not";
+                        }
+                      }
+                      leaf feature {
+                        mandatory true;
+                        type string {
+                          pattern "[a-z0-9-]+";
+                        }
+                        augex:data-path "feature";
+                      }
+                    }
+                  }
+                }
+                leaf on-true {
+                  type string {
+                    pattern "[^#{}:|\n\\\\]+";
+                  }
+                  augex:data-path "on_true";
+                }
+                leaf on-false {
+                  type string {
+                    pattern "[^#{}:|\n\\\\]+";
+                  }
+                  augex:data-path "on_false";
+                }
+              }
+              leaf argument {
+                type string {
+                  pattern "\\[[^\\]{}#\n]+\\]|[^\\[{#\n \t\\\\][^#\n \t\\\\]*";
+                }
+                augex:data-path "argument";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

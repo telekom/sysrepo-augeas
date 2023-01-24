@@ -1,0 +1,322 @@
+module dns-zone {
+  yang-version 1.1;
+  namespace "aug:dns-zone";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Dns_Zone";
+
+  grouping control {
+    container control {
+      augex:data-path "$$";
+      augex:value-yang-path "token";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "$[^ \t\n/]+";
+        }
+      }
+      leaf token {
+        mandatory true;
+        type string {
+          pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+        }
+      }
+    }
+  }
+  grouping ws-record {
+    list owner-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      choice ch-owner-list {
+        mandatory true;
+        container case {
+          presence "Config entry.";
+          leaf ttl {
+            type string {
+              pattern "[0-9]+[DHMWdhmw]?";
+            }
+            augex:data-path "ttl";
+          }
+          leaf class {
+            type string {
+              pattern "IN";
+            }
+            augex:data-path "class";
+          }
+        }
+        container case2 {
+          presence "Config entry.";
+          leaf class {
+            mandatory true;
+            type string {
+              pattern "IN";
+            }
+            augex:data-path "class";
+          }
+          leaf ttl {
+            mandatory true;
+            type string {
+              pattern "[0-9]+[DHMWdhmw]?";
+            }
+            augex:data-path "ttl";
+          }
+        }
+      }
+      leaf type {
+        mandatory true;
+        type union {
+          type string {
+            pattern "IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|S|I|[A-HJ-LO-RT-Z]";
+          }
+          type string {
+            pattern "MX";
+          }
+          type string {
+            pattern "NAPTR";
+          }
+          type string {
+            pattern "SOA";
+          }
+          type string {
+            pattern "SRV";
+          }
+        }
+        augex:data-path "type";
+      }
+      choice ch-owner-list2 {
+        mandatory true;
+        container case3 {
+          presence "Config entry.";
+          when "re-match(../type, 'IN[A-Z]([A-Z][A-Z]*|())|I[A-MO-Z]([A-Z][A-Z]*|())|NAPT((R[A-Z]|[A-QS-Z])[A-Z]*|())|NAP([A-SU-Z][A-Z]*|())|NA([A-OQ-Z][A-Z]*|())|(SR(V[A-Z]|[A-UW-Z])|SO(A[A-Z]|[B-Z])|(S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z])[A-Z]|MX[A-Z])[A-Z]*|SR|SO|S[A-NPQS-Z]|N[B-Z]|M[A-WYZ]|[A-HJ-LO-RT-Z][A-Z]|M|N|S|I|[A-HJ-LO-RT-Z]')";
+          leaf rdata {
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "rdata";
+          }
+        }
+        container case4 {
+          presence "Config entry.";
+          when "../type='MX'";
+          leaf priority {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "priority";
+          }
+          leaf exchange {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "exchange";
+          }
+        }
+        container case5 {
+          presence "Config entry.";
+          when "../type='NAPTR'";
+          leaf order {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "order";
+          }
+          leaf preference {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "preference";
+          }
+          leaf flags {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "flags";
+          }
+          leaf service {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "service";
+          }
+          leaf regexp {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "regexp";
+          }
+          leaf replacement {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "replacement";
+          }
+        }
+        container case6 {
+          presence "Config entry.";
+          when "../type='SOA'";
+          leaf mname {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "mname";
+          }
+          leaf rname {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "rname";
+          }
+          leaf serial {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "serial";
+          }
+          leaf refresh {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "refresh";
+          }
+          leaf retry {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "retry";
+          }
+          leaf expiry {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "expiry";
+          }
+          leaf minimum {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "minimum";
+          }
+        }
+        container case7 {
+          presence "Config entry.";
+          when "../type='SRV'";
+          leaf priority {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "priority";
+          }
+          leaf weight {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "weight";
+          }
+          leaf port {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "port";
+          }
+          leaf target {
+            mandatory true;
+            type string {
+              pattern "([^ \t\n\";()\\\\]|\\\\.)+|\"([^\"\\\\]|\\\\.)*\"";
+            }
+            augex:data-path "target";
+          }
+        }
+      }
+    }
+  }
+  list dns-zone {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list control-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses control;
+    }
+    choice ch-dns-zone {
+      container root-records {
+        augex:data-path "@";
+        presence "Config entry.";
+        uses ws-record;
+      }
+      container non-root-records {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "@[^ \t\n;/]+|[^ \t\n;/$@][^ \t\n;/]*";
+          }
+        }
+        uses ws-record;
+      }
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        case control {
+          uses control;
+        }
+        container any-record-block {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n;/$][^ \t\n;/]*";
+            }
+          }
+          uses ws-record;
+        }
+      }
+    }
+  }
+}

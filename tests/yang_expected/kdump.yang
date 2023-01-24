@@ -1,0 +1,508 @@
+module kdump {
+  yang-version 1.1;
+  namespace "aug:kdump";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Kdump";
+
+  list kdump {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf raw {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "raw";
+        }
+        leaf net {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "net";
+        }
+        leaf path {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "path";
+        }
+        leaf core-collector {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "core_collector";
+        }
+        leaf kdump-post {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "kdump_post";
+        }
+        leaf kdump-pre {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "kdump_pre";
+        }
+        leaf default {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "default";
+        }
+        leaf ssh {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ssh";
+        }
+        leaf sshkey {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "sshkey";
+        }
+        leaf dracut-args {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "dracut_args";
+        }
+        leaf fence-kdump-args {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "fence_kdump_args";
+        }
+        leaf adfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "adfs";
+        }
+        leaf affs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "affs";
+        }
+        leaf autofs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "autofs";
+        }
+        leaf cifs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "cifs";
+        }
+        leaf coda {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "coda";
+        }
+        leaf coherent {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "coherent";
+        }
+        leaf cramfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "cramfs";
+        }
+        leaf debugfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "debugfs";
+        }
+        leaf devpts {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "devpts";
+        }
+        leaf efs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "efs";
+        }
+        leaf ext {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ext";
+        }
+        leaf ext2 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ext2";
+        }
+        leaf ext3 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ext3";
+        }
+        leaf ext4 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ext4";
+        }
+        leaf hfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "hfs";
+        }
+        leaf hfsplus {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "hfsplus";
+        }
+        leaf hpfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "hpfs";
+        }
+        leaf iso9660 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "iso9660";
+        }
+        leaf jfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "jfs";
+        }
+        leaf minix {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "minix";
+        }
+        leaf msdos {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "msdos";
+        }
+        leaf ncpfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ncpfs";
+        }
+        leaf nfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "nfs";
+        }
+        leaf nfs4 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "nfs4";
+        }
+        leaf ntfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ntfs";
+        }
+        leaf proc {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "proc";
+        }
+        leaf qnx4 {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "qnx4";
+        }
+        leaf ramfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ramfs";
+        }
+        leaf reiserfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "reiserfs";
+        }
+        leaf romfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "romfs";
+        }
+        leaf squashfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "squashfs";
+        }
+        leaf smbfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "smbfs";
+        }
+        leaf sysv {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "sysv";
+        }
+        leaf tmpfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "tmpfs";
+        }
+        leaf ubifs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ubifs";
+        }
+        leaf udf {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "udf";
+        }
+        leaf ufs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "ufs";
+        }
+        leaf umsdos {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "umsdos";
+        }
+        leaf usbfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "usbfs";
+        }
+        leaf vfat {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "vfat";
+        }
+        leaf xenix {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "xenix";
+        }
+        leaf xfs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "xfs";
+        }
+        leaf xiafs {
+          type string {
+            pattern "[^ \t\n#][^\n#]*[^ \t\n#]|[^ \t\n#]";
+          }
+          augex:data-path "xiafs";
+        }
+        leaf force-rebuild {
+          type uint64;
+          augex:data-path "force_rebuild";
+        }
+        leaf override-resettable {
+          type uint64;
+          augex:data-path "override_resettable";
+        }
+        leaf debug-mem-level {
+          type uint64;
+          augex:data-path "debug_mem_level";
+        }
+        leaf link-delay {
+          type uint64;
+          augex:data-path "link_delay";
+        }
+        leaf disk-timeout {
+          type uint64;
+          augex:data-path "disk_timeout";
+        }
+        leaf auto-reset-crashkernel {
+          type string {
+            pattern "(yes)|(no)";
+          }
+          augex:data-path "auto_reset_crashkernel";
+        }
+        container extra-bins {
+          augex:data-path "extra_bins";
+          presence "Config entry.";
+          list extra-bins-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+            }
+          }
+        }
+        container extra-modules {
+          augex:data-path "extra_modules";
+          presence "Config entry.";
+          list extra-modules-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+            }
+          }
+        }
+        container blacklist {
+          augex:data-path "blacklist";
+          presence "Config entry.";
+          list blacklist-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+            }
+          }
+        }
+        container fence-kdump-nodes {
+          augex:data-path "fence_kdump_nodes";
+          presence "Config entry.";
+          list fence-kdump-nodes-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+            }
+          }
+        }
+        container mod-options {
+          augex:data-path "options";
+          presence "Config entry.";
+          container mdl-options {
+            augex:data-path "$$";
+            presence "Config entry.";
+            leaf key-to-space {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.$-]+";
+              }
+            }
+            list mdl-key-value-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container mdl-key-value {
+                augex:data-path "$$";
+                augex:value-yang-path "value-to-spc";
+                presence "Config entry.";
+                leaf key-to-space {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.$-]+";
+                  }
+                }
+                leaf value-to-spc {
+                  type string {
+                    pattern "[^,# \n\t]+";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

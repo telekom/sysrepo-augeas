@@ -1,0 +1,222 @@
+module interfaces {
+  yang-version 1.1;
+  namespace "aug:interfaces";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Interfaces";
+
+  grouping stanza-option {
+    container stanza-option {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "[a-z0-9_-]+";
+          pattern "source(-directory)?|iface|auto|allow-[a-z-]+|mapping|bond-slaves|bridge-ports" {
+            modifier invert-match;
+          }
+        }
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^\\\\ \t\n].*[^\\\\ \t\n]|[^\\\\ \t\n]";
+        }
+      }
+    }
+  }
+  list interfaces {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container iface {
+          augex:data-path "iface";
+          augex:value-yang-path "sto-to-spc";
+          presence "Config entry.";
+          leaf sto-to-spc {
+            mandatory true;
+            type string {
+              pattern "[^\\\\ \t\n]+";
+            }
+          }
+          leaf family {
+            mandatory true;
+            type string {
+              pattern "[^\\\\ \t\n]+";
+            }
+            augex:data-path "family";
+          }
+          leaf method {
+            mandatory true;
+            type string {
+              pattern "[^\\\\ \t\n]+";
+            }
+            augex:data-path "method";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              case stanza-option {
+                uses stanza-option;
+              }
+              container bond-slaves {
+                augex:data-path "bond-slaves";
+                presence "Config entry.";
+                list bond-slaves-list {
+                  key "_seq";
+                  min-elements 1;
+                  ordered-by user;
+                  augex:data-path "$$";
+                  augex:value-yang-path "sto-to-spc";
+                  leaf _seq {
+                    type uint64;
+                    description
+                      "Key contains some unique value. The order is based on the actual order of list instances.";
+                  }
+                  leaf sto-to-spc {
+                    mandatory true;
+                    type string {
+                      pattern "[^\\\\ \t\n]+";
+                    }
+                  }
+                }
+              }
+              container bridge-ports {
+                augex:data-path "bridge-ports";
+                presence "Config entry.";
+                list bridge-ports-list {
+                  key "_seq";
+                  min-elements 1;
+                  ordered-by user;
+                  augex:data-path "$$";
+                  augex:value-yang-path "sto-to-spc";
+                  leaf _seq {
+                    type uint64;
+                    description
+                      "Key contains some unique value. The order is based on the actual order of list instances.";
+                  }
+                  leaf sto-to-spc {
+                    mandatory true;
+                    type string {
+                      pattern "[^\\\\ \t\n]+";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container mapping {
+          augex:data-path "mapping";
+          augex:value-yang-path "sto-to-spc";
+          presence "Config entry.";
+          leaf sto-to-spc {
+            mandatory true;
+            type string {
+              pattern "[^\\\\ \t\n]+";
+            }
+          }
+          list stanza-option-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            uses stanza-option;
+          }
+        }
+        container auto {
+          augex:data-path "auto";
+          presence "Config entry.";
+          list auto-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "sto-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf sto-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^\\\\ \t\n]+";
+              }
+            }
+          }
+        }
+        container allow {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "allow-[a-z-]+";
+              pattern "allow-auto" {
+                modifier invert-match;
+              }
+            }
+          }
+          list allow-seq-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "sto-to-spc";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf sto-to-spc {
+              mandatory true;
+              type string {
+                pattern "[^\\\\ \t\n]+";
+              }
+            }
+          }
+        }
+        leaf source {
+          type string {
+            pattern "[^\\\\ \t\n].*[^\\\\ \t\n]|[^\\\\ \t\n]";
+          }
+          augex:data-path "source";
+        }
+        leaf source-directory {
+          type string {
+            pattern "[^\\\\ \t\n].*[^\\\\ \t\n]|[^\\\\ \t\n]";
+          }
+          augex:data-path "source-directory";
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1120 @@
+module multipath {
+  yang-version 1.1;
+  namespace "aug:multipath";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Multipath";
+
+  grouping device {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf vendor {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "vendor";
+        }
+        leaf product {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "product";
+        }
+        leaf product-blacklist {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "product_blacklist";
+        }
+        leaf hardware-handler {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "hardware_handler";
+        }
+        leaf alias-prefix {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "alias_prefix";
+        }
+        leaf path-selector {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "path_selector";
+        }
+        leaf path-grouping-policy {
+          type string {
+            pattern "failover|multibus|group_by_(serial|prio|node_name)";
+          }
+          augex:data-path "path_grouping_policy";
+        }
+        leaf path-checker {
+          type string {
+            pattern "tur|emc_clariion|hp_sw|rdac|directio|rdb|readsector0";
+          }
+          augex:data-path "path_checker";
+        }
+        leaf prio {
+          type string {
+            pattern "const|emc|alua|ontap|rdac|hp_sw|hds|random|weightedpath";
+          }
+          augex:data-path "prio";
+        }
+        leaf prio-args {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "prio_args";
+        }
+        leaf failback {
+          type string {
+            pattern "([0-9]+)|(immediate|manual|followover)";
+          }
+          augex:data-path "failback";
+        }
+        leaf rr-weight {
+          type string {
+            pattern "priorities|uniform";
+          }
+          augex:data-path "rr_weight";
+        }
+        leaf flush-on-last-del {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "flush_on_last_del";
+        }
+        leaf user-friendly-names {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "user_friendly_names";
+        }
+        leaf no-path-retry {
+          type string {
+            pattern "([0-9]+)|(fail|queue)";
+          }
+          augex:data-path "no_path_retry";
+        }
+        leaf rr-min-io {
+          type uint64;
+          augex:data-path "rr_min_io";
+        }
+        leaf rr-min-io-q {
+          type uint64;
+          augex:data-path "rr_min_io_q";
+        }
+        leaf features {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "features";
+        }
+        leaf reservation-key {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "reservation_key";
+        }
+        leaf deferred-remove {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "deferred_remove";
+        }
+        leaf delay-watch-checks {
+          type string {
+            pattern "([0-9]+)|(no)";
+          }
+          augex:data-path "delay_watch_checks";
+        }
+        leaf delay-wait-checks {
+          type string {
+            pattern "([0-9]+)|(no)";
+          }
+          augex:data-path "delay_wait_checks";
+        }
+        leaf skip-kpartx {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "skip_kpartx";
+        }
+        leaf getuid-callout {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "getuid_callout";
+        }
+        leaf prio-callout {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "prio_callout";
+        }
+        leaf rr-min-io-rq {
+          type uint64;
+          augex:data-path "rr_min_io_rq";
+        }
+        leaf udev-dir {
+          type string {
+            pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+          }
+          augex:data-path "udev_dir";
+        }
+        leaf selector {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "selector";
+        }
+        leaf async-timeout {
+          type uint64;
+          augex:data-path "async_timeout";
+        }
+        leaf pg-timeout {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "pg_timeout";
+        }
+        leaf h-on-last-deleassign-maps {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "h_on_last_deleassign_maps";
+        }
+        leaf uid-attribute {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "uid_attribute";
+        }
+        leaf hwtable-regex-match {
+          type string {
+            pattern "yes|no|on|off";
+          }
+          augex:data-path "hwtable_regex_match";
+        }
+        leaf reload-readwrite {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "reload_readwrite";
+        }
+        leaf polling-interval {
+          type uint64;
+          augex:data-path "polling_interval";
+        }
+        leaf max-polling-interval {
+          type uint64;
+          augex:data-path "max_polling_interval";
+        }
+        leaf multipath-dir {
+          type string {
+            pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+          }
+          augex:data-path "multipath_dir";
+        }
+        leaf find-multipaths {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "find_multipaths";
+        }
+        leaf verbosity {
+          type string {
+            pattern "[0-6]";
+          }
+          augex:data-path "verbosity";
+        }
+        leaf reassign-maps {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "reassign_maps";
+        }
+        leaf uid-attrribute {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "uid_attrribute";
+        }
+        leaf max-fds {
+          type string {
+            pattern "([0-9]+)|(max)";
+          }
+          augex:data-path "max_fds";
+        }
+        leaf checker-timeout {
+          type uint64;
+          augex:data-path "checker_timeout";
+        }
+        leaf fast-io-fail-tmo {
+          type string {
+            pattern "([0-9]+)|(off)";
+          }
+          augex:data-path "fast_io_fail_tmo";
+        }
+        leaf dev-loss-tmo {
+          type string {
+            pattern "([0-9]+)|(infinity)";
+          }
+          augex:data-path "dev_loss_tmo";
+        }
+        leaf queue-without-daemon {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "queue_without_daemon";
+        }
+        leaf bindings-file {
+          type string {
+            pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+          }
+          augex:data-path "bindings_file";
+        }
+        leaf wwids-file {
+          type string {
+            pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+          }
+          augex:data-path "wwids_file";
+        }
+        leaf log-checker-err {
+          type string {
+            pattern "once|always";
+          }
+          augex:data-path "log_checker_err";
+        }
+        leaf retain-attached-hw-handler {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "retain_attached_hw_handler";
+        }
+        leaf detect-prio {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "detect_prio";
+        }
+        leaf hw-str-match {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "hw_str_match";
+        }
+        leaf force-sync {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "force_sync";
+        }
+        leaf config-dir {
+          type string {
+            pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+          }
+          augex:data-path "config_dir";
+        }
+        leaf missing-uev-wait-timeout {
+          type uint64;
+          augex:data-path "missing_uev_wait_timeout";
+        }
+        leaf ignore-new-boot-devs {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "ignore_new_boot_devs";
+        }
+        leaf retrigger-tries {
+          type uint64;
+          augex:data-path "retrigger_tries";
+        }
+        leaf retrigger-delay {
+          type uint64;
+          augex:data-path "retrigger_delay";
+        }
+        leaf new-bindings-in-boot {
+          type string {
+            pattern "yes|no";
+          }
+          augex:data-path "new_bindings_in_boot";
+        }
+      }
+    }
+  }
+  grouping blacklist {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf devnode {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "devnode";
+        }
+        leaf wwid {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "wwid";
+        }
+        leaf property {
+          type union {
+            type string {
+              pattern "[^\"' \t\n]+";
+            }
+            type string {
+              pattern ".*[ \t].*";
+            }
+          }
+          augex:data-path "property";
+        }
+        container device {
+          augex:data-path "device";
+          presence "Config entry.";
+          uses device;
+        }
+      }
+    }
+  }
+  list multipath {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container defaults {
+          augex:data-path "defaults";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf path-selector {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "path_selector";
+              }
+              leaf path-grouping-policy {
+                type string {
+                  pattern "failover|multibus|group_by_(serial|prio|node_name)";
+                }
+                augex:data-path "path_grouping_policy";
+              }
+              leaf path-checker {
+                type string {
+                  pattern "tur|emc_clariion|hp_sw|rdac|directio|rdb|readsector0";
+                }
+                augex:data-path "path_checker";
+              }
+              leaf prio {
+                type string {
+                  pattern "const|emc|alua|ontap|rdac|hp_sw|hds|random|weightedpath";
+                }
+                augex:data-path "prio";
+              }
+              leaf prio-args {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "prio_args";
+              }
+              leaf failback {
+                type string {
+                  pattern "([0-9]+)|(immediate|manual|followover)";
+                }
+                augex:data-path "failback";
+              }
+              leaf rr-weight {
+                type string {
+                  pattern "priorities|uniform";
+                }
+                augex:data-path "rr_weight";
+              }
+              leaf flush-on-last-del {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "flush_on_last_del";
+              }
+              leaf user-friendly-names {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "user_friendly_names";
+              }
+              leaf no-path-retry {
+                type string {
+                  pattern "([0-9]+)|(fail|queue)";
+                }
+                augex:data-path "no_path_retry";
+              }
+              leaf rr-min-io {
+                type uint64;
+                augex:data-path "rr_min_io";
+              }
+              leaf rr-min-io-q {
+                type uint64;
+                augex:data-path "rr_min_io_q";
+              }
+              leaf features {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "features";
+              }
+              leaf reservation-key {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "reservation_key";
+              }
+              leaf deferred-remove {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "deferred_remove";
+              }
+              leaf delay-watch-checks {
+                type string {
+                  pattern "([0-9]+)|(no)";
+                }
+                augex:data-path "delay_watch_checks";
+              }
+              leaf delay-wait-checks {
+                type string {
+                  pattern "([0-9]+)|(no)";
+                }
+                augex:data-path "delay_wait_checks";
+              }
+              leaf skip-kpartx {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "skip_kpartx";
+              }
+              leaf getuid-callout {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "getuid_callout";
+              }
+              leaf prio-callout {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "prio_callout";
+              }
+              leaf rr-min-io-rq {
+                type uint64;
+                augex:data-path "rr_min_io_rq";
+              }
+              leaf udev-dir {
+                type string {
+                  pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                }
+                augex:data-path "udev_dir";
+              }
+              leaf selector {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "selector";
+              }
+              leaf async-timeout {
+                type uint64;
+                augex:data-path "async_timeout";
+              }
+              leaf pg-timeout {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "pg_timeout";
+              }
+              leaf h-on-last-deleassign-maps {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "h_on_last_deleassign_maps";
+              }
+              leaf uid-attribute {
+                type union {
+                  type string {
+                    pattern "[^\"' \t\n]+";
+                  }
+                  type string {
+                    pattern ".*[ \t].*";
+                  }
+                }
+                augex:data-path "uid_attribute";
+              }
+              leaf hwtable-regex-match {
+                type string {
+                  pattern "yes|no|on|off";
+                }
+                augex:data-path "hwtable_regex_match";
+              }
+              leaf reload-readwrite {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "reload_readwrite";
+              }
+              leaf polling-interval {
+                type uint64;
+                augex:data-path "polling_interval";
+              }
+              leaf max-polling-interval {
+                type uint64;
+                augex:data-path "max_polling_interval";
+              }
+              leaf multipath-dir {
+                type string {
+                  pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                }
+                augex:data-path "multipath_dir";
+              }
+              leaf find-multipaths {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "find_multipaths";
+              }
+              leaf verbosity {
+                type string {
+                  pattern "[0-6]";
+                }
+                augex:data-path "verbosity";
+              }
+              leaf reassign-maps {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "reassign_maps";
+              }
+              leaf uid-attrribute {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "uid_attrribute";
+              }
+              leaf max-fds {
+                type string {
+                  pattern "([0-9]+)|(max)";
+                }
+                augex:data-path "max_fds";
+              }
+              leaf checker-timeout {
+                type uint64;
+                augex:data-path "checker_timeout";
+              }
+              leaf fast-io-fail-tmo {
+                type string {
+                  pattern "([0-9]+)|(off)";
+                }
+                augex:data-path "fast_io_fail_tmo";
+              }
+              leaf dev-loss-tmo {
+                type string {
+                  pattern "([0-9]+)|(infinity)";
+                }
+                augex:data-path "dev_loss_tmo";
+              }
+              leaf queue-without-daemon {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "queue_without_daemon";
+              }
+              leaf bindings-file {
+                type string {
+                  pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                }
+                augex:data-path "bindings_file";
+              }
+              leaf wwids-file {
+                type string {
+                  pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                }
+                augex:data-path "wwids_file";
+              }
+              leaf log-checker-err {
+                type string {
+                  pattern "once|always";
+                }
+                augex:data-path "log_checker_err";
+              }
+              leaf retain-attached-hw-handler {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "retain_attached_hw_handler";
+              }
+              leaf detect-prio {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "detect_prio";
+              }
+              leaf hw-str-match {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "hw_str_match";
+              }
+              leaf force-sync {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "force_sync";
+              }
+              leaf config-dir {
+                type string {
+                  pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                }
+                augex:data-path "config_dir";
+              }
+              leaf missing-uev-wait-timeout {
+                type uint64;
+                augex:data-path "missing_uev_wait_timeout";
+              }
+              leaf ignore-new-boot-devs {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "ignore_new_boot_devs";
+              }
+              leaf retrigger-tries {
+                type uint64;
+                augex:data-path "retrigger_tries";
+              }
+              leaf retrigger-delay {
+                type uint64;
+                augex:data-path "retrigger_delay";
+              }
+              leaf new-bindings-in-boot {
+                type string {
+                  pattern "yes|no";
+                }
+                augex:data-path "new_bindings_in_boot";
+              }
+            }
+          }
+        }
+        container blacklist {
+          augex:data-path "blacklist";
+          presence "Config entry.";
+          uses blacklist;
+        }
+        container blacklist-exceptions {
+          augex:data-path "blacklist_exceptions";
+          presence "Config entry.";
+          uses blacklist;
+        }
+        container devices {
+          augex:data-path "devices";
+          presence "Config entry.";
+          list device-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container device {
+              augex:data-path "device";
+              presence "Config entry.";
+              uses device;
+            }
+          }
+        }
+        container multipaths {
+          augex:data-path "multipaths";
+          presence "Config entry.";
+          list multipath-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container multipath {
+              augex:data-path "multipath";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf wwid {
+                    type string {
+                      pattern "([A-Za-z0-9_.-]+)|(\\*)";
+                    }
+                    augex:data-path "wwid";
+                  }
+                  leaf alias {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "alias";
+                  }
+                  leaf path-selector {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "path_selector";
+                  }
+                  leaf path-grouping-policy {
+                    type string {
+                      pattern "failover|multibus|group_by_(serial|prio|node_name)";
+                    }
+                    augex:data-path "path_grouping_policy";
+                  }
+                  leaf path-checker {
+                    type string {
+                      pattern "tur|emc_clariion|hp_sw|rdac|directio|rdb|readsector0";
+                    }
+                    augex:data-path "path_checker";
+                  }
+                  leaf prio {
+                    type string {
+                      pattern "const|emc|alua|ontap|rdac|hp_sw|hds|random|weightedpath";
+                    }
+                    augex:data-path "prio";
+                  }
+                  leaf prio-args {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "prio_args";
+                  }
+                  leaf failback {
+                    type string {
+                      pattern "([0-9]+)|(immediate|manual|followover)";
+                    }
+                    augex:data-path "failback";
+                  }
+                  leaf rr-weight {
+                    type string {
+                      pattern "priorities|uniform";
+                    }
+                    augex:data-path "rr_weight";
+                  }
+                  leaf flush-on-last-del {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "flush_on_last_del";
+                  }
+                  leaf user-friendly-names {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "user_friendly_names";
+                  }
+                  leaf no-path-retry {
+                    type string {
+                      pattern "([0-9]+)|(fail|queue)";
+                    }
+                    augex:data-path "no_path_retry";
+                  }
+                  leaf rr-min-io {
+                    type uint64;
+                    augex:data-path "rr_min_io";
+                  }
+                  leaf rr-min-io-q {
+                    type uint64;
+                    augex:data-path "rr_min_io_q";
+                  }
+                  leaf features {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "features";
+                  }
+                  leaf reservation-key {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "reservation_key";
+                  }
+                  leaf deferred-remove {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "deferred_remove";
+                  }
+                  leaf delay-watch-checks {
+                    type string {
+                      pattern "([0-9]+)|(no)";
+                    }
+                    augex:data-path "delay_watch_checks";
+                  }
+                  leaf delay-wait-checks {
+                    type string {
+                      pattern "([0-9]+)|(no)";
+                    }
+                    augex:data-path "delay_wait_checks";
+                  }
+                  leaf skip-kpartx {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "skip_kpartx";
+                  }
+                  leaf getuid-callout {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "getuid_callout";
+                  }
+                  leaf prio-callout {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "prio_callout";
+                  }
+                  leaf rr-min-io-rq {
+                    type uint64;
+                    augex:data-path "rr_min_io_rq";
+                  }
+                  leaf udev-dir {
+                    type string {
+                      pattern "[^\" \t\n]|[^\" \t\n][^ \t\n]*[^\" \t\n]";
+                    }
+                    augex:data-path "udev_dir";
+                  }
+                  leaf selector {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "selector";
+                  }
+                  leaf async-timeout {
+                    type uint64;
+                    augex:data-path "async_timeout";
+                  }
+                  leaf pg-timeout {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "pg_timeout";
+                  }
+                  leaf h-on-last-deleassign-maps {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "h_on_last_deleassign_maps";
+                  }
+                  leaf uid-attribute {
+                    type union {
+                      type string {
+                        pattern "[^\"' \t\n]+";
+                      }
+                      type string {
+                        pattern ".*[ \t].*";
+                      }
+                    }
+                    augex:data-path "uid_attribute";
+                  }
+                  leaf hwtable-regex-match {
+                    type string {
+                      pattern "yes|no|on|off";
+                    }
+                    augex:data-path "hwtable_regex_match";
+                  }
+                  leaf reload-readwrite {
+                    type string {
+                      pattern "yes|no";
+                    }
+                    augex:data-path "reload_readwrite";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

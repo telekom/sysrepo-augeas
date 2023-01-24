@@ -1,0 +1,74 @@
+module crypttab {
+  yang-version 1.1;
+  namespace "aug:crypttab";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Crypttab";
+
+  list crypttab {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf target {
+        mandatory true;
+        type string {
+          pattern "[a-zA-Z0-9_?.+:!-]+";
+        }
+        augex:data-path "target";
+      }
+      leaf device {
+        mandatory true;
+        type string {
+          pattern "([^ \t\n]+)|(UUID=[0-9a-f-]+)";
+        }
+        augex:data-path "device";
+      }
+      leaf password {
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "password";
+      }
+      list opt-list {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        container opt {
+          augex:data-path "opt";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          leaf value {
+            type string {
+              pattern "[A-Za-z0-9/_.:-]+";
+            }
+            augex:data-path "value";
+          }
+        }
+      }
+    }
+  }
+}

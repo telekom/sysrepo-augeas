@@ -1,0 +1,459 @@
+module fonts {
+  yang-version 1.1;
+  namespace "aug:fonts";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Fonts";
+
+  grouping nmtoken {
+    container nmtoken {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf nmtoken {
+        mandatory true;
+        type string {
+          pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+        }
+      }
+      leaf value {
+        mandatory true;
+        type union {
+          type string {
+            pattern "[^']*\"[^']*";
+          }
+          type string {
+            pattern "[^\"]*'[^\"]*";
+          }
+          type string {
+            pattern "(\\\\|[^'\\\\\"])*";
+          }
+        }
+      }
+    }
+  }
+  grouping pi-instruction {
+    leaf target {
+      mandatory true;
+      type string {
+        pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+        pattern "[Xx][Mm][Ll]" {
+          modifier invert-match;
+        }
+      }
+      augex:data-path "#target";
+    }
+    leaf instruction {
+      type string {
+        pattern "[^ \n\t]|[^ \n\t][^?>]*[^ \n\t]";
+      }
+      augex:data-path "#instruction";
+    }
+  }
+  grouping nmtoken-list {
+    list nmtoken-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      uses nmtoken;
+    }
+  }
+  grouping attributes {
+    container attributes {
+      augex:data-path "#attribute";
+      presence "Config entry.";
+      uses nmtoken-list;
+    }
+  }
+  list fonts {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list doc {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-doc {
+        mandatory true;
+        container prolog {
+          augex:data-path "#declaration";
+          presence "Config entry.";
+          container attributes {
+            augex:data-path "#attribute";
+            presence "Config entry.";
+            list nmtoken-list {
+              key "_id";
+              min-elements 1;
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              uses nmtoken;
+            }
+          }
+        }
+        container doctype {
+          augex:data-path "$$";
+          augex:value-yang-path "nmtoken";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "!DOCTYPE";
+            }
+          }
+          leaf nmtoken {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+            }
+          }
+          choice ch-doctype {
+            mandatory true;
+            list decl-def-item {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              choice ch-decl-def-item {
+                mandatory true;
+                container elem-def {
+                  augex:data-path "$$";
+                  augex:value-yang-path "nmtoken";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "!ELEMENT";
+                    }
+                  }
+                  leaf nmtoken {
+                    mandatory true;
+                    type string {
+                      pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+                    }
+                  }
+                  leaf decl {
+                    mandatory true;
+                    type string {
+                      pattern "[^> \t\n]|[^> \t\n][^>\t\n]*[^> \t\n]";
+                    }
+                    augex:data-path "#decl";
+                  }
+                }
+                container entity-def {
+                  augex:data-path "$$";
+                  augex:value-yang-path "nmtoken";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "!ENTITY";
+                    }
+                  }
+                  leaf nmtoken {
+                    mandatory true;
+                    type string {
+                      pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+                    }
+                  }
+                  choice ch-entity-def {
+                    mandatory true;
+                    leaf decl {
+                      type string {
+                        pattern "[^\"]*";
+                      }
+                      augex:data-path "#decl";
+                    }
+                    container system {
+                      augex:data-path "SYSTEM";
+                      presence "Config entry.";
+                      leaf systemliteral {
+                        mandatory true;
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        augex:data-path "#systemliteral";
+                      }
+                    }
+                    container public {
+                      augex:data-path "PUBLIC";
+                      presence "Config entry.";
+                      leaf pubidliteral {
+                        mandatory true;
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        augex:data-path "#pubidliteral";
+                      }
+                      leaf systemliteral {
+                        mandatory true;
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        augex:data-path "#systemliteral";
+                      }
+                    }
+                  }
+                }
+                container att-list-def {
+                  augex:data-path "$$";
+                  augex:value-yang-path "nmtoken";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "!ATTLIST";
+                    }
+                  }
+                  leaf nmtoken {
+                    mandatory true;
+                    type string {
+                      pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+                    }
+                  }
+                  list att-id-list {
+                    key "_seq";
+                    ordered-by user;
+                    augex:data-path "$$";
+                    leaf _seq {
+                      type uint64;
+                      description
+                        "Key contains some unique value. The order is based on the actual order of list instances.";
+                    }
+                    leaf name {
+                      mandatory true;
+                      type string {
+                        pattern "[a-zA-Z][a-zA-Z0-9._-]*";
+                      }
+                      augex:data-path "#name";
+                    }
+                    leaf type {
+                      mandatory true;
+                      type string {
+                        pattern "(CDATA|ID|IDREF|IDREFS|ENTITY|ENTITIES|NMTOKEN|NMTOKENS)|((((((\\()([ \t\n]*))([a-zA-Z:_][a-zA-Z0-9:_.-]*))((((([ \t\n]*)(\\|))([ \t\n]*))([a-zA-Z:_][a-zA-Z0-9:_.-]*))*))([ \t\n]*))(\\)))";
+                      }
+                      augex:data-path "#type";
+                    }
+                    choice ch-att-id-list {
+                      mandatory true;
+                      leaf required {
+                        type empty;
+                        augex:data-path "#REQUIRED";
+                      }
+                      leaf implied {
+                        type empty;
+                        augex:data-path "#IMPLIED";
+                      }
+                      leaf fixed {
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        augex:data-path "#FIXED";
+                      }
+                    }
+                  }
+                }
+                container notation-def {
+                  augex:data-path "$$";
+                  augex:value-yang-path "nmtoken";
+                  presence "Config entry.";
+                  leaf label {
+                    mandatory true;
+                    type string {
+                      pattern "!NOTATION";
+                    }
+                  }
+                  leaf nmtoken {
+                    mandatory true;
+                    type string {
+                      pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+                    }
+                  }
+                  choice ch-notation-def {
+                    mandatory true;
+                    container public {
+                      augex:data-path "PUBLIC";
+                      presence "Config entry.";
+                      leaf-list literal {
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        ordered-by user;
+                        augex:data-path "#literal";
+                      }
+                    }
+                    leaf system {
+                      type string {
+                        pattern "[^\"]*";
+                      }
+                      augex:data-path "SYSTEM";
+                    }
+                  }
+                }
+              }
+            }
+            container public {
+              augex:data-path "PUBLIC";
+              presence "Config entry.";
+              leaf-list literal {
+                type string {
+                  pattern "[^\"]*";
+                }
+                ordered-by user;
+                augex:data-path "#literal";
+              }
+            }
+            leaf system {
+              type string {
+                pattern "[^\"]*";
+              }
+              augex:data-path "SYSTEM";
+            }
+          }
+        }
+        container pi-instruction {
+          augex:data-path "#pi";
+          presence "Config entry.";
+          uses pi-instruction;
+        }
+      }
+    }
+    choice ch-fonts {
+      mandatory true;
+      list nmtoken-key-list {
+        key "_r-id";
+        leaf _r-id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the recursive augeas data.";
+        }
+        container nmtoken-key {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf nmtoken-key {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+            }
+          }
+          container attributes {
+            augex:data-path "#attribute";
+            presence "Config entry.";
+            uses nmtoken-list;
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf text {
+                type string {
+                  pattern "[^<]+";
+                  pattern "[^<]*\\]\\]>[^<]*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "#text";
+              }
+              leaf _nmtoken-key-ref {
+                type leafref {
+                  path "../../../../nmtoken-key-list/_r-id";
+                }
+                description
+                  "Implicitly generated leaf to maintain recursive augeas data.";
+              }
+              container empty-element {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf nmtoken-key {
+                  mandatory true;
+                  type string {
+                    pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type enumeration {
+                    enum "#empty";
+                  }
+                }
+                uses attributes;
+              }
+              container pi-instruction {
+                augex:data-path "#pi";
+                presence "Config entry.";
+                uses pi-instruction;
+              }
+              leaf cdata {
+                type string {
+                  pattern "(.|(\n))*";
+                  pattern "(.|(\n))*\\]\\]>(.|(\n))*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "#CDATA";
+              }
+            }
+          }
+        }
+      }
+      container empty-element {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf nmtoken-key {
+          mandatory true;
+          type string {
+            pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
+          }
+        }
+        leaf value {
+          mandatory true;
+          type enumeration {
+            enum "#empty";
+          }
+        }
+        uses attributes;
+      }
+    }
+    list pi-instruction-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container pi-instruction {
+        augex:data-path "#pi";
+        presence "Config entry.";
+        uses pi-instruction;
+      }
+    }
+  }
+}

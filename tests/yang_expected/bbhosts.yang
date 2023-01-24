@@ -1,0 +1,834 @@
+module bbhosts {
+  yang-version 1.1;
+  namespace "aug:bbhosts";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "BBhosts";
+
+  grouping url {
+    leaf url {
+      type string {
+        pattern "[^;# \n\t]+";
+      }
+      augex:data-path "url";
+    }
+    leaf keyword {
+      type string {
+        pattern "[^|;# \n\t]+";
+      }
+      augex:data-path "keyword";
+    }
+  }
+  grouping host-list {
+    list host-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container host {
+        augex:data-path "host";
+        presence "Config entry.";
+        leaf ip {
+          mandatory true;
+          type inet:ipv4-address-no-zone;
+          augex:data-path "ip";
+        }
+        leaf fqdn {
+          mandatory true;
+          type string {
+            pattern "[^|;# \n\t]+";
+          }
+          augex:data-path "fqdn";
+        }
+        container host-opts {
+          augex:data-path "probes";
+          presence "Config entry.";
+          list host-test {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-host-test {
+              mandatory true;
+              container cont {
+                augex:data-path "cont";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                uses url;
+              }
+              container cont-insecure {
+                augex:data-path "contInsecure";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                uses url;
+              }
+              container dns {
+                augex:data-path "dns";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                uses url;
+              }
+              container bbdisplay {
+                augex:data-path "BBDISPLAY";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container bbnet {
+                augex:data-path "BBNET";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container bbpager {
+                augex:data-path "BBPAGER";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container cdb {
+                augex:data-path "CDB";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container gtm {
+                augex:data-path "GTM";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container xymon {
+                augex:data-path "XYMON";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container ajp13 {
+                augex:data-path "ajp13";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container bbd {
+                augex:data-path "bbd";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container clamd {
+                augex:data-path "clamd";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container cupsd {
+                augex:data-path "cupsd";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container front {
+                augex:data-path "front";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container ftp {
+                augex:data-path "ftp";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container ftps {
+                augex:data-path "ftps";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container node {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "imap[2-4s]?";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container ldap {
+                augex:data-path "ldap";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container ldaps {
+                augex:data-path "ldaps";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container nntp {
+                augex:data-path "nntp";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container nntps {
+                augex:data-path "nntps";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container noconn {
+                augex:data-path "noconn";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container nocont {
+                augex:data-path "nocont";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container noping {
+                augex:data-path "noping";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container notrends {
+                augex:data-path "notrends";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container oratns {
+                augex:data-path "oratns";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container node2 {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "pop-?[2-3]?s?";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container qmqp {
+                augex:data-path "qmqp";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container qmtp {
+                augex:data-path "qmtp";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container rsync {
+                augex:data-path "rsync";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container smtp {
+                augex:data-path "smtp";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container smtps {
+                augex:data-path "smtps";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container spamd {
+                augex:data-path "spamd";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container node3 {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "ssh[1-2]?";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container telnet {
+                augex:data-path "telnet";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container telnets {
+                augex:data-path "telnets";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              container vnc {
+                augex:data-path "vnc";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "!?";
+                  }
+                }
+                leaf value2 {
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                  augex:data-path "value";
+                }
+              }
+              leaf url {
+                type string {
+                  pattern "https?:[^# \n\t]+";
+                }
+                augex:data-path "url";
+              }
+              container host-test-downtime {
+                augex:data-path "DOWNTIME";
+                presence "Config entry.";
+                leaf-list probe {
+                  type string {
+                    pattern "([A-Za-z0-9_.-]+)|(\\*)";
+                  }
+                  ordered-by user;
+                  augex:data-path "probe";
+                }
+                leaf day {
+                  mandatory true;
+                  type string {
+                    pattern "([A-Za-z0-9_.-]+)|(\\*)";
+                  }
+                  augex:data-path "day";
+                }
+                leaf starttime {
+                  mandatory true;
+                  type uint64;
+                  augex:data-path "starttime";
+                }
+                leaf endtime {
+                  mandatory true;
+                  type uint64;
+                  augex:data-path "endtime";
+                }
+                leaf cause {
+                  mandatory true;
+                  type string {
+                    pattern "[^\"]*";
+                  }
+                  augex:data-path "cause";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  list bbhosts {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list page-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container page {
+        augex:data-path "page";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[^|;# \n\t]+";
+          }
+        }
+        leaf title {
+          type string {
+            pattern "[^ \t][^\n]+";
+          }
+          augex:data-path "title";
+        }
+        uses host-list;
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            container group {
+              augex:data-path "group";
+              augex:value-yang-path "value-to-eol";
+              presence "Config entry.";
+              leaf value-to-eol {
+                type string {
+                  pattern "[^ \t][^\n]+";
+                }
+              }
+              uses host-list;
+            }
+            container group-compress {
+              augex:data-path "group-compress";
+              augex:value-yang-path "value-to-eol";
+              presence "Config entry.";
+              leaf value-to-eol {
+                type string {
+                  pattern "[^ \t][^\n]+";
+                }
+              }
+              uses host-list;
+            }
+            container group-only {
+              augex:data-path "group-only";
+              augex:value-yang-path "value-to-eol";
+              presence "Config entry.";
+              leaf-list col {
+                min-elements 1;
+                type string {
+                  pattern "[^|;# \n\t]+";
+                }
+                ordered-by user;
+                augex:data-path "col";
+              }
+              leaf value-to-eol {
+                mandatory true;
+                type string {
+                  pattern "[^ \t][^\n]+";
+                }
+              }
+              uses host-list;
+            }
+          }
+        }
+      }
+    }
+  }
+}

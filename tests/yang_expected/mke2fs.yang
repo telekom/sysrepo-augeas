@@ -1,0 +1,431 @@
+module mke2fs {
+  yang-version 1.1;
+  namespace "aug:mke2fs";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Mke2fs";
+
+  grouping word {
+    leaf-list word {
+      min-elements 1;
+      type string {
+        pattern "[A-Za-z0-9_.-]+";
+      }
+      ordered-by user;
+      augex:data-path "$$";
+    }
+  }
+  grouping word-list {
+    list word-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container word {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf disable {
+          type empty;
+          augex:data-path "disable";
+        }
+      }
+    }
+  }
+  grouping word-list2 {
+    list word-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container word {
+        augex:data-path "$$";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf id {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+      }
+    }
+  }
+  list mke2fs {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container defaults {
+          augex:data-path "defaults";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf fs-type {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "fs_type";
+              }
+              leaf undo-dir {
+                type string {
+                  pattern "[^ \t\n\"]+";
+                }
+                augex:data-path "undo_dir";
+              }
+              container base-features {
+                augex:data-path "base_features";
+                presence "Config entry.";
+                uses word;
+              }
+              container default-features {
+                augex:data-path "default_features";
+                presence "Config entry.";
+                uses word;
+              }
+              container default-mntopts {
+                augex:data-path "default_mntopts";
+                presence "Config entry.";
+                uses word;
+              }
+              leaf cluster-size {
+                type uint64;
+                augex:data-path "cluster_size";
+              }
+              leaf flex-bg-size {
+                type uint64;
+                augex:data-path "flex_bg_size";
+              }
+              leaf force-undo {
+                type uint64;
+                augex:data-path "force_undo";
+              }
+              leaf inode-ratio {
+                type uint64;
+                augex:data-path "inode_ratio";
+              }
+              leaf inode-size {
+                type uint64;
+                augex:data-path "inode_size";
+              }
+              leaf num-backup-sb {
+                type uint64;
+                augex:data-path "num_backup_sb";
+              }
+              leaf auto-64-bit-support {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "auto_64-bit_support";
+              }
+              leaf discard {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "discard";
+              }
+              leaf enable-periodic-fsck {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "enable_periodic_fsck";
+              }
+              leaf lazy-itable-init {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "lazy_itable_init";
+              }
+              leaf lazy-journal-init {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "lazy_journal_init";
+              }
+              leaf packed-meta-blocks {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "packed_meta_blocks";
+              }
+              leaf encoding {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "encoding";
+              }
+              leaf journal-location {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "journal_location";
+              }
+              leaf reserved-ratio {
+                type string {
+                  pattern "[0-9]+([.,][0-9]+)?";
+                }
+                augex:data-path "reserved_ratio";
+              }
+              leaf blocksize {
+                type string {
+                  pattern "((-){0,1})([0-9]+)";
+                }
+                augex:data-path "blocksize";
+              }
+              leaf hash-alg {
+                type string {
+                  pattern "((legacy)|(half_md4))|(tea)";
+                }
+                augex:data-path "hash_alg";
+              }
+              leaf errors {
+                type string {
+                  pattern "((continue)|(remount-ro))|(panic)";
+                }
+                augex:data-path "errors";
+              }
+              container features {
+                augex:data-path "features";
+                presence "Config entry.";
+                uses word-list;
+              }
+              container options {
+                augex:data-path "options";
+                presence "Config entry.";
+                uses word-list2;
+              }
+            }
+          }
+        }
+        container fs-types {
+          augex:data-path "fs_types";
+          presence "Config entry.";
+          list fs-types-record-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container fs-types-record {
+              augex:data-path "filesystem";
+              augex:value-yang-path "word";
+              presence "Config entry.";
+              leaf word {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+              }
+              list common-entry {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-common-entry {
+                  mandatory true;
+                  container base-features {
+                    augex:data-path "base_features";
+                    presence "Config entry.";
+                    uses word;
+                  }
+                  container default-features {
+                    augex:data-path "default_features";
+                    presence "Config entry.";
+                    uses word;
+                  }
+                  container default-mntopts {
+                    augex:data-path "default_mntopts";
+                    presence "Config entry.";
+                    uses word;
+                  }
+                  leaf cluster-size {
+                    type uint64;
+                    augex:data-path "cluster_size";
+                  }
+                  leaf flex-bg-size {
+                    type uint64;
+                    augex:data-path "flex_bg_size";
+                  }
+                  leaf force-undo {
+                    type uint64;
+                    augex:data-path "force_undo";
+                  }
+                  leaf inode-ratio {
+                    type uint64;
+                    augex:data-path "inode_ratio";
+                  }
+                  leaf inode-size {
+                    type uint64;
+                    augex:data-path "inode_size";
+                  }
+                  leaf num-backup-sb {
+                    type uint64;
+                    augex:data-path "num_backup_sb";
+                  }
+                  leaf auto-64-bit-support {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "auto_64-bit_support";
+                  }
+                  leaf discard {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "discard";
+                  }
+                  leaf enable-periodic-fsck {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "enable_periodic_fsck";
+                  }
+                  leaf lazy-itable-init {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "lazy_itable_init";
+                  }
+                  leaf lazy-journal-init {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "lazy_journal_init";
+                  }
+                  leaf packed-meta-blocks {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "packed_meta_blocks";
+                  }
+                  leaf encoding {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "encoding";
+                  }
+                  leaf journal-location {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "journal_location";
+                  }
+                  leaf reserved-ratio {
+                    type string {
+                      pattern "[0-9]+([.,][0-9]+)?";
+                    }
+                    augex:data-path "reserved_ratio";
+                  }
+                  leaf blocksize {
+                    type string {
+                      pattern "((-){0,1})([0-9]+)";
+                    }
+                    augex:data-path "blocksize";
+                  }
+                  leaf hash-alg {
+                    type string {
+                      pattern "((legacy)|(half_md4))|(tea)";
+                    }
+                    augex:data-path "hash_alg";
+                  }
+                  leaf errors {
+                    type string {
+                      pattern "((continue)|(remount-ro))|(panic)";
+                    }
+                    augex:data-path "errors";
+                  }
+                  container features {
+                    augex:data-path "features";
+                    presence "Config entry.";
+                    uses word-list;
+                  }
+                  container options {
+                    augex:data-path "options";
+                    presence "Config entry.";
+                    uses word-list2;
+                  }
+                }
+              }
+            }
+          }
+        }
+        container options {
+          augex:data-path "options";
+          presence "Config entry.";
+          list options-entry {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-options-entry {
+              mandatory true;
+              leaf proceed-delay {
+                type uint64;
+                augex:data-path "proceed_delay";
+              }
+              leaf sync-kludge {
+                type uint64;
+                augex:data-path "sync_kludge";
+              }
+              leaf old-bitmaps {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "old_bitmaps";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

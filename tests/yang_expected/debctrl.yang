@@ -1,0 +1,327 @@
+module debctrl {
+  yang-version 1.1;
+  namespace "aug:debctrl";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Debctrl";
+
+  grouping and-list {
+    list and-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container and {
+        augex:data-path "and";
+        presence "Config entry.";
+        list or-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container or {
+            augex:data-path "or";
+            presence "Config entry.";
+            container package-depends {
+              augex:data-path "$$";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "([a-zA-Z0-9_-]+)|($\\{[a-zA-Z0-9:]+\\})";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  container version-depends {
+                    augex:data-path "version";
+                    presence "Config entry.";
+                    leaf relation {
+                      mandatory true;
+                      type string {
+                        pattern "[<>=]+";
+                      }
+                      augex:data-path "relation";
+                    }
+                    leaf number {
+                      mandatory true;
+                      type string {
+                        pattern "([a-zA-Z0-9_.-]+)|($\\{[a-zA-Z0-9:]+\\})";
+                      }
+                      augex:data-path "number";
+                    }
+                  }
+                  container arch-depends {
+                    augex:data-path "arch";
+                    presence "Config entry.";
+                    leaf prefix {
+                      mandatory true;
+                      type string {
+                        pattern "!?";
+                      }
+                      augex:data-path "prefix";
+                    }
+                    leaf name {
+                      mandatory true;
+                      type string {
+                        pattern "[a-zA-Z0-9_.-]+";
+                      }
+                      augex:data-path "name";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  list debctrl {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    container srcpkg {
+      augex:data-path "srcpkg";
+      presence "Config entry.";
+      list src-entries {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        choice ch-src-entries {
+          mandatory true;
+          leaf source {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Source";
+          }
+          leaf section {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Section";
+          }
+          leaf priority {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Priority";
+          }
+          leaf standards-version {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Standards-Version";
+          }
+          leaf homepage {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Homepage";
+          }
+          leaf vcs-svn {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Vcs-Svn";
+          }
+          leaf vcs-browser {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Vcs-Browser";
+          }
+          leaf maintainer {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "Maintainer";
+          }
+          leaf dm-upload-allowed {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "DM-Upload-Allowed";
+          }
+          leaf x-python-version {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "X-Python-Version";
+          }
+          leaf xs-python-version {
+            type string {
+              pattern "[^ \t][^\n]+";
+            }
+            augex:data-path "XS-Python-Version";
+          }
+          container uploaders {
+            augex:data-path "Uploaders";
+            presence "Config entry.";
+            list array-list {
+              key "_seq";
+              min-elements 1;
+              ordered-by user;
+              augex:data-path "$$";
+              augex:value-yang-path "email";
+              leaf _seq {
+                type uint64;
+                description
+                  "Key contains some unique value. The order is based on the actual order of list instances.";
+              }
+              leaf email {
+                mandatory true;
+                type string {
+                  pattern "(([A-Za-z]+ )+<[^\n>]+>)|([^\n,\t<> ]+)";
+                }
+              }
+            }
+          }
+          container build-depends {
+            augex:data-path "Build-Depends";
+            presence "Config entry.";
+            uses and-list;
+          }
+          container build-depends-indep {
+            augex:data-path "Build-Depends-Indep";
+            presence "Config entry.";
+            uses and-list;
+          }
+        }
+      }
+    }
+    list binpkg-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container binpkg {
+        augex:data-path "binpkg";
+        presence "Config entry.";
+        list config-entries {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf package {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Package";
+            }
+            leaf architecture {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Architecture";
+            }
+            leaf section {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Section";
+            }
+            leaf priority {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Priority";
+            }
+            leaf essential {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Essential";
+            }
+            leaf homepage {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "Homepage";
+            }
+            leaf xb-python-version {
+              type string {
+                pattern "[^ \t][^\n]+";
+              }
+              augex:data-path "XB-Python-Version";
+            }
+            container depends {
+              augex:data-path "Depends";
+              presence "Config entry.";
+              uses and-list;
+            }
+            container recommends {
+              augex:data-path "Recommends";
+              presence "Config entry.";
+              uses and-list;
+            }
+            container suggests {
+              augex:data-path "Suggests";
+              presence "Config entry.";
+              uses and-list;
+            }
+            container provides {
+              augex:data-path "Provides";
+              presence "Config entry.";
+              uses and-list;
+            }
+          }
+        }
+        container description {
+          augex:data-path "Description";
+          presence "Config entry.";
+          leaf summary {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z][^\n]+";
+            }
+            augex:data-path "summary";
+          }
+          leaf-list text {
+            type string {
+              pattern ".*[^ \t\n].*";
+            }
+            ordered-by user;
+            augex:data-path "text";
+          }
+        }
+      }
+    }
+  }
+}

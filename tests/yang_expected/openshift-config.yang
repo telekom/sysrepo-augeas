@@ -1,0 +1,43 @@
+module openshift-config {
+  yang-version 1.1;
+  namespace "aug:openshift-config";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "OpenShift_Config";
+
+  list openshift-config {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list primary-entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container primary-entry {
+        augex:data-path "$$";
+        augex:value-yang-path "any-opt";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf any-opt {
+          type string {
+            pattern "[^\n\t \"']([^\n\"']*[^\n\t \"'])?";
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+module jettyrealm {
+  yang-version 1.1;
+  namespace "aug:jettyrealm";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "JettyRealm";
+
+  list jettyrealm {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list realm-entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container realm-entry {
+        augex:data-path "user";
+        presence "Config entry.";
+        leaf username {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "username";
+        }
+        leaf password {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "password";
+        }
+        leaf-list realm {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          ordered-by user;
+          augex:data-path "realm";
+        }
+      }
+    }
+  }
+}

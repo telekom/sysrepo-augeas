@@ -1,0 +1,67 @@
+module apt-update-manager {
+  yang-version 1.1;
+  namespace "aug:apt-update-manager";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Apt_Update_Manager";
+
+  list apt-update-manager {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        list word-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container word {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf word {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+            }
+            leaf value {
+              type union {
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

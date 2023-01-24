@@ -1,0 +1,105 @@
+module lvm {
+  yang-version 1.1;
+  namespace "aug:lvm";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "LVM";
+
+  list lvm {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list def-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      list identifier-list {
+        key "_r-id";
+        leaf _r-id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the recursive augeas data.";
+        }
+        container identifier {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf identifier {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z0-9_-]+";
+            }
+          }
+          choice ch-identifier {
+            mandatory true;
+            container dict {
+              augex:data-path "dict";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                leaf _identifier-ref {
+                  type leafref {
+                    path "../../../../../identifier-list/_r-id";
+                  }
+                  description
+                    "Implicitly generated leaf to maintain recursive augeas data.";
+                }
+              }
+            }
+            leaf int {
+              type int64;
+              augex:data-path "int";
+            }
+            leaf str {
+              type string {
+                pattern "([^\\\\\"]|\\\\.)*";
+              }
+              augex:data-path "str";
+            }
+            container list {
+              augex:data-path "list";
+              presence "Config entry.";
+              list list-list {
+                key "_seq";
+                ordered-by user;
+                augex:data-path "$$";
+                leaf _seq {
+                  type uint64;
+                  description
+                    "Key contains some unique value. The order is based on the actual order of list instances.";
+                }
+                choice ch-list-list {
+                  mandatory true;
+                  leaf int {
+                    type int64;
+                    augex:data-path "int";
+                  }
+                  leaf str {
+                    type string {
+                      pattern "([^\\\\\"]|\\\\.)*";
+                    }
+                    augex:data-path "str";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

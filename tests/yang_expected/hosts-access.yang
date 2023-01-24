@@ -1,0 +1,302 @@
+module hosts-access {
+  yang-version 1.1;
+  namespace "aug:hosts-access";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Hosts_Access";
+
+  grouping daemon {
+    container daemon {
+      augex:data-path "process";
+      augex:value-yang-path "list-item";
+      presence "Config entry.";
+      leaf list-item {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+          pattern "(?i)EXCEPT" {
+            modifier invert-match;
+          }
+        }
+      }
+      leaf host {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+          pattern "(?i)EXCEPT" {
+            modifier invert-match;
+          }
+        }
+        augex:data-path "host";
+      }
+    }
+  }
+  grouping ch-client {
+    choice ch-client {
+      mandatory true;
+      container client {
+        augex:data-path "client";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf user {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+            pattern "(?i)EXCEPT" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "user";
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.@?*-][A-Za-z0-9_.?*-]*|\\[[A-Za-z0-9:?*%]+\\]";
+            pattern "(?i)EXCEPT" {
+              modifier invert-match;
+            }
+          }
+        }
+        leaf netmask {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "netmask";
+        }
+      }
+      leaf file {
+        type string {
+          pattern "/[^\t\n ,:][^\t\n ,:][^\t\n ,:]*|/[^\t\n ,:]";
+        }
+        augex:data-path "file";
+      }
+    }
+  }
+  list hosts-access {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list line-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      list daemon-list {
+        key "_id";
+        min-elements 1;
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        uses daemon;
+      }
+      container except {
+        augex:data-path "except";
+        presence "Config entry.";
+        list daemon-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses daemon;
+        }
+      }
+      list ch-client-list {
+        key "_id";
+        min-elements 1;
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        uses ch-client;
+      }
+      container except2 {
+        augex:data-path "except";
+        presence "Config entry.";
+        list ch-client-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses ch-client;
+        }
+      }
+      choice ch-line-list {
+        mandatory true;
+        list config-entries {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            leaf severity {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "severity";
+            }
+            leaf spawn {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "spawn";
+            }
+            leaf twist {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "twist";
+            }
+            leaf keepalive {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "keepalive";
+            }
+            leaf linger {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "linger";
+            }
+            leaf rfc931 {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "rfc931";
+            }
+            leaf banners {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "banners";
+            }
+            leaf nice {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "nice";
+            }
+            leaf setenv {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "setenv";
+            }
+            leaf umask {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "umask";
+            }
+            leaf user {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "user";
+            }
+            leaf allow {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "ALLOW";
+            }
+            leaf allow2 {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "allow";
+            }
+            leaf deny {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "DENY";
+            }
+            leaf deny2 {
+              type union {
+                type empty;
+                type string {
+                  pattern "[^ \t\n:=][^\n:]*((\\\\:|\\\\[ \t]*\n[ \t]+)[^\n:]*)*[^ \\\\\t\n:]|[^ \t\n:\\\\\\\\]";
+                }
+              }
+              augex:data-path "deny";
+            }
+          }
+        }
+        leaf shell-command {
+          type string {
+            pattern "[^ \t\n:][^\n]*[^ \t\n]|[^ \t\n:\\\\\\\\]";
+            pattern "(severity|spawn|twist|keepalive|linger|rfc931|banners|nice|setenv|umask|user|allow|deny).*" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "shell_command";
+        }
+      }
+    }
+  }
+}

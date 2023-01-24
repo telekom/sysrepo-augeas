@@ -1,0 +1,92 @@
+module mysql {
+  yang-version 1.1;
+  namespace "aug:mysql";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "MySQL";
+
+  list mysql {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container record {
+          augex:data-path "target";
+          augex:value-yang-path "record-label";
+          presence "Config entry.";
+          leaf record-label {
+            mandatory true;
+            type string {
+              pattern "[^\\]\n]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container node {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z][A-Za-z0-9._-]*";
+                }
+              }
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^#;\" \t\n]+([ \t]+[^#;\" \t\n]+)*";
+                  }
+                  type string {
+                    pattern "[^\"\n]*[#;]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "";
+                  }
+                }
+              }
+            }
+          }
+        }
+        container node {
+          augex:data-path "$$";
+          augex:value-yang-path "fspath";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "!include(dir)?";
+            }
+          }
+          leaf fspath {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+          }
+        }
+      }
+    }
+  }
+}

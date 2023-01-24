@@ -1,0 +1,290 @@
+module dput {
+  yang-version 1.1;
+  namespace "aug:dput";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Dput";
+
+  list dput {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "target";
+        augex:value-yang-path "record-label";
+        presence "Config entry.";
+        leaf record-label {
+          mandatory true;
+          type string {
+            pattern "[^\\]\n]+";
+          }
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf allow-dcut {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "allow_dcut";
+            }
+            leaf allow-non-us-software {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "allow_non-us_software";
+            }
+            leaf allow-unsigned-uploads {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "allow_unsigned_uploads";
+            }
+            leaf check-version {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "check_version";
+            }
+            leaf default-host-main {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "default_host_main";
+            }
+            leaf default-host-non-us {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "default_host_non-us";
+            }
+            leaf fqdn {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "fqdn";
+            }
+            leaf hash {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "hash";
+            }
+            leaf incoming {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "incoming";
+            }
+            leaf login {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "login";
+            }
+            leaf method {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "method";
+            }
+            leaf passive-ftp {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "passive_ftp";
+            }
+            leaf post-upload-command {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "post_upload_command";
+            }
+            leaf pre-upload-command {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "pre_upload_command";
+            }
+            leaf progress-indicator {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "progress_indicator";
+            }
+            leaf run-dinstall {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "run_dinstall";
+            }
+            leaf run-lintian {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "run_lintian";
+            }
+            leaf scp-compress {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "scp_compress";
+            }
+            leaf ssh-config-options {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "ssh_config_options";
+            }
+            leaf allowed-distributions {
+              type union {
+                type empty;
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+              augex:data-path "allowed_distributions";
+            }
+          }
+        }
+      }
+    }
+  }
+}

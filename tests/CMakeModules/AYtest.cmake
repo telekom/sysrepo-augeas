@@ -44,10 +44,9 @@ if(NOT ret EQUAL 0)
 endif()
 
 # compare generated yang file with expected one
-set(IGNORE_PATTERN "ldif")
-if ("${MOD}" MATCHES "${IGNORE_PATTERN}")
-    message(WARNING "The 'diff' command ignores yang-pattern.")
-    execute_process(COMMAND diff -I "pattern " ${GENFILE} ${EXPFILE} RESULT_VARIABLE ret)
+if ("${MOD}" MATCHES "^(ldif|dns-zone|gdm|krb5|php)$")
+    message(WARNING "The 'diff' command ignores yang-pattern and when-pattern.")
+    execute_process(COMMAND diff -I "pattern " -I "when " ${GENFILE} ${EXPFILE} RESULT_VARIABLE ret)
 else()
     execute_process(COMMAND diff ${GENFILE} ${EXPFILE} RESULT_VARIABLE ret)
 endif()

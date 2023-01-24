@@ -1,0 +1,154 @@
+module modprobe {
+  yang-version 1.1;
+  namespace "aug:modprobe";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Modprobe";
+
+  grouping command {
+    leaf command {
+      mandatory true;
+      type string {
+        pattern "([^# \t\n\\\\\\\\][^#\n\\\\\\\\]*[ \t]*\\\\[ \t]*\n[ \t]*)*([^# \t\n\\\\\\\\][^#\n\\\\\\\\]*[^# \t\n\\\\\\\\]|[^# \t\n\\\\\\\\])|[^# \t\n\\\\\\\\]";
+      }
+      augex:data-path "command";
+    }
+  }
+  list modprobe {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container alias {
+          augex:data-path "alias";
+          augex:value-yang-path "sto-no-spaces";
+          presence "Config entry.";
+          leaf sto-no-spaces {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n\\\\\\\\]+";
+            }
+          }
+          leaf modulename {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n\\\\\\\\]+";
+            }
+            augex:data-path "modulename";
+          }
+        }
+        container options {
+          augex:data-path "options";
+          augex:value-yang-path "sto-no-spaces";
+          presence "Config entry.";
+          leaf sto-no-spaces {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n\\\\\\\\]+";
+            }
+          }
+          list word-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container word {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf word {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+              }
+              leaf value {
+                type string {
+                  pattern "[^#\" \t\n\\\\\\\\]+|\"[^#\"\n\\\\\\\\]*\"";
+                }
+              }
+            }
+          }
+        }
+        container install {
+          augex:data-path "install";
+          augex:value-yang-path "sto-no-spaces";
+          presence "Config entry.";
+          leaf sto-no-spaces {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n\\\\\\\\]+";
+            }
+          }
+          uses command;
+        }
+        container remove {
+          augex:data-path "remove";
+          augex:value-yang-path "sto-no-spaces";
+          presence "Config entry.";
+          leaf sto-no-spaces {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n\\\\\\\\]+";
+            }
+          }
+          uses command;
+        }
+        leaf blacklist {
+          type string {
+            pattern "[^# \t\n\\\\\\\\]+";
+          }
+          augex:data-path "blacklist";
+        }
+        leaf config {
+          type string {
+            pattern "binary_indexes|yes|no";
+          }
+          augex:data-path "config";
+        }
+        container softdep {
+          augex:data-path "softdep";
+          augex:value-yang-path "sto-no-colons";
+          presence "Config entry.";
+          leaf sto-no-colons {
+            mandatory true;
+            type string {
+              pattern "[^:# \t\n\\\\\\\\]+";
+            }
+          }
+          leaf-list pre {
+            type string {
+              pattern "[^:# \t\n\\\\\\\\]+";
+            }
+            ordered-by user;
+            augex:data-path "pre";
+          }
+          leaf-list post {
+            type string {
+              pattern "[^:# \t\n\\\\\\\\]+";
+            }
+            ordered-by user;
+            augex:data-path "post";
+          }
+        }
+      }
+    }
+  }
+}

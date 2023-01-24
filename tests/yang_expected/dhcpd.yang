@@ -1,0 +1,1428 @@
+module dhcpd {
+  yang-version 1.1;
+  namespace "aug:dhcpd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Dhcpd";
+
+  grouping lns-staging {
+    choice ch-lns-staging {
+      mandatory true;
+      leaf allow {
+        type string {
+          pattern "(((((((((((unknown(-|[ ]+)clients)|(known(-|[ ]+)clients))|(all[ ]+clients))|(dynamic[ ]+bootp[ ]+clients))|(authenticated[ ]+clients))|(unauthenticated[ ]+clients))|(bootp))|(booting))|(duplicates))|(declines))|(client-updates))|(leasequery)";
+        }
+        augex:data-path "allow";
+      }
+      leaf deny {
+        type string {
+          pattern "(((((((((((unknown(-|[ ]+)clients)|(known(-|[ ]+)clients))|(all[ ]+clients))|(dynamic[ ]+bootp[ ]+clients))|(authenticated[ ]+clients))|(unauthenticated[ ]+clients))|(bootp))|(booting))|(duplicates))|(declines))|(client-updates))|(leasequery)";
+        }
+        augex:data-path "deny";
+      }
+      leaf allow-members-of {
+        type union {
+          type string {
+            pattern "[^\" \t\n;]+";
+          }
+          type string {
+            pattern "[^\"\n]*[ \t]+[^\"\n]*";
+          }
+        }
+        augex:data-path "allow-members-of";
+      }
+      leaf deny-members-of {
+        type union {
+          type string {
+            pattern "[^\" \t\n;]+";
+          }
+          type string {
+            pattern "[^\"\n]*[ \t]+[^\"\n]*";
+          }
+        }
+        augex:data-path "deny-members-of";
+      }
+      container stmt-option1 {
+        augex:data-path "option";
+        presence "Config entry.";
+        container stmt-option-basic {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+            }
+          }
+          leaf value {
+            type boolean;
+          }
+          list arg-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf arg {
+              type union {
+                type string {
+                  pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+                }
+                type string {
+                  pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+                }
+              }
+              augex:data-path "arg";
+            }
+          }
+        }
+      }
+      container stmt-option2 {
+        augex:data-path "rfc-code";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+          }
+          augex:data-path "label";
+        }
+        leaf code {
+          type string {
+            pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+          }
+          augex:data-path "code";
+        }
+        choice ch-stmt-option2 {
+          mandatory true;
+          leaf type {
+            type string {
+              pattern "(array of[ \t]+)?(((un)?signed[ \t]+)?integer (8|16|32)|string|ip6?-address|boolean|domain-list|text)|encapsulate [A-Za-z0-9_.-]+";
+            }
+            augex:data-path "type";
+          }
+          container record {
+            augex:data-path "record";
+            presence "Config entry.";
+            list record-list {
+              key "_seq";
+              ordered-by user;
+              augex:data-path "$$";
+              augex:value-yang-path "stmt-option-value";
+              leaf _seq {
+                type uint64;
+                description
+                  "Key contains some unique value. The order is based on the actual order of list instances.";
+              }
+              leaf stmt-option-value {
+                mandatory true;
+                type string {
+                  pattern "(array of[ \t]+)?(((un)?signed[ \t]+)?integer (8|16|32)|string|ip6?-address|boolean|domain-list|text)|encapsulate [A-Za-z0-9_.-]+";
+                }
+              }
+            }
+          }
+        }
+      }
+      container stmt-hardware {
+        augex:data-path "hardware";
+        presence "Config entry.";
+        leaf type {
+          mandatory true;
+          type string {
+            pattern "ethernet|tokenring|fddi";
+          }
+          augex:data-path "type";
+        }
+        leaf address {
+          mandatory true;
+          type string {
+            pattern "[a-fA-F0-9:-]+";
+          }
+          augex:data-path "address";
+        }
+      }
+      container stmt-range {
+        augex:data-path "range";
+        presence "Config entry.";
+        leaf flag {
+          type string {
+            pattern "dynamic-bootp";
+          }
+          augex:data-path "flag";
+        }
+        leaf from {
+          type inet:ipv4-address-no-zone;
+          augex:data-path "from";
+        }
+        leaf to {
+          mandatory true;
+          type inet:ipv4-address-no-zone;
+          augex:data-path "to";
+        }
+      }
+      leaf ddns-update-style {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ddns-update-style";
+      }
+      leaf ddns-updates {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ddns-updates";
+      }
+      leaf ddns-hostname {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ddns-hostname";
+      }
+      leaf ddns-domainname {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ddns-domainname";
+      }
+      leaf ddns-rev-domainname {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ddns-rev-domainname";
+      }
+      leaf log-facility {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "log-facility";
+      }
+      leaf server-name {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "server-name";
+      }
+      leaf fixed-address {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "fixed-address";
+      }
+      leaf failover-peer {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "failover peer";
+      }
+      leaf use-host-decl-names {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "use-host-decl-names";
+      }
+      leaf next-server {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "next-server";
+      }
+      leaf address {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "address";
+      }
+      leaf peer-address {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "peer address";
+      }
+      leaf type {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "type";
+      }
+      leaf file {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "file";
+      }
+      leaf algorithm {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "algorithm";
+      }
+      leaf secret {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "secret";
+      }
+      leaf key {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "key";
+      }
+      leaf include {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "include";
+      }
+      leaf hba {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "hba";
+      }
+      leaf boot-unknown-clients {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "boot-unknown-clients";
+      }
+      leaf db-time-format {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "db-time-format";
+      }
+      leaf do-forward-updates {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "do-forward-updates";
+      }
+      leaf dynamic-bootp-lease-cutoff {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "dynamic-bootp-lease-cutoff";
+      }
+      leaf get-lease-hostnames {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "get-lease-hostnames";
+      }
+      leaf infinite-is-reserved {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "infinite-is-reserved";
+      }
+      leaf lease-file-name {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "lease-file-name";
+      }
+      leaf local-address {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "local-address";
+      }
+      leaf one-lease-per-client {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "one-lease-per-client";
+      }
+      leaf pid-file-name {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "pid-file-name";
+      }
+      leaf ping-check {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "ping-check";
+      }
+      leaf server-identifier {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "server-identifier";
+      }
+      leaf site-option-space {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "site-option-space";
+      }
+      leaf stash-agent-options {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "stash-agent-options";
+      }
+      leaf update-conflict-detection {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "update-conflict-detection";
+      }
+      leaf update-optimization {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "update-optimization";
+      }
+      leaf update-static-leases {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "update-static-leases";
+      }
+      leaf use-host-decl-names2 {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "use-host-decl-names";
+      }
+      leaf use-lease-addr-for-default-route {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "use-lease-addr-for-default-route";
+      }
+      leaf vendor-option-space {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "vendor-option-space";
+      }
+      leaf primary {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "primary";
+      }
+      leaf omapi-key {
+        type union {
+          type string {
+            pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+          }
+          type string {
+            pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+          }
+        }
+        augex:data-path "omapi-key";
+      }
+      leaf filename {
+        type string {
+          pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+        }
+        augex:data-path "filename";
+      }
+      leaf default-lease-time {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "default-lease-time";
+      }
+      leaf max-lease-time {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-lease-time";
+      }
+      leaf min-lease-time {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "min-lease-time";
+      }
+      leaf lease-limit {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "lease limit";
+      }
+      leaf port {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "port";
+      }
+      leaf peer-port {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "peer port";
+      }
+      leaf max-response-delay {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-response-delay";
+      }
+      leaf max-unacked-updates {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-unacked-updates";
+      }
+      leaf mclt {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "mclt";
+      }
+      leaf split {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "split";
+      }
+      leaf load-balance-max-seconds {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "load balance max seconds";
+      }
+      leaf max-lease-misbalance {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-lease-misbalance";
+      }
+      leaf max-lease-ownership {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-lease-ownership";
+      }
+      leaf min-balance {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "min-balance";
+      }
+      leaf max-balance {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "max-balance";
+      }
+      leaf adaptive-lease-time-threshold {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "adaptive-lease-time-threshold";
+      }
+      leaf dynamic-bootp-lease-length {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "dynamic-bootp-lease-length";
+      }
+      leaf local-port {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "local-port";
+      }
+      leaf min-sec {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "min-sec";
+      }
+      leaf omapi-port {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "omapi-port";
+      }
+      leaf ping-timeout {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "ping-timeout";
+      }
+      leaf remote-port {
+        type string {
+          pattern "[0-9][0-9]*";
+        }
+        augex:data-path "remote-port";
+      }
+      leaf authoritative {
+        type empty;
+        augex:data-path "authoritative";
+      }
+      leaf primary2 {
+        type empty;
+        augex:data-path "primary";
+      }
+      leaf secondary {
+        type empty;
+        augex:data-path "secondary";
+      }
+      container stmt-match {
+        augex:data-path "match";
+        presence "Config entry.";
+        choice ch-stmt-match {
+          mandatory true;
+          case function {
+            container function {
+              augex:data-path "function";
+              augex:value-yang-path "fct";
+              presence "Config entry.";
+              leaf fct {
+                type union {
+                  type string {
+                    pattern "((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)";
+                  }
+                  type string {
+                    pattern "pick-first-value";
+                  }
+                }
+              }
+              container fct-args {
+                augex:data-path "args";
+                presence "Config entry.";
+                leaf-list arg {
+                  min-elements 2;
+                  type string {
+                    pattern "([^ \t\n,\\\\(\\\\)][^,\\\\(\\\\)]*[^ \t\n,\\\\(\\\\)]|[^ \t\n,\\\\(\\\\)]+)|(([A-Za-z0-9_.-]+(\\[[0-9]+\\])?)([ \t]*\\([^)]*\\)))";
+                  }
+                  ordered-by user;
+                  augex:data-path "arg";
+                }
+              }
+            }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\" \t\n;]+";
+                }
+                type string {
+                  pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                }
+              }
+              augex:data-path "value";
+              when "re-match(../function/fct, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
+            }
+          }
+          container stmt-match-ifopt {
+            augex:data-path "option";
+            augex:value-yang-path "word";
+            presence "Config entry.";
+            leaf word {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+              }
+            }
+            leaf value {
+              type union {
+                type string {
+                  pattern "[^\" \t\n;]+";
+                }
+                type string {
+                  pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                }
+              }
+              augex:data-path "value";
+            }
+          }
+        }
+      }
+      container stmt-subclass {
+        augex:data-path "subclass";
+        presence "Config entry.";
+        leaf name {
+          type union {
+            type string {
+              pattern "[^\" \t\n;]+";
+            }
+            type string {
+              pattern "[^\"\n]*[ \t]+[^\"\n]*";
+            }
+          }
+          augex:data-path "name";
+        }
+        leaf value {
+          type union {
+            type string {
+              pattern "[^\" \t\n;]+";
+            }
+            type string {
+              pattern "[^\"\n]*[ \t]+[^\"\n]*";
+            }
+          }
+          augex:data-path "value";
+        }
+      }
+      container stmt-set {
+        augex:data-path "set";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
+          }
+        }
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^ \t;][^;\n=]+[^ \t;]|[^ \t;=]+";
+          }
+          augex:data-path "value";
+        }
+      }
+    }
+  }
+  list dhcpd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        case lns-staging {
+          uses lns-staging;
+        }
+        list subnet-list {
+          key "_r-id";
+          leaf _r-id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the recursive augeas data.";
+          }
+          choice ch-subnet-list {
+            mandatory true;
+            container subnet {
+              augex:data-path "subnet";
+              presence "Config entry.";
+              leaf network {
+                mandatory true;
+                type inet:ipv4-address-no-zone;
+                augex:data-path "network";
+              }
+              leaf netmask {
+                type inet:ipv4-address-no-zone;
+                augex:data-path "netmask";
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container host {
+              augex:data-path "host";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container class {
+              augex:data-path "class";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container shared-network {
+              augex:data-path "shared-network";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container failover-peer {
+              augex:data-path "failover peer";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container zone {
+              augex:data-path "zone";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container group {
+              augex:data-path "group";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container on {
+              augex:data-path "on";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container key-block {
+              augex:data-path "key_block";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[^\"\n]*[ \t]+[^\"\n]*";
+                  }
+                  type string {
+                    pattern "[^\" \t\n;]+";
+                  }
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container pool {
+              augex:data-path "pool";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container group2 {
+              augex:data-path "group";
+              presence "Config entry.";
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+            }
+            container if {
+              augex:data-path "@if";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[^{ \t\n][^{\n]*[^{ \t\n]|[^{ \t\n]";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf _subnet-ref {
+                    type leafref {
+                      path "../../../../subnet-list/_r-id";
+                    }
+                    description
+                      "Implicitly generated leaf to maintain recursive augeas data.";
+                  }
+                  case lns-staging {
+                    uses lns-staging;
+                  }
+                }
+              }
+              list elsif-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container elsif {
+                  augex:data-path "@elsif";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf value {
+                    mandatory true;
+                    type string {
+                      pattern "[^{ \t\n][^{\n]*[^{ \t\n]|[^{ \t\n]";
+                    }
+                  }
+                  list config-entries {
+                    key "_id";
+                    ordered-by user;
+                    leaf _id {
+                      type uint64;
+                      description
+                        "Implicitly generated list key to maintain the order of the augeas data.";
+                    }
+                    choice ch-config-entries {
+                      mandatory true;
+                      leaf _subnet-ref {
+                        type leafref {
+                          path "../../../../../../subnet-list/_r-id";
+                        }
+                        description
+                          "Implicitly generated leaf to maintain recursive augeas data.";
+                      }
+                      case lns-staging {
+                        uses lns-staging;
+                      }
+                    }
+                  }
+                }
+              }
+              container else {
+                augex:data-path "@else";
+                presence "Config entry.";
+                list config-entries {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  choice ch-config-entries {
+                    mandatory true;
+                    leaf _subnet-ref {
+                      type leafref {
+                        path "../../../../../subnet-list/_r-id";
+                      }
+                      description
+                        "Implicitly generated leaf to maintain recursive augeas data.";
+                    }
+                    case lns-staging {
+                      uses lns-staging;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

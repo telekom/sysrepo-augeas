@@ -1,0 +1,197 @@
+module pagekite {
+  yang-version 1.1;
+  namespace "aug:pagekite";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Pagekite";
+
+  list pagekite {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf defaults {
+          type empty;
+          augex:data-path "defaults";
+        }
+        leaf isfrontend {
+          type empty;
+          augex:data-path "isfrontend";
+        }
+        leaf abort-not-configured {
+          type empty;
+          augex:data-path "abort_not_configured";
+        }
+        leaf insecure {
+          type empty;
+          augex:data-path "insecure";
+        }
+        leaf domain {
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "domain";
+        }
+        leaf frontend {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "frontend";
+        }
+        leaf frontends {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "frontends";
+        }
+        leaf host {
+          type inet:ip-address-no-zone;
+          augex:data-path "host";
+        }
+        container ports {
+          augex:data-path "ports";
+          presence "Config entry.";
+          list ports-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "integer";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf integer {
+              mandatory true;
+              type uint64;
+            }
+          }
+        }
+        container protos {
+          augex:data-path "protos";
+          presence "Config entry.";
+          list protos-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "word";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf word {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+            }
+          }
+        }
+        leaf kitename {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "kitename";
+        }
+        leaf fe-certname {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "fe_certname";
+        }
+        leaf ca-certs {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "ca_certs";
+        }
+        leaf tls-endpoint {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+          augex:data-path "tls_endpoint";
+        }
+        leaf kitesecret {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "kitesecret";
+        }
+        container service-on {
+          augex:data-path "service_on";
+          presence "Config entry.";
+          container service-on {
+            augex:data-path "$$";
+            presence "Config entry.";
+            leaf service-on {
+              mandatory true;
+              type uint64;
+            }
+            leaf protocol {
+              mandatory true;
+              type string {
+                pattern "[^# \\\\:\n\t]+";
+              }
+              augex:data-path "protocol";
+            }
+            leaf kitename {
+              mandatory true;
+              type string {
+                pattern "[^# \\\\:\n\t]+";
+              }
+              augex:data-path "kitename";
+            }
+            leaf backend-host {
+              mandatory true;
+              type string {
+                pattern "[^# \\\\:\n\t]+";
+              }
+              augex:data-path "backend_host";
+            }
+            leaf backend-port {
+              mandatory true;
+              type string {
+                pattern "[^# \\\\:\n\t]+";
+              }
+              augex:data-path "backend_port";
+            }
+            leaf secret {
+              type string {
+                pattern "[^ \t\n]+";
+              }
+              augex:data-path "secret";
+            }
+          }
+        }
+        leaf service-cfg {
+          type string {
+            pattern "[^ \t\n](.*[^ \t\n])?";
+          }
+          augex:data-path "service_cfg";
+        }
+      }
+    }
+  }
+}

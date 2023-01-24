@@ -1,0 +1,782 @@
+module nslcd {
+  yang-version 1.1;
+  namespace "aug:nslcd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Nslcd";
+
+  grouping key-name {
+    container key-name {
+      augex:data-path "$$";
+      augex:value-yang-path "no-spaces";
+      presence "Config entry.";
+      leaf key-name {
+        mandatory true;
+        type string {
+          pattern "[^ #\n\t/][^ #\n\t/]+";
+        }
+      }
+      leaf no-spaces {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+      }
+    }
+  }
+  list nslcd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container map-entry {
+          augex:data-path "map";
+          presence "Config entry.";
+          choice ch-map-entry {
+            mandatory true;
+            container alias {
+              augex:data-path "alias";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container aliases {
+              augex:data-path "aliases";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container ether {
+              augex:data-path "ether";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container ethers {
+              augex:data-path "ethers";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container group {
+              augex:data-path "group";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container host {
+              augex:data-path "host";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container hosts {
+              augex:data-path "hosts";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container netgroup {
+              augex:data-path "netgroup";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container network {
+              augex:data-path "network";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container networks {
+              augex:data-path "networks";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container passwd {
+              augex:data-path "passwd";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container protocol {
+              augex:data-path "protocol";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container protocols {
+              augex:data-path "protocols";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container rpc {
+              augex:data-path "rpc";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container service {
+              augex:data-path "service";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container services {
+              augex:data-path "services";
+              presence "Config entry.";
+              uses key-name;
+            }
+            container shadow {
+              augex:data-path "shadow";
+              presence "Config entry.";
+              uses key-name;
+            }
+          }
+        }
+        container base {
+          augex:data-path "base";
+          augex:value-yang-path "ldap-dn";
+          presence "Config entry.";
+          choice ch-base {
+            mandatory true;
+            leaf ldap-dn {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+            }
+            leaf alias {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "alias";
+            }
+            leaf aliases {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "aliases";
+            }
+            leaf ether {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "ether";
+            }
+            leaf ethers {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "ethers";
+            }
+            leaf group {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "group";
+            }
+            leaf host {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "host";
+            }
+            leaf hosts {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "hosts";
+            }
+            leaf netgroup {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "netgroup";
+            }
+            leaf network {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "network";
+            }
+            leaf networks {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "networks";
+            }
+            leaf passwd {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "passwd";
+            }
+            leaf protocol {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "protocol";
+            }
+            leaf protocols {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "protocols";
+            }
+            leaf rpc {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "rpc";
+            }
+            leaf service {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "service";
+            }
+            leaf services {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "services";
+            }
+            leaf shadow {
+              type string {
+                pattern "([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+)((((,)?)([A-Za-z][A-Za-z]+=[A-Za-z0-9_.-]+))*)";
+              }
+              augex:data-path "shadow";
+            }
+          }
+        }
+        container scope {
+          augex:data-path "scope";
+          augex:value-yang-path "ldap-scope";
+          presence "Config entry.";
+          choice ch-scope {
+            mandatory true;
+            leaf ldap-scope {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+            }
+            leaf alias {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "alias";
+            }
+            leaf aliases {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "aliases";
+            }
+            leaf ether {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "ether";
+            }
+            leaf ethers {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "ethers";
+            }
+            leaf group {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "group";
+            }
+            leaf host {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "host";
+            }
+            leaf hosts {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "hosts";
+            }
+            leaf netgroup {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "netgroup";
+            }
+            leaf network {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "network";
+            }
+            leaf networks {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "networks";
+            }
+            leaf passwd {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "passwd";
+            }
+            leaf protocol {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "protocol";
+            }
+            leaf protocols {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "protocols";
+            }
+            leaf rpc {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "rpc";
+            }
+            leaf service {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "service";
+            }
+            leaf services {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "services";
+            }
+            leaf shadow {
+              type string {
+                pattern "sub(tree)?|one(level)?|base";
+              }
+              augex:data-path "shadow";
+            }
+          }
+        }
+        container filter-entry {
+          augex:data-path "filter";
+          presence "Config entry.";
+          choice ch-filter-entry {
+            mandatory true;
+            leaf alias {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "alias";
+            }
+            leaf aliases {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "aliases";
+            }
+            leaf ether {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "ether";
+            }
+            leaf ethers {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "ethers";
+            }
+            leaf group {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "group";
+            }
+            leaf host {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "host";
+            }
+            leaf hosts {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "hosts";
+            }
+            leaf netgroup {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "netgroup";
+            }
+            leaf network {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "network";
+            }
+            leaf networks {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "networks";
+            }
+            leaf passwd {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "passwd";
+            }
+            leaf protocol {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "protocol";
+            }
+            leaf protocols {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "protocols";
+            }
+            leaf rpc {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "rpc";
+            }
+            leaf service {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "service";
+            }
+            leaf services {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "services";
+            }
+            leaf shadow {
+              type string {
+                pattern "\\(.*\\)";
+              }
+              augex:data-path "shadow";
+            }
+          }
+        }
+        leaf threads {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "threads";
+        }
+        leaf uid {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "uid";
+        }
+        leaf gid {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "gid";
+        }
+        container uri {
+          augex:data-path "uri";
+          presence "Config entry.";
+          list uri-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n]+";
+              }
+            }
+          }
+        }
+        leaf ldap-version {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "ldap_version";
+        }
+        leaf binddn {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "binddn";
+        }
+        leaf bindpw {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "bindpw";
+        }
+        leaf rootpwmoddn {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "rootpwmoddn";
+        }
+        leaf rootpwmodpw {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "rootpwmodpw";
+        }
+        leaf sasl-mech {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_mech";
+        }
+        leaf sasl-realm {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_realm";
+        }
+        leaf sasl-authcid {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_authcid";
+        }
+        leaf sasl-authzid {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_authzid";
+        }
+        leaf sasl-secprops {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_secprops";
+        }
+        leaf sasl-canonicalize {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl_canonicalize";
+        }
+        leaf krb5-ccname {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "krb5_ccname";
+        }
+        leaf deref {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "deref";
+        }
+        leaf referrals {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "referrals";
+        }
+        leaf bind-timelimit {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "bind_timelimit";
+        }
+        leaf timelimit {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "timelimit";
+        }
+        leaf idle-timelimit {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "idle_timelimit";
+        }
+        leaf reconnect-sleeptime {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "reconnect_sleeptime";
+        }
+        leaf reconnect-retrytime {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "reconnect_retrytime";
+        }
+        leaf ssl {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "ssl";
+        }
+        leaf tls-reqcert {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_reqcert";
+        }
+        leaf tls-cacertdir {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_cacertdir";
+        }
+        leaf tls-cacertfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_cacertfile";
+        }
+        leaf tls-randfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_randfile";
+        }
+        leaf tls-ciphers {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_ciphers";
+        }
+        leaf tls-cert {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_cert";
+        }
+        leaf tls-key {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tls_key";
+        }
+        leaf pagesize {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "pagesize";
+        }
+        container nss-initgroups-ignoreusers {
+          augex:data-path "nss_initgroups_ignoreusers";
+          presence "Config entry.";
+          list nss-initgroups-ignoreusers-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n]+";
+              }
+            }
+          }
+        }
+        leaf nss-min-uid {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "nss_min_uid";
+        }
+        leaf nss-nested-groups {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "nss_nested_groups";
+        }
+        leaf nss-getgrent-skipmembers {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "nss_getgrent_skipmembers";
+        }
+        leaf nss-disable-enumeration {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "nss_disable_enumeration";
+        }
+        leaf validnames {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "validnames";
+        }
+        leaf ignorecase {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "ignorecase";
+        }
+        leaf pam-authz-search {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "pam_authz_search";
+        }
+        leaf pam-password-prohibit-message {
+          type string {
+            pattern ".*";
+          }
+          augex:data-path "pam_password_prohibit_message";
+        }
+        leaf reconnect-invalidate {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "reconnect_invalidate";
+        }
+        leaf cache {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "cache";
+        }
+        leaf log {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "log";
+        }
+        leaf pam-authc-ppolicy {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "pam_authc_ppolicy";
+        }
+      }
+    }
+  }
+}

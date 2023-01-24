@@ -1,0 +1,43 @@
+module dpkg {
+  yang-version 1.1;
+  namespace "aug:dpkg";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Dpkg";
+
+  list dpkg {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf keyword {
+          mandatory true;
+          type string {
+            pattern "[^,# \n\t/]+";
+          }
+        }
+        leaf word {
+          type string {
+            pattern "[^,# \n\t]+";
+          }
+        }
+      }
+    }
+  }
+}

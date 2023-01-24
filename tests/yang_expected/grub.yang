@@ -1,0 +1,709 @@
+module grub {
+  yang-version 1.1;
+  namespace "aug:grub";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Grub";
+
+  grouping password-arg {
+    leaf md5 {
+      type empty;
+      augex:data-path "md5";
+    }
+    leaf encrypted {
+      type empty;
+      augex:data-path "encrypted";
+    }
+    leaf value {
+      mandatory true;
+      type string {
+        pattern "(-[^\t\n -]|[^\t\n -][^\t\n ])[^\t\n ]*|-(-|())|[^\t\n -]";
+      }
+    }
+    leaf file {
+      type string {
+        pattern "[^ \t\n]+";
+      }
+      augex:data-path "file";
+    }
+  }
+  grouping kernel {
+    container node {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.$\\\\+-]+";
+          pattern "type|no-mem-option" {
+            modifier invert-match;
+          }
+        }
+      }
+      leaf value {
+        type string {
+          pattern "([^ \t\n])*";
+        }
+      }
+    }
+  }
+  list grub {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf default {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "default";
+        }
+        leaf fallback {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "fallback";
+        }
+        leaf hiddenmenu {
+          type empty;
+          augex:data-path "hiddenmenu";
+        }
+        leaf timeout {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "timeout";
+        }
+        leaf splashimage {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "splashimage";
+        }
+        leaf gfxmenu {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "gfxmenu";
+        }
+        leaf foreground {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "foreground";
+        }
+        leaf background {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "background";
+        }
+        leaf verbose {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "verbose";
+        }
+        leaf boot {
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+          augex:data-path "boot";
+        }
+        container serial {
+          augex:data-path "serial";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf unit {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "unit";
+              }
+              leaf port {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "port";
+              }
+              leaf speed {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "speed";
+              }
+              leaf word {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "word";
+              }
+              leaf parity {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "parity";
+              }
+              leaf stop {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "stop";
+              }
+              leaf device {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "device";
+              }
+            }
+          }
+        }
+        container terminal {
+          augex:data-path "terminal";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf dumb {
+                type empty;
+                augex:data-path "dumb";
+              }
+              leaf no-echo {
+                type empty;
+                augex:data-path "no-echo";
+              }
+              leaf no-edit {
+                type empty;
+                augex:data-path "no-edit";
+              }
+              leaf silent {
+                type empty;
+                augex:data-path "silent";
+              }
+              leaf timeout {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "timeout";
+              }
+              leaf lines {
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+                augex:data-path "lines";
+              }
+            }
+          }
+          list config-entries2 {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries2 {
+              mandatory true;
+              leaf console {
+                type empty;
+                augex:data-path "console";
+              }
+              leaf serial {
+                type empty;
+                augex:data-path "serial";
+              }
+              leaf hercules {
+                type empty;
+                augex:data-path "hercules";
+              }
+            }
+          }
+        }
+        container password-arg {
+          augex:data-path "password";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          uses password-arg;
+        }
+        container color {
+          augex:data-path "color";
+          presence "Config entry.";
+          container normal {
+            augex:data-path "normal";
+            presence "Config entry.";
+            leaf foreground {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z-]+";
+              }
+              augex:data-path "foreground";
+            }
+            leaf background {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z-]+";
+              }
+              augex:data-path "background";
+            }
+          }
+          container highlight {
+            augex:data-path "highlight";
+            presence "Config entry.";
+            leaf foreground {
+              type string {
+                pattern "[A-Za-z-]+";
+              }
+              augex:data-path "foreground";
+            }
+            leaf background {
+              type string {
+                pattern "[A-Za-z-]+";
+              }
+              augex:data-path "background";
+            }
+          }
+        }
+        container device {
+          augex:data-path "device";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "\\([A-Za-z0-9_.-]+\\)";
+            }
+          }
+          leaf file {
+            mandatory true;
+            type string {
+              pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+            }
+            augex:data-path "file";
+          }
+        }
+        container setkey {
+          augex:data-path "setkey";
+          presence "Config entry.";
+          leaf to {
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "to";
+          }
+          leaf from {
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "from";
+          }
+        }
+        leaf error {
+          type string {
+            pattern "(backgroun((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|backgrou([A-Za-mo-z][A-Za-z]*|())|backgro([A-Za-tv-z][A-Za-z]*|())|backgr([A-Za-np-z][A-Za-z]*|())|backg([A-Za-qs-z][A-Za-z]*|())|back([A-Za-fh-z][A-Za-z]*|())|bac([A-Za-jl-z][A-Za-z]*|())|boo((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|bo([A-Za-np-z][A-Za-z]*|())|ba([A-Zabd-z][A-Za-z]*|())|colo((r[A-Za-z]|[A-Za-qs-z])[A-Za-z]*|())|col([A-Za-np-z][A-Za-z]*|())|co([A-Za-km-z][A-Za-z]*|())|defaul((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|defau([A-Za-km-z][A-Za-z]*|())|defa([A-Za-tv-z][A-Za-z]*|())|devic((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|devi([A-Zabd-z][A-Za-z]*|())|dev([A-Za-hj-z][A-Za-z]*|())|def([A-Zb-z][A-Za-z]*|())|de([A-Za-eg-uw-z][A-Za-z]*|())|fallbac((k[A-Za-z]|[A-Za-jl-z])[A-Za-z]*|())|fallba([A-Zabd-z][A-Za-z]*|())|fallb([A-Zb-z][A-Za-z]*|())|fall([A-Zac-z][A-Za-z]*|())|fal([A-Za-km-z][A-Za-z]*|())|foregroun((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|foregrou([A-Za-mo-z][A-Za-z]*|())|foregro([A-Za-tv-z][A-Za-z]*|())|foregr([A-Za-np-z][A-Za-z]*|())|foreg([A-Za-qs-z][A-Za-z]*|())|fore([A-Za-fh-z][A-Za-z]*|())|for([A-Za-df-z][A-Za-z]*|())|fo([A-Za-qs-z][A-Za-z]*|())|fa([A-Za-km-z][A-Za-z]*|())|gfxmen((u[A-Za-z]|[A-Za-tv-z])[A-Za-z]*|())|gfxme([A-Za-mo-z][A-Za-z]*|())|gfxm([A-Za-df-z][A-Za-z]*|())|gfx([A-Za-ln-z][A-Za-z]*|())|gf([A-Za-wyz][A-Za-z]*|())|hiddenmen((u[A-Za-z]|[A-Za-tv-z])[A-Za-z]*|())|hiddenme([A-Za-mo-z][A-Za-z]*|())|hiddenm([A-Za-df-z][A-Za-z]*|())|hidden([A-Za-ln-z][A-Za-z]*|())|hidde([A-Za-mo-z][A-Za-z]*|())|hidd([A-Za-df-z][A-Za-z]*|())|hid([A-Za-ce-z][A-Za-z]*|())|hi([A-Za-ce-z][A-Za-z]*|())|passwor((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|passwo([A-Za-qs-z][A-Za-z]*|())|passw([A-Za-np-z][A-Za-z]*|())|pass([A-Za-vx-z][A-Za-z]*|())|pas([A-Za-rt-z][A-Za-z]*|())|pa([A-Za-rt-z][A-Za-z]*|())|seria((l[A-Za-z]|[A-Za-km-z])[A-Za-z]*|())|seri([A-Zb-z][A-Za-z]*|())|setke((y[A-Za-z]|[A-Za-xz])[A-Za-z]*|())|setk([A-Za-df-z][A-Za-z]*|())|set([A-Za-jl-z][A-Za-z]*|())|ser([A-Za-hj-z][A-Za-z]*|())|splashimag((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|splashima([A-Za-fh-z][A-Za-z]*|())|splashim([A-Zb-z][A-Za-z]*|())|splashi([A-Za-ln-z][A-Za-z]*|())|splash([A-Za-hj-z][A-Za-z]*|())|splas([A-Za-gi-z][A-Za-z]*|())|spla([A-Za-rt-z][A-Za-z]*|())|spl([A-Zb-z][A-Za-z]*|())|sp([A-Za-km-z][A-Za-z]*|())|se([A-Za-qsu-z][A-Za-z]*|())|termina((l[A-Za-z]|[A-Za-km-z])[A-Za-z]*|())|termin([A-Zb-z][A-Za-z]*|())|termi([A-Za-mo-z][A-Za-z]*|())|term([A-Za-hj-z][A-Za-z]*|())|ter([A-Za-ln-z][A-Za-z]*|())|timeou((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|timeo([A-Za-tv-z][A-Za-z]*|())|time([A-Za-np-z][A-Za-z]*|())|titl((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|tit([A-Za-km-z][A-Za-z]*|())|tim([A-Za-df-z][A-Za-z]*|())|ti([A-Za-ln-su-z][A-Za-z]*|())|te([A-Za-qs-z][A-Za-z]*|())|verbos((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|verbo([A-Za-rt-z][A-Za-z]*|())|verb([A-Za-np-z][A-Za-z]*|())|ver([A-Zac-z][A-Za-z]*|())|ve([A-Za-qs-z][A-Za-z]*|())|(v[A-Za-df-z]|t[A-Za-df-hj-z]|s[A-Za-df-oq-z]|p[A-Zb-z]|h[A-Za-hj-z]|g[A-Za-eg-z]|f[A-Zb-np-z]|d[A-Za-df-z]|c[A-Za-np-z]|b[A-Zb-np-z]|[A-Zaei-oqruw-z][A-Za-z])[A-Za-z]*|v|t|s|p|h|g|f|d|c|b|[A-Zaei-oqruw-z])(([^a-zA-Z\n].*[^ \t\n])?)";
+          }
+          augex:data-path "#error";
+        }
+        container debian {
+          augex:data-path "debian";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf kopt {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "kopt";
+              }
+              leaf groot {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "groot";
+              }
+              leaf alternative {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "alternative";
+              }
+              leaf lockalternative {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "lockalternative";
+              }
+              leaf defoptions {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "defoptions";
+              }
+              leaf lockold {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "lockold";
+              }
+              leaf xenhopt {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "xenhopt";
+              }
+              leaf xenkopt {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "xenkopt";
+              }
+              leaf altoptions {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "altoptions";
+              }
+              leaf howmany {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "howmany";
+              }
+              leaf memtest86 {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "memtest86";
+              }
+              leaf updatedefaultentry {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "updatedefaultentry";
+              }
+              leaf savedefault {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "savedefault";
+              }
+              leaf indom-u {
+                type union {
+                  type empty;
+                  type string {
+                    pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+                  }
+                }
+                augex:data-path "indomU";
+              }
+            }
+          }
+        }
+      }
+    }
+    list boot-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container boot {
+        augex:data-path "title";
+        augex:value-yang-path "value-to-eol";
+        presence "Config entry.";
+        leaf value-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+          }
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf root {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "root";
+            }
+            leaf initrd {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "initrd";
+            }
+            leaf rootnoverify {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "rootnoverify";
+            }
+            leaf uuid {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "uuid";
+            }
+            leaf findroot {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "findroot";
+            }
+            leaf bootfs {
+              type string {
+                pattern "[^= \t\n][^\n]*[^= \t\n]|[^= \t\n]";
+              }
+              augex:data-path "bootfs";
+            }
+            container kernel {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "kernel$?";
+                }
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "(\\([a-z0-9,]+\\))?/[^ \t\n]*";
+                }
+              }
+              list config-entries {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                choice ch-config-entries {
+                  mandatory true;
+                  leaf type {
+                    type string {
+                      pattern "[a-z]+";
+                    }
+                    augex:data-path "type";
+                  }
+                  leaf no-mem-option {
+                    type empty;
+                    augex:data-path "no-mem-option";
+                  }
+                }
+              }
+              leaf path {
+                type string {
+                  pattern "(([A-Za-z0-9_.-]+)(/))([^ \t\n]+)";
+                }
+                augex:data-path "@path";
+              }
+              list kernel-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                uses kernel;
+              }
+            }
+            container chainloader {
+              augex:data-path "chainloader";
+              augex:value-yang-path "no-spaces";
+              presence "Config entry.";
+              leaf force {
+                type empty;
+                augex:data-path "force";
+              }
+              leaf no-spaces {
+                mandatory true;
+                type string {
+                  pattern "[^ \t\n]+";
+                }
+              }
+            }
+            leaf quiet {
+              type empty;
+              augex:data-path "quiet";
+            }
+            leaf savedefault {
+              type union {
+                type empty;
+                type uint64;
+              }
+              augex:data-path "savedefault";
+            }
+            leaf configfile {
+              type string {
+                pattern "[^ \t\n]+";
+              }
+              augex:data-path "configfile";
+            }
+            container module-line {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf label {
+                mandatory true;
+                type string {
+                  pattern "module$?";
+                }
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "(\\([a-z0-9,]+\\))?/[^ \t\n]*";
+                }
+              }
+              leaf path {
+                type string {
+                  pattern "(([A-Za-z0-9_.-]+)(/))([^ \t\n]+)";
+                }
+                augex:data-path "@path";
+              }
+              list kernel-list {
+                key "_id";
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                uses kernel;
+              }
+            }
+            container map-line {
+              augex:data-path "map";
+              presence "Config entry.";
+              leaf from {
+                mandatory true;
+                type string {
+                  pattern "[()A-za-z0-9]+";
+                }
+                augex:data-path "from";
+              }
+              leaf to {
+                mandatory true;
+                type string {
+                  pattern "[()A-za-z0-9]+";
+                }
+                augex:data-path "to";
+              }
+            }
+            leaf lock {
+              type empty;
+              augex:data-path "lock";
+            }
+            leaf makeactive {
+              type empty;
+              augex:data-path "makeactive";
+            }
+            container password-arg {
+              augex:data-path "password";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              uses password-arg;
+            }
+            leaf error {
+              type string {
+                pattern "(bootf((s[A-Za-z]|[A-Za-rt-z])[A-Za-z]*|())|boot[A-Za-eg-z][A-Za-z]*|boo([A-Za-su-z][A-Za-z]*|())|bo([A-Za-np-z][A-Za-z]*|())|chainloade((r[A-Za-z]|[A-Za-qs-z])[A-Za-z]*|())|chainload([A-Za-df-z][A-Za-z]*|())|chainloa([A-Za-ce-z][A-Za-z]*|())|chainlo([A-Zb-z][A-Za-z]*|())|chainl([A-Za-np-z][A-Za-z]*|())|chain([A-Za-km-z][A-Za-z]*|())|chai([A-Za-mo-z][A-Za-z]*|())|cha([A-Za-hj-z][A-Za-z]*|())|configfil((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|configfi([A-Za-km-z][A-Za-z]*|())|configf([A-Za-hj-z][A-Za-z]*|())|config([A-Za-eg-z][A-Za-z]*|())|confi([A-Za-fh-z][A-Za-z]*|())|conf([A-Za-hj-z][A-Za-z]*|())|con([A-Za-eg-z][A-Za-z]*|())|co([A-Za-mo-z][A-Za-z]*|())|ch([A-Zb-z][A-Za-z]*|())|findroo((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|findro([A-Za-np-z][A-Za-z]*|())|findr([A-Za-np-z][A-Za-z]*|())|find([A-Za-qs-z][A-Za-z]*|())|fin([A-Za-ce-z][A-Za-z]*|())|fi([A-Za-mo-z][A-Za-z]*|())|initr((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|init([A-Za-qs-z][A-Za-z]*|())|ini([A-Za-su-z][A-Za-z]*|())|in([A-Za-hj-z][A-Za-z]*|())|kerne((l[A-Za-z]|[A-Za-km-z])[A-Za-z]*|())|kern([A-Za-df-z][A-Za-z]*|())|ker([A-Za-mo-z][A-Za-z]*|())|ke([A-Za-qs-z][A-Za-z]*|())|loc((k[A-Za-z]|[A-Za-jl-z])[A-Za-z]*|())|lo([A-Zabd-z][A-Za-z]*|())|makeactiv((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|makeacti([A-Za-uw-z][A-Za-z]*|())|makeact([A-Za-hj-z][A-Za-z]*|())|makeac([A-Za-su-z][A-Za-z]*|())|makea([A-Zabd-z][A-Za-z]*|())|make([A-Zb-z][A-Za-z]*|())|mak([A-Za-df-z][A-Za-z]*|())|modul((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|modu([A-Za-km-z][A-Za-z]*|())|mod([A-Za-tv-z][A-Za-z]*|())|mo([A-Za-ce-z][A-Za-z]*|())|ma((p[A-Za-z]|[A-Za-jl-oq-z])[A-Za-z]*|())|passwor((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|passwo([A-Za-qs-z][A-Za-z]*|())|passw([A-Za-np-z][A-Za-z]*|())|pass([A-Za-vx-z][A-Za-z]*|())|pas([A-Za-rt-z][A-Za-z]*|())|pa([A-Za-rt-z][A-Za-z]*|())|quie((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|qui([A-Za-df-z][A-Za-z]*|())|qu([A-Za-hj-z][A-Za-z]*|())|rootnoverif((y[A-Za-z]|[A-Za-xz])[A-Za-z]*|())|rootnoveri([A-Za-eg-z][A-Za-z]*|())|rootnover([A-Za-hj-z][A-Za-z]*|())|rootnove([A-Za-qs-z][A-Za-z]*|())|rootnov([A-Za-df-z][A-Za-z]*|())|rootno([A-Za-uw-z][A-Za-z]*|())|rootn([A-Za-np-z][A-Za-z]*|())|root[A-Za-mo-z][A-Za-z]*|roo([A-Za-su-z][A-Za-z]*|())|ro([A-Za-np-z][A-Za-z]*|())|savedefaul((t[A-Za-z]|[A-Za-su-z])[A-Za-z]*|())|savedefau([A-Za-km-z][A-Za-z]*|())|savedefa([A-Za-tv-z][A-Za-z]*|())|savedef([A-Zb-z][A-Za-z]*|())|savede([A-Za-eg-z][A-Za-z]*|())|saved([A-Za-df-z][A-Za-z]*|())|save([A-Za-ce-z][A-Za-z]*|())|sav([A-Za-df-z][A-Za-z]*|())|sa([A-Za-uw-z][A-Za-z]*|())|titl((e[A-Za-z]|[A-Za-df-z])[A-Za-z]*|())|tit([A-Za-km-z][A-Za-z]*|())|ti([A-Za-su-z][A-Za-z]*|())|uui((d[A-Za-z]|[A-Za-ce-z])[A-Za-z]*|())|uu([A-Za-hj-z][A-Za-z]*|())|(u[A-Za-tv-z]|t[A-Za-hj-z]|s[A-Zb-z]|r[A-Za-np-z]|q[A-Za-tv-z]|p[A-Zb-z]|m[A-Zb-np-z]|l[A-Za-np-z]|k[A-Za-df-z]|i[A-Za-mo-z]|f[A-Za-hj-z]|c[A-Za-gi-np-z]|b[A-Za-np-z]|[A-Zadeghjnov-z][A-Za-z])[A-Za-z]*|u|t|s|r|q|p|m|l|k|i|f|c|b|[A-Zadeghjnov-z])(([^a-zA-Z\n].*[^ \t\n])?)";
+              }
+              augex:data-path "#error";
+            }
+          }
+        }
+      }
+    }
+  }
+}

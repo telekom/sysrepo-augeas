@@ -1,0 +1,62 @@
+module networkmanager {
+  yang-version 1.1;
+  namespace "aug:networkmanager";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "NetworkManager";
+
+  list networkmanager {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf record {
+          mandatory true;
+          type string {
+            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|())|#comme([^\\]\n/n][^\\]\n/]*|())|#comm([^\\]\n/e][^\\]\n/]*|())|#com([^\\]\n/m][^\\]\n/]*|())|#co([^\\]\n/m][^\\]\n/]*|())|#c([^\\]\n/o][^\\]\n/]*|())|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+          }
+        }
+        list entry-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry {
+            augex:data-path "$$";
+            augex:value-yang-path "space-in";
+            presence "Config entry.";
+            leaf entry {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z][A-Za-z0-9:._\\\\(\\\\) \t-]+";
+              }
+            }
+            leaf space-in {
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

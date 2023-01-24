@@ -1,0 +1,198 @@
+module cgconfig {
+  yang-version 1.1;
+  namespace "aug:cgconfig";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Cgconfig";
+
+  grouping mount-point-list {
+    list mount-point-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container mount-point {
+        augex:data-path "$$";
+        augex:value-yang-path "address";
+        presence "Config entry.";
+        leaf name {
+          mandatory true;
+          type string {
+            pattern "[^#= \n\t{}/]+";
+          }
+        }
+        leaf address {
+          mandatory true;
+          type string {
+            pattern "[^#; \n\t{}]+";
+          }
+        }
+      }
+    }
+  }
+  grouping t-info {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf uid {
+          type string {
+            pattern "[^#; \n\t{}]+";
+          }
+          augex:data-path "uid";
+        }
+        leaf gid {
+          type string {
+            pattern "[^#; \n\t{}]+";
+          }
+          augex:data-path "gid";
+        }
+        leaf fperm {
+          type string {
+            pattern "[^#; \n\t{}]+";
+          }
+          augex:data-path "fperm";
+        }
+        leaf dperm {
+          type string {
+            pattern "[^#; \n\t{}]+";
+          }
+          augex:data-path "dperm";
+        }
+      }
+    }
+  }
+  list cgconfig {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container mount-data {
+          augex:data-path "mount";
+          presence "Config entry.";
+          uses mount-point-list;
+        }
+        container group-data {
+          augex:data-path "group";
+          augex:value-yang-path "id";
+          presence "Config entry.";
+          leaf id {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z0-9_/.-]+";
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              container perm-info {
+                augex:data-path "perm";
+                presence "Config entry.";
+                choice ch-perm-info {
+                  container case {
+                    presence "Config entry.";
+                    container t-info {
+                      augex:data-path "task";
+                      presence "Config entry.";
+                      uses t-info;
+                    }
+                    container a-info {
+                      augex:data-path "admin";
+                      presence "Config entry.";
+                      uses t-info;
+                    }
+                  }
+                  container case2 {
+                    presence "Config entry.";
+                    container a-info {
+                      augex:data-path "admin";
+                      presence "Config entry.";
+                      uses t-info;
+                    }
+                    container t-info {
+                      augex:data-path "task";
+                      presence "Config entry.";
+                      uses t-info;
+                    }
+                  }
+                }
+              }
+              container controller-info {
+                augex:data-path "controller";
+                augex:value-yang-path "cont-name";
+                presence "Config entry.";
+                leaf cont-name {
+                  mandatory true;
+                  type string {
+                    pattern "cpuacct|cpu|devices|ns|cpuset|memory|freezer|net_cls|blkio|hugetlb|perf_event";
+                  }
+                }
+                list variable-setting-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  container variable-setting {
+                    augex:data-path "$$";
+                    augex:value-yang-path "qaddress";
+                    presence "Config entry.";
+                    leaf name {
+                      mandatory true;
+                      type string {
+                        pattern "[^#= \n\t{}/]+";
+                      }
+                    }
+                    leaf qaddress {
+                      mandatory true;
+                      type string {
+                        pattern "([^#; \n\t{}]+)|(\"[^#;\"\n\t{}]+\")";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container namespace {
+          augex:data-path "namespace";
+          presence "Config entry.";
+          uses mount-point-list;
+        }
+      }
+    }
+  }
+}

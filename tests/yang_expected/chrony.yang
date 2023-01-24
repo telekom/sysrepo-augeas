@@ -1,0 +1,1194 @@
+module chrony {
+  yang-version 1.1;
+  namespace "aug:chrony";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Chrony";
+
+  grouping host-list {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf auto-offline {
+          type empty;
+          augex:data-path "auto_offline";
+        }
+        leaf iburst {
+          type empty;
+          augex:data-path "iburst";
+        }
+        leaf noselect {
+          type empty;
+          augex:data-path "noselect";
+        }
+        leaf offline {
+          type empty;
+          augex:data-path "offline";
+        }
+        leaf prefer {
+          type empty;
+          augex:data-path "prefer";
+        }
+        leaf copy {
+          type empty;
+          augex:data-path "copy";
+        }
+        leaf require {
+          type empty;
+          augex:data-path "require";
+        }
+        leaf trust {
+          type empty;
+          augex:data-path "trust";
+        }
+        leaf xleave {
+          type empty;
+          augex:data-path "xleave";
+        }
+        leaf burst {
+          type empty;
+          augex:data-path "burst";
+        }
+        leaf nts {
+          type empty;
+          augex:data-path "nts";
+        }
+        leaf asymmetry {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "asymmetry";
+        }
+        leaf certset {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "certset";
+        }
+        leaf extfield {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "extfield";
+        }
+        leaf filter {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "filter";
+        }
+        leaf key {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "key";
+        }
+        leaf maxdelay {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxdelay";
+        }
+        leaf maxdelayratio {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxdelayratio";
+        }
+        leaf maxdelaydevratio {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxdelaydevratio";
+        }
+        leaf minpoll {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "minpoll";
+        }
+        leaf maxpoll {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxpoll";
+        }
+        leaf minsamples {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "minsamples";
+        }
+        leaf maxsamples {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxsamples";
+        }
+        leaf maxsources {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "maxsources";
+        }
+        leaf mindelay {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "mindelay";
+        }
+        leaf offset {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "offset";
+        }
+        leaf polltarget {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "polltarget";
+        }
+        leaf port {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "port";
+        }
+        leaf presend {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "presend";
+        }
+        leaf version {
+          type string {
+            pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+          }
+          augex:data-path "version";
+        }
+      }
+    }
+  }
+  grouping allowdeny {
+    leaf all {
+      type empty;
+      augex:data-path "all";
+    }
+    leaf value {
+      type string {
+        pattern "[^ \t\n!;#%]+";
+        pattern "all" {
+          modifier invert-match;
+        }
+      }
+    }
+  }
+  grouping directory {
+    leaf-list directory {
+      min-elements 1;
+      type string {
+        pattern "[^ \t\n!;#%]+";
+      }
+      ordered-by user;
+      augex:data-path "directory";
+    }
+  }
+  grouping ratelimit {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf interval {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "interval";
+        }
+        leaf burst {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "burst";
+        }
+        leaf leak {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "leak";
+        }
+      }
+    }
+  }
+  list chrony {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container server {
+          augex:data-path "server";
+          augex:value-yang-path "address";
+          presence "Config entry.";
+          leaf address {
+            mandatory true;
+            type string {
+              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+            }
+          }
+          uses host-list;
+        }
+        container peer {
+          augex:data-path "peer";
+          augex:value-yang-path "address";
+          presence "Config entry.";
+          leaf address {
+            mandatory true;
+            type string {
+              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+            }
+          }
+          uses host-list;
+        }
+        container pool {
+          augex:data-path "pool";
+          augex:value-yang-path "address";
+          presence "Config entry.";
+          leaf address {
+            mandatory true;
+            type string {
+              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+            }
+          }
+          uses host-list;
+        }
+        container allow {
+          augex:data-path "allow";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          uses allowdeny;
+        }
+        container deny {
+          augex:data-path "deny";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          uses allowdeny;
+        }
+        container cmdallow {
+          augex:data-path "cmdallow";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          uses allowdeny;
+        }
+        container cmddeny {
+          augex:data-path "cmddeny";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          uses allowdeny;
+        }
+        container log-list {
+          augex:data-path "log";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf measurements {
+                type empty;
+                augex:data-path "measurements";
+              }
+              leaf rawmeasurements {
+                type empty;
+                augex:data-path "rawmeasurements";
+              }
+              leaf refclocks {
+                type empty;
+                augex:data-path "refclocks";
+              }
+              leaf rtc {
+                type empty;
+                augex:data-path "rtc";
+              }
+              leaf statistics {
+                type empty;
+                augex:data-path "statistics";
+              }
+              leaf tempcomp {
+                type empty;
+                augex:data-path "tempcomp";
+              }
+              leaf tracking {
+                type empty;
+                augex:data-path "tracking";
+              }
+            }
+          }
+        }
+        container bcast {
+          augex:data-path "broadcast";
+          presence "Config entry.";
+          leaf interval {
+            mandatory true;
+            type int64;
+            augex:data-path "interval";
+          }
+          leaf address {
+            mandatory true;
+            type string {
+              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+            }
+            augex:data-path "address";
+          }
+          leaf port {
+            type int64;
+            augex:data-path "port";
+          }
+        }
+        container fdrift {
+          augex:data-path "fallbackdrift";
+          presence "Config entry.";
+          leaf min {
+            mandatory true;
+            type int64;
+            augex:data-path "min";
+          }
+          leaf max {
+            mandatory true;
+            type int64;
+            augex:data-path "max";
+          }
+        }
+        container istepslew {
+          augex:data-path "initstepslew";
+          presence "Config entry.";
+          leaf threshold {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "threshold";
+          }
+          leaf-list address {
+            min-elements 1;
+            type string {
+              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+            }
+            ordered-by user;
+            augex:data-path "address";
+          }
+        }
+        container local {
+          augex:data-path "local";
+          presence "Config entry.";
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf orphan {
+                type empty;
+                augex:data-path "orphan";
+              }
+              leaf stratum {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "stratum";
+              }
+              leaf distance {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "distance";
+              }
+            }
+          }
+        }
+        container email {
+          augex:data-path "mailonchange";
+          presence "Config entry.";
+          leaf emailaddress {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "emailaddress";
+          }
+          leaf threshold {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "threshold";
+          }
+        }
+        container makestep {
+          augex:data-path "makestep";
+          presence "Config entry.";
+          leaf threshold {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "threshold";
+          }
+          leaf limit {
+            mandatory true;
+            type int64;
+            augex:data-path "limit";
+          }
+        }
+        container maxchange {
+          augex:data-path "maxchange";
+          presence "Config entry.";
+          leaf threshold {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "threshold";
+          }
+          leaf delay {
+            mandatory true;
+            type int64;
+            augex:data-path "delay";
+          }
+          leaf limit {
+            mandatory true;
+            type int64;
+            augex:data-path "limit";
+          }
+        }
+        container refclock {
+          augex:data-path "refclock";
+          presence "Config entry.";
+          leaf driver {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "driver";
+          }
+          leaf parameter {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n!;#%]+";
+            }
+            augex:data-path "parameter";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf noselect {
+                type empty;
+                augex:data-path "noselect";
+              }
+              leaf pps {
+                type empty;
+                augex:data-path "pps";
+              }
+              leaf prefer {
+                type empty;
+                augex:data-path "prefer";
+              }
+              leaf require {
+                type empty;
+                augex:data-path "require";
+              }
+              leaf tai {
+                type empty;
+                augex:data-path "tai";
+              }
+              leaf trust {
+                type empty;
+                augex:data-path "trust";
+              }
+              leaf refid {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "refid";
+              }
+              leaf lock {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "lock";
+              }
+              leaf poll {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "poll";
+              }
+              leaf dpoll {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "dpoll";
+              }
+              leaf filter {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "filter";
+              }
+              leaf rate {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "rate";
+              }
+              leaf minsamples {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "minsamples";
+              }
+              leaf maxsamples {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "maxsamples";
+              }
+              leaf offset {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "offset";
+              }
+              leaf delay {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "delay";
+              }
+              leaf precision {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "precision";
+              }
+              leaf maxdispersion {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "maxdispersion";
+              }
+              leaf stratum {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "stratum";
+              }
+              leaf width {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "width";
+              }
+            }
+          }
+        }
+        container smoothtime {
+          augex:data-path "smoothtime";
+          presence "Config entry.";
+          leaf maxfreq {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "maxfreq";
+          }
+          leaf maxwander {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "maxwander";
+          }
+          leaf leaponly {
+            type empty;
+            augex:data-path "leaponly";
+          }
+        }
+        container confdir {
+          augex:data-path "confdir";
+          presence "Config entry.";
+          uses directory;
+        }
+        container sourcedir {
+          augex:data-path "sourcedir";
+          presence "Config entry.";
+          uses directory;
+        }
+        container hwtimestamp {
+          augex:data-path "hwtimestamp";
+          presence "Config entry.";
+          leaf interface {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n!;#%]+";
+            }
+            augex:data-path "interface";
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-config-entries {
+              mandatory true;
+              leaf nocrossts {
+                type empty;
+                augex:data-path "nocrossts";
+              }
+              leaf minpoll {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "minpoll";
+              }
+              leaf precision {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "precision";
+              }
+              leaf rxcomp {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "rxcomp";
+              }
+              leaf txcomp {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "txcomp";
+              }
+              leaf minsamples {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "minsamples";
+              }
+              leaf maxsamples {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "maxsamples";
+              }
+              leaf rxfilter {
+                type string {
+                  pattern "[^ \t\n!;#%]+";
+                }
+                augex:data-path "rxfilter";
+              }
+            }
+          }
+        }
+        container cmdratelimit {
+          augex:data-path "cmdratelimit";
+          presence "Config entry.";
+          uses ratelimit;
+        }
+        container ntsratelimit {
+          augex:data-path "ntsratelimit";
+          presence "Config entry.";
+          uses ratelimit;
+        }
+        container ratelimit {
+          augex:data-path "ratelimit";
+          presence "Config entry.";
+          uses ratelimit;
+        }
+        container tempcomp {
+          augex:data-path "tempcomp";
+          presence "Config entry.";
+          leaf sensorfile {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "sensorfile";
+          }
+          leaf interval {
+            mandatory true;
+            type string {
+              pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+            }
+            augex:data-path "interval";
+          }
+          choice ch-tempcomp {
+            mandatory true;
+            case t0 {
+              leaf t0 {
+                mandatory true;
+                type string {
+                  pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+                }
+                augex:data-path "t0";
+              }
+              leaf k0 {
+                mandatory true;
+                type string {
+                  pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+                }
+                augex:data-path "k0";
+              }
+              leaf k1 {
+                mandatory true;
+                type string {
+                  pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+                }
+                augex:data-path "k1";
+              }
+              leaf k2 {
+                mandatory true;
+                type string {
+                  pattern "((([-+]?[0-9]+)|([+-]?[0-9]+([.,][0-9]+)?))|((([+-]?[0-9]+([.,][0-9]+)?)([eE]))([-+]?[0-9]+)))|([0-9a-fA-F]+)";
+                }
+                augex:data-path "k2";
+              }
+            }
+            leaf pointfile {
+              type string {
+                pattern "[^ \t\n]+";
+              }
+              augex:data-path "pointfile";
+            }
+          }
+        }
+        leaf acquisitionport {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "acquisitionport";
+        }
+        leaf authselectmode {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "authselectmode";
+        }
+        leaf bindacqaddress {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "bindacqaddress";
+        }
+        leaf bindaddress {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "bindaddress";
+        }
+        leaf bindcmdaddress {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "bindcmdaddress";
+        }
+        leaf bindacqdevice {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "bindacqdevice";
+        }
+        leaf bindcmddevice {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "bindcmddevice";
+        }
+        leaf binddevice {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "binddevice";
+        }
+        leaf clientloglimit {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "clientloglimit";
+        }
+        leaf clockprecision {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "clockprecision";
+        }
+        leaf combinelimit {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "combinelimit";
+        }
+        leaf commandkey {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "commandkey";
+        }
+        leaf cmdport {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "cmdport";
+        }
+        leaf corrtimeratio {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "corrtimeratio";
+        }
+        leaf driftfile {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "driftfile";
+        }
+        leaf dscp {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "dscp";
+        }
+        leaf dumpdir {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "dumpdir";
+        }
+        leaf hwclockfile {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "hwclockfile";
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "include";
+        }
+        leaf keyfile {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "keyfile";
+        }
+        leaf leapsecmode {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "leapsecmode";
+        }
+        leaf leapsectz {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "leapsectz";
+        }
+        leaf linux-freq-scale {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "linux_freq_scale";
+        }
+        leaf linux-hz {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "linux_hz";
+        }
+        leaf logbanner {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "logbanner";
+        }
+        leaf logchange {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "logchange";
+        }
+        leaf logdir {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "logdir";
+        }
+        leaf maxclockerror {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxclockerror";
+        }
+        leaf maxdistance {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxdistance";
+        }
+        leaf maxdrift {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxdrift";
+        }
+        leaf maxjitter {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxjitter";
+        }
+        leaf maxsamples {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxsamples";
+        }
+        leaf maxslewrate {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxslewrate";
+        }
+        leaf maxntsconnections {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxntsconnections";
+        }
+        leaf maxupdateskew {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "maxupdateskew";
+        }
+        leaf minsamples {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "minsamples";
+        }
+        leaf minsources {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "minsources";
+        }
+        leaf nocerttimecheck {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "nocerttimecheck";
+        }
+        leaf ntsdumpdir {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsdumpdir";
+        }
+        leaf ntsntpserver {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsntpserver";
+        }
+        leaf ntsport {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsport";
+        }
+        leaf ntsprocesses {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsprocesses";
+        }
+        leaf ntsrefresh {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsrefresh";
+        }
+        leaf ntsrotate {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsrotate";
+        }
+        leaf ntsservercert {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsservercert";
+        }
+        leaf ntsserverkey {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntsserverkey";
+        }
+        leaf ntstrustedcerts {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntstrustedcerts";
+        }
+        leaf ntpsigndsocket {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ntpsigndsocket";
+        }
+        leaf pidfile {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "pidfile";
+        }
+        leaf ptpport {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "ptpport";
+        }
+        leaf port {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "port";
+        }
+        leaf reselectdist {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "reselectdist";
+        }
+        leaf rtcautotrim {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "rtcautotrim";
+        }
+        leaf rtcdevice {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "rtcdevice";
+        }
+        leaf rtcfile {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "rtcfile";
+        }
+        leaf sched-priority {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "sched_priority";
+        }
+        leaf stratumweight {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "stratumweight";
+        }
+        leaf user {
+          type string {
+            pattern "[^ \t\n!;#%]+";
+          }
+          augex:data-path "user";
+        }
+        leaf dumponexit {
+          type empty;
+          augex:data-path "dumponexit";
+        }
+        leaf generatecommandkey {
+          type empty;
+          augex:data-path "generatecommandkey";
+        }
+        leaf lock-all {
+          type empty;
+          augex:data-path "lock_all";
+        }
+        leaf manual {
+          type empty;
+          augex:data-path "manual";
+        }
+        leaf noclientlog {
+          type empty;
+          augex:data-path "noclientlog";
+        }
+        leaf nosystemcert {
+          type empty;
+          augex:data-path "nosystemcert";
+        }
+        leaf rtconutc {
+          type empty;
+          augex:data-path "rtconutc";
+        }
+        leaf rtcsync {
+          type empty;
+          augex:data-path "rtcsync";
+        }
+      }
+    }
+  }
+}

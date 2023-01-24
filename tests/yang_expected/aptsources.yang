@@ -1,0 +1,98 @@
+module aptsources {
+  yang-version 1.1;
+  namespace "aug:aptsources";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Aptsources";
+
+  grouping operation {
+    leaf operation {
+      type string {
+        pattern "[+-]";
+      }
+      augex:data-path "operation";
+    }
+    leaf word {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z0-9_.-]+";
+      }
+    }
+  }
+  list aptsources {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list source-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf type {
+        mandatory true;
+        type string {
+          pattern "[^\\]\\[# \n\t]+";
+        }
+        augex:data-path "type";
+      }
+      container options {
+        augex:data-path "options";
+        presence "Config entry.";
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            container arch {
+              augex:data-path "arch";
+              augex:value-yang-path "word";
+              presence "Config entry.";
+              uses operation;
+            }
+            container trusted {
+              augex:data-path "trusted";
+              augex:value-yang-path "word";
+              presence "Config entry.";
+              uses operation;
+            }
+          }
+        }
+      }
+      leaf uri {
+        mandatory true;
+        type string {
+          pattern "((([a-z+]+:){0,1})(/[^\\] \t]*))|(([a-z+]+:)(\\[[^\\]\\]+\\\\]/?))";
+        }
+        augex:data-path "uri";
+      }
+      leaf distribution {
+        mandatory true;
+        type string {
+          pattern "[^\\]\\[# \n\t]+";
+        }
+        augex:data-path "distribution";
+      }
+      leaf-list component {
+        type string {
+          pattern "[^\\]\\[# \n\t]+";
+        }
+        ordered-by user;
+        augex:data-path "component";
+      }
+    }
+  }
+}
