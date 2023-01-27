@@ -11382,8 +11382,8 @@ ay_ynode_delete_equal_cases(struct ay_ynode *tree)
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *chnode, *br1, *br2;
 
-    for (i = 0; i < LY_ARRAY_COUNT(tree); i++) {
-        chnode = &tree[i + 1];
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        chnode = &tree[i];
         if (!chnode->choice) {
             continue;
         }
