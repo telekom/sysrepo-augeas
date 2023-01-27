@@ -28,7 +28,7 @@ module nagioscfg {
           augex:data-path "$$";
           augex:value-yang-path "value";
           presence "Config entry.";
-          leaf label {
+          leaf param-def {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9_]+";
@@ -40,7 +40,7 @@ module nagioscfg {
               pattern "[^ \t\n][^\n=]*[^ \t\n]|[^ \t\n]";
             }
           }
-          list config-entries {
+          list param-def-list {
             key "_id";
             ordered-by user;
             leaf _id {
@@ -48,11 +48,11 @@ module nagioscfg {
               description
                 "Implicitly generated list key to maintain the order of the augeas data.";
             }
-            container node {
+            container param-def {
               augex:data-path "$$";
               augex:value-yang-path "value";
               presence "Config entry.";
-              leaf label {
+              leaf param-def {
                 mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_]+";
@@ -71,7 +71,7 @@ module nagioscfg {
           augex:data-path "$$";
           augex:value-yang-path "value";
           presence "Config entry.";
-          leaf label {
+          leaf macro-def {
             mandatory true;
             type string {
               pattern "$[A-Za-z0-9]+$";

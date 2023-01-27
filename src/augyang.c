@@ -2081,9 +2081,13 @@ ay_regex_is_long(const char *regex)
  * @return pnode from which to derive the name or NULL.
  */
 static struct ay_pnode *
-ay_lnode_snode_get_pnode(struct ay_pnode *pnode)
+ay_lnode_get_pnode_name(struct ay_pnode *pnode)
 {
     struct ay_pnode *iter, *prev, *ret;
+
+    if (!pnode) {
+        return NULL;
+    }
 
     /* Must come from the correct LET without parameter. */
     ret = NULL;
@@ -2115,22 +2119,14 @@ ay_lnode_snode_get_pnode(struct ay_pnode *pnode)
  *
  * Applied to regex that use minus, which can be shortened with yang 'invert-match' statement.
  *
+ * @param[in] aug Augeas context.
  * @param[in] ptree Tree of pnodes.
- * @param[in] node the lnode for which the pnode is to be found.
+ * @param[in] pnode the pnode founded by info.
  * @return pnode or NULL.
  */
 static struct ay_pnode *
-ay_pnode_for_regex(struct augeas *aug, struct ay_pnode *ptree, struct ay_lnode *node)
+ay_pnode_for_regex(struct augeas *aug, struct ay_pnode *ptree, struct ay_pnode *pnode)
 {
-    struct ay_pnode *pnode;
-
-    if ((node->lens->tag != L_STORE) && (node->lens->tag != L_KEY)) {
-        return NULL;
-    } else if (!ay_regex_is_long(node->lens->regexp->pattern->str)) {
-        return NULL;
-    }
-
-    pnode = ay_pnode_find_by_info(ptree, node->lens->info);
     if (!pnode || (pnode->term->tag != A_APP)) {
         return NULL;
     }
@@ -2149,32 +2145,6 @@ ay_pnode_for_regex(struct augeas *aug, struct ay_pnode *ptree, struct ay_lnode *
 }
 
 /**
- * @brief Find suitable pnode for snode.
- *
- * The pnode will be used for yang node name.
- *
- * @param[in] ptree Tree of pnodes.
- * @param[in] node the lnode for which the pnode is to be found.
- * @return pnode or NULL.
- */
-static struct ay_pnode *
-ay_pnode_for_snode(struct ay_pnode *ptree, struct ay_lnode *node)
-{
-    struct ay_pnode *pnode;
-
-    if (node->lens->tag != L_SUBTREE) {
-        return NULL;
-    }
-    pnode = ay_pnode_find_by_info(ptree, node->lens->info);
-    if (!pnode) {
-        return NULL;
-    }
-    pnode = ay_lnode_snode_get_pnode(pnode);
-
-    return pnode;
-}
-
-/**
  * @brief For every lnode set parsed node.
  *
  * The root of the pnode tree is stored in the root of the lnode node.
@@ -2188,16 +2158,29 @@ ay_lnode_set_pnode(struct ay_lnode *tree, struct ay_pnode *ptree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_lnode *iter;
-    struct ay_pnode *pnode;
+    struct ay_pnode *pnode, *pnode_by_info;
     struct augeas *aug;
 
     aug = ay_get_augeas_ctx2(tree->lens);
     LY_ARRAY_FOR(tree, i) {
         iter = &tree[i];
-        if ((pnode = ay_pnode_for_regex(aug, ptree, iter))) {
+        if (((iter->lens->tag == L_STORE) || (iter->lens->tag == L_KEY)) &&
+                ay_regex_is_long(iter->lens->regexp->pattern->str)) {
+            pnode_by_info = ay_pnode_find_by_info(ptree, iter->lens->info);
+            if ((pnode = ay_pnode_for_regex(aug, ptree, pnode_by_info))) {
+                pnode->flags |= AY_PNODE_REG_MINUS;
+                iter->pnode = pnode;
+            } else {
+                pnode = ay_lnode_get_pnode_name(pnode_by_info);
+                iter->pnode = pnode;
+            }
+        } else if (iter->lens->tag == L_KEY) {
+            pnode_by_info = ay_pnode_find_by_info(ptree, iter->lens->info);
+            pnode = ay_lnode_get_pnode_name(pnode_by_info);
             iter->pnode = pnode;
-            pnode->flags |= AY_PNODE_REG_MINUS;
-        } else if ((pnode = ay_pnode_for_snode(ptree, iter))) {
+        } else if (iter->lens->tag == L_SUBTREE) {
+            pnode_by_info = ay_pnode_find_by_info(ptree, iter->lens->info);
+            pnode = ay_lnode_get_pnode_name(pnode_by_info);
             iter->pnode = pnode;
             /* flag is set in ay_ynode_snode_unique_pnode(). */
         }
@@ -5201,6 +5184,27 @@ ay_get_yang_ident_first_descendants(struct yprinter_ctx *ctx, struct ay_ynode *n
 }
 
 /**
+ * @brief Try to find a name by pnode.
+ *
+ * @param[in] pnode Node for processing.
+ * @return pointer to name or NULL.
+ */
+static char *
+ay_ynode_name_by_pnode(struct ay_pnode *pnode)
+{
+    if (!pnode) {
+        return NULL;
+    }
+    if (pnode->term->tag == A_FUNC) {
+        return pnode->term->param->name->str;
+    } else if (pnode->term->tag == A_BIND) {
+        return pnode->term->bname;
+    } else {
+        return NULL;
+    }
+}
+
+/**
  * @brief Try to find snode name from pnode.
  *
  * @param[in] node Node for which a name is sought.
@@ -5221,12 +5225,7 @@ ay_ynode_snode_name(struct ay_ynode *node)
         return NULL;
     }
 
-    name = NULL;
-    if (pnode->term->tag == A_FUNC) {
-        name = pnode->term->param->name->str;
-    } else if (pnode->term->tag == A_BIND) {
-        name = pnode->term->bname;
-    }
+    name = ay_ynode_name_by_pnode(pnode);
 
     return name;
 }
@@ -5386,6 +5385,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
+        } else if (node->label && (tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
+            str = tmp;
         } else if (!node->label) {
             ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
             AY_CHECK_RET(ret);
@@ -5414,6 +5415,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = ident_from_label;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
             str = tmp;
+        } else if ((tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
+            str = tmp;
         } else {
             str = "label";
         }
@@ -5433,6 +5436,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
             str = tmp;
         } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
+            str = tmp;
+        } else if ((tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
             str = tmp;
         } else {
             str = "node";
