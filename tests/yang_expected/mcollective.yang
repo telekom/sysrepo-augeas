@@ -24,7 +24,7 @@ module mcollective {
       }
       container entry {
         augex:data-path "$$";
-        augex:value-yang-path "to-comment";
+        augex:value-yang-path "value";
         presence "Config entry.";
         leaf word {
           mandatory true;
@@ -32,7 +32,7 @@ module mcollective {
             pattern "[A-Za-z0-9_.-]+";
           }
         }
-        leaf to-comment {
+        leaf value {
           type union {
             type string {
               pattern "(('[^\n']*')|(\"[^\n\"]*\"))|([^\n \t'\"#][^\n#]*[^\n \t#]|[^\n \t'\"#])";

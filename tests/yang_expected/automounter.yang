@@ -90,13 +90,13 @@ module automounter {
       key "_seq";
       ordered-by user;
       augex:data-path "$$";
-      augex:value-yang-path "entry-mkey";
+      augex:value-yang-path "value";
       leaf _seq {
         type uint64;
         description
           "Key contains some unique value. The order is based on the actual order of list instances.";
       }
-      leaf entry-mkey {
+      leaf value {
         mandatory true;
         type union {
           type string {
@@ -110,7 +110,7 @@ module automounter {
       choice ch-entry-list {
         mandatory true;
         case opt-list {
-          when "re-match(entry-mkey, '[^-+#: \t\n][^#: \t\n]*')";
+          when "re-match(value, '[^-+#: \t\n][^#: \t\n]*')";
           uses opt-list;
           choice ch-opt-list {
             mandatory true;
@@ -154,7 +154,7 @@ module automounter {
             pattern "[^: \t\n]+";
           }
           augex:data-path "map";
-          when "../entry-mkey='+'";
+          when "../value='+'";
         }
       }
     }

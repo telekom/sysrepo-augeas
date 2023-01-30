@@ -5424,7 +5424,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         ay_get_yang_ident(ctx, node->child, opt, buffer);
         str = buffer;
     } else if (node->type == YN_VALUE) {
-        if ((tmp = ay_get_lense_name(ctx->mod, node->value))) {
+        if (!ay_dnode_find(AY_YNODE_ROOT_VALUES(ctx->tree), node->value) &&
+                (tmp = ay_get_lense_name(ctx->mod, node->value))) {
             str = tmp;
         } else {
             str = "value";

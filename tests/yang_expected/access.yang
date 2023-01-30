@@ -14,9 +14,9 @@ module access {
       mandatory true;
       container user {
         augex:data-path "user";
-        augex:value-yang-path "user";
+        augex:value-yang-path "value";
         presence "Config entry.";
-        leaf user {
+        leaf value {
           mandatory true;
           type union {
             type string {
@@ -32,7 +32,7 @@ module access {
             pattern "[A-Za-z0-9_.-]+";
           }
           augex:data-path "host";
-          when "re-match(../user, '[A-Za-z0-9_.-]+')";
+          when "re-match(../value, '[A-Za-z0-9_.-]+')";
         }
       }
       leaf group {

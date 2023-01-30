@@ -794,9 +794,9 @@ module dhcpd {
           case function {
             container function {
               augex:data-path "function";
-              augex:value-yang-path "fct";
+              augex:value-yang-path "value";
               presence "Config entry.";
-              leaf fct {
+              leaf value {
                 type union {
                   type string {
                     pattern "((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)";
@@ -829,7 +829,7 @@ module dhcpd {
                 }
               }
               augex:data-path "value";
-              when "re-match(../function/fct, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
+              when "re-match(../function/value, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
             }
           }
           container option {
