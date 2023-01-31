@@ -46,25 +46,13 @@ module keepalived {
       }
     }
   }
-  grouping word-list {
-    list word-list {
-      key "_id";
+  grouping word {
+    leaf-list word {
+      type string {
+        pattern "[A-Za-z0-9_.-]+";
+      }
       ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      container word {
-        augex:data-path "$$";
-        presence "Config entry.";
-        leaf word {
-          mandatory true;
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
-        }
-      }
+      augex:data-path "$$";
     }
   }
   grouping gr {
@@ -160,20 +148,12 @@ module keepalived {
               container notification-email {
                 augex:data-path "notification_email";
                 presence "Config entry.";
-                list email-list {
-                  key "_id";
+                leaf-list email {
+                  type string {
+                    pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
+                  }
                   ordered-by user;
-                  leaf _id {
-                    type uint64;
-                    description
-                      "Implicitly generated list key to maintain the order of the augeas data.";
-                  }
-                  leaf email {
-                    type string {
-                      pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
-                    }
-                    augex:data-path "email";
-                  }
+                  augex:data-path "email";
                 }
               }
               leaf notification-email-from {
@@ -320,7 +300,7 @@ module keepalived {
               container group {
                 augex:data-path "group";
                 presence "Config entry.";
-                uses word-list;
+                uses word;
               }
             }
           }
@@ -511,12 +491,12 @@ module keepalived {
               container track-interface {
                 augex:data-path "track_interface";
                 presence "Config entry.";
-                uses word-list;
+                uses word;
               }
               container track-script {
                 augex:data-path "track_script";
                 presence "Config entry.";
-                uses word-list;
+                uses word;
               }
               container unicast-peer {
                 augex:data-path "unicast_peer";

@@ -47,40 +47,23 @@ module shellvars-list {
           augex:data-path "quote";
         }
         choice ch-kv {
-          mandatory true;
-          list value-list {
-            key "_id";
+          leaf-list value {
+            type string {
+              pattern "[^ '\t\n]+";
+            }
             //when "re-match(../quote, ''')";
             ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            leaf value {
-              type string {
-                pattern "[^ '\t\n]+";
-              }
-              augex:data-path "value";
-            }
+            augex:data-path "value";
           }
-          list value-list2 {
-            key "_id";
+          leaf-list value2 {
+            type string {
+              pattern "([^ \"\\\\\t\n]|\\\\.)+";
+            }
             when "re-match(../quote, '\"')";
             ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            leaf value {
-              type string {
-                pattern "([^ \"\\\\\t\n]|\\\\.)+";
-              }
-              augex:data-path "value";
-            }
+            augex:data-path "value";
           }
-          leaf value {
+          leaf value3 {
             type string {
               pattern "((([^ `\"'\\\\\t\n]|\\\\.)+)+)|(`[^`\n]*`)";
             }

@@ -218,10 +218,7 @@ test_load(void **state)
             "      <action-list>\n"
             "        <_id>1</_id>\n"
             "        <action>\n"
-            "          <user-list>\n"
-            "            <_id>1</_id>\n"
-            "            <user>*</user>\n"
-            "          </user-list>\n"
+            "          <user>*</user>\n"
             "        </action>\n"
             "      </action-list>\n"
             "    </entry>\n"
@@ -277,10 +274,7 @@ test_load(void **state)
             "      <action-list>\n"
             "        <_id>1</_id>\n"
             "        <action>\n"
-            "          <omusrmsg-list>\n"
-            "            <_id>1</_id>\n"
-            "            <omusrmsg>*</omusrmsg>\n"
-            "          </omusrmsg-list>\n"
+            "          <omusrmsg>*</omusrmsg>\n"
             "        </action>\n"
             "      </action-list>\n"
             "    </entry>\n"
@@ -298,14 +292,8 @@ test_load(void **state)
             "      <action-list>\n"
             "        <_id>1</_id>\n"
             "        <action>\n"
-            "          <omusrmsg-list>\n"
-            "            <_id>1</_id>\n"
-            "            <omusrmsg>foo</omusrmsg>\n"
-            "          </omusrmsg-list>\n"
-            "          <omusrmsg-list>\n"
-            "            <_id>2</_id>\n"
-            "            <omusrmsg>bar</omusrmsg>\n"
-            "          </omusrmsg-list>\n"
+            "          <omusrmsg>foo</omusrmsg>\n"
+            "          <omusrmsg>bar</omusrmsg>\n"
             "        </action>\n"
             "      </action-list>\n"
             "    </entry>\n"
@@ -349,14 +337,8 @@ test_load(void **state)
             "        </node>\n"
             "      </config-entries>\n"
             "      <then>\n"
-            "        <cmd-list>\n"
-            "          <_id>1</_id>\n"
-            "          <cmd>/dev/tty10</cmd>\n"
-            "        </cmd-list>\n"
-            "        <cmd-list>\n"
-            "          <_id>2</_id>\n"
-            "          <cmd>|/dev/xconsole</cmd>\n"
-            "        </cmd-list>\n"
+            "        <cmd>/dev/tty10</cmd>\n"
+            "        <cmd>|/dev/xconsole</cmd>\n"
             "      </then>\n"
             "    </if>\n"
             "  </entries>\n"
@@ -467,8 +449,8 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/reverse", NULL, 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/program-list[_id='1']/"
-            "program", "ay_start", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/program",
+            "ay_start", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entries[_id='1']/"
             "entry/selector-list[_id='1']/selector/facility", "*", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='1']/program/entries[_id='1']/"
@@ -540,7 +522,7 @@ test_store_remove(void **state)
 
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='16']/entry/action-list[_id='1']/action/"
-            "omusrmsg-list[_id='1']", 0, &node));
+            "omusrmsg[.='foo']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entries[_id='10']/entry/selector-list[_id='2']", 0, &node));
     lyd_free_tree(node);

@@ -67,26 +67,18 @@ module dhcpd {
           leaf value {
             type boolean;
           }
-          list arg-list {
-            key "_id";
+          leaf-list arg {
             min-elements 1;
-            ordered-by user;
-            leaf _id {
-              type uint64;
-              description
-                "Implicitly generated list key to maintain the order of the augeas data.";
-            }
-            leaf arg {
-              type union {
-                type string {
-                  pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
-                }
-                type string {
-                  pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
-                }
+            type union {
+              type string {
+                pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
               }
-              augex:data-path "arg";
+              type string {
+                pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+              }
             }
+            ordered-by user;
+            augex:data-path "arg";
           }
         }
       }

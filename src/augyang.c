@@ -9824,6 +9824,10 @@ ay_ynode_mandatory_in_list_children_mandfalse(struct ay_ynode *list)
 {
     struct ay_ynode *child, *iter;
 
+    if (list->type == YN_LEAFLIST) {
+        return 0;
+    }
+
     for (child = list->child; child; child = child->next) {
         if (child->choice && (child->flags & AY_CHOICE_MAND_FALSE) && !ay_ynode_alone_in_choice(child)) {
             assert(child->flags & AY_CHOICE_MAND_FALSE);
@@ -9888,10 +9892,11 @@ ay_ynode_mandatory_in_list_upper_choice_mandfalse(struct ay_ynode *list)
     }
 
     /* Starting position to search. */
-    start = list->child->label;
-    if (list->child->label) {
+    if (list->snode && (list->snode->lens->tag == L_SUBTREE)) {
+        start = list->snode;
+    } else if (list->child && list->child->label) {
         start = list->child->label;
-    } else if (list->child->snode) {
+    } else if (list->child && list->child->snode) {
         start = list->child->snode;
     } else {
         return 0;
@@ -9935,7 +9940,7 @@ ay_ynode_mandatory_in_list(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         list = &tree[i];
-        if (list->type != YN_LIST) {
+        if ((list->type != YN_LIST) && (list->type != YN_LEAFLIST)) {
             continue;
         } else if ((list->flags & AY_YNODE_MAND_FALSE) || (list->min_elems == 0)) {
             continue;
@@ -10066,7 +10071,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
         } else if (node->choice && (node->type != YN_CASE) && (node->type != YN_LIST) &&
-                !ay_ynode_choice_has_mand_false(node)) {
+                (node->type != YN_LEAFLIST) && !ay_ynode_choice_has_mand_false(node)) {
             /* The mandatory true information is useless because choice is mandatory true. */
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && (node->flags & AY_VALUE_MAND_FALSE)) {
@@ -10090,6 +10095,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             } else if (node->min_elems) {
                 node->flags |= AY_YNODE_MAND_TRUE;
             } else {
+                node->min_elems = 0;
                 node->flags |= AY_YNODE_MAND_FALSE;
             }
         } else if (node->type == YN_KEY) {
@@ -10679,7 +10685,7 @@ ay_ynode_get_child_by_snode(struct ay_ynode *parent, const struct ay_lnode *snod
 static struct ay_ynode *
 ay_ynode_place_value(struct ay_ynode *tree, struct ay_ynode *node)
 {
-    const struct ay_lnode *iterl, *choice, *choice_wanted;
+    const struct ay_lnode *iterl, *choice, *choice_wanted, *val_parent;
     struct ay_ynode *dst, *value;
 
     assert(node->value);
@@ -10689,9 +10695,9 @@ ay_ynode_place_value(struct ay_ynode *tree, struct ay_ynode *node)
     }
 
     /* Find L_SUBTREE before 'value' */
-    assert(node->snode < node->value);
+    for (val_parent = node->value; val_parent->lens->tag != L_SUBTREE; val_parent = val_parent->parent) {}
     dst = NULL;
-    for (iterl = node->value; (iterl != node->snode) && !dst; iterl--) {
+    for (iterl = node->value; (iterl != val_parent) && !dst; iterl--) {
         if (iterl->lens->tag != L_SUBTREE) {
             continue;
         }
@@ -12357,8 +12363,6 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
         for (iter = parent->child; iter; iter = iter->next) {
             if ((iter->type != YN_LIST) && (iter->type != YN_LEAFLIST) && (iter->type != YN_REC)) {
                 continue;
-            } else if ((iter->type == YN_LEAFLIST) && !iter->choice) {
-                continue;
             } else if ((iter->type == YN_REC) && (parent->type == YN_LIST) &&
                     (parent->parent->type != YN_ROOT)) {
                 continue;
@@ -12385,6 +12389,9 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
                 } else {
                     break;
                 }
+            }
+            if ((nodes_cnt == 0) && (iter->type == YN_LEAFLIST)) {
+                continue;
             }
 
             /* wrapper is list to maintain the order of the augeas data */
