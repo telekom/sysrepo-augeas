@@ -10606,10 +10606,13 @@ static void
 ay_ynode_set_choice_for_value(const struct ay_ynode *tree, struct ay_ynode *node)
 {
     const struct ay_lnode *snode;
+    struct ay_dnode *values;
 
     assert((node->type == YN_VALUE) && node->value && node->parent);
 
-    if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) || (ay_lnode_has_attribute(node->value, L_UNION)))) {
+    values = AY_YNODE_ROOT_VALUES(tree);
+    if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) ||
+            (!ay_dnode_find(values, node->value) && ay_lnode_has_attribute(node->value, L_UNION)))) {
         if (node->next->type == YN_GROUPING) {
             assert(node->next->next->type == YN_USES);
             node->choice = node->next->next->choice;
@@ -11517,7 +11520,7 @@ static int
 ay_ynode_dependence_on_value(struct ay_ynode *tree)
 {
     struct ay_ynode *branch, *iter, *vnode;
-    const struct ay_lnode *con1, *con2, *when_val;
+    const struct ay_lnode *con1, *con2, *when_val, *val_union;
     struct ay_dnode *values, *key;
     uint64_t i, j, union_elements, moved_cnt;
     ly_bool match;
@@ -11534,17 +11537,15 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
 
     for (i = 0; i < tree->descendants; i++) {
         branch = &tree[i + 1];
-        if (!branch->choice) {
-            continue;
-        } else if ((branch->type == YN_CASE) && (branch->child->type != YN_VALUE)) {
+        if ((branch->type == YN_CASE) && (branch->child->type != YN_VALUE)) {
             continue;
         } else if (branch->type != YN_VALUE) {
             continue;
+        } else if (!(val_union = ay_lnode_has_attribute(branch->value, L_UNION))) {
+            continue;
         }
-        /* YN_VALUE node must be in choice. */
 
         vnode = branch->type == YN_CASE ? branch->child : branch;
-        assert(vnode->type == YN_VALUE);
 
         key = ay_dnode_find(values, vnode->value);
         if (!key) {
@@ -11561,9 +11562,7 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
 
         assert(AY_DNODE_IS_KEY(key));
         /* Looking for a branch that is concatenated with YN_VALUE value. */
-        for (iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
-                iter && (iter->choice == branch->choice);
-                iter = iter->next) {
+        for (iter = branch->next; iter; iter = iter->next) {
             if ((iter->type == YN_CASE) && (!iter->child->snode)) {
                 continue;
             } else if ((iter->type == YN_LIST) && !iter->child->snode) {
@@ -11571,19 +11570,21 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
             } else if ((iter->type != YN_LIST) && !iter->snode) {
                 /* Concatenation cannot be found without snode. */
                 continue;
+            } else if (val_union != iter->choice) {
+                continue;
             }
 
-            if (iter->type == YN_LIST) {
-                con1 = ay_lnode_get_last_concat(iter->child->snode, branch->choice);
+            if ((iter->type == YN_LIST) || (iter->type == YN_CASE)) {
+                con1 = ay_lnode_get_last_concat(iter->child->snode, val_union);
             } else {
-                con1 = ay_lnode_get_last_concat(iter->snode, branch->choice);
+                con1 = ay_lnode_get_last_concat(iter->snode, val_union);
             }
 
             /* Check if 'iter' is concatenated with YN_VALUE node. */
             match = 0;
             AY_DNODE_KEYVAL_FOR(key, j) {
                 when_val = key[j].lval;
-                con2 = ay_lnode_get_last_concat(when_val, branch->choice);
+                con2 = ay_lnode_get_last_concat(when_val, val_union);
                 if (con1 == con2) {
                     match = 1;
                     break;
@@ -11615,7 +11616,12 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
                 ay_ynode_insert_wrapper(tree, vnode);
                 vnode++;
                 branch->type = YN_CASE;
-                branch->choice = branch->child->choice;
+                if (branch->child->choice) {
+                    branch->choice = branch->child->choice;
+                } else {
+                    branch->choice = AY_YNODE_ROOT_LTREE(tree);
+                    branch->flags |= AY_CHOICE_CREATED;
+                }
                 vnode->choice = NULL;
                 iter = branch < iter ? iter + 1 : iter;
                 ay_ynode_move_subtree_as_last_child(tree, branch, iter);
