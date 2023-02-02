@@ -73,53 +73,20 @@ module pbuilder {
       }
     }
   }
-  grouping type {
-    leaf type {
+  grouping ch-and {
+    choice ch-and {
       mandatory true;
-      type union {
-        type string {
-          pattern "\\[";
-        }
-        type string {
-          pattern "\\[\\[";
-        }
-      }
-      augex:data-path "type";
-    }
-    leaf value {
-      mandatory true;
-      type union {
+      leaf and {
         type string {
           pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
         }
+        augex:data-path "@and";
+      }
+      leaf or {
         type string {
           pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
         }
-      }
-    }
-    list config-entries {
-      key "_id";
-      //when "re-match(../value, '(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)')";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      choice ch-config-entries {
-        mandatory true;
-        leaf and {
-          type string {
-            pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
-          }
-          augex:data-path "@and";
-        }
-        leaf or {
-          type string {
-            pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
-          }
-          augex:data-path "@or";
-        }
+        augex:data-path "@or";
       }
     }
   }
@@ -154,20 +121,35 @@ module pbuilder {
       }
     }
   }
-  grouping ch-and {
-    choice ch-and {
+  grouping type {
+    leaf type {
       mandatory true;
-      leaf and {
+      type union {
         type string {
-          pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
+          pattern "\\[";
         }
-        augex:data-path "@and";
+        type string {
+          pattern "\\[\\[";
+        }
       }
-      leaf or {
+      augex:data-path "type";
+    }
+    choice ch-type {
+      mandatory true;
+      leaf sto-to-semicol {
         type string {
           pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
         }
-        augex:data-path "@or";
+      }
+      list ch-and-list {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        uses ch-and;
       }
     }
   }
@@ -243,7 +225,7 @@ module pbuilder {
         }
         container condition {
           augex:data-path "@condition";
-          augex:value-yang-path "value";
+          augex:value-yang-path "sto-to-semicol";
           presence "Config entry.";
           uses type;
         }
@@ -392,7 +374,7 @@ module pbuilder {
                     }
                     container condition {
                       augex:data-path "@condition";
-                      augex:value-yang-path "value";
+                      augex:value-yang-path "sto-to-semicol";
                       presence "Config entry.";
                       uses type;
                     }
@@ -503,7 +485,7 @@ module pbuilder {
                     }
                     container condition {
                       augex:data-path "@condition";
-                      augex:value-yang-path "value";
+                      augex:value-yang-path "sto-to-semicol";
                       presence "Config entry.";
                       uses type;
                     }
@@ -643,7 +625,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -792,7 +774,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -903,7 +885,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -1051,7 +1033,7 @@ module pbuilder {
                       }
                       container condition {
                         augex:data-path "@condition";
-                        augex:value-yang-path "value";
+                        augex:value-yang-path "sto-to-semicol";
                         presence "Config entry.";
                         uses type;
                       }
@@ -1200,7 +1182,7 @@ module pbuilder {
                                   }
                                   container condition {
                                     augex:data-path "@condition";
-                                    augex:value-yang-path "value";
+                                    augex:value-yang-path "sto-to-semicol";
                                     presence "Config entry.";
                                     uses type;
                                   }
@@ -1311,7 +1293,7 @@ module pbuilder {
                                   }
                                   container condition {
                                     augex:data-path "@condition";
-                                    augex:value-yang-path "value";
+                                    augex:value-yang-path "sto-to-semicol";
                                     presence "Config entry.";
                                     uses type;
                                   }
@@ -1436,7 +1418,7 @@ module pbuilder {
                     }
                     container condition {
                       augex:data-path "@condition";
-                      augex:value-yang-path "value";
+                      augex:value-yang-path "sto-to-semicol";
                       presence "Config entry.";
                       uses type;
                     }
@@ -1585,7 +1567,7 @@ module pbuilder {
                                 }
                                 container condition {
                                   augex:data-path "@condition";
-                                  augex:value-yang-path "value";
+                                  augex:value-yang-path "sto-to-semicol";
                                   presence "Config entry.";
                                   uses type;
                                 }
@@ -1696,7 +1678,7 @@ module pbuilder {
                                 }
                                 container condition {
                                   augex:data-path "@condition";
-                                  augex:value-yang-path "value";
+                                  augex:value-yang-path "sto-to-semicol";
                                   presence "Config entry.";
                                   uses type;
                                 }
@@ -1838,7 +1820,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -1987,7 +1969,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -2098,7 +2080,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -2239,7 +2221,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -2388,7 +2370,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -2499,7 +2481,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -2640,7 +2622,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -2789,7 +2771,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -2900,7 +2882,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -3041,7 +3023,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -3190,7 +3172,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -3301,7 +3283,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -3451,7 +3433,7 @@ module pbuilder {
                       }
                       container condition {
                         augex:data-path "@condition";
-                        augex:value-yang-path "value";
+                        augex:value-yang-path "sto-to-semicol";
                         presence "Config entry.";
                         uses type;
                       }
@@ -3600,7 +3582,7 @@ module pbuilder {
                                   }
                                   container condition {
                                     augex:data-path "@condition";
-                                    augex:value-yang-path "value";
+                                    augex:value-yang-path "sto-to-semicol";
                                     presence "Config entry.";
                                     uses type;
                                   }
@@ -3711,7 +3693,7 @@ module pbuilder {
                                   }
                                   container condition {
                                     augex:data-path "@condition";
-                                    augex:value-yang-path "value";
+                                    augex:value-yang-path "sto-to-semicol";
                                     presence "Config entry.";
                                     uses type;
                                   }
@@ -3822,7 +3804,7 @@ module pbuilder {
                     }
                     container condition {
                       augex:data-path "@condition";
-                      augex:value-yang-path "value";
+                      augex:value-yang-path "sto-to-semicol";
                       presence "Config entry.";
                       uses type;
                     }
@@ -3970,7 +3952,7 @@ module pbuilder {
                                 }
                                 container condition {
                                   augex:data-path "@condition";
-                                  augex:value-yang-path "value";
+                                  augex:value-yang-path "sto-to-semicol";
                                   presence "Config entry.";
                                   uses type;
                                 }
@@ -4081,7 +4063,7 @@ module pbuilder {
                                 }
                                 container condition {
                                   augex:data-path "@condition";
-                                  augex:value-yang-path "value";
+                                  augex:value-yang-path "sto-to-semicol";
                                   presence "Config entry.";
                                   uses type;
                                 }
@@ -4206,7 +4188,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -4355,7 +4337,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -4466,7 +4448,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -4590,7 +4572,7 @@ module pbuilder {
                   }
                   container condition {
                     augex:data-path "@condition";
-                    augex:value-yang-path "value";
+                    augex:value-yang-path "sto-to-semicol";
                     presence "Config entry.";
                     uses type;
                   }
@@ -4739,7 +4721,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }
@@ -4850,7 +4832,7 @@ module pbuilder {
                               }
                               container condition {
                                 augex:data-path "@condition";
-                                augex:value-yang-path "value";
+                                augex:value-yang-path "sto-to-semicol";
                                 presence "Config entry.";
                                 uses type;
                               }

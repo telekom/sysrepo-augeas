@@ -1326,6 +1326,8 @@ ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value, int (
     } else if (dkey && !ay_dnode_value_is_unique(dkey, value, equal)) {
         /* The value is not unique, so nothing is inserted. */
         return ret;
+    } else if (equal && !dkey && !dval && equal(key, value)) {
+        return ret;
     }
 
     if (dkey) {
