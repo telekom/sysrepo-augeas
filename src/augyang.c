@@ -2881,7 +2881,7 @@ ay_lnode_get_last_concat(const struct ay_lnode *start, const struct ay_lnode *st
         return NULL;
     }
 
-    for (iter = start->parent; iter && iter != stop; iter = iter->parent) {
+    for (iter = start->parent; iter && (iter != stop); iter = iter->parent) {
         if (iter->lens->tag == L_CONCAT) {
             concat = iter;
         }
@@ -8937,18 +8937,6 @@ ay_ynode_rule_more_keys_for_node(const struct ay_ynode *tree)
 }
 
 /**
- * @brief The rule decides the maximum number of nodes that can be dependent on a value.
- *
- * @param[in] tree Tree of nodes.
- * @return Number of nodes to insert.
- */
-static uint32_t
-ay_ynode_rule_dependence_on_value(const struct ay_ynode *tree)
-{
-    return LY_ARRAY_COUNT(AY_YNODE_ROOT_VALUES(tree));
-}
-
-/**
  * @brief Rule decide how many nodes will be inserted for grouping.
  *
  * @param[in] node to check.
@@ -11509,6 +11497,75 @@ ay_ynode_delete_useless_choice(struct ay_ynode *tree)
 /**
  * @brief Insert a 'when' statement if the node's existence depends on the YN_VALUE node.
  *
+ * @param[in] vnode Node ynode of type YN_VALUE.
+ * @param[in] key_value Main key value from AY_YNODE_ROOT_VALUES() dictionary.
+ * @param[in] uni First L_UNION above vnode->value.
+ * @parma[in,out] iter Iterator over @p vnode siblings. Children of YN_CASE node are also considered siblings.
+ */
+static void
+ay_ynode_dependence_on_value_set_when(struct ay_ynode *vnode, struct ay_dnode *key_value, const struct ay_lnode *uni,
+        struct ay_ynode *iter)
+{
+    uint64_t i;
+    struct ay_ynode *child;
+    const struct ay_lnode *con1, *con2, *when_val;
+    ly_bool match;
+
+    if (!iter) {
+        return;
+    } else if (iter->type == YN_CASE) {
+        /* Nodes without choice are skipped because 'when' is not currently written to them. It's probably not that
+         * important to consistently write 'when' to all nodes, because it can't be fully relied on yet. So it must be
+         * taken more as a hint about how the nodes are interdependent. Finally, it can actually be derived and put
+         * together the 'when' conditions using the 'or' operator, but that might be added sometime in the future.
+         */
+        for (child = iter->child; child && !child->choice; child = child->next) {}
+
+        /* Recursive call for YN_CASE children. */
+        ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, child);
+        /* Continue to YN_CASE sibling. */
+        goto next_sibling;
+    }
+
+    /* Get last concatenation below L_UNION. */
+    if (iter->type == YN_LIST) {
+        con1 = ay_lnode_get_last_concat(iter->child->snode, uni);
+    } else {
+        con1 = ay_lnode_get_last_concat(iter->snode, uni);
+    }
+    if (!con1) {
+        goto next_sibling;
+    }
+
+    /* Check if 'iter' is concatenated with YN_VALUE node. */
+    match = 0;
+    AY_DNODE_KEYVAL_FOR(key_value, i) {
+        when_val = key_value[i].lval;
+        con2 = ay_lnode_get_last_concat(when_val, uni);
+        if (con1 == con2) {
+            match = 1;
+            break;
+        }
+    }
+    if (!match) {
+        /* Not in concatenation. */
+        goto next_sibling;
+    }
+    assert(!iter->when_ref);
+
+    /* Success, the 'when' will be set. */
+    iter->when_ref = vnode->id;
+    iter->when_val = when_val;
+    vnode->flags |= AY_WHEN_TARGET;
+
+next_sibling:
+    /* Move to the next sibling. */
+    ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, iter->next);
+}
+
+/**
+ * @brief Insert a 'when' statement if the node's existence depends on the YN_VALUE node.
+ *
  * For example lense:
  * [ label "user" . (store user_re | store Rx.word . Sep.space . [label "host"]) ]
  * The 'host' node can only exist if the node's YN_VALUE value is 'Rx.word'.
@@ -11519,11 +11576,10 @@ ay_ynode_delete_useless_choice(struct ay_ynode *tree)
 static int
 ay_ynode_dependence_on_value(struct ay_ynode *tree)
 {
-    struct ay_ynode *branch, *iter, *vnode;
-    const struct ay_lnode *con1, *con2, *when_val, *val_union;
+    struct ay_ynode *iter, *vnode;
+    const struct ay_lnode *val_union;
     struct ay_dnode *values, *key;
-    uint64_t i, j, union_elements, moved_cnt;
-    ly_bool match;
+    uint64_t i;
 
     if (!AY_YNODE_ROOT_VALUES(tree) || !tree->descendants) {
         return 0;
@@ -11535,108 +11591,31 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
         return 0;
     }
 
-    for (i = 0; i < tree->descendants; i++) {
-        branch = &tree[i + 1];
-        if ((branch->type == YN_CASE) && (branch->child->type != YN_VALUE)) {
-            continue;
-        } else if (branch->type != YN_VALUE) {
-            continue;
-        } else if (!(val_union = ay_lnode_has_attribute(branch->value, L_UNION))) {
+    for (i = 1; i < tree->descendants; i++) {
+        vnode = &tree[i];
+        if (vnode->type != YN_VALUE) {
             continue;
         }
-
-        vnode = branch->type == YN_CASE ? branch->child : branch;
 
         key = ay_dnode_find(values, vnode->value);
         if (!key) {
-            /* YN_VALUE node with no union. */
+            /* YN_VALUE node with no YANG union-stmt. */
+            continue;
+        }
+        assert(AY_DNODE_IS_KEY(key));
+        val_union = ay_lnode_has_attribute(vnode->value, L_UNION);
+        if (!val_union) {
+            /* No choice-stmt. */
             continue;
         }
 
-        /* Count number of elements in union. */
-        union_elements = 0;
-        moved_cnt = 0;
-        AY_DNODE_KEYVAL_FOR(key, j) {
-            ++union_elements;
+        /* Skip nodes without choice. */
+        for (iter = vnode->next; iter && !iter->choice; iter = iter->next) {}
+        if (!iter) {
+            continue;
         }
 
-        assert(AY_DNODE_IS_KEY(key));
-        /* Looking for a branch that is concatenated with YN_VALUE value. */
-        for (iter = branch->next; iter; iter = iter->next) {
-            if ((iter->type == YN_CASE) && (!iter->child->snode)) {
-                continue;
-            } else if ((iter->type == YN_LIST) && !iter->child->snode) {
-                continue;
-            } else if ((iter->type != YN_LIST) && !iter->snode) {
-                /* Concatenation cannot be found without snode. */
-                continue;
-            } else if (val_union != iter->choice) {
-                continue;
-            }
-
-            if ((iter->type == YN_LIST) || (iter->type == YN_CASE)) {
-                con1 = ay_lnode_get_last_concat(iter->child->snode, val_union);
-            } else {
-                con1 = ay_lnode_get_last_concat(iter->snode, val_union);
-            }
-
-            /* Check if 'iter' is concatenated with YN_VALUE node. */
-            match = 0;
-            AY_DNODE_KEYVAL_FOR(key, j) {
-                when_val = key[j].lval;
-                con2 = ay_lnode_get_last_concat(when_val, val_union);
-                if (con1 == con2) {
-                    match = 1;
-                    break;
-                }
-            }
-            if (!match) {
-                /* Not in concatenation. */
-                continue;
-            }
-            assert(!iter->when_ref);
-
-            /* Add 'when' reference. */
-            iter->when_ref = vnode->id;
-            iter->when_val = when_val;
-            vnode->flags |= AY_WHEN_TARGET;
-            /* Move 'iter' subtree close to YN_VALUE node (vnode). */
-            if (branch->type == YN_CASE) {
-                /* 'vnode' is in YN_CASE. */
-                assert((branch->descendants >= 2) && branch->child && branch->child->next);
-                iter->choice = AY_YNODE_ROOT_LTREE(tree);
-                iter->flags |= AY_CHOICE_CREATED;
-                ay_ynode_move_subtree_as_last_child(tree, branch, iter);
-            } else {
-                /* Branch is not in YN_CASE. */
-                assert(vnode == branch);
-                /* Create YN_CASE node containing 'vnode' and 'iter'. */
-                iter->choice = AY_YNODE_ROOT_LTREE(tree);
-                iter->flags |= AY_CHOICE_CREATED | AY_CHOICE_MAND_FALSE;
-                ay_ynode_insert_wrapper(tree, vnode);
-                vnode++;
-                branch->type = YN_CASE;
-                if (branch->child->choice) {
-                    branch->choice = branch->child->choice;
-                } else {
-                    branch->choice = AY_YNODE_ROOT_LTREE(tree);
-                    branch->flags |= AY_CHOICE_CREATED;
-                }
-                vnode->choice = NULL;
-                iter = branch < iter ? iter + 1 : iter;
-                ay_ynode_move_subtree_as_last_child(tree, branch, iter);
-            }
-            iter = ay_ynode_get_first_in_choice(branch->parent, branch->choice);
-            ++moved_cnt;
-        }
-
-        if ((branch->type == YN_CASE) && (moved_cnt == union_elements)) {
-            assert((branch->child == vnode) && (vnode->type == YN_VALUE));
-            vnode->next->flags &= ~AY_CHOICE_MAND_FALSE;
-        }
-        if ((branch->type == YN_CASE) && ay_ynode_alone_in_choice(branch)) {
-            ay_ynode_delete_node(tree, branch);
-        }
+        ay_ynode_dependence_on_value_set_when(vnode, key, val_union, iter);
     }
 
     return 0;
@@ -13221,7 +13200,7 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     /* [label str (store lns | store lns2 . [label str2])] -> [label str2] has 'when' reference to lns2 */
     /* ... */
-    TRANSF(ay_ynode_dependence_on_value, ay_ynode_rule_dependence_on_value(*tree));
+    ay_ynode_dependence_on_value(*tree);
 
     ay_ynode_tree_set_mandatory(*tree);
 
