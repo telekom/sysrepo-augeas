@@ -134,23 +134,21 @@ module pbuilder {
       }
       augex:data-path "type";
     }
-    choice ch-type {
+    leaf sto-to-semicol {
       mandatory true;
-      leaf sto-to-semicol {
-        type string {
-          pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
-        }
+      type string {
+        pattern "(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``))(((([ \t]*\\\\\n[ \t]*)|([ \t]+))(((((((([^`;()'\"&|\n\\\\# \t]#*|\\\\.)|(((\")((([^\"\\\\]|\\\\.)|([ \t]*\\\\\n[ \t]*))*))(\")))|('[^']*'))|($\\([^\\\\(\\\\)#\n]*\\)))|($\\(\\([^\\\\)#\n]*\\)\\)))+)|(`[^`\n]+`))|(``[^` \t\n;]+``)))*)";
       }
-      list ch-and-list {
-        key "_id";
-        ordered-by user;
-        leaf _id {
-          type uint64;
-          description
-            "Implicitly generated list key to maintain the order of the augeas data.";
-        }
-        uses ch-and;
+    }
+    list ch-and-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
+      uses ch-and;
     }
   }
   list pbuilder {

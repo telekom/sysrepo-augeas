@@ -10595,28 +10595,32 @@ ay_ynode_more_keys_for_node(struct ay_ynode *tree)
 static void
 ay_ynode_set_choice_for_value(const struct ay_ynode *tree, struct ay_ynode *node)
 {
-    const struct ay_lnode *snode;
+    const struct ay_lnode *snode, *choice;
     struct ay_dnode *values;
 
     assert((node->type == YN_VALUE) && node->value && node->parent);
 
     values = AY_YNODE_ROOT_VALUES(tree);
-    if (node->next && ((node->parent->flags & AY_VALUE_IN_CHOICE) ||
-            (!ay_dnode_find(values, node->value) && ay_lnode_has_attribute(node->value, L_UNION)))) {
-        if (node->next->type == YN_GROUPING) {
-            assert(node->next->next->type == YN_USES);
-            node->choice = node->next->next->choice;
-        } else if (node->next && node->next->choice) {
-            node->choice = node->next->choice;
-        } else if (node->next && !node->next->choice && ay_ynode_rule_node_is_splittable(tree, node->next)) {
-            node->choice = AY_YNODE_ROOT_LTREE(tree);
-            node->flags |= AY_CHOICE_CREATED;
-        }
-    } else if (!node->next && AY_YNODE_IS_SEQ_LIST(node->parent)) {
+    choice = ay_lnode_has_attribute(node->value, L_UNION);
+
+    if (!node->next && AY_YNODE_IS_SEQ_LIST(node->parent)) {
         for (snode = node->value; snode && (snode->lens->tag != L_SUBTREE); snode = snode->parent) {}
         if (snode) {
             node->choice = ay_lnode_has_attribute(snode, L_UNION);
         }
+        return;
+    } else if (!node->next) {
+        return;
+    } else if (!(node->parent->flags & AY_VALUE_IN_CHOICE) && (!choice || ay_dnode_find(values, node->value))) {
+        return;
+    }
+
+    assert(node->next);
+    if (node->next->choice && ((node->parent->flags & AY_VALUE_IN_CHOICE) || (node->next->choice == choice))) {
+        node->choice = node->next->choice;
+    } else if (!node->next->choice && ay_ynode_rule_node_is_splittable(tree, node->next)) {
+        node->choice = AY_YNODE_ROOT_LTREE(tree);
+        node->flags |= AY_CHOICE_CREATED;
     }
 }
 
