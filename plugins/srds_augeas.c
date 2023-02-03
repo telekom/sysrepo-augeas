@@ -50,7 +50,7 @@ srpds_aug_install(const struct lys_module *mod, sr_datastore_t ds, const char *o
         return SR_ERR_UNSUPPORTED;
     }
 
-    /* no installation tasks to perform, the config files must already exist */
+    /* no initialization tasks to perform, the config files must already exist */
 
     return SR_ERR_OK;
 }
@@ -73,8 +73,9 @@ srpds_aug_init(const struct lys_module *mod, sr_datastore_t ds)
     (void)mod;
     (void)ds;
 
-    /* init auginfo structure and augeas itself */
-    return augds_init(&auginfo, mod);
+    /* no initialization tasks to perform, the config files are persistent and must already exist */
+
+    return SR_ERR_OK;
 }
 
 static int
@@ -88,6 +89,11 @@ srpds_aug_store(const struct lys_module *mod, sr_datastore_t ds, const struct ly
     uint32_t i;
 
     (void)mod_diff;
+
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, NULL))) {
+        goto cleanup;
+    }
 
     /* get current data */
     if ((rc = srpds_aug_load(mod, ds, NULL, 0, &cur_data))) {
@@ -149,6 +155,11 @@ srpds_aug_recover(const struct lys_module *mod, sr_datastore_t ds)
     const char **files = NULL;
     char *bck_path = NULL;
     struct lyd_node *mod_data = NULL;
+
+    /* init */
+    if (augds_init(&auginfo, mod, NULL)) {
+        return;
+    }
 
     /* check whether the file(s) is valid */
     if (!srpds_aug_load(mod, ds, NULL, 0, &mod_data)) {
@@ -212,8 +223,8 @@ srpds_aug_load(const struct lys_module *mod, sr_datastore_t ds, const char **xpa
 
     *mod_data = NULL;
 
-    /* get the auginfo mod */
-    if ((rc = augds_get(&auginfo, mod, &augmod))) {
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, &augmod))) {
         goto cleanup;
     }
 
@@ -285,6 +296,11 @@ srpds_aug_access_set(const struct lys_module *mod, sr_datastore_t ds, const char
     (void)ds;
     assert(mod && (owner || group || perm));
 
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, NULL))) {
+        goto cleanup;
+    }
+
     /* get all parsed files */
     if ((rc = augds_get_config_files(auginfo.aug, mod, 1, &files, &file_count))) {
         goto cleanup;
@@ -320,6 +336,11 @@ srpds_aug_access_get(const struct lys_module *mod, sr_datastore_t ds, char **own
     }
     if (group) {
         *group = NULL;
+    }
+
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, NULL))) {
+        goto cleanup;
     }
 
     /* get all parsed files */
@@ -389,6 +410,11 @@ srpds_aug_access_check(const struct lys_module *mod, sr_datastore_t ds, int *rea
 
     (void)ds;
 
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, NULL))) {
+        goto cleanup;
+    }
+
     /* get all parsed files */
     if ((rc = augds_get_config_files(auginfo.aug, mod, 1, &files, &file_count))) {
         goto cleanup;
@@ -453,8 +479,8 @@ srpds_aug_last_modif(const struct lys_module *mod, sr_datastore_t ds, struct tim
     mtime->tv_sec = 0;
     mtime->tv_nsec = 0;
 
-    /* get auginfo mod */
-    if ((rc = augds_get(&auginfo, mod, &augmod))) {
+    /* init */
+    if ((rc = augds_init(&auginfo, mod, &augmod))) {
         goto cleanup;
     }
 
