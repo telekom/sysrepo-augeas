@@ -108,10 +108,9 @@ struct auginfo {
  *
  * @param[in] auginfo Base auginfo structure to use.
  * @param[in] mod YANG module.
- * @param[out] augmod Optional created/found augmod structure for @p mod.
  * @return SR error code.
  */
-int augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct augmod **augmod);
+int augds_init(struct auginfo *auginfo, const struct lys_module *mod);
 
 /**
  * @brief Destroy augeas structure.
@@ -119,6 +118,16 @@ int augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct aug
  * @param[in] auginfo Base auginfo structure.
  */
 void augds_destroy(struct auginfo *auginfo);
+
+/**
+ * @brief Find auginfo augmod for a YANG module.
+ *
+ * @param[in] auginfo Base auginfo structure to use.
+ * @param[in] mod YANG module.
+ * @param[out] augmod Augmod structure for @p mod.
+ * @return SR error code.
+ */
+int augds_get(struct auginfo *auginfo, const struct lys_module *mod, struct augmod **augmod);
 
 /**
  * @brief Learn operation of a diff node.

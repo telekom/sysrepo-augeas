@@ -4,8 +4,8 @@
  * @brief common routines for tests
  *
  * @copyright
- * Copyright (c) 2022 Deutsche Telekom AG.
- * Copyright (c) 2022 CESNET, z.s.p.o.
+ * Copyright (c) 2022 - 2023 Deutsche Telekom AG.
+ * Copyright (c) 2022 - 2023 CESNET, z.s.p.o.
  *
  * This source code is licensed under BSD 3-Clause License (the "License").
  * You may not use this file except in compliance with the License.
@@ -58,6 +58,9 @@ tsetup_glob(void **state, const char *yang_mod, const struct srplg_ds_s *ds_plg,
     /* aug intpu files */
     st->aug_input_files = aug_input_files;
 
+    /* init DS */
+    st->ds_plg->init_cb(st->mod, SR_DS_STARTUP);
+
     return 0;
 }
 
@@ -69,7 +72,7 @@ tteardown_glob(void **state)
 
     if (st->ds_plg) {
         /* destroy DS */
-        st->ds_plg->destroy_cb(st->mod, SR_DS_STARTUP);
+        st->ds_plg->uninstall_cb(st->mod, SR_DS_STARTUP);
     }
 
     /* free */

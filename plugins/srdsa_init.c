@@ -415,14 +415,13 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
 }
 
 int
-augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct augmod **augmod)
+augds_init(struct auginfo *auginfo, const struct lys_module *mod)
 {
     int rc = SR_ERR_OK;
-    uint32_t i;
     const char *lens;
     char *path = NULL, *value = NULL;
     void *ptr;
-    struct augmod *augm = NULL;
+    struct augmod *augm;
 
     if (!auginfo->aug) {
         /* init augeas with all modules but no loaded files */
@@ -433,15 +432,6 @@ augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct augmod 
 
         /* remove all lenses except this one so we are left only with 'incl' and 'excl' for all the lenses */
         aug_rm(auginfo->aug, "/augeas/load/*/lens");
-    }
-
-    /* try to find this module in auginfo, it must be there if already initialized */
-    for (i = 0; i < auginfo->mod_count; ++i) {
-        if (auginfo->mods[i].mod == mod) {
-            /* found */
-            augm = &auginfo->mods[i];
-            goto cleanup;
-        }
     }
 
     /* get lens name */
@@ -461,8 +451,11 @@ augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct augmod 
     }
 
 #ifdef AUG_TEST_INPUT_FILES
+    uint32_t i;
+
     /* for testing, remove all default includes */
     free(path);
+
     if (asprintf(&path, "/augeas/load/%s/incl", lens) == -1) {
         AUG_LOG_ERRMEM_GOTO(rc, cleanup);
     }
@@ -514,14 +507,8 @@ augds_init(struct auginfo *auginfo, const struct lys_module *mod, struct augmod 
 cleanup:
     free(path);
     free(value);
-    if (augmod) {
-        *augmod = augm;
-    }
     if (rc) {
         augds_destroy(auginfo);
-        if (augmod) {
-            *augmod = NULL;
-        }
     }
     return rc;
 }
@@ -550,4 +537,23 @@ augds_destroy(struct auginfo *auginfo)
 
     /* free compiled patterns */
     pcre2_code_free(auginfo->pcode_uint64);
+}
+
+int
+augds_get(struct auginfo *auginfo, const struct lys_module *mod, struct augmod **augmod)
+{
+    uint32_t i;
+
+    assert(auginfo->aug);
+
+    /* find this module in auginfo */
+    for (i = 0; i < auginfo->mod_count; ++i) {
+        if (auginfo->mods[i].mod == mod) {
+            /* found */
+            *augmod = &auginfo->mods[i];
+            return SR_ERR_OK;
+        }
+    }
+
+    return SR_ERR_NOT_FOUND;
 }
