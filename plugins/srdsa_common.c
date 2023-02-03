@@ -81,7 +81,7 @@ augds_get_pwd(uid_t *uid, char **user)
         if (*user) {
             SRPLG_LOG_ERR(srpds_name, "Retrieving user \"%s\" passwd entry failed (%s).", *user, strerror(r));
         } else {
-            SRPLG_LOG_ERR(srpds_name, "Retrieving UID \"%lu\" passwd entry failed (%s).", (unsigned long int)*uid, strerror(r));
+            SRPLG_LOG_ERR(srpds_name, "Retrieving UID \"%lu\" passwd entry failed (%s).", (unsigned long)*uid, strerror(r));
         }
         rc = SR_ERR_INTERNAL;
         goto cleanup;
@@ -89,7 +89,7 @@ augds_get_pwd(uid_t *uid, char **user)
         if (*user) {
             SRPLG_LOG_ERR(srpds_name, "Retrieving user \"%s\" passwd entry failed (No such user).", *user);
         } else {
-            SRPLG_LOG_ERR(srpds_name, "Retrieving UID \"%lu\" passwd entry failed (No such UID).", (unsigned long int)*uid);
+            SRPLG_LOG_ERR(srpds_name, "Retrieving UID \"%lu\" passwd entry failed (No such UID).", (unsigned long)*uid);
         }
         rc = SR_ERR_NOT_FOUND;
         goto cleanup;
@@ -158,7 +158,7 @@ augds_get_grp(gid_t *gid, char **group)
         if (*group) {
             SRPLG_LOG_ERR(srpds_name, "Retrieving group \"%s\" grp entry failed (%s).", *group, strerror(r));
         } else {
-            SRPLG_LOG_ERR(srpds_name, "Retrieving GID \"%lu\" grp entry failed (%s).", (unsigned long int)*gid, strerror(r));
+            SRPLG_LOG_ERR(srpds_name, "Retrieving GID \"%lu\" grp entry failed (%s).", (unsigned long)*gid, strerror(r));
         }
         rc = SR_ERR_INTERNAL;
         goto cleanup;
@@ -166,7 +166,7 @@ augds_get_grp(gid_t *gid, char **group)
         if (*group) {
             SRPLG_LOG_ERR(srpds_name, "Retrieving group \"%s\" grp entry failed (No such group).", *group);
         } else {
-            SRPLG_LOG_ERR(srpds_name, "Retrieving GID \"%lu\" grp entry failed (No such GID).", (unsigned long int)*gid);
+            SRPLG_LOG_ERR(srpds_name, "Retrieving GID \"%lu\" grp entry failed (No such GID).", (unsigned long)*gid);
         }
         rc = SR_ERR_NOT_FOUND;
         goto cleanup;
