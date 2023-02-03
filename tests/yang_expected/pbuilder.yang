@@ -28,7 +28,6 @@ module pbuilder {
       }
       list values-list {
         key "_seq";
-        min-elements 1;
         ordered-by user;
         augex:data-path "$$";
         augex:value-yang-path "anyquot";
@@ -3845,6 +3844,7 @@ module pbuilder {
                         augex:value-yang-path "value";
                         presence "Config entry.";
                         leaf value {
+                          mandatory true;
                           type string {
                             pattern "$?[-A-Za-z0-9_./]+";
                             pattern "exit|shift|return|ulimit|unset|export|source|\\.|if|for|select|while|until|then|else|fi|done|case|eval|alias" {

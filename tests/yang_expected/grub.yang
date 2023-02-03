@@ -31,6 +31,22 @@ module grub {
       augex:data-path "file";
     }
   }
+  grouping foreground {
+    leaf foreground {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z-]+";
+      }
+      augex:data-path "foreground";
+    }
+    leaf background {
+      mandatory true;
+      type string {
+        pattern "[A-Za-z-]+";
+      }
+      augex:data-path "background";
+    }
+  }
   grouping kernel-args-list {
     list kernel-args-list {
       key "_id";
@@ -272,36 +288,12 @@ module grub {
           container normal {
             augex:data-path "normal";
             presence "Config entry.";
-            leaf foreground {
-              mandatory true;
-              type string {
-                pattern "[A-Za-z-]+";
-              }
-              augex:data-path "foreground";
-            }
-            leaf background {
-              mandatory true;
-              type string {
-                pattern "[A-Za-z-]+";
-              }
-              augex:data-path "background";
-            }
+            uses foreground;
           }
           container highlight {
             augex:data-path "highlight";
             presence "Config entry.";
-            leaf foreground {
-              type string {
-                pattern "[A-Za-z-]+";
-              }
-              augex:data-path "foreground";
-            }
-            leaf background {
-              type string {
-                pattern "[A-Za-z-]+";
-              }
-              augex:data-path "background";
-            }
+            uses foreground;
           }
         }
         container device {

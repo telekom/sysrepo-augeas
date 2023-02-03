@@ -111,6 +111,7 @@ module systemd {
                 presence "Config entry.";
                 list args-list {
                   key "_seq";
+                  min-elements 1;
                   ordered-by user;
                   augex:data-path "$$";
                   augex:value-yang-path "sto-value";

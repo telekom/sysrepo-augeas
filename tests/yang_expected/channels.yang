@@ -101,6 +101,7 @@ module channels {
           augex:value-yang-path "integer";
           presence "Config entry.";
           leaf integer {
+            mandatory true;
             type uint64;
           }
           leaf codec {

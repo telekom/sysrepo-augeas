@@ -51,6 +51,7 @@ module koji {
       augex:value-yang-path "value";
       presence "Config entry.";
       leaf value {
+        mandatory true;
         type enumeration {
           enum ".anon";
         }

@@ -11,6 +11,7 @@ module ldif {
 
   grouping include {
     leaf include {
+      mandatory true;
       type string {
         pattern "[^ \t\n][^\n]*";
       }
@@ -300,7 +301,6 @@ module ldif {
           choice ch-record-list2 {
             list attr-val-spec-list {
               key "_id";
-              min-elements 1;
               when "../change-type/value='add'";
               ordered-by user;
               leaf _id {
@@ -312,7 +312,6 @@ module ldif {
             }
             list change-modify {
               key "_id";
-              min-elements 1;
               when "../change-type/value='modify'";
               ordered-by user;
               leaf _id {
@@ -362,7 +361,6 @@ module ldif {
             }
             list change-modrdn {
               key "_id";
-              min-elements 1;
               when "re-match(../change-type/value, 'modr?dn')";
               ordered-by user;
               leaf _id {

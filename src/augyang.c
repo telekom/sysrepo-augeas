@@ -3249,26 +3249,6 @@ ay_ynode_choice_contains_lnode(const struct ay_ynode *chnode, const struct ay_ln
 }
 
 /**
- * @brief Check if @p node is in choice whose mandatory statement is false.
- *
- * @param[in] node Node to check.
- * @return 1 if node is in choice and mandatory statement for choice is false.
- */
-static ly_bool
-ay_ynode_choice_has_mand_false(struct ay_ynode *node)
-{
-    struct ay_ynode *chnode;
-
-    if (!node->choice) {
-        return 0;
-    }
-
-    chnode = ay_ynode_get_first_in_choice(node->parent, node->choice);
-
-    return chnode->flags & AY_CHOICE_MAND_FALSE;
-}
-
-/**
  * @brief Check if @p lnode1 and @p lnode2 from ay_dnode dictionary are equal.
  *
  * @param[in] lnode1 First ay_lnode to check.
@@ -5820,6 +5800,11 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
+    if ((node->type == YN_LIST) && node->choice && !ay_ynode_alone_in_choice(node) && (node->min_elems < 2)) {
+        return;
+    } else if (ay_ynode_alone_in_choice(node) && (node->flags & AY_CHOICE_MAND_FALSE)) {
+        return;
+    }
     if (node->min_elems) {
         ly_print(ctx->out, "%*smin-elements %" PRIu16 ";\n", ctx->space, "", node->min_elems);
     } else if (node->flags & AY_YNODE_MAND_TRUE) {
@@ -6637,7 +6622,10 @@ ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if (node->flags & AY_YNODE_MAND_TRUE) {
+    if (ay_ynode_alone_in_choice(node) && (node->flags & AY_CHOICE_MAND_FALSE)) {
+        return;
+    }
+    if ((node->flags & AY_YNODE_MAND_TRUE) && !node->choice && !node->when_val) {
         ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
     }
 }
@@ -9858,7 +9846,7 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
             continue;
         }
 
-        if (!(chnode->flags & AY_CHOICE_MAND_FALSE) && ay_ynode_mandatory_empty_branch_d2_deleted_node(chnode, chnode->choice)) {
+        if (ay_ynode_mandatory_empty_branch_d2_deleted_node(chnode, chnode->choice)) {
             chnode->flags |= AY_CHOICE_MAND_FALSE;
         }
     }
@@ -9899,6 +9887,9 @@ ay_ynode_mandatory_in_list_upper_choice_mandfalse(struct ay_ynode *list)
             stop = stop->parent) {}
     if (!stop && list->label && (list->label->lens->tag == L_STAR)) {
         stop = list->label;
+    } else if (!stop && (list->label->lens->tag == L_SEQ)) {
+        stop = ay_lnode_has_attribute(list->snode, L_STAR);
+        assert(stop);
     } else if (!stop) {
         return 0;
     }
@@ -9985,7 +9976,7 @@ ay_ynode_mandatory_choice_in_list(struct ay_ynode *tree)
         /* Get list with mandatory false. */
         if (list->type != YN_LIST) {
             continue;
-        } else if ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems) {
+        } else if (!list->choice && ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems)) {
             continue;
         }
 
@@ -10011,59 +10002,57 @@ ay_ynode_mandatory_choice_in_list(struct ay_ynode *tree)
 static void
 ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 {
-    LY_ARRAY_COUNT_TYPE i, j;
+    LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *node, *iter;
     const struct ay_lnode *lnode;
-    ly_bool maybe;
+
+    /* TODO: in YN_CASE node should be at least one node with mandatory true (if choice is mandatory true). */
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
 
-        /* setting AY_CHOICE_MAND_FALSE */
-        if (!(node->flags & AY_CHOICE_MAND_FALSE) &&
-                (node == ay_ynode_get_first_in_choice(node->parent, node->choice)) &&
-                !ay_ynode_alone_in_choice(node)) {
-            maybe = 1;
-            for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
-                lnode = iter->flags & AY_CHOICE_CREATED ? iter->snode : iter->choice;
-                if (!ay_lnode_has_maybe(lnode, 0, 0)) {
-                    maybe = 0;
-                    break;
+        if (node->flags & AY_CHILDREN_MAND_FALSE) {
+            if (node->type == YN_CASE) {
+                node->child->flags |= AY_YNODE_MAND_TRUE;
+                for (iter = node->child->next; iter; iter = iter->next) {
+                    iter->flags |= AY_YNODE_MAND_FALSE;
+                }
+            } else {
+                for (iter = node->child; iter; iter = iter->next) {
+                    iter->flags |= AY_YNODE_MAND_FALSE;
                 }
             }
-            if (maybe) {
-                node->flags |= AY_CHOICE_MAND_FALSE;
-            }
+        }
+        if (node->type == YN_CONTAINER) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            continue;
+        } else if (node->type == YN_KEY) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags |= AY_YNODE_MAND_TRUE;
+            continue;
+        } else if ((node->parent->type == YN_LIST) && (node->parent->child == node) &&
+                (node->parent->descendants == 1)) {
+            node->flags &= ~AY_YNODE_MAND_MASK;
+            node->flags |= AY_YNODE_MAND_TRUE;
+            node->min_elems = 1;
+            continue;
+        } else if ((node->flags & AY_HINT_MAND_TRUE) && !ay_lnode_has_maybe(node->snode, 0, 0)) {
+            node->flags |= AY_YNODE_MAND_TRUE;
+            node->min_elems = (node->type == YN_LIST) || (node->type == YN_LEAFLIST) ? 1 : 0;
+            continue;
+        } else if (node->flags & AY_HINT_MAND_FALSE) {
+            node->flags |= AY_YNODE_MAND_FALSE;
+            continue;
+        } else if (node->flags & (AY_YNODE_MAND_FALSE | AY_YNODE_MAND_TRUE)) {
+            continue;
         }
 
-        if (node->flags & AY_CHILDREN_MAND_FALSE) {
-            for (j = 0; j < node->descendants; j++) {
-                iter = node + j + 1;
-                iter->flags |= AY_HINT_MAND_FALSE;
-            }
-        } else if ((node->type != YN_KEY) && !(node->flags & AY_HINT_MAND_TRUE) && (node->flags & AY_HINT_MAND_FALSE)) {
-            node->flags |= AY_YNODE_MAND_FALSE;
-        } else if (node->parent && (node->parent->type == YN_CONTAINER) && (node->parent->flags & AY_YNODE_MAND_FALSE)) {
-            node->flags |= AY_YNODE_MAND_FALSE;
-            node->min_elems = 0;
-        } else if (node->when_ref && (node->type != YN_LIST) && (node->type != YN_LEAFLIST)) {
-            node->flags |= AY_YNODE_MAND_FALSE;
-        } else if ((node->type == YN_LEAF) && node->label && (node->label->flags & AY_LNODE_KEY_NOREGEX)) {
-            if (ay_lnode_has_maybe(node->snode, 0, 0) && !ay_ynode_alone_in_choice(node)) {
-                node->flags |= AY_CHOICE_MAND_FALSE;
-            } else {
-                node->flags |= AY_YNODE_MAND_FALSE;
-            }
-        } else if (node->type == YN_CONTAINER) {
-            if (!ay_ynode_choice_has_mand_false(node) && ay_lnode_has_maybe(node->snode, 0, 1)) {
+        if (node->type == YN_CONTAINER) {
+            if (ay_lnode_has_maybe(node->snode, 0, 1)) {
                 node->flags |= AY_YNODE_MAND_FALSE;
             } else {
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
-        } else if (node->choice && (node->type != YN_CASE) && (node->type != YN_LIST) &&
-                (node->type != YN_LEAFLIST) && !ay_ynode_choice_has_mand_false(node)) {
-            /* The mandatory true information is useless because choice is mandatory true. */
-            node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && (node->flags & AY_VALUE_MAND_FALSE)) {
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if ((node->type == YN_VALUE) && ay_yang_type_is_empty(node->value)) {
@@ -10088,9 +10077,6 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
                 node->min_elems = 0;
                 node->flags |= AY_YNODE_MAND_FALSE;
             }
-        } else if (node->type == YN_KEY) {
-            node->flags &= ~AY_YNODE_MAND_MASK;
-            node->flags |= AY_YNODE_MAND_TRUE;
         } else {
             if (ay_lnode_has_maybe(node->snode, 0, 0)) {
                 node->flags |= AY_YNODE_MAND_FALSE;
@@ -10101,8 +10087,6 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         }
     }
 
-    /* TODO: in YN_CASE node should be at least one node with mandatory true (if choice is mandatory true). */
-
     /* Setting mandatory for list and choice is not so obvious. The ynode tree does not contain all nodes
      * and also does not contain L_DEL lenses. So the following cases are in ynode tree ignored:
      * 1. Node is comment.
@@ -10110,11 +10094,32 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
      * 3. No nodes. Branch in L_UNION that only contains L_DEL.
      * But cases 2. and 3. have an effect on mandatory-stmt.
      * A branch containing empty nodes or no nodes must have choice set to mandatory false.
-     * Also, if choice contains a list with mandatory true and at the same time choice contains cases 1. or 2.,
-     * then the list must be mandatory false because it is actually optional.
      */
     ay_ynode_mandatory_empty_branch(tree);
     ay_ynode_mandatory_in_list(tree);
+
+    /* Setting AY_CHOICE_MAND_FALSE and set mandatory-false for nodes under choice. */
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        node = &tree[i];
+        if ((node != ay_ynode_get_first_in_choice(node->parent, node->choice)) || ay_ynode_alone_in_choice(node)) {
+            continue;
+        }
+        if (!(node->flags & AY_CHOICE_MAND_FALSE) && ay_lnode_has_maybe(node->choice, 0, 0)) {
+            /* There is L_MAYBE above L_UNION.*/
+            node->flags |= AY_CHOICE_MAND_FALSE;
+        } else if (!(node->flags & AY_CHOICE_MAND_FALSE)) {
+            for (iter = node; iter && (iter->choice == node->choice); iter = iter->next) {
+                if (iter->snode && (iter->snode->lens->tag == L_REC)) {
+                    /* Recursive list is exception */
+                    break;
+                } else if (iter->flags & AY_YNODE_MAND_FALSE) {
+                    /* Some node under choice has mandatory false. So choice cannot be mandatory-true. */
+                    node->flags |= AY_CHOICE_MAND_FALSE;
+                    break;
+                }
+            }
+        }
+    }
 
     /* There is one more rule. If list is mandatory false and its choice is mandatory false,
      * then it is unnecessary to have this information twice. Therefore, its choice is reset to mandatory true.
@@ -11208,6 +11213,10 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
  * If the branches are the same including values in first nodes,
  * the function returns 1 and @p br2 can be deleted.
  *
+ * TODO: There is a problem if the first node is CONTAINER and the second is LIST. In that case, L_STAR
+ * should be moved to the first node and its type should be changed to LIST. But then they won't match lnode subtree.
+ * So the first node (first branch) should actually be deleted and not the second. So far this bug has not occurred.
+ *
  * @param[in,out] tree Tree of ynodes.
  * @param[in,out] br1 First branch.
  * @param[in,out] br2 Second branch.
@@ -11266,8 +11275,10 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
     }
     /* else br1 and br2 are equal */
 
-    /* The min_elems must be reset before @p br2 is deleted. */
-    first1->min_elems = first1->min_elems < first2->min_elems ? first1->min_elems : first2->min_elems;
+    if ((first2->type == YN_LEAFLIST) || (first2->type == YN_LIST)) {
+        /* The min_elems must be reset before @p br2 is deleted. */
+        first1->min_elems = first1->min_elems < first2->min_elems ? first1->min_elems : first2->min_elems;
+    }
 
     return 1;
 }

@@ -29,6 +29,7 @@ module dhclient {
         }
         case code {
           leaf code {
+            mandatory true;
             type string {
               pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
             }

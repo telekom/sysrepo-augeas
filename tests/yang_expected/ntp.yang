@@ -204,6 +204,7 @@ module ntp {
             }
           }
           choice ch-fudge {
+            mandatory true;
             leaf refid {
               type string {
                 pattern "[^,# \n\t]+";

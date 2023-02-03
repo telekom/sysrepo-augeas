@@ -9,28 +9,38 @@ module activemq-xml {
 
   augex:augeas-mod-name "ActiveMQ_XML";
 
-  grouping nmtoken {
-    container nmtoken {
-      augex:data-path "$$";
-      augex:value-yang-path "value";
-      presence "Config entry.";
-      leaf nmtoken {
-        mandatory true;
-        type string {
-          pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
-        }
+  grouping nmtoken-list {
+    list nmtoken-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      leaf value {
-        mandatory true;
-        type union {
+      container nmtoken {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf nmtoken {
+          mandatory true;
           type string {
-            pattern "[^']*\"[^']*";
+            pattern "[a-zA-Z:_][a-zA-Z0-9:_.-]*";
           }
-          type string {
-            pattern "[^\"]*'[^\"]*";
-          }
-          type string {
-            pattern "(\\\\|[^'\\\\\"])*";
+        }
+        leaf value {
+          mandatory true;
+          type union {
+            type string {
+              pattern "[^']*\"[^']*";
+            }
+            type string {
+              pattern "[^\"]*'[^\"]*";
+            }
+            type string {
+              pattern "(\\\\|[^'\\\\\"])*";
+            }
           }
         }
       }
@@ -52,18 +62,6 @@ module activemq-xml {
         pattern "[^ \n\t]|[^ \n\t][^?>]*[^ \n\t]";
       }
       augex:data-path "#instruction";
-    }
-  }
-  grouping nmtoken-list {
-    list nmtoken-list {
-      key "_id";
-      ordered-by user;
-      leaf _id {
-        type uint64;
-        description
-          "Implicitly generated list key to maintain the order of the augeas data.";
-      }
-      uses nmtoken;
     }
   }
   grouping attributes {
@@ -91,21 +89,7 @@ module activemq-xml {
         container declaration {
           augex:data-path "#declaration";
           presence "Config entry.";
-          container attribute {
-            augex:data-path "#attribute";
-            presence "Config entry.";
-            list nmtoken-list {
-              key "_id";
-              min-elements 1;
-              ordered-by user;
-              leaf _id {
-                type uint64;
-                description
-                  "Implicitly generated list key to maintain the order of the augeas data.";
-              }
-              uses nmtoken;
-            }
-          }
+          uses attributes;
         }
         container doctype {
           augex:data-path "$$";
@@ -124,7 +108,6 @@ module activemq-xml {
             }
           }
           choice ch-doctype {
-            mandatory true;
             list decl-def-item {
               key "_id";
               ordered-by user;

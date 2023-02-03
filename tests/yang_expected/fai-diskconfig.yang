@@ -38,6 +38,7 @@ module fai-diskconfig {
   grouping fs-options {
     list config-entries {
       key "_id";
+      min-elements 1;
       ordered-by user;
       leaf _id {
         type uint64;
@@ -717,6 +718,7 @@ module fai-diskconfig {
                   "Implicitly generated list key to maintain the order of the augeas data.";
               }
               leaf randinit {
+                mandatory true;
                 type empty;
                 augex:data-path "randinit";
               }

@@ -101,6 +101,7 @@ module rsyslog {
             }
           }
           leaf-list user {
+            min-elements 1;
             type union {
               type string {
                 pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
@@ -123,6 +124,7 @@ module rsyslog {
             augex:data-path "discard";
           }
           leaf-list omusrmsg {
+            min-elements 1;
             type union {
               type string {
                 pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
@@ -231,6 +233,7 @@ module rsyslog {
               }
             }
             leaf-list user {
+              min-elements 1;
               type union {
                 type string {
                   pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
@@ -425,6 +428,7 @@ module rsyslog {
             augex:data-path "reverse";
           }
           leaf-list program {
+            min-elements 1;
             type union {
               type string {
                 pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
@@ -446,6 +450,7 @@ module rsyslog {
             augex:data-path "reverse";
           }
           leaf-list hostname {
+            min-elements 1;
             type union {
               type string {
                 pattern "[A-Za-z0-9_.-]+";

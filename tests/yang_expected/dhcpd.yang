@@ -93,6 +93,7 @@ module dhcpd {
           augex:data-path "label";
         }
         leaf code {
+          mandatory true;
           type string {
             pattern "[A-Za-z0-9_.-]+(\\[[0-9]+\\])?";
           }
@@ -789,6 +790,7 @@ module dhcpd {
               augex:value-yang-path "value";
               presence "Config entry.";
               leaf value {
+                mandatory true;
                 type union {
                   type string {
                     pattern "((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)";
@@ -929,6 +931,7 @@ module dhcpd {
                 augex:data-path "network";
               }
               leaf netmask {
+                mandatory true;
                 type inet:ipv4-address-no-zone;
                 augex:data-path "netmask";
               }

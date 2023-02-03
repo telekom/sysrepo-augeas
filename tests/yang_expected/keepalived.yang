@@ -217,18 +217,21 @@ module keepalived {
               augex:data-path "route";
               presence "Config entry.";
               leaf src {
+                mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_.-]+";
                 }
                 augex:data-path "src";
               }
               leaf to {
+                mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_.-]+";
                 }
                 augex:data-path "to";
               }
               leaf dev {
+                mandatory true;
                 type string {
                   pattern "[A-Za-z0-9_.-]+";
                 }

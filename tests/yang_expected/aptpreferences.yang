@@ -74,7 +74,6 @@ module aptpreferences {
               mandatory true;
               list pin-keys-list {
                 key "_id";
-                min-elements 1;
                 when "../value='release'";
                 ordered-by user;
                 leaf _id {

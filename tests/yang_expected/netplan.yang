@@ -1674,6 +1674,7 @@ module netplan {
                             "Key contains some unique value. The order is based on the actual order of list instances.";
                         }
                         leaf wakeonlan {
+                          mandatory true;
                           type string {
                             pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
                           }

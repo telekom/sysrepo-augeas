@@ -127,18 +127,21 @@ module lokkit {
           augex:data-path "forward-port";
           presence "Config entry.";
           leaf if {
+            mandatory true;
             type string {
               pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
             }
             augex:data-path "if";
           }
           leaf port {
+            mandatory true;
             type string {
               pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
             }
             augex:data-path "port";
           }
           leaf proto {
+            mandatory true;
             type string {
               pattern "[a-zA-Z0-9][a-zA-Z0-9-]*";
             }

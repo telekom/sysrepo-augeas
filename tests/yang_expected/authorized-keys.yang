@@ -31,6 +31,7 @@ module authorized-keys {
           presence "Config entry.";
           list option {
             key "_id";
+            min-elements 1;
             ordered-by user;
             leaf _id {
               type uint64;
