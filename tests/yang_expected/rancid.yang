@@ -1,0 +1,58 @@
+module rancid {
+  yang-version 1.1;
+  namespace "aug:rancid";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Rancid";
+
+  list rancid {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container device {
+        augex:data-path "device";
+        augex:value-yang-path "field";
+        presence "Config entry.";
+        leaf field {
+          mandatory true;
+          type string {
+            pattern "[^;#\n]+";
+          }
+        }
+        leaf type {
+          mandatory true;
+          type string {
+            pattern "[^;#\n]+";
+          }
+          augex:data-path "type";
+        }
+        leaf state {
+          mandatory true;
+          type string {
+            pattern "[^;#\n]+";
+          }
+          augex:data-path "state";
+        }
+        leaf comment {
+          type string {
+            pattern "[^;#\n]*";
+          }
+          augex:data-path "comment";
+        }
+      }
+    }
+  }
+}

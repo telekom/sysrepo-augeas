@@ -1,0 +1,47 @@
+module protocols {
+  yang-version 1.1;
+  namespace "aug:protocols";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Protocols";
+
+  list protocols {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list protocol-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf protocol {
+        mandatory true;
+        type string {
+          pattern "[^# \t\n]+";
+        }
+        augex:data-path "protocol";
+      }
+      leaf number {
+        mandatory true;
+        type uint64;
+        augex:data-path "number";
+      }
+      leaf-list alias {
+        type string {
+          pattern "[^# \t\n]+";
+        }
+        ordered-by user;
+        augex:data-path "alias";
+      }
+    }
+  }
+}

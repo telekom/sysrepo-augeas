@@ -1,0 +1,43 @@
+module postfix-main {
+  yang-version 1.1;
+  namespace "aug:postfix-main";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Postfix_Main";
+
+  list postfix-main {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf value {
+          type string {
+            pattern "(((([^# \t\n])((.*)*))([^# \t\n]))|([^# \t\n]))((([ \t]*\n[ \t]+)(((([^# \t\n])((.*)*))([^# \t\n]))|([^# \t\n])))*)";
+          }
+        }
+      }
+    }
+  }
+}

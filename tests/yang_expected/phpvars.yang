@@ -1,0 +1,235 @@
+module phpvars {
+  yang-version 1.1;
+  namespace "aug:phpvars";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Phpvars";
+
+  grouping label {
+    leaf label {
+      type string {
+        pattern "@include";
+      }
+    }
+    leaf sto-to-scl {
+      mandatory true;
+      type string {
+        pattern "[^ \t\n].*[^ \t\n;]|[^ \t\n;]";
+        pattern ".*;[ \t]*(//|#).*" {
+          modifier invert-match;
+        }
+      }
+    }
+  }
+  grouping assignment {
+    leaf arraykey {
+      type string {
+        pattern "\\[[\\]\\[A-Za-z0-9'\"_:-]+\\]";
+      }
+      augex:data-path "@arraykey";
+    }
+    leaf sto-to-scl {
+      mandatory true;
+      type string {
+        pattern "[^ \t\n].*[^ \t\n;]|[^ \t\n;]";
+        pattern ".*;[ \t]*(//|#).*" {
+          modifier invert-match;
+        }
+      }
+    }
+  }
+  list phpvars {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-entry {
+        mandatory true;
+        leaf global {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n;]|[^ \t\n;]";
+            pattern ".*;[ \t]*(//|#).*" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "global";
+        }
+        container include {
+          augex:data-path "$$";
+          augex:value-yang-path "sto-to-scl";
+          presence "Config entry.";
+          uses label;
+        }
+        container define {
+          augex:data-path "define";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9'_:-]+";
+            }
+          }
+          leaf value2 {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+              pattern ".*;[ \t]*(//|#).*" {
+                modifier invert-match;
+              }
+            }
+            augex:data-path "value";
+          }
+        }
+        leaf include2 {
+          type string {
+            pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+            pattern ".*;[ \t]*(//|#).*" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "include";
+        }
+        leaf include-once {
+          type string {
+            pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+            pattern ".*;[ \t]*(//|#).*" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "include_once";
+        }
+        leaf echo {
+          type string {
+            pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+            pattern ".*;[ \t]*(//|#).*" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "echo";
+        }
+        container class {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf classname {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9'\"_:-]+";
+            }
+          }
+          list entry {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-entry {
+              mandatory true;
+              leaf global {
+                type string {
+                  pattern "[^ \t\n].*[^ \t\n;]|[^ \t\n;]";
+                  pattern ".*;[ \t]*(//|#).*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "global";
+              }
+              container include {
+                augex:data-path "$$";
+                augex:value-yang-path "sto-to-scl";
+                presence "Config entry.";
+                uses label;
+              }
+              container define {
+                augex:data-path "define";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9'_:-]+";
+                  }
+                }
+                leaf value2 {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+                    pattern ".*;[ \t]*(//|#).*" {
+                      modifier invert-match;
+                    }
+                  }
+                  augex:data-path "value";
+                }
+              }
+              leaf include2 {
+                type string {
+                  pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+                  pattern ".*;[ \t]*(//|#).*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "include";
+              }
+              leaf include-once {
+                type string {
+                  pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+                  pattern ".*;[ \t]*(//|#).*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "include_once";
+              }
+              leaf echo {
+                type string {
+                  pattern "[^ \t\n][^\n]*[^ \t\n\\\\)]|[^ \t\n\\\\)]";
+                  pattern ".*;[ \t]*(//|#).*" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "echo";
+              }
+              container assignment {
+                augex:data-path "$$";
+                augex:value-yang-path "sto-to-scl";
+                presence "Config entry.";
+                leaf chr-variable {
+                  mandatory true;
+                  type string {
+                    pattern "$[A-Za-z0-9'\"_:-]+";
+                  }
+                }
+                uses assignment;
+              }
+            }
+          }
+        }
+        container assignment {
+          augex:data-path "$$";
+          augex:value-yang-path "sto-to-scl";
+          presence "Config entry.";
+          leaf chr-variable {
+            mandatory true;
+            type string {
+              pattern "$[A-Za-z0-9'\"_:-]+";
+            }
+          }
+          uses assignment;
+        }
+      }
+    }
+  }
+}

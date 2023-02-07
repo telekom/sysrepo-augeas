@@ -1,0 +1,77 @@
+module postfix-transport {
+  yang-version 1.1;
+  namespace "aug:postfix-transport";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Postfix_Transport";
+
+  list postfix-transport {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container pattern {
+        augex:data-path "pattern";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9@\\\\*._-]+";
+          }
+        }
+        choice ch-pattern {
+          mandatory true;
+          case transport {
+            leaf transport {
+              mandatory true;
+              type union {
+                type empty;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+              }
+              augex:data-path "transport";
+            }
+            leaf nexthop {
+              mandatory true;
+              type union {
+                type empty;
+                type string {
+                  pattern "(((\\[)([A-Za-z0-9_.-]+))(\\]))|([A-Za-z]([^\n]*[^ \t\n])?)";
+                }
+              }
+              augex:data-path "nexthop";
+            }
+          }
+          case host {
+            leaf host {
+              mandatory true;
+              type string {
+                pattern "(((\\[)([A-Za-z0-9_.-]+))(\\]))|([A-Za-z0-9_.-]+)";
+              }
+              augex:data-path "host";
+            }
+            leaf port {
+              mandatory true;
+              type uint64;
+              augex:data-path "port";
+            }
+          }
+        }
+      }
+    }
+  }
+}

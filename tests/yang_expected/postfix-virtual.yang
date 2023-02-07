@@ -1,0 +1,46 @@
+module postfix-virtual {
+  yang-version 1.1;
+  namespace "aug:postfix-virtual";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Postfix_Virtual";
+
+  list postfix-virtual {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container pattern {
+        augex:data-path "pattern";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9@\\\\*.+=_-]+";
+          }
+        }
+        leaf-list destination {
+          min-elements 1;
+          type string {
+            pattern "[A-Za-z0-9@\\\\*.+=_-]+";
+          }
+          ordered-by user;
+          augex:data-path "destination";
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+module properties {
+  yang-version 1.1;
+  namespace "aug:properties";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Properties";
+
+  list properties {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list property-ws-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container property-ws {
+        augex:data-path "$$";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf entry {
+          mandatory true;
+          type string {
+            pattern "([^ \t\n:=!#\\\\]|[\\\\]:|[\\\\]=|[\\\\][\t ]|[\\\\][^/\n])+";
+          }
+        }
+        leaf value {
+          type union {
+            type string {
+              pattern " < multi_ws > ";
+            }
+            type string {
+              pattern "(:|=)[^\n]*[^ \t\n\\\\]";
+            }
+            type string {
+              pattern " < multi > ";
+            }
+            type string {
+              pattern "[^ \t\n:=][^\n]*[^ \t\n\\\\]|[^ \t\n\\\\:=]";
+            }
+          }
+        }
+      }
+    }
+  }
+}

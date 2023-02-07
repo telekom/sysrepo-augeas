@@ -1,0 +1,86 @@
+module postfix-master {
+  yang-version 1.1;
+  namespace "aug:postfix-master";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Postfix_Master";
+
+  list postfix-master {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.:-]+";
+          }
+        }
+        leaf type {
+          mandatory true;
+          type string {
+            pattern "inet|unix(-dgram)?|fifo|pass";
+          }
+          augex:data-path "type";
+        }
+        leaf private {
+          mandatory true;
+          type string {
+            pattern "y|n|-";
+          }
+          augex:data-path "private";
+        }
+        leaf unprivileged {
+          mandatory true;
+          type string {
+            pattern "y|n|-";
+          }
+          augex:data-path "unprivileged";
+        }
+        leaf chroot {
+          mandatory true;
+          type string {
+            pattern "y|n|-";
+          }
+          augex:data-path "chroot";
+        }
+        leaf wakeup {
+          mandatory true;
+          type string {
+            pattern "([0-9]+|-)\\??";
+          }
+          augex:data-path "wakeup";
+        }
+        leaf limit {
+          mandatory true;
+          type string {
+            pattern "([0-9]+|-)\\??";
+          }
+          augex:data-path "limit";
+        }
+        leaf command {
+          mandatory true;
+          type string {
+            pattern "((([A-Za-z0-9$!(){}=_.,:@-])(((([A-Za-z0-9$!(){}=_.,:@-])|([\\]\\[\"/]))|( ))*))(([A-Za-z0-9$!(){}=_.,:@-])|([\\]\\[\"/])))((([ \t]*\n[ \t]+)((([A-Za-z0-9$!(){}=_.,:@-])(((([A-Za-z0-9$!(){}=_.,:@-])|([\\]\\[\"/]))|( ))*))(([A-Za-z0-9$!(){}=_.,:@-])|([\\]\\[\"/]))))*)";
+          }
+          augex:data-path "command";
+        }
+      }
+    }
+  }
+}
