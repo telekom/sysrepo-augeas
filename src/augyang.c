@@ -6479,7 +6479,9 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     refnode = NULL;
     path_cnt = 0;
     for (parent = node->parent; parent; parent = parent->parent) {
-        ++path_cnt;
+        if (parent->type != YN_CASE) {
+            ++path_cnt;
+        }
         if (parent->id == node->when_ref) {
             refnode = parent;
             break;
@@ -6498,16 +6500,20 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
             break;
         }
     }
+
+    if (parent->type == YN_CASE) {
+        path_cnt++;
+    }
+    if ((node->type == YN_CASE) && (path_cnt > 0)) {
+        /* In YANG, the case-stmt is not counted in the path. */
+        assert(path_cnt);
+        path_cnt--;
+    }
     if (!refnode) {
         /* Warning: when is ignored. */
         fprintf(stderr, "augyang warn: 'when' has invalid path and therefore will not be generated "
                 "(id = %" PRIu32 ", when_ref = %" PRIu32 ").\n", node->id, node->when_ref);
         return;
-    }
-
-    if ((node->type == YN_CASE) && (path_cnt > 0)) {
-        /* In YANG, the case-stmt is not counted in the path. */
-        path_cnt--;
     }
 
     /* Print 'when' statement. */

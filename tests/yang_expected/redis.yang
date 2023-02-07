@@ -1,0 +1,240 @@
+module redis {
+  yang-version 1.1;
+  namespace "aug:redis";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+  import ietf-inet-types {
+    prefix inet;
+    reference
+      "RFC 6991: Common YANG Data Types";
+  }
+
+  augex:augeas-mod-name "Redis";
+
+  grouping replicaof-entry {
+    leaf ip {
+      mandatory true;
+      type inet:ip-address-no-zone;
+      augex:data-path "ip";
+    }
+    leaf port {
+      mandatory true;
+      type uint64;
+      augex:data-path "port";
+    }
+  }
+  list redis {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container entry-noempty {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+              pattern "save|rename-command|replicaof|slaveof|bind|client-output-buffer-limit|sentinel" {
+                modifier invert-match;
+              }
+            }
+          }
+          leaf value {
+            mandatory true;
+            type union {
+              type string {
+                pattern "[^ \t\n'\"]+";
+              }
+              type string {
+                pattern "";
+              }
+            }
+          }
+        }
+        container save {
+          augex:data-path "save";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          choice ch-save {
+            mandatory true;
+            case seconds {
+              leaf seconds {
+                mandatory true;
+                type uint64;
+                augex:data-path "seconds";
+              }
+              leaf keys {
+                mandatory true;
+                type uint64;
+                augex:data-path "keys";
+              }
+            }
+            leaf value {
+              type string {
+                pattern "";
+              }
+            }
+          }
+        }
+        container rename-command {
+          augex:data-path "rename-command";
+          presence "Config entry.";
+          leaf from {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "from";
+          }
+          leaf to {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "to";
+          }
+        }
+        container replicaof {
+          augex:data-path "replicaof";
+          presence "Config entry.";
+          uses replicaof-entry;
+        }
+        container slaveof {
+          augex:data-path "slaveof";
+          presence "Config entry.";
+          uses replicaof-entry;
+        }
+        container bind {
+          augex:data-path "bind";
+          presence "Config entry.";
+          leaf-list ip {
+            min-elements 1;
+            type inet:ip-address-no-zone;
+            ordered-by user;
+            augex:data-path "ip";
+          }
+        }
+        container sentinel {
+          augex:data-path "sentinel";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type union {
+              type string {
+                pattern "((deny-scripts-reconfig)|(current-epoch))|(myid)";
+              }
+              type string {
+                pattern "(config-epoch)|(leader-epoch)";
+              }
+              type string {
+                pattern "(monitor)|(known-replica)";
+              }
+              type string {
+                pattern "known-sentinel";
+              }
+            }
+          }
+          choice ch-sentinel {
+            mandatory true;
+            leaf value2 {
+              type string {
+                pattern "([A-Za-z0-9_.-]+)|([0-9]+)";
+              }
+              augex:data-path "value";
+              when "re-match(../value, '((deny-scripts-reconfig)|(current-epoch))|(myid)')";
+            }
+            case cluster {
+              leaf cluster {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "cluster";
+              }
+              choice ch-cluster {
+                mandatory true;
+                leaf epoch {
+                  type uint64;
+                  augex:data-path "epoch";
+                  when "re-match(../value, '(config-epoch)|(leader-epoch)')";
+                }
+                case ip {
+                  leaf ip {
+                    mandatory true;
+                    type inet:ip-address-no-zone;
+                    augex:data-path "ip";
+                  }
+                  leaf port {
+                    mandatory true;
+                    type uint64;
+                    augex:data-path "port";
+                  }
+                  choice ch-ip {
+                    leaf quorum {
+                      type uint64;
+                      augex:data-path "quorum";
+                      when "re-match(../value, '(monitor)|(known-replica)')";
+                    }
+                    leaf id {
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                      }
+                      augex:data-path "id";
+                      when "../value='known-sentinel'";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container client-output-buffer-limit {
+          augex:data-path "client-output-buffer-limit";
+          presence "Config entry.";
+          leaf class {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "class";
+          }
+          leaf hard-limit {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "hard_limit";
+          }
+          leaf soft-limit {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "soft_limit";
+          }
+          leaf soft-seconds {
+            mandatory true;
+            type uint64;
+            augex:data-path "soft_seconds";
+          }
+        }
+      }
+    }
+  }
+}
