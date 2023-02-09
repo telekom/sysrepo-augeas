@@ -4496,11 +4496,12 @@ ay_ynode_delete_useless_choice(struct ay_ynode *tree)
  * @param[in] vnode Node ynode of type YN_VALUE.
  * @param[in] key_value Main key value from AY_YNODE_ROOT_VALUES() dictionary.
  * @param[in] uni First L_UNION above vnode->value.
- * @parma[in,out] iter Iterator over @p vnode siblings. Children of YN_CASE node are also considered siblings.
+ * @param[in,out] iter Iterator over @p vnode siblings. Children of YN_CASE node are also considered siblings.
+ * @param[in,out] sum Total sum of 'when' settings.
  */
 static void
 ay_ynode_dependence_on_value_set_when(struct ay_ynode *vnode, struct ay_dnode *key_value, const struct ay_lnode *uni,
-        struct ay_ynode *iter)
+        uint32_t *sum, struct ay_ynode *iter)
 {
     uint64_t i;
     struct ay_ynode *child;
@@ -4518,7 +4519,7 @@ ay_ynode_dependence_on_value_set_when(struct ay_ynode *vnode, struct ay_dnode *k
         for (child = iter->child; child && !child->choice; child = child->next) {}
 
         /* Recursive call for YN_CASE children. */
-        ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, child);
+        ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, sum, child);
         /* Continue to YN_CASE sibling. */
         goto next_sibling;
     }
@@ -4553,10 +4554,11 @@ ay_ynode_dependence_on_value_set_when(struct ay_ynode *vnode, struct ay_dnode *k
     iter->when_ref = vnode->id;
     iter->when_val = when_val;
     vnode->flags |= AY_WHEN_TARGET;
+    ++(*sum);
 
 next_sibling:
     /* Move to the next sibling. */
-    ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, iter->next);
+    ay_ynode_dependence_on_value_set_when(vnode, key_value, uni, sum, iter->next);
 }
 
 /**
@@ -4572,10 +4574,11 @@ next_sibling:
 static int
 ay_ynode_dependence_on_value(struct ay_ynode *tree)
 {
-    struct ay_ynode *iter, *vnode;
+    struct ay_ynode *iter, *vnode, *chnode;
     const struct ay_lnode *val_union;
     struct ay_dnode *values, *key;
     uint64_t i;
+    uint32_t sum;
 
     if (!AY_YNODE_ROOT_VALUES(tree) || !tree->descendants) {
         return 0;
@@ -4611,7 +4614,15 @@ ay_ynode_dependence_on_value(struct ay_ynode *tree)
             continue;
         }
 
-        ay_ynode_dependence_on_value_set_when(vnode, key, val_union, iter);
+        sum = 0;
+        chnode = iter;
+        ay_ynode_dependence_on_value_set_when(vnode, key, val_union, &sum, iter);
+
+        /* If when-stmts does not cover all values, the choice must be without mandatory. */
+        assert(sum <= (key->values_count + 1));
+        if (sum != (key->values_count + 1)) {
+            chnode->flags |= AY_CHOICE_MAND_FALSE;
+        }
     }
 
     return 0;
