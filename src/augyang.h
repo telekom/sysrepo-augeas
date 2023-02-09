@@ -75,5 +75,3 @@ int augyang_print_yang(struct module *mod, uint64_t vercode, char **str);
  * @return Message string.
  */
 const char *augyang_get_error_message(int err_code);
-
-void augyang_print_stats(struct augeas *aug);

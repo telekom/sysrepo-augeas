@@ -78,6 +78,11 @@ set(AY_STARTUP_SRC
 
 set(AUGYANG_SRC
     src/main.c
+    src/common.c
+    src/print_yang.c
+    src/debug.c
+    src/parse_regex.c
+    src/terms.c
     src/augyang.c)
 
 # source files to be covered by the 'format' target
