@@ -3163,7 +3163,9 @@ ay_delete_comment(struct ay_ynode *tree)
 static ly_bool
 ay_ynode_build_list_match(struct ay_ynode *node1, struct ay_ynode *node2, ly_bool list_check)
 {
-    if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
+    if (node1->choice && (node1->choice == node2->choice) && !ay_ynode_common_concat(node1, node2, node1->choice)) {
+        return 0;
+    } else if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
         assert(node1->snode && node2->snode);
         if (node1->snode->lens != node2->snode->lens) {
             return 0;
@@ -4263,6 +4265,42 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
 }
 
 /**
+ * @brief Merging two nodes which are the same except for repetition.
+ *
+ * TODO Also check children?
+ *
+ * @param[in] br1 First branch to check.
+ * @param[in] br2 Second branch to check.
+ * @return 1 for success and br2 is copied to br1, so br2 must be deleted.
+ * @return 0 merge cannot be applied and no data has changed.
+ */
+static ly_bool
+ay_ynode_merge_cases_only_by_repetition(struct ay_ynode *br1, struct ay_ynode *br2)
+{
+    if ((br1->descendants != 0) || (br2->descendants != 0) || (br1->type == br2->type)) {
+        return 0;
+    } else if (br1->value && br2->value && !ay_lnode_lense_equal(br1->value->lens, br2->value->lens)) {
+        return 0;
+    } else if (!(
+                ((br1->type == YN_LEAFLIST) && (br2->type == YN_LEAF)) ||
+                ((br2->type == YN_LEAFLIST) && (br1->type == YN_LEAF)) ||
+                ((br1->type == YN_LIST) && (br2->type == YN_CONTAINER)) ||
+                ((br2->type == YN_LIST) && (br1->type == YN_CONTAINER)))) {
+        return 0;
+    }
+
+    if ((br2->type == YN_LEAFLIST) || (br2->type == YN_LIST)) {
+        ay_ynode_copy_data(br1, br2);
+        br1->id = br2->id;
+        br1->min_elems = br1->min_elems ? 1 : 0;
+    } else {
+        br1->min_elems = br1->min_elems ? 1 : 0;
+    }
+
+    return 1;
+}
+
+/**
  * @brief Merge branches to one if the leading nodes have the same label.
  *
  * For example:
@@ -4312,7 +4350,9 @@ ay_ynode_merge_cases_r(struct ay_ynode *tree, struct ay_ynode *subtree, ly_bool 
             if (!match) {
                 continue;
             }
-            if (ay_ynode_merge_cases_only_by_value(tree, chn1, chn2, &err)) {
+            if (ay_ynode_merge_cases_only_by_repetition(chn1, chn2)) {
+                ay_ynode_delete_subtree(tree, chn2);
+            } else if (ay_ynode_merge_cases_only_by_value(tree, chn1, chn2, &err)) {
                 AY_CHECK_RET(err);
                 ay_ynode_delete_subtree(tree, chn2);
             } else {
