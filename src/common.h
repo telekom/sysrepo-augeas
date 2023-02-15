@@ -365,7 +365,7 @@ struct ay_ynode_root {
     struct ay_transl *patt_table;   /**< The ay_transl data in LY_ARRAY. Contains a link to lens.regexp.pattern.str
                                          in the form '(pref1|pref2)name1|name2|name3(suf1|suf2)|...' and its parsed
                                          names (pref1name1, pref2name1, name2, name3suf1, name3suf2, ...). */
-    uint32_t ref;                   /**< Not used. */
+    uint32_t ref;                   /**< Can be used as flag between transformations. */
     uint32_t idcnt;                 /**< ID counter for uniquely assigning identifiers to ynodes. */
     uint16_t flags;                 /**< Not used. */
     uint16_t min_elems;             /**< Not used. */

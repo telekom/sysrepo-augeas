@@ -1648,6 +1648,46 @@ ay_ynode_rule_insert_case(const struct ay_ynode *node)
 }
 
 /**
+ * @brief Rule for copy node to YN_CASE.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @return The number of nodes that will be added.
+ */
+static uint32_t
+ay_ynode_rule_copy_case_nodes(const struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    const struct ay_ynode *iter, *cas, *child;
+    uint32_t cnt;
+
+    if (!tree->ref) {
+        return 0;
+    }
+
+    cnt = 0;
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if (!iter->ref) {
+            continue;
+        }
+        /* Find YN_CASE containing nodes to copy. */
+        for (cas = iter->next; cas && (cas->id != iter->ref); cas = cas->next) {}
+        assert(cas);
+
+        /* New YN_CASE node. */
+        cnt++;
+        assert(cas->child->next);
+
+        /* Count nodes to be copied. */
+        for (child = cas->child->next; child; child = child->next) {
+            cnt += child->descendants + 1;
+        }
+    }
+
+    return cnt;
+}
+
+/**
  * @brief Check if choice branches should be merged.
  *
  * @param[in] br1 First branch to check.
@@ -3783,6 +3823,8 @@ ay_insert_node_key_and_value(struct ay_ynode *tree)
 /**
  * @brief Insert YN_CASE node which groups nodes under one case-stmt.
  *
+ * Function set ay_ynode.ref for function ay_ynode_copy_case_nodes().
+ *
  * @param[in,out] tree Tree of ynodes.
  * @return 0.
  */
@@ -3794,8 +3836,10 @@ ay_ynode_insert_case(struct ay_ynode *tree)
     const struct ay_lnode *common_choice, *con;
     uint64_t j, cnt;
 
+    assert(!tree->ref);
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         first = &tree[i];
+        assert(!first->ref);
         cnt = 0;
         /* Count how many subtrees will be in case. */
         for (iter = first->next; iter; iter = iter->next) {
@@ -3842,7 +3886,68 @@ ay_ynode_insert_case(struct ay_ynode *tree)
             ay_ynode_delete_node(tree, cas);
             continue;
         }
+        /* Find the branch to which the nodes should also be copied. Only references are set.
+         * The copying itself happens in the ay_ynode_copy_case_nodes(). */
+        for (iter = ay_ynode_get_prev(cas); iter; iter = ay_ynode_get_prev(iter)) {
+            common_choice = ay_ynode_common_choice(cas->child->snode, iter->snode, cas->choice);
+            if (first->choice == common_choice) {
+                break;
+            } else if (!(con = ay_ynode_common_concat(cas->child->next, iter, cas->choice))) {
+                break;
+            }
+            iter->ref = cas->id;
+            tree->ref = 1;
+        }
         i++;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Insert YN_CASE node and copy nodes which belong to it.
+ *
+ * Function uses ay_ynode.ref, which will be reset.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @return 0.
+ */
+static int
+ay_ynode_copy_case_nodes(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *first, *iter, *cas_src, *cas_dst;
+    uint32_t cnt;
+
+    assert(tree->ref);
+    tree->ref = 0;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        first = &tree[i];
+        if (!first->ref) {
+            continue;
+        }
+
+        /* Insert case. */
+        ay_ynode_insert_wrapper(tree, first);
+        cas_dst = first;
+        first = cas_dst->child;
+        cas_dst->type = YN_CASE;
+        cas_dst->choice = first->choice;
+        first->choice = NULL;
+
+        /* Find nodes to copy. */
+        for (cas_src = cas_dst->next; cas_src && (cas_src->id != first->ref); cas_src = cas_src->next) {}
+        assert(cas_src);
+        first->ref = 0;
+
+        /* Copy nodes. */
+        assert(cas_src->child->next);
+        for (iter = cas_src->child->next; iter; iter = iter->next) {
+            cnt = iter->descendants + 1;
+            ay_ynode_copy_subtree_as_last_child(tree, cas_dst, iter);
+            iter += cnt;
+        }
     }
 
     return 0;
@@ -6216,6 +6321,12 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
      * choice ch { case { node1{pattern lns1} node2{pattern lns2} } node3{pattern lns3} }
      */
     TRANSF(ay_ynode_insert_case, ay_ynode_summary(*tree, ay_ynode_rule_insert_case));
+
+    /*
+     * [key lns1] | (([key lns2] | [key lns3]) . [key lns4]) ->
+     * [key lns1] | YN_CASE{[key lns2] . [key lns4]} | YN_CASE{[key lns3] . [key lns4]}
+     */
+    TRANSF(ay_ynode_copy_case_nodes, ay_ynode_rule_copy_case_nodes(*tree));
 
     /* If some choice branch is repeated, it is useless and is deleted. */
     ay_ynode_delete_equal_cases(*tree);
