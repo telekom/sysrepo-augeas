@@ -3062,7 +3062,10 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
         } else if (node->flags & AY_HINT_MAND_FALSE) {
             node->flags |= AY_YNODE_MAND_FALSE;
             continue;
-        } else if (node->flags & (AY_YNODE_MAND_FALSE | AY_YNODE_MAND_TRUE)) {
+        } else if (node->flags & AY_YNODE_MAND_TRUE) {
+            continue;
+        } else if (node->flags & AY_YNODE_MAND_FALSE) {
+            node->min_elems = 0;
             continue;
         }
 

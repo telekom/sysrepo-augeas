@@ -643,6 +643,25 @@ module netplan {
       }
     }
   }
+  grouping wakeonlan-list {
+    list wakeonlan-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "wakeonlan";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf wakeonlan {
+        mandatory true;
+        type string {
+          pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
+        }
+      }
+    }
+  }
   grouping interfaces-list {
     list interfaces-list {
       key "_seq";
@@ -1662,24 +1681,7 @@ module netplan {
                       leaf bool {
                         type boolean;
                       }
-                      list wakeonlan-list {
-                        key "_seq";
-                        min-elements 1;
-                        ordered-by user;
-                        augex:data-path "$$";
-                        augex:value-yang-path "wakeonlan";
-                        leaf _seq {
-                          type uint64;
-                          description
-                            "Key contains some unique value. The order is based on the actual order of list instances.";
-                        }
-                        leaf wakeonlan {
-                          mandatory true;
-                          type string {
-                            pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
-                          }
-                        }
-                      }
+                      uses wakeonlan-list;
                     }
                     leaf emit-lldp {
                       type boolean;
@@ -1925,23 +1927,7 @@ module netplan {
                     container wakeonlan-f {
                       augex:data-path "wakeonlan_f";
                       presence "Config entry.";
-                      list wakeonlan-list {
-                        key "_seq";
-                        ordered-by user;
-                        augex:data-path "$$";
-                        augex:value-yang-path "wakeonlan";
-                        leaf _seq {
-                          type uint64;
-                          description
-                            "Key contains some unique value. The order is based on the actual order of list instances.";
-                        }
-                        leaf wakeonlan {
-                          mandatory true;
-                          type string {
-                            pattern "any|disconnect|magic_pkt|gtk_rekey_failure|eap_identity_req|four_way_handshake|rfkill_release|tcp|default";
-                          }
-                        }
-                      }
+                      uses wakeonlan-list;
                     }
                     leaf regulatory-domain {
                       type string {
