@@ -391,6 +391,9 @@ ay_ynode_common_choice(const struct ay_lnode *node1, const struct ay_lnode *node
     }
 
     for (it1 = node1; it1 != stop; it1 = it1->parent) {
+        if (!it1) {
+            return NULL;
+        }
         if (it1->lens->tag != L_UNION) {
             continue;
         }
@@ -429,7 +432,6 @@ ay_ynode_reset_choice(struct ay_ynode *node, const struct ay_lnode *stop)
     for (iter = node->snode; iter && (iter != stop); iter = iter->parent) {
         if (iter->lens->tag == L_UNION) {
             choice = iter;
-            break;
         }
     }
 
@@ -3220,8 +3222,9 @@ ay_ynode_build_list_match(struct ay_ynode *node1, struct ay_ynode *node2, ly_boo
         return 0;
     } else if (list_check &&
             ((node1->type == YN_LIST) || (node1->type == YN_LEAFLIST)) &&
-            ((ay_lnode_has_attribute(node1->snode, L_STAR) == ay_lnode_has_attribute(node2->snode, L_STAR)) ||
-            (node1->choice == node2->choice))) {
+            ((ay_ynode_alone_in_choice(node1) && !ay_ynode_common_concat(node1, node2, node1->parent->snode)) ||
+            (!ay_ynode_alone_in_choice(node1) && !ay_ynode_common_concat(node1, node2, node1->choice)) ||
+            (ay_lnode_has_attribute(node1->snode, L_STAR) == ay_lnode_has_attribute(node2->snode, L_STAR)))) {
         return 0;
     } else if (!ay_lnode_lense_equal(node1->label->lens, node2->label->lens)) {
         return 0;
