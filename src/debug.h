@@ -76,16 +76,6 @@ char *ay_gdb_lptree(struct ay_ynode *tree);
 int ay_debug_ynode_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree);
 
 /**
- * @brief Test if ynode forest matches lense tree.
- *
- * @param[in] vercode Verbose that decides the execution of a function.
- * @param[in] mod Module in which the trees are located.
- * @param[in] yforest Forest of ynodes to check by print functions.
- * @return 0 on success.
- */
-int ay_test_ynode_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yforest);
-
-/**
  * @brief Test if lnode tree matches lense tree.
  *
  * @param[in] vercode Verbose that decides the execution of a function.

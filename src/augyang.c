@@ -1164,30 +1164,132 @@ ay_lnode_tree_check(const struct ay_lnode *ltree, const struct module *mod)
 }
 
 /**
+ * @brief Check if label indicates comment.
+ *
+ * @param[in] lns lens to check.
+ * @return 1 if label is comment.
+ */
+static ly_bool
+ay_lense_is_comment(struct lens *lns)
+{
+    if (lns && (lns->tag == L_LABEL) &&
+            (!strcmp("#comment", lns->string->str) ||
+            !strcmp("!comment", lns->string->str) ||
+            !strcmp("#mcomment", lns->string->str) ||
+            !strcmp("#scomment", lns->string->str))) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * @brief Check if ynode should be ignored.
+ *
+ * @param[in] snode The lnode with tag L_SUBTREE.
+ * @param[in] label The lnode which belongs to @p snode.
+ * @return 1 if should be ignored, 0 otherwise.
+ */
+static ly_bool
+ay_ynode_is_ignored(const struct ay_lnode *snode, const struct ay_lnode *label)
+{
+
+    return (snode->lens->tag == L_SUBTREE) && label && ay_lense_is_comment(label->lens);
+}
+
+/**
+ * @brief Find label for ynode.
+ *
+ * @param[in] snode The lnode with tag L_SUBTREE.
+ * @return label or NULL.
+ */
+static struct ay_lnode *
+ay_ynode_find_label(struct ay_lnode *snode)
+{
+    uint32_t i;
+    struct ay_lnode *lnode;
+    enum lens_tag tag;
+
+    for (i = 0; i < snode->descendants; i++) {
+        lnode = &snode[i + 1];
+        tag = lnode->lens->tag;
+        if (tag == L_SUBTREE) {
+            i += lnode->descendants;
+        } else if (AY_TAG_IS_LABEL(tag)) {
+            return lnode;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Find value for ynode.
+ *
+ * @param[in] snode The lnode with tag L_SUBTREE.
+ * @return value or NULL.
+ */
+static struct ay_lnode *
+ay_ynode_find_value(struct ay_lnode *snode)
+{
+    uint32_t i;
+    struct ay_lnode *lnode;
+    enum lens_tag tag;
+
+    for (i = 0; i < snode->descendants; i++) {
+        lnode = &snode[i + 1];
+        tag = lnode->lens->tag;
+        if (tag == L_SUBTREE) {
+            i += lnode->descendants;
+        } else if (AY_TAG_IS_VALUE(tag)) {
+            return lnode;
+        }
+    }
+
+    return NULL;
+}
+
+/**
  * @brief Create basic ynode forest from lnode tree.
  *
  * Only ay_ynode.snode and ay_ynode.descendants are set.
  *
- * @param[out] ynode Tree of ynodes as destination.
- * @param[in] lnode Tree of lnodes as source.
+ * @param[out] ytree Tree of ynodes as destination.
+ * @param[in] ltree Tree of lnodes as source.
  */
 static void
-ay_ynode_create_forest_(struct ay_ynode *ynode, struct ay_lnode *lnode)
+ay_ynode_create_forest_(struct ay_ynode *ytree, struct ay_lnode *ltree)
 {
     uint32_t id = 1;
-    struct ay_lnode *child;
+    struct ay_lnode *child, *label;
 
-    for (uint32_t i = 0, j = 0; i < lnode->descendants; i++) {
-        if ((lnode[i].lens->tag == L_SUBTREE) || (lnode[i].lens->tag == L_REC)) {
-            LY_ARRAY_INCREMENT(ynode);
-            ynode[j].type = lnode[i].lens->tag == L_REC ? YN_REC : YN_UNKNOWN;
-            ynode[j].snode = &lnode[i];
-            ynode[j].descendants = 0;
-            ynode[j].id = id++;
-            for (uint32_t k = 0; k < lnode[i].descendants; k++) {
-                child = &lnode[i + 1 + k];
+    for (uint32_t i = 0, j = 0; i < ltree->descendants; i++) {
+        if ((ltree[i].lens->tag == L_SUBTREE) || (ltree[i].lens->tag == L_REC)) {
+            /* Set label and value. */
+            label = ay_ynode_find_label(&ltree[i]);
+            if (ay_ynode_is_ignored(&ltree[i], label)) {
+                i += ltree[i].descendants;
+                continue;
+            }
+            ytree[j].label = label;
+            ytree[j].value = ay_ynode_find_value(&ltree[i]);
+
+            LY_ARRAY_INCREMENT(ytree);
+            ytree[j].type = ltree[i].lens->tag == L_REC ? YN_REC : YN_UNKNOWN;
+            ytree[j].snode = &ltree[i];
+            ytree[j].descendants = 0;
+            ytree[j].id = id++;
+
+            /* Set descendants. */
+            for (uint32_t k = 0; k < ltree[i].descendants; k++) {
+                child = &ltree[i + 1 + k];
                 if ((child->lens->tag == L_SUBTREE) || (child->lens->tag == L_REC)) {
-                    ynode[j].descendants++;
+                    label = ay_ynode_find_label(child);
+                    if (ay_ynode_is_ignored(child, label)) {
+                        k += child->descendants;
+                        continue;
+                    }
+                    ytree[j].descendants++;
                 }
             }
             j++;
@@ -1219,34 +1321,6 @@ ay_ynode_forest_connect_topnodes(struct ay_ynode *forest)
     }
     assert(last);
     last->next = NULL;
-}
-
-/**
- * @brief Set label and value to all ynodes in the forest.
- *
- * @param[in,out] forest Forest of ynodes.
- */
-static void
-ay_ynode_add_label_value(struct ay_ynode *forest)
-{
-    struct ay_ynode *ynode;
-    const struct ay_lnode *lnode;
-    enum lens_tag tag;
-
-    LY_ARRAY_FOR(forest, struct ay_ynode, ynode) {
-        for (uint32_t j = 0; j < ynode->snode->descendants; j++) {
-            lnode = &ynode->snode[j + 1];
-            tag = lnode->lens->tag;
-            if (tag == L_SUBTREE) {
-                /* skip - this subtree will be processed later */
-                j += lnode->descendants;
-            } else if (!ynode->label && AY_TAG_IS_LABEL(tag)) {
-                ynode->label = lnode;
-            } else if (!ynode->value && AY_TAG_IS_VALUE(tag)) {
-                ynode->value = lnode;
-            }
-        }
-    }
 }
 
 /**
@@ -1311,7 +1385,6 @@ ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
     ay_ynode_create_forest_(yforest, ltree);
     ay_ynode_tree_correction(yforest);
     ay_ynode_forest_connect_topnodes(yforest);
-    ay_ynode_add_label_value(yforest);
     ay_ynode_add_choice(yforest);
 }
 
@@ -2723,20 +2796,6 @@ ay_ynode_unite_choice(struct ay_ynode *tree)
     }
 }
 
-static ly_bool
-ay_lense_is_comment(struct lens *lns)
-{
-    if (lns && (lns->tag == L_LABEL) &&
-            (!strcmp("#comment", lns->string->str) ||
-            !strcmp("!comment", lns->string->str) ||
-            !strcmp("#mcomment", lns->string->str) ||
-            !strcmp("#scomment", lns->string->str))) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 static const struct ay_lnode *
 ay_lnode_get_snode_label(const struct ay_lnode *snode)
 {
@@ -3168,28 +3227,6 @@ ay_delete_type_unknown(struct ay_ynode *tree)
             } else {
                 ay_ynode_delete_subtree(tree, &tree[i]);
             }
-            i--;
-        }
-    }
-}
-
-/**
- * @brief Delete generally using nodes for comments.
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_delete_comment(struct ay_ynode *tree)
-{
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *iter;
-    struct lens *label;
-
-    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        iter = &tree[i];
-        label = AY_LABEL_LENS(iter);
-        if (ay_lense_is_comment(label)) {
-            ay_ynode_delete_subtree(tree, &tree[i]);
             i--;
         }
     }
@@ -6294,9 +6331,6 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
 
     assert((*tree)->type == YN_ROOT);
 
-    /* delete unnecessary nodes */
-    ay_delete_comment(*tree);
-
     /* Insert list if two L_STAR belongs to ynode node. */
     TRANSF(ay_ynode_insert_implicit_list, ay_ynode_rule_insert_implicit_list(*tree));
 
@@ -6440,7 +6474,6 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     /* Create ynode forest. */
     LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
     ay_ynode_create_forest(ltree, yforest);
-    ay_test_ynode_forest(vercode, mod, yforest);
 
     /* Convert ynode forest to tree. */
     ret = ay_ynode_create_tree(yforest, ltree, tpatt_size, &ytree);

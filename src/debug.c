@@ -473,47 +473,6 @@ ay_debug_ynode_tree(uint64_t vercode, uint64_t vermask, struct ay_ynode *tree)
 }
 
 /**
- * @brief Check if lense node is not ynode.
- *
- * @param[in] ctx Context for printing. The lprinter_ctx.data is type of lense.
- * @return 1 if lense should be filtered because it is not ynode, otherwise 0.
- */
-static ly_bool
-ay_print_lens_filter_ynode(struct lprinter_ctx *ctx)
-{
-    struct lens *lens;
-
-    lens = ctx->data;
-    return !((lens->tag == L_SUBTREE) || (lens->tag == L_REC));
-}
-
-/**
- * @brief Starting function for printing ynode forest.
- *
- * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of ynode.
- */
-static void
-ay_print_ynode_main(struct lprinter_ctx *ctx)
-{
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *forest;
-
-    forest = ctx->data;
-    LY_ARRAY_FOR(forest, i) {
-        if (forest[i].type == YN_ROOT) {
-            continue;
-        }
-        ctx->data = &forest[i];
-        if (forest[i].snode) {
-            ay_print_lens_node(ctx, forest[i].snode->lens);
-        } else {
-            ay_print_lens_node(ctx, NULL);
-        }
-        i += forest[i].descendants;
-    }
-}
-
-/**
  * @brief Transition from one lense node to another.
  *
  * @param[in,out] ctx Context for printing. The lprinter_ctx.data is type of lense.
@@ -535,39 +494,6 @@ ay_print_lens_transition(struct lprinter_ctx *ctx)
         ctx->data = lens->body;
         ay_print_lens_node(ctx, ctx->data);
     }
-}
-
-int
-ay_test_ynode_forest(uint64_t vercode, struct module *mod, struct ay_ynode *yforest)
-{
-    int ret = 0;
-    char *str1, *str2;
-    struct lens *lens;
-    struct lprinter_ctx_f print_func = {0};
-
-    if (!vercode) {
-        return ret;
-    }
-
-    lens = ay_lense_get_root(mod);
-    AY_CHECK_COND(!lens, AYE_LENSE_NOT_FOUND);
-    print_func.transition = ay_print_lens_transition;
-    print_func.filter = ay_print_lens_filter_ynode;
-    ret = ay_print_lens(lens, &print_func, lens, &str1);
-    AY_CHECK_RET(ret);
-
-    print_func.main = ay_print_ynode_main;
-    print_func.transition = ay_print_ynode_transition;
-    print_func.filter = NULL;
-    ret = ay_print_lens(yforest, &print_func, yforest->snode->lens, &str2);
-    AY_CHECK_RET(ret);
-
-    ret = ay_test_compare("ynode forest", str1, str2);
-
-    free(str1);
-    free(str2);
-
-    return ret;
 }
 
 /**
