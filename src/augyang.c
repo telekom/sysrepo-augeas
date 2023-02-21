@@ -1348,6 +1348,87 @@ ay_ynode_add_choice(struct ay_ynode *forest)
 }
 
 /**
+ * @brief Move ynodes in an array one element to the right.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_shift_right(struct ay_ynode *tree)
+{
+    memmove(&tree[1], tree, LY_ARRAY_COUNT(tree) * sizeof *tree);
+    LY_ARRAY_INCREMENT(tree);
+    memset(tree, 0, sizeof *tree);
+
+    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        tree[i].parent = tree[i].parent ? tree[i].parent + 1 : NULL;
+        tree[i].next = tree[i].next ? tree[i].next + 1 : NULL;
+        tree[i].child = tree[i].child ? tree[i].child + 1 : NULL;
+    }
+}
+
+/**
+ * @brief Set root node for @p tree.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ * @param[in] ltree Tree of lnodes (Sized array). If function succeeds then the ownership of memory is moved to @tree,
+ * so the memory of ltree should be therefore released by ::ay_ynode_tree_free().
+ * @param[in] tpatt_size Required memory space for ay_ynode_root.patt_table LY_ARRAY.
+ * @return 0 on success.
+ */
+static int
+ay_ynode_set_root(struct ay_ynode *tree, uint32_t tpatt_size, struct ay_lnode *ltree)
+{
+    int ret;
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter;
+    uint64_t labcount, valcount;
+    enum lens_tag tag;
+
+    ay_ynode_shift_right(tree);
+
+    tree->type = YN_ROOT;
+    tree->child = tree + 1;
+    for (iter = tree + 1; iter; iter = iter->next) {
+        iter->parent = tree;
+        tree->descendants += iter->descendants + 1;
+    }
+
+    AY_YNODE_ROOT_ARRSIZE(tree) = LY_ARRAY_COUNT(tree);
+    assert(AY_YNODE_ROOT_ARRSIZE(tree) == (tree->descendants + 1));
+
+    labcount = 0;
+    valcount = 0;
+    LY_ARRAY_FOR(ltree, i) {
+        tag = ltree[i].lens->tag;
+        if (AY_TAG_IS_LABEL(tag)) {
+            labcount++;
+        } else if (AY_TAG_IS_VALUE(tag)) {
+            valcount++;
+        }
+    }
+    /* Set labels. */
+    if (labcount) {
+        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_LABELS(tree), labcount, return AYE_MEMORY);
+    }
+    /* Set values. */
+    if (valcount) {
+        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_VALUES(tree), valcount, return AYE_MEMORY);
+    }
+
+    /* Create translation table for lens.regexp.pattern. */
+    LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_PATT_TABLE(tree), tpatt_size, return AYE_MEMORY);
+    ret = ay_transl_create_pattern_table(ltree, AY_YNODE_ROOT_PATT_TABLE(tree));
+    AY_CHECK_RET(ret);
+
+    /* Set idcnt. */
+    AY_YNODE_ROOT_IDCNT(tree) = (tree + tree->descendants)->id + 1;
+    /* Set ltree. Note that this set must be the last operation before return. */
+    AY_YNODE_ROOT_LTREE(tree) = ltree;
+
+    return 0;
+}
+
+/**
  * @brief Set correct parent, next and child pointers to all ynodes.
  *
  * @param[in,out] tree Tree of ynodes which have bad pointers. It can also take the form of a forest.
@@ -1374,129 +1455,25 @@ ay_ynode_tree_correction(struct ay_ynode *tree)
 }
 
 /**
- * @brief Create forest of ynodes from lnode tree.
+ * @brief Create tree of ynodes from lnode tree.
  *
  * @param[in] ltree Tree of lnodes.
- * @param[out] yforest Forest of ynodes.
- */
-static void
-ay_ynode_create_forest(struct ay_lnode *ltree, struct ay_ynode *yforest)
-{
-    ay_ynode_create_forest_(yforest, ltree);
-    ay_ynode_tree_correction(yforest);
-    ay_ynode_forest_connect_topnodes(yforest);
-    ay_ynode_add_choice(yforest);
-}
-
-/**
- * @brief Copy ynodes to new location.
- *
- * @param[out] dst Destination where are ynode copied.
- * @param[in] src Source where the ynodes are copied from.
- */
-static void
-ay_ynode_copy(struct ay_ynode *dst, struct ay_ynode *src)
-{
-    LY_ARRAY_COUNT_TYPE i;
-
-    LY_ARRAY_FOR(src, i) {
-        dst[i] = src[i];
-        dst[i].parent = AY_MAP_ADDRESS(dst, src, src[i].parent);
-        dst[i].next = AY_MAP_ADDRESS(dst, src, src[i].next);
-        dst[i].child = AY_MAP_ADDRESS(dst, src, src[i].child);
-        LY_ARRAY_INCREMENT(dst);
-    }
-}
-
-/**
- * @brief Move ynodes in an array one element to the right.
- *
- * @param[in,out] tree Tree of ynodes.
- */
-static void
-ay_ynode_shift_right(struct ay_ynode *tree)
-{
-    memmove(&tree[1], tree, LY_ARRAY_COUNT(tree) * sizeof *tree);
-    LY_ARRAY_INCREMENT(tree);
-    memset(tree, 0, sizeof *tree);
-
-    for (uint32_t i = 1; i < LY_ARRAY_COUNT(tree); i++) {
-        tree[i].parent = tree[i].parent ? tree[i].parent + 1 : NULL;
-        tree[i].next = tree[i].next ? tree[i].next + 1 : NULL;
-        tree[i].child = tree[i].child ? tree[i].child + 1 : NULL;
-    }
-}
-
-/**
- * @brief Create ynode tree from ynode forest.
- *
- * @param[in] forest Forest of ynodes.
- * @param[in] ltree Tree of lnodes (Sized array). If function succeeds then the ownership of memory is moved to @tree,
- * so the memory of ltree should be therefore released by ::ay_ynode_tree_free().
  * @param[in] tpatt_size Required memory space for ay_ynode_root.patt_table LY_ARRAY.
- * @param[out] tree Resulting ynode tree (new dynamic memory is allocated).
+ * @param[out] ytree Tree of ynodes.
  * @return 0 on success.
  */
 static int
-ay_ynode_create_tree(struct ay_ynode *forest, struct ay_lnode *ltree, uint32_t tpatt_size, struct ay_ynode **tree)
+ay_ynode_create_tree(struct ay_lnode *ltree, uint32_t tpatt_size, struct ay_ynode *ytree)
 {
     int ret;
-    LY_ARRAY_COUNT_TYPE i;
-    struct ay_ynode *iter;
-    uint32_t forest_count;
-    uint64_t labcount, valcount;
-    enum lens_tag tag;
 
-    forest_count = LY_ARRAY_COUNT(forest);
+    ay_ynode_create_forest_(ytree, ltree);
+    ay_ynode_tree_correction(ytree);
+    ay_ynode_forest_connect_topnodes(ytree);
+    ay_ynode_add_choice(ytree);
+    ret = ay_ynode_set_root(ytree, tpatt_size, ltree);
 
-    LY_ARRAY_CREATE(NULL, *tree, 1 + forest_count, return AYE_MEMORY);
-    if (!forest_count) {
-        return 0;
-    }
-
-    ay_ynode_copy(*tree, forest);
-    ay_ynode_shift_right(*tree);
-    (*tree)->child = (*tree) + 1;
-    (*tree)->type = YN_ROOT;
-
-    for (iter = *tree + 1; iter; iter = iter->next) {
-        iter->parent = *tree;
-        (*tree)->descendants += iter->descendants + 1;
-    }
-
-    /* Set YN_ROOT members. */
-    AY_YNODE_ROOT_ARRSIZE(*tree) = LY_ARRAY_COUNT(*tree);
-    assert(AY_YNODE_ROOT_ARRSIZE(*tree) == ((*tree)->descendants + 1));
-    labcount = 0;
-    valcount = 0;
-    LY_ARRAY_FOR(ltree, i) {
-        tag = ltree[i].lens->tag;
-        if (AY_TAG_IS_LABEL(tag)) {
-            labcount++;
-        } else if (AY_TAG_IS_VALUE(tag)) {
-            valcount++;
-        }
-    }
-    /* Set labels. */
-    if (labcount) {
-        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_LABELS(*tree), labcount, return AYE_MEMORY);
-    }
-    /* Set values. */
-    if (valcount) {
-        LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_VALUES(*tree), valcount, return AYE_MEMORY);
-    }
-
-    /* Create translation table for lens.regexp.pattern. */
-    LY_ARRAY_CREATE(NULL, AY_YNODE_ROOT_PATT_TABLE(*tree), tpatt_size, return AYE_MEMORY);
-    ret = ay_transl_create_pattern_table(ltree, AY_YNODE_ROOT_PATT_TABLE(*tree));
-    AY_CHECK_RET(ret);
-
-    /* Set idcnt. */
-    AY_YNODE_ROOT_IDCNT(*tree) = ((*tree) + (*tree)->descendants)->id + 1;
-    /* Set ltree. Note that this set must be the last operation before return. */
-    AY_YNODE_ROOT_LTREE(*tree) = ltree;
-
-    return 0;
+    return ret;
 }
 
 /**
@@ -6448,7 +6425,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     int ret = 0;
     struct lens *lens;
     struct ay_lnode *ltree = NULL;
-    struct ay_ynode *yforest = NULL, *ytree = NULL;
+    struct ay_ynode *ytree = NULL;
     struct ay_pnode *ptree = NULL;
     uint32_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
 
@@ -6472,17 +6449,11 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     ay_pnode_print_verbose(vercode, ptree);
 
     /* Create ynode forest. */
-    LY_ARRAY_CREATE_GOTO(NULL, yforest, yforest_size, ret, cleanup);
-    ay_ynode_create_forest(ltree, yforest);
-
-    /* Convert ynode forest to tree. */
-    ret = ay_ynode_create_tree(yforest, ltree, tpatt_size, &ytree);
+    LY_ARRAY_CREATE_GOTO(NULL, ytree, yforest_size + 1, ret, cleanup);
+    ay_ynode_create_tree(ltree, tpatt_size, ytree);
     AY_CHECK_GOTO(ret, cleanup);
     /* The ltree is now owned by ytree, so ytree is responsible for freeing memory of ltree. */
     ltree = NULL;
-    /* The yforest is no longer needed. */
-    LY_ARRAY_FREE(yforest);
-    yforest = NULL;
     /* Print ytree if debugged. */
     ret = ay_debug_ynode_tree(vercode, AYV_YTREE, ytree);
     AY_CHECK_GOTO(ret, cleanup);
@@ -6498,7 +6469,6 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
 cleanup:
     LY_ARRAY_FREE(ltree);
     ay_pnode_free(ptree);
-    LY_ARRAY_FREE(yforest);
     ay_ynode_tree_free(ytree);
 
     return ret;
