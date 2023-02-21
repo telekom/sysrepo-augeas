@@ -123,7 +123,7 @@ static void
 ay_pnode_set_term(struct term *term, void *data)
 {
     struct ay_pnode **iter;
-    uint32_t cnt = 0;
+    uint64_t cnt = 0;
 
     iter = data;
     (*iter)->term = term;
@@ -685,7 +685,7 @@ ay_pnode_create(struct augeas *aug, const char *filename, struct ay_lnode *ltree
     int ret;
     struct ay_pnode *tree, *iter;
     struct term *term;
-    uint32_t cnt = 0;
+    uint64_t cnt = 0;
 
     ret = augl_parse_file(aug, filename, &term);
     if (ret || (aug->error->code != AUG_NOERROR)) {

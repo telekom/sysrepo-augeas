@@ -730,7 +730,7 @@ main(int argc, char **argv)
     char *loadpath = NULL, *str = NULL, *modname, *outdir = NULL;
     const char *dirpath;
     size_t loadpathlen = 0;
-    struct module *mod, *mod_iter;
+    struct module *mod = NULL, *mod_iter;
     char *filename = NULL;
     FILE *file = NULL;
     uint64_t vercode = 0;

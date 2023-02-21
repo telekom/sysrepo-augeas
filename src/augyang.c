@@ -121,7 +121,7 @@ augyang_get_error_message(int err_code)
  * @param[out] tpatt_size Maximum number of records in translation table of lens patterns.
  */
 static void
-ay_lense_summary(struct lens *lens, uint32_t *ltree_size, uint32_t *yforest_size, uint32_t *tpatt_size)
+ay_lense_summary(struct lens *lens, uint64_t *ltree_size, uint64_t *yforest_size, uint64_t *tpatt_size)
 {
     (*ltree_size)++;
     if ((lens->tag == L_SUBTREE) || (lens->tag == L_REC)) {
@@ -2196,8 +2196,11 @@ ay_ynode_insert_gap_range(struct ay_ynode *tree, uint32_t index, uint32_t items)
 static void
 ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 {
-    memmove(&tree[index], &tree[index + 1], (LY_ARRAY_COUNT(tree) - index - 1) * sizeof *tree);
-    memset(tree + LY_ARRAY_COUNT(tree) - 1, 0, sizeof *tree);
+    uint32_t tree_count;
+
+    tree_count = LY_ARRAY_COUNT(tree);
+    memmove(&tree[index], &tree[index + 1], (tree_count - index - 1) * sizeof *tree);
+    memset(tree + tree_count - 1, 0, sizeof *tree);
     LY_ARRAY_DECREMENT(tree);
 }
 
@@ -2211,9 +2214,12 @@ ay_ynode_delete_gap(struct ay_ynode *tree, uint32_t index)
 static void
 ay_ynode_delete_gap_range(struct ay_ynode *tree, uint32_t index, uint32_t items)
 {
-    memmove(&tree[index], &tree[index + items], (LY_ARRAY_COUNT(tree) - index - items) * sizeof *tree);
-    memset(tree + LY_ARRAY_COUNT(tree) - items, 0, items * sizeof *tree);
-    AY_SET_LY_ARRAY_SIZE(tree, LY_ARRAY_COUNT(tree) - items);
+    uint32_t tree_count;
+
+    tree_count = LY_ARRAY_COUNT(tree);
+    memmove(&tree[index], &tree[index + items], (tree_count - index - items) * sizeof *tree);
+    memset(tree + tree_count - items, 0, items * sizeof *tree);
+    AY_SET_LY_ARRAY_SIZE(tree, tree_count - items);
 }
 
 /**
@@ -5961,7 +5967,6 @@ cleanup:
 static uint64_t
 ay_ynode_grouping_reduction_count(struct ay_ynode *tree)
 {
-    int ret;
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *gr, *uses;
     uint64_t new_nodes, dupl_count;
@@ -5990,8 +5995,7 @@ ay_ynode_grouping_reduction_count(struct ay_ynode *tree)
                 continue;
             }
             /* Explore all siblings of this YN_USES. */
-            ret = ay_yang_ident_duplications(tree, uses, gr->child->ident, NULL, &dupl_count);
-            assert(!ret);
+            ay_yang_ident_duplications(tree, uses, gr->child->ident, NULL, &dupl_count);
             if (dupl_count) {
                 /* Name collision found. Grouping must be reduced. */
                 gr->flags |= AY_GROUPING_REDUCTION;
@@ -6427,7 +6431,9 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     struct ay_lnode *ltree = NULL;
     struct ay_ynode *ytree = NULL;
     struct ay_pnode *ptree = NULL;
-    uint32_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
+    uint64_t ltree_size = 0, yforest_size = 0, tpatt_size = 0;
+
+    AY_CHECK_COND(!mod, AYE_LENSE_NOT_FOUND);
 
     assert(sizeof(struct ay_ynode) == sizeof(struct ay_ynode_root));
 
@@ -6435,6 +6441,7 @@ augyang_print_yang(struct module *mod, uint64_t vercode, char **str)
     AY_CHECK_COND(!lens, AYE_LENSE_NOT_FOUND);
 
     ay_lense_summary(lens, &ltree_size, &yforest_size, &tpatt_size);
+    AY_CHECK_COND(yforest_size + 1 > UINT32_MAX, AYE_MEMORY);
 
     /* Create lnode tree. */
     LY_ARRAY_CREATE_GOTO(NULL, ltree, ltree_size, ret, cleanup);

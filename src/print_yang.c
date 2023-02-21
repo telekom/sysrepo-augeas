@@ -837,7 +837,7 @@ ay_replace_substr(char *str, const char *target, const char *replace)
     while ((hit = strstr(hit, target))) {
         if (rplen) {
             /* insert @p replace */
-            strncpy(hit, replace, rplen);
+            memcpy(hit, replace, rplen);
             rmlen = trlen - rplen;
             if (rmlen) {
                 remain = hit + rplen;
@@ -3081,7 +3081,8 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         break;
     case YN_CASE:
         /* Handling in ay_print_yang_node_in_choice(). */
-        return 1;
+        ret = 1;
+        break;
     case YN_KEY:
         ret = ay_print_yang_leaf_key(ctx, node);
         break;
@@ -3099,6 +3100,9 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         break;
     case YN_ROOT:
         ret = ay_print_yang_children(ctx, node);
+        break;
+    default:
+        ret = 1;
         break;
     }
 
