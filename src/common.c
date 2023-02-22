@@ -130,13 +130,9 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
             ((*ch >= 97) && (*ch <= 122)) || /* a-z */
             ((*ch >= 48) && (*ch <= 57))) { /* 0-9 */
         return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '.')) {
-        *shift = 1;
-        return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '-')) {
-        *shift = 1;
-        return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '+')) {
+    } else if (((*ch == '\\') && (*(ch + 1) == '.')) ||
+            ((*ch == '\\') && (*(ch + 1) == '-')) ||
+            ((*ch == '\\') && (*(ch + 1) == '+'))) {
         *shift = 1;
         return 1;
     } else {
@@ -262,16 +258,12 @@ ay_dnode_insert(struct ay_dnode *dict, const void *key, const void *value, int (
 
     dkey = ay_dnode_find(dict, key);
     dval = ay_dnode_find(dict, value);
-    if (dkey && AY_DNODE_IS_VAL(dkey)) {
+    if ((dkey && (AY_DNODE_IS_VAL(dkey) || !ay_dnode_value_is_unique(dkey, value, equal))) ||
+            (equal && !dkey && !dval && equal(key, value))) {
         return ret;
     } else if (dval && AY_DNODE_IS_KEY(dval)) {
         /* The dval will no longer be dictionary key. It will be value of dkey. */
         ret = ay_dnode_merge_keys(dict, dkey, dval);
-        return ret;
-    } else if (dkey && !ay_dnode_value_is_unique(dkey, value, equal)) {
-        /* The value is not unique, so nothing is inserted. */
-        return ret;
-    } else if (equal && !dkey && !dval && equal(key, value)) {
         return ret;
     }
 
@@ -418,13 +410,10 @@ ay_ynode_get_first_in_choice(const struct ay_ynode *parent, const struct ay_lnod
 ly_bool
 ay_ynode_alone_in_choice(struct ay_ynode *node)
 {
-    if (!node->choice) {
+    if ((!node->choice) || (node != ay_ynode_get_first_in_choice(node->parent, node->choice))) {
         return 0;
-    } else if (node != ay_ynode_get_first_in_choice(node->parent, node->choice)) {
-        return 0;
-    } else if (!node->next) {
-        return 1;
-    } else if (node->next->choice == node->choice) {
+    }
+    if (node->next && (node->next->choice == node->choice)) {
         return 0;
     } else {
         return 1;

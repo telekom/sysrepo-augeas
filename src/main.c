@@ -239,9 +239,7 @@ aym_loadpath_next(const char *loadpath_iter)
 {
     char *next;
 
-    if (!loadpath_iter) {
-        return NULL;
-    } else if ((next = strchr(loadpath_iter, PATH_SEP_CHAR))) {
+    if (loadpath_iter && (next = strchr(loadpath_iter, PATH_SEP_CHAR))) {
         return next + 1;
     } else {
         return NULL;
@@ -789,8 +787,6 @@ main(int argc, char **argv)
             yanglint = 1;
             break;
         case 'h':
-            aym_usage();
-            goto cleanup;
         default:
             aym_usage();
             goto cleanup;

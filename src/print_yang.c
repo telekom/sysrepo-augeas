@@ -331,9 +331,7 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
             j--;
             break;
         case ' ':
-            if (j && (buffer[j - 1] == '-')) {
-                j--;
-            } else if (j == 0) {
+            if ((j == 0) || (j && (buffer[j - 1] == '-'))) {
                 j--;
             } else {
                 AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
@@ -341,11 +339,7 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
             }
             break;
         case '(':
-            j--;
-            break;
         case ')':
-            j--;
-            break;
         case '?':
             j--;
             break;
@@ -354,11 +348,8 @@ ay_get_ident_from_pattern_standardized(const char *ident, enum ay_ident_dst opt,
                 /* remove '\' and also '.' */
                 j--;
                 i++;
-            } else if (ident[i + 1] == '.') {
+            } else if ((ident[i + 1] == '.') || (ident[i + 1] == '-')) {
                 /* remove '\' but keep '.' */
-                j--;
-            } else if (ident[i + 1] == '-') {
-                /* remove '\' but keep '-' */
                 j--;
             } else {
                 return AYE_IDENT_BAD_CHAR;
@@ -904,9 +895,8 @@ ay_regex_try_skip(const char *curr)
     int64_t parcnt;
 
     /* Cannot be skiped, this substring is important. */
-    if (curr[1] && curr[2] && !strncmp(curr, "|()", 3)) {
-        return curr;
-    } else if (curr[1] && !strncmp(curr, "()", 2)) {
+    if ((curr[1] && curr[2] && !strncmp(curr, "|()", 3)) ||
+            (curr[1] && !strncmp(curr, "()", 2))) {
         return curr;
     }
 
@@ -1275,20 +1265,13 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             ret = ay_ynode_get_ident_from_transl_table(tree, node, opt, buffer);
             AY_CHECK_RET(ret);
             str = buffer;
-        } else if ((node->child->type != YN_KEY) &&
-                (tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
+        } else if (((node->child->type != YN_KEY) && (tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) ||
+                (tmp = ay_get_lense_name(ctx->mod, node->snode)) ||
+                (tmp = ay_ynode_snode_name(node)) ||
+                (tmp = ay_get_lense_name(ctx->mod, node->label)) ||
+                (tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret)) ||
+                (node->label && (tmp = ay_ynode_name_by_pnode(node->label->pnode)))) {
             AY_CHECK_RET(ret);
-            str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
-            str = tmp;
-        } else if ((tmp = ay_ynode_snode_name(node))) {
-            str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
-            str = tmp;
-        } else if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
-            AY_CHECK_RET(ret);
-            str = tmp;
-        } else if (node->label && (tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
             str = tmp;
         } else if (!node->label) {
             ret = ay_get_yang_ident(ctx, node->child, opt, buffer);
@@ -1296,13 +1279,6 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = buffer;
         } else {
             str = "node";
-        }
-    } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_DATA_PATH)) {
-        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
-            AY_CHECK_RET(ret);
-            str = tmp;
-        } else {
-            str = "$$";
         }
     } else if ((node->type == YN_CONTAINER) && (opt == AY_IDENT_VALUE_YPATH)) {
         assert(node->child && node->child->next && (node->child->next->type == YN_VALUE));
@@ -1316,9 +1292,8 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else if (ident_from_label) {
             AY_CHECK_RET(ret);
             str = ident_from_label;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
-            str = tmp;
-        } else if ((tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label)) ||
+                (tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
             str = tmp;
         } else {
             str = "label";
@@ -1333,20 +1308,18 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else {
             str = "value";
         }
-    } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_NODE_NAME)) {
-        if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
+    } else if ((opt == AY_IDENT_NODE_NAME) && ((node->type == YN_LEAF) || (node->type == YN_LEAFLIST))) {
+        if (((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) ||
+                (tmp = ay_get_lense_name(ctx->mod, node->snode)) ||
+                (tmp = ay_get_lense_name(ctx->mod, node->label)) ||
+                (tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
             AY_CHECK_RET(ret);
-            str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->snode))) {
-            str = tmp;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label))) {
-            str = tmp;
-        } else if ((tmp = ay_ynode_name_by_pnode(node->label->pnode))) {
             str = tmp;
         } else {
             str = "node";
         }
-    } else if (((node->type == YN_LEAF) || (node->type == YN_LEAFLIST)) && (opt == AY_IDENT_DATA_PATH)) {
+    } else if ((opt == AY_IDENT_DATA_PATH) &&
+            ((node->type == YN_CONTAINER) || (node->type == YN_LEAF) || (node->type == YN_LEAFLIST))) {
         if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
@@ -1476,12 +1449,10 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
 
     root = ay_yang_ident_iter(NULL, node);
     for (iter = ay_yang_ident_iter(root, NULL); iter; iter = ay_yang_ident_iter(root, iter)) {
-        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF)) {
+        if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || !iter->ident) {
             continue;
         } else if (iter == node) {
             rnk = cnt;
-            continue;
-        } else if (!iter->ident) {
             continue;
         } else if (iter->type == YN_USES) {
             gr = ay_ynode_get_grouping(tree, iter->ref);
@@ -1964,15 +1935,10 @@ ay_print_yang_pattern_by_pnode_regex(struct yprinter_ctx *ctx, struct ay_pnode *
 static ly_bool
 ay_yang_type_is_regex_unmin(const struct ay_ynode *node, struct ay_pnode *pnode)
 {
-    if (!pnode) {
-        return 0;
-    } else if (pnode->flags & AY_PNODE_REG_UNMIN) {
+    if (pnode && (pnode->flags & AY_PNODE_REG_UNMIN)) {
         return 1;
-    } else if (!(pnode->flags & AY_PNODE_REG_MINUS)) {
-        return 0;
-    } else if (node->flags & AY_WHEN_TARGET) {
-        return 0;
-    } else if (pnode->term->tag == A_UNION) {
+    } else if (pnode && (pnode->flags & AY_PNODE_REG_MINUS) && (pnode->term->tag == A_UNION) &&
+            !(node->flags & AY_WHEN_TARGET)) {
         pnode->flags |= AY_PNODE_REG_UNMIN;
         return 1;
     } else {
@@ -2201,9 +2167,7 @@ ay_print_yang_type_builtin(struct yprinter_ctx *ctx, struct lens *reg)
         pattern = reg->regexp->pattern->str;
         if (!strcmp("[0-9]+", pattern)) {
             type = "uint64";
-        } else if (!strcmp("[-+]?[0-9]+", pattern)) {
-            type = "int64";
-        } else if (!strcmp("[-]?[0-9]+", pattern)) {
+        } else if (!strcmp("[-+]?[0-9]+", pattern) || !strcmp("[-]?[0-9]+", pattern)) {
             type = "int64";
         } else if (!strcmp("true|false", pattern) || !strcmp("(true|false)", pattern) ||
                 !strcmp("false|true", pattern) || !strcmp("(false|true)", pattern)) {
@@ -2336,24 +2300,19 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if (node->type == YN_VALUE) {
-        lnode = node->value;
-        lv_type = AY_LV_TYPE_VALUE;
-    } else if (AY_LABEL_LENS_IS_IDENT(node) && value) {
-        lnode = node->value;
-        lv_type = AY_LV_TYPE_VALUE;
-    } else if ((node->type == YN_LEAF) && (node->label->flags & AY_LNODE_KEY_NOREGEX) && !value) {
+    if (!value &&
+            (((node->type == YN_LEAF) && (node->label->flags & AY_LNODE_KEY_NOREGEX)) ||
+            (label && (label->tag == L_LABEL)))) {
         ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         return ret;
+    } else if ((node->type == YN_VALUE) || (value &&
+            (AY_LABEL_LENS_IS_IDENT(node) ||
+            ((value->tag == L_STORE) && (!label || (label->tag != L_KEY)))))) {
+        lnode = node->value;
+        lv_type = AY_LV_TYPE_VALUE;
     } else if (label && (label->tag == L_KEY)) {
         lnode = node->label;
         lv_type = AY_LV_TYPE_LABEL;
-    } else if (value && (value->tag == L_STORE)) {
-        lnode = node->value;
-        lv_type = AY_LV_TYPE_VALUE;
-    } else if (label && (label->tag == L_LABEL) && !value) {
-        ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
-        return ret;
     } else {
         ret = ay_print_yang_type_string(ctx, node, NULL);
         return ret;
@@ -2632,11 +2591,8 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     value = AY_VALUE_LENS(node);
 
-    if ((node->type == YN_CASE) || (node->type == YN_KEY) || (node->type == YN_VALUE)) {
-        return ret;
-    } else if (!value) {
-        return ret;
-    } else if ((node->type == YN_LEAF) && AY_LABEL_LENS_IS_IDENT(node)) {
+    if (!value || (node->type == YN_CASE) || (node->type == YN_KEY) || (node->type == YN_VALUE) ||
+            ((node->type == YN_LEAF) && AY_LABEL_LENS_IS_IDENT(node))) {
         return ret;
     }
 
@@ -2659,12 +2615,10 @@ ay_print_yang_value_path(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    if ((node->type == YN_LIST) && node->choice && !ay_ynode_alone_in_choice(node) && (node->min_elems < 2)) {
+    if (((node->type == YN_LIST) && node->choice && !ay_ynode_alone_in_choice(node) && (node->min_elems < 2)) ||
+            (ay_ynode_alone_in_choice(node) && (node->flags & AY_CHOICE_MAND_FALSE))) {
         return;
-    } else if (ay_ynode_alone_in_choice(node) && (node->flags & AY_CHOICE_MAND_FALSE)) {
-        return;
-    }
-    if (node->min_elems) {
+    } else if (node->min_elems) {
         ly_print(ctx->out, "%*smin-elements %" PRIu16 ";\n", ctx->space, "", node->min_elems);
     } else if (node->flags & AY_YNODE_MAND_TRUE) {
         ly_print(ctx->out, "%*smin-elements 1;\n", ctx->space, "");
@@ -3096,8 +3050,6 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_uses(ctx, node);
         break;
     case YN_REC:
-        ret = ay_print_yang_children(ctx, node);
-        break;
     case YN_ROOT:
         ret = ay_print_yang_children(ctx, node);
         break;
@@ -3266,7 +3218,7 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
     alone = first && !next_has_same_choice;
     last = !first && !next_has_same_choice;
 
-    if (alone) {
+    if (alone || (!first && !last)) {
         /* choice with one 'case' is not printed */
         ret = ay_print_yang_node_in_choice(ctx, node, alone);
     } else if (first && !last) {
@@ -3275,8 +3227,6 @@ ay_print_yang_node(struct yprinter_ctx *ctx, struct ay_ynode *node)
         /* start of choice nesting */
         ay_print_yang_nesting_begin(ctx);
         ay_print_yang_mandatory_choice(ctx, node);
-        ret = ay_print_yang_node_in_choice(ctx, node, alone);
-    } else if (!last) {
         ret = ay_print_yang_node_in_choice(ctx, node, alone);
     } else {
         /* print last case */

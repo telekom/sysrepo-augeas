@@ -70,31 +70,15 @@ ay_term_visitor(struct term *term, void *data, void (*func)(struct term *, void 
         ay_term_visitor(term->exp, data, func);
         break;
     case A_LET:
-        ay_term_visitor(term->left, data, func);
-        ay_term_visitor(term->right, data, func);
-        break;
     case A_COMPOSE:
-        ay_term_visitor(term->left, data, func);
-        ay_term_visitor(term->right, data, func);
-        break;
     case A_UNION:
-        ay_term_visitor(term->left, data, func);
-        ay_term_visitor(term->right, data, func);
-        break;
     case A_MINUS:
-        ay_term_visitor(term->left, data, func);
-        ay_term_visitor(term->right, data, func);
-        break;
     case A_CONCAT:
-        ay_term_visitor(term->left, data, func);
-        ay_term_visitor(term->right, data, func);
-        break;
     case A_APP:
         ay_term_visitor(term->left, data, func);
         ay_term_visitor(term->right, data, func);
         break;
     case A_VALUE:
-        break;
     case A_IDENT:
         break;
     case A_BRACKET:
@@ -107,7 +91,6 @@ ay_term_visitor(struct term *term, void *data, void (*func)(struct term *, void 
         ay_term_visitor(term->rexp, data, func);
         break;
     case A_TEST:
-        break;
     default:
         break;
     }
@@ -230,15 +213,11 @@ ay_pnode_swap_data(struct ay_pnode *first, struct ay_pnode *second)
 static ly_bool
 ay_term_info_equal(const struct info *inf1, const struct info *inf2)
 {
-    if (inf1->first_line != inf2->first_line) {
-        return 0;
-    } else if (inf1->first_column != inf2->first_column) {
-        return 0;
-    } else if (inf1->last_line != inf2->last_line) {
-        return 0;
-    } else if (inf1->last_column != inf2->last_column) {
-        return 0;
-    } else if (strcmp(inf1->filename->str, inf2->filename->str)) {
+    if ((inf1->first_line != inf2->first_line) ||
+            (inf1->first_column != inf2->first_column) ||
+            (inf1->last_line != inf2->last_line) ||
+            (inf1->last_column != inf2->last_column) ||
+            (strcmp(inf1->filename->str, inf2->filename->str))) {
         return 0;
     } else {
         return 1;
@@ -305,9 +284,7 @@ ay_pnode_find_func(struct ay_pnode *ident)
     assert(ident->term->tag == A_IDENT);
 
     for (iter = ident; iter != ident->bind; iter = iter->parent) {
-        if (iter->term->tag != A_FUNC) {
-            continue;
-        } else if (iter->parent->term->tag != A_LET) {
+        if ((iter->term->tag != A_FUNC) || (iter->parent->term->tag != A_LET)) {
             continue;
         } else if (!strcmp(iter->term->param->name->str, ident->term->ident->str)) {
             return iter;
@@ -419,9 +396,7 @@ ay_get_regexp_by_lensname(struct module *mod, char *lensname)
     struct binding *bind_iter;
 
     LY_LIST_FOR(mod->bindings, bind_iter) {
-        if (strcmp(bind_iter->ident->str, lensname)) {
-            continue;
-        } else if (bind_iter->value->tag != V_REGEXP) {
+        if (strcmp(bind_iter->ident->str, lensname) || (bind_iter->value->tag != V_REGEXP)) {
             continue;
         }
 
@@ -662,11 +637,7 @@ ay_lnode_set_pnode(struct ay_lnode *tree, struct ay_pnode *ptree)
                 pnode = ay_lnode_get_pnode_name(pnode_by_info);
                 iter->pnode = pnode;
             }
-        } else if (iter->lens->tag == L_KEY) {
-            pnode_by_info = ay_pnode_find_by_info(ptree, iter->lens->info);
-            pnode = ay_lnode_get_pnode_name(pnode_by_info);
-            iter->pnode = pnode;
-        } else if (iter->lens->tag == L_SUBTREE) {
+        } else if ((iter->lens->tag == L_KEY) || (iter->lens->tag == L_SUBTREE)) {
             pnode_by_info = ay_pnode_find_by_info(ptree, iter->lens->info);
             pnode = ay_lnode_get_pnode_name(pnode_by_info);
             iter->pnode = pnode;

@@ -61,11 +61,9 @@ ay_ident_pattern_is_valid(const char *str, uint32_t *shift)
 {
     *shift = 0;
 
-    if (!strncmp(str, "[ ]+", 4)) {
-        *shift = 3;
-        return 1;
-    } else if (ay_ident_character_nocase(str)) {
-        /* match pattern like [Aa] */
+    if (!strncmp(str, "[ ]+", 4) ||
+            /* match pattern like [Aa] */
+            ay_ident_character_nocase(str)) {
         *shift = 3;
         return 1;
     } else {
@@ -92,13 +90,9 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
             ((*ch >= 97) && (*ch <= 122)) || /* a-z */
             ((*ch >= 48) && (*ch <= 57))) { /* 0-9 */
         return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '.')) {
-        *shift = 1;
-        return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '-')) {
-        *shift = 1;
-        return 1;
-    } else if ((*ch == '\\') && (*(ch + 1) == '+')) {
+    } else if (((*ch == '\\') && (*(ch + 1) == '.')) ||
+            ((*ch == '\\') && (*(ch + 1) == '-')) ||
+            ((*ch == '\\') && (*(ch + 1) == '+'))) {
         *shift = 1;
         return 1;
     } else {
@@ -132,15 +126,13 @@ ay_lense_pattern_has_idents(const struct ay_ynode *tree, const struct lens *lens
     for (iter = patt; *iter != '\0'; iter++) {
         switch (*iter) {
         case '#':
-            break;
         case '(':
+        case '?':
             break;
         case ')':
             if (*(iter + 1) == '?') {
                 iter++;
             }
-            break;
-        case '?':
             break;
         case '|':
         case '\n': /* '\n'-> TODO pattern is probably written wrong -> bugfix lense? */
@@ -545,10 +537,9 @@ ay_pattern_union_token_is_valid(const char *ptoken, uint64_t ptoken_len)
         }
     }
 
-    if (qm && (qm != opbr)) {
-        return 0;
-    } else if (qm && vbar && (qm != 1)) {
-        /* There is no algorithm implemented that can process several '?' and '|' in @p ptoken. */
+    if ((qm && (qm != opbr)) ||
+            /* There is no algorithm implemented that can process several '?' and '|' in @p ptoken. */
+            (qm && vbar && (qm != 1))) {
         return 0;
     }
 

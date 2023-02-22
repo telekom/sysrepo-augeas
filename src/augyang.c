@@ -767,30 +767,24 @@ ay_ynode_equal(const struct ay_ynode *n1, const struct ay_ynode *n2, ly_bool ign
     alone2 = !n2->next && (n2->parent->child == n2);
     cmp_mask = ignore_choice ? AY_YNODE_FLAGS_CMP_MASK & ~AY_CHOICE_MAND_FALSE : AY_YNODE_FLAGS_CMP_MASK;
 
-    if (n1->descendants != n2->descendants) {
+    if ((n1->descendants != n2->descendants) ||
+            (n1->type != n2->type) ||
+            (!n1->label && n2->label) ||
+            (n1->label && !n2->label) ||
+            (n1->label && !ay_lnode_lense_equal(n1->label->lens, n2->label->lens)) ||
+            (!n1->value && n2->value) ||
+            (n1->value && !n2->value) ||
+            (n1->value && !ay_lnode_lense_equal(n1->value->lens, n2->value->lens)) ||
+            (!n1->snode && n2->snode) ||
+            (n1->snode && !n2->snode) ||
+            (!ignore_choice && !alone1 && !alone2 && ((!n1->choice && n2->choice) || (n1->choice && !n2->choice))) ||
+            ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) ||
+            ((n1->flags & cmp_mask) != (n2->flags & cmp_mask)) ||
+            ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) ||
+            (!ignore_when && (n1->when_ref != n2->when_ref))) {
         return 0;
-    } else if (n1->type != n2->type) {
-        return 0;
-    } else if ((!n1->label && n2->label) || (n1->label && !n2->label)) {
-        return 0;
-    } else if (n1->label && !ay_lnode_lense_equal(n1->label->lens, n2->label->lens)) {
-        return 0;
-    } else if ((!n1->value && n2->value) || (n1->value && !n2->value)) {
-        return 0;
-    } else if (n1->value && !ay_lnode_lense_equal(n1->value->lens, n2->value->lens)) {
-        return 0;
-    } else if ((!n1->snode && n2->snode) || (n1->snode && !n2->snode)) {
-        return 0;
-    } else if (!ignore_choice && !alone1 && !alone2 && ((!n1->choice && n2->choice) || (n1->choice && !n2->choice))) {
-        return 0;
-    } else if ((n1->type != YN_LEAFREF) && (n1->ref != n2->ref)) {
-        return 0;
-    } else if ((n1->flags & cmp_mask) != (n2->flags & cmp_mask)) {
-        return 0;
-    } else if ((n1->type == YN_LIST) && (n1->min_elems != n2->min_elems)) {
-        return 0;
-    } else if (!ignore_when && (n1->when_ref != n2->when_ref)) {
-        return 0;
+    } else {
+        return 1;
     }
 
     return 1;
@@ -941,9 +935,8 @@ ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop, ly_bool sta
     }
 
     for (iter = node->parent; iter && (iter->lens->tag != L_SUBTREE); iter = iter->parent) {
-        if (choice_stop && (iter->lens->tag == L_UNION)) {
-            return 0;
-        } else if (star_stop && (iter->lens->tag == L_STAR)) {
+        if ((choice_stop && (iter->lens->tag == L_UNION)) ||
+                (star_stop && (iter->lens->tag == L_STAR))) {
             return 0;
         } else if (iter->lens->tag == L_MAYBE) {
             return 1;
@@ -1050,9 +1043,9 @@ ay_transl_create_pattern_table(struct ay_lnode *tree, struct ay_transl *table)
 
     /* Fill ay_transl.origin. */
     LY_ARRAY_FOR(tree, i) {
-        if (tree[i].lens->tag != L_KEY) {
-            continue;
-        } else if ((tree[i].flags & AY_LNODE_KEY_IS_LABEL) || !ay_lense_pattern_has_idents(NULL, tree[i].lens)) {
+        if ((tree[i].lens->tag != L_KEY) ||
+                (tree[i].flags & AY_LNODE_KEY_IS_LABEL) ||
+                !ay_lense_pattern_has_idents(NULL, tree[i].lens)) {
             continue;
         }
 
@@ -1598,18 +1591,14 @@ ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_yn
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if (!label) {
-        return 0;
-    } else if (AY_YNODE_IS_IMPLICIT_LIST(node)) {
-        return 0;
-    } else if ((node->type != YN_CONTAINER) && !AY_YNODE_IS_SEQ_LIST(node)) {
+    if (!label ||
+            AY_YNODE_IS_IMPLICIT_LIST(node) ||
+            ((node->type != YN_CONTAINER) && !AY_YNODE_IS_SEQ_LIST(node))) {
         return 0;
     } else if (AY_LABEL_LENS_IS_IDENT(node)) {
         return value ? 1 : 0;
-    } else if (label->tag == L_SEQ) {
-        return value ? 2 : 1;
     } else {
-        assert(label->tag == L_KEY);
+        assert((label->tag == L_KEY) || (label->tag == L_SEQ));
         return value ? 2 : 1;
     }
 }
@@ -1624,13 +1613,8 @@ ay_ynode_rule_node_key_and_value(const struct ay_ynode *tree, const struct ay_yn
 static ly_bool
 ay_ynode_insert_case_prerequisite(const struct ay_ynode *node1, const struct ay_ynode *node2)
 {
-    if (!node1 || !node2) {
-        return 0;
-    } else if (!node1->choice || !node2->choice) {
-        return 0;
-    } else if (node1->choice != node2->choice) {
-        return 0;
-    } else if (!node1->snode || !node2->snode) {
+    if (!node1 || !node2 || !node1->choice || !node2->choice || !node1->snode || !node2->snode ||
+            (node1->choice != node2->choice)) {
         return 0;
     } else {
         return 1;
@@ -1862,11 +1846,8 @@ ay_ynode_rule_node_is_splittable(const struct ay_ynode *tree, const struct ay_yn
 
     label = AY_LABEL_LENS(node);
 
-    if ((node->type == YN_ROOT) || !label || (label->tag != L_KEY)) {
-        return 0;
-    } else if ((node->type == YN_KEY) || (node->type == YN_VALUE)) {
-        return 0;
-    } else if ((count = ay_lense_pattern_idents_count(tree, label)) && (count > 1)) {
+    if (label && (label->tag == L_KEY) && (node->type != YN_KEY) && (node->type != YN_VALUE) &&
+            (count = ay_lense_pattern_idents_count(tree, label)) && (count > 1)) {
         /* +2 for YN_GROUPING and YN_USES node in @p node. */
         return (count - 1) * node->descendants + 2 + (count - 1);
     } else {
@@ -2901,11 +2882,8 @@ ay_ynode_mandatory_empty_branch(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         chnode = &tree[i];
-        if (!chnode->choice) {
-            continue;
-        } else if (chnode->flags & (AY_CHOICE_CREATED | AY_CHOICE_MAND_FALSE)) {
-            continue;
-        } else if (chnode != ay_ynode_get_first_in_choice(chnode->parent, chnode->choice)) {
+        if (!chnode->choice || (chnode->flags & (AY_CHOICE_CREATED | AY_CHOICE_MAND_FALSE)) ||
+                (chnode != ay_ynode_get_first_in_choice(chnode->parent, chnode->choice))) {
             continue;
         }
 
@@ -2984,9 +2962,9 @@ ay_ynode_mandatory_in_list(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         list = &tree[i];
-        if ((list->type != YN_LIST) && (list->type != YN_LEAFLIST)) {
-            continue;
-        } else if ((list->flags & AY_YNODE_MAND_FALSE) || (list->min_elems == 0)) {
+        if (((list->type != YN_LIST) && (list->type != YN_LEAFLIST)) ||
+                (list->flags & AY_YNODE_MAND_FALSE) ||
+                (list->min_elems == 0)) {
             continue;
         }
 
@@ -3037,15 +3015,11 @@ ay_ynode_mandatory_choice_in_list(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         list = &tree[i];
         /* Get list with mandatory false. */
-        if (list->type != YN_LIST) {
-            continue;
-        } else if (!list->choice && ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems)) {
-            continue;
-        }
-
-        /* Check if all children has mandatory false. */
-        if (!(list->child->choice && (list->child->flags & AY_CHOICE_MAND_FALSE) &&
-                (chnode = ay_ynode_get_last_in_choice(list->child)) && !chnode->next)) {
+        if ((list->type != YN_LIST) ||
+                (!list->choice && ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems)) ||
+                /* Check if all children has mandatory false. */
+                (!(list->child->choice && (list->child->flags & AY_CHOICE_MAND_FALSE) &&
+                (chnode = ay_ynode_get_last_in_choice(list->child)) && !chnode->next))) {
             /* No correction because list contains some node which is not in choice.
              * And if mandatory in choice will be set to true, additional data would be
              * incorrectly required, which are actually optional.
@@ -3119,9 +3093,8 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             } else {
                 node->flags |= AY_YNODE_MAND_TRUE;
             }
-        } else if ((node->type == YN_VALUE) && (node->flags & AY_VALUE_MAND_FALSE)) {
-            node->flags |= AY_YNODE_MAND_FALSE;
-        } else if ((node->type == YN_VALUE) && ay_yang_type_is_empty(node->value)) {
+        } else if ((node->type == YN_VALUE) &&
+                ((node->flags & AY_VALUE_MAND_FALSE) || ay_yang_type_is_empty(node->value))) {
             node->flags |= AY_YNODE_MAND_FALSE;
         } else if (node->type == YN_LIST) {
             lnode = AY_YNODE_IS_SEQ_LIST(node) ? node->snode : node->label;
@@ -3228,30 +3201,22 @@ ay_delete_type_unknown(struct ay_ynode *tree)
 static ly_bool
 ay_ynode_build_list_match(struct ay_ynode *node1, struct ay_ynode *node2, ly_bool list_check)
 {
-    if (node1->choice && (node1->choice == node2->choice) && !ay_ynode_common_concat(node1, node2, node1->choice)) {
-        return 0;
-    } else if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
+    if ((node1->type == YN_REC) || (node2->type == YN_REC)) {
         assert(node1->snode && node2->snode);
         if (node1->snode->lens != node2->snode->lens) {
             return 0;
         }
         assert((node1->type == YN_REC) && (node2->type == YN_REC));
-    } else if (!node2->label || !node2->snode) {
-        return 0;
-    } else if (list_check && (node2->type != YN_LIST) && (node2->type != YN_LEAFLIST)) {
-        return 0;
-    } else if (list_check &&
-            ((node1->type == YN_LIST) || (node1->type == YN_LEAFLIST)) &&
+    } else if ((node1->choice && (node1->choice == node2->choice) && !ay_ynode_common_concat(node1, node2, node1->choice)) ||
+            !node2->label || !node2->snode ||
+            (list_check && (node2->type != YN_LIST) && (node2->type != YN_LEAFLIST)) ||
+            (list_check && ((node1->type == YN_LIST) || (node1->type == YN_LEAFLIST)) &&
             ((ay_ynode_alone_in_choice(node1) && !ay_ynode_common_concat(node1, node2, node1->parent->snode)) ||
             (!ay_ynode_alone_in_choice(node1) && !ay_ynode_common_concat(node1, node2, node1->choice)) ||
-            (ay_lnode_has_attribute(node1->snode, L_STAR) == ay_lnode_has_attribute(node2->snode, L_STAR)))) {
-        return 0;
-    } else if (!ay_lnode_lense_equal(node1->label->lens, node2->label->lens)) {
-        return 0;
-    } else if ((node1->value && !node2->value) || (!node1->value && node2->value)) {
-        return 0;
-    } else if (node1->value && node2->value &&
-            !ay_lnode_lense_equal(node1->value->lens, node2->value->lens)) {
+            (ay_lnode_has_attribute(node1->snode, L_STAR) == ay_lnode_has_attribute(node2->snode, L_STAR)))) ||
+            !ay_lnode_lense_equal(node1->label->lens, node2->label->lens) ||
+            ((node1->value && !node2->value) || (!node1->value && node2->value)) ||
+            (node1->value && node2->value && !ay_lnode_lense_equal(node1->value->lens, node2->value->lens))) {
         return 0;
     }
 
@@ -3661,9 +3626,8 @@ ay_ynode_set_choice_for_value(const struct ay_ynode *tree, struct ay_ynode *node
             node->choice = ay_lnode_has_attribute(snode, L_UNION);
         }
         return;
-    } else if (!node->next) {
-        return;
-    } else if (!(node->parent->flags & AY_VALUE_IN_CHOICE) && (!choice || ay_dnode_find(values, node->value))) {
+    } else if (!node->next ||
+            (!(node->parent->flags & AY_VALUE_IN_CHOICE) && (!choice || ay_dnode_find(values, node->value)))) {
         return;
     }
 
@@ -3714,9 +3678,8 @@ ay_ynode_get_child_by_snode(struct ay_ynode *parent, const struct ay_lnode *snod
 
     ret = NULL;
     for (iter = parent->child; iter && !ret; iter = iter->next) {
-        if (into_case && (iter->type == YN_CASE) && (ret = ay_ynode_get_child_by_snode(iter, snode, 1))) {
-            ret = iter;
-        } else if (iter->snode && (snode->lens == iter->snode->lens)) {
+        if ((into_case && (iter->type == YN_CASE) && (ret = ay_ynode_get_child_by_snode(iter, snode, 1))) ||
+                (iter->snode && (snode->lens == iter->snode->lens))) {
             ret = iter;
         }
     }
@@ -3916,9 +3879,8 @@ ay_ynode_insert_case(struct ay_ynode *tree)
          * The copying itself happens in the ay_ynode_copy_case_nodes(). */
         for (iter = ay_ynode_get_prev(cas); iter; iter = ay_ynode_get_prev(iter)) {
             common_choice = ay_ynode_common_choice(cas->child->snode, iter->snode, cas->choice);
-            if (first->choice == common_choice) {
-                break;
-            } else if (!(con = ay_ynode_common_concat(cas->child->next, iter, cas->choice))) {
+            if ((first->choice == common_choice) ||
+                    !(con = ay_ynode_common_concat(cas->child->next, iter, cas->choice))) {
                 break;
             }
             iter->ref = cas->id;
@@ -4343,9 +4305,8 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
     assert(br1 && br2 && err);
 
     /* The branches must have the same form. */
-    if ((br1->type != YN_CASE) && (br2->type == YN_CASE)) {
-        return 0;
-    } else if ((br1->type == YN_CASE) && (br2->type != YN_CASE)) {
+    if (((br1->type != YN_CASE) && (br2->type == YN_CASE)) ||
+            ((br1->type == YN_CASE) && (br2->type != YN_CASE))) {
         return 0;
     }
 
@@ -4408,11 +4369,9 @@ ay_ynode_merge_cases_only_by_value(struct ay_ynode *tree, struct ay_ynode *br1, 
 static ly_bool
 ay_ynode_merge_cases_only_by_repetition(struct ay_ynode *br1, struct ay_ynode *br2)
 {
-    if ((br1->descendants != 0) || (br2->descendants != 0) || (br1->type == br2->type)) {
-        return 0;
-    } else if (br1->value && br2->value && !ay_lnode_lense_equal(br1->value->lens, br2->value->lens)) {
-        return 0;
-    } else if (!(
+    if ((br1->descendants != 0) || (br2->descendants != 0) || (br1->type == br2->type) ||
+            (br1->value && br2->value && !ay_lnode_lense_equal(br1->value->lens, br2->value->lens)) ||
+            !(
                 ((br1->type == YN_LEAFLIST) && (br2->type == YN_LEAF)) ||
                 ((br2->type == YN_LEAFLIST) && (br1->type == YN_LEAF)) ||
                 ((br1->type == YN_LIST) && (br2->type == YN_CONTAINER)) ||
@@ -4842,12 +4801,12 @@ ay_ynode_recursive_form_by_copy_(struct ay_ynode *tree, struct ay_ynode *branch,
 
     /* Remove duplicit YN_LIST node. */
     for (iter = listord->child; iter; iter = iter->next) {
-        if (iter->type == YN_LIST) {
-            if (iter->choice) {
-                for (iter2 = iter->child; iter2; iter2 = iter2->next) {
-                    iter2->choice = iter->choice;
-                }
+        if ((iter->type == YN_LIST) && iter->choice) {
+            for (iter2 = iter->child; iter2; iter2 = iter2->next) {
+                iter2->choice = iter->choice;
             }
+            ay_ynode_delete_node(tree, iter);
+        } else if (iter->type == YN_LIST) {
             ay_ynode_delete_node(tree, iter);
         }
     }
@@ -4884,11 +4843,7 @@ ay_ynode_recursive_form_by_copy(struct ay_ynode *tree)
         for (iter = first_branch; iter && (iter->choice == branch->choice); iter = iter->next) {
             if (ay_ynode_subtree_contains_rec(iter, 1)) {
                 continue;
-            }
-            if (iter->type == YN_LIST) {
-                copy_nodes = 1;
-                break;
-            } else if (iter->when_ref || !ay_ynode_when_paths_are_valid(iter, 1)) {
+            } else if ((iter->type == YN_LIST) || iter->when_ref || !ay_ynode_when_paths_are_valid(iter, 1)) {
                 copy_nodes = 1;
                 break;
             }
@@ -4983,9 +4938,8 @@ ay_ynode_choice_group_equal(struct ay_ynode *ch1, struct ay_ynode *ch2, ly_bool 
         }
     }
 
-    if (!it1 && !it2) {
-        return 1;
-    } else if (it1 && it2 && (it1->choice != ch1->choice) && (it2->choice != ch2->choice)) {
+    if ((!it1 && !it2) ||
+            (it1 && it2 && (it1->choice != ch1->choice) && (it2->choice != ch2->choice))) {
         return 1;
     } else {
         return 0;
@@ -5095,17 +5049,12 @@ ay_ynode_set_ref(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         /* Get default subtree. */
         iti = &tree[i];
-        if ((iti->type == YN_LIST) && (iti->parent->type == YN_ROOT)) {
-            continue;
-        } else if ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) {
-            continue;
-        } else if (iti->ref && (iti->parent->type != YN_REC)) {
-            /* Grouping has already been evaluated. */
+        if (iti->ref && (iti->parent->type != YN_REC)) {
             i += iti->descendants;
             continue;
-        } else if (ay_ynode_set_ref_leafref_restriction(iti)) {
-            continue;
-        } else if (iti->when_ref || !ay_ynode_when_paths_are_valid(iti, 1)) {
+        } else if (((iti->type == YN_LIST) && (iti->parent->type == YN_ROOT)) ||
+                ((iti->type != YN_CONTAINER) && (iti->type != YN_LIST)) ||
+                ay_ynode_set_ref_leafref_restriction(iti) || iti->when_ref || !ay_ynode_when_paths_are_valid(iti, 1)) {
             continue;
         }
 
@@ -5126,15 +5075,10 @@ ay_ynode_set_ref(struct ay_ynode *tree)
                 continue;
             }
 
-            if ((itj->type == YN_CONTAINER) &&
+            if (((itj->type == YN_LIST) && ay_ynode_subtree_equal(iti, itj, 1, 1)) ||
+                    ((itj->type == YN_CONTAINER) &&
                     ((alone && ay_ynode_inner_node_alone(itj)) || !ay_ynode_inner_nodes(itj)) &&
-                    ay_ynode_subtree_equal(iti, itj, 1, 1)) {
-                /* Subtrees including root node are equal. */
-                subtree_eq = 1;
-                itj->ref = iti->id;
-                j += itj->descendants;
-            } else if ((itj->type == YN_LIST) && ay_ynode_subtree_equal(iti, itj, 1, 1)) {
-                /* Subtrees including root node are equal. */
+                    ay_ynode_subtree_equal(iti, itj, 1, 1))) {
                 subtree_eq = 1;
                 itj->ref = iti->id;
                 j += itj->descendants;
@@ -5192,9 +5136,7 @@ ay_ynode_create_groupings_toplevel(struct ay_ynode *tree)
 
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         iti = &tree[i];
-        if (!iti->ref) {
-            continue;
-        } else if ((iti->type == YN_USES) || (iti->type == YN_LEAFREF)) {
+        if (!iti->ref || (iti->type == YN_USES) || (iti->type == YN_LEAFREF)) {
             continue;
         } else if (iti->type == YN_GROUPING) {
             i += iti->descendants;
@@ -5431,9 +5373,7 @@ ay_ynode_node_split(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         node = &tree[i];
 
-        if (!ay_ynode_rule_node_is_splittable(tree, node)) {
-            continue;
-        } else if (ay_ynode_splitted_seq_index(node) != 0) {
+        if (!ay_ynode_rule_node_is_splittable(tree, node) || (ay_ynode_splitted_seq_index(node) != 0)) {
             continue;
         }
 
@@ -5524,12 +5464,9 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
         }
 
         for (iter = parent->child; iter; iter = iter->next) {
-            if ((iter->type != YN_LIST) && (iter->type != YN_LEAFLIST) && (iter->type != YN_REC)) {
-                continue;
-            } else if ((iter->type == YN_REC) && (parent->type == YN_LIST) &&
-                    (parent->parent->type != YN_ROOT)) {
-                continue;
-            } else if (AY_YNODE_IS_SEQ_LIST(iter) || AY_YNODE_IS_IMPLICIT_LIST(iter)) {
+            if (AY_YNODE_IS_SEQ_LIST(iter) || AY_YNODE_IS_IMPLICIT_LIST(iter) ||
+                    ((iter->type != YN_LIST) && (iter->type != YN_LEAFLIST) && (iter->type != YN_REC)) ||
+                    ((iter->type == YN_REC) && (parent->type == YN_LIST) && (parent->parent->type != YN_ROOT))) {
                 continue;
             }
 
