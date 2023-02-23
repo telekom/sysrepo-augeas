@@ -439,7 +439,7 @@ ay_ident_lowercase_dash(char *buffer)
             buffer[i + 1] = '-';
             i++;
         } else if (isupper(buffer[i])) {
-            buffer[i] = tolower(buffer[i]);
+            buffer[i] = (char)tolower(buffer[i]);
         }
     }
 
@@ -461,7 +461,8 @@ static int
 ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool internal, char *buffer)
 {
     int ret;
-    int64_t i, j, len, stop;
+    int64_t j;
+    uint64_t i, stop, len;
 
     assert((opt == AY_IDENT_NODE_NAME) || (opt == AY_IDENT_VALUE_YPATH));
 
@@ -479,14 +480,14 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
             len = strlen("plus-");
             AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
             strcpy(&buffer[j], "plus-");
-            j += len - 1;
+            j += ((int64_t)len) - 1;
             break;
         case '-':
             if (j == 0) {
                 len = strlen("minus-");
                 AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 strcpy(&buffer[j], "minus-");
-                j += len - 1;
+                j += ((int64_t)len) - 1;
             } else {
                 AY_CHECK_COND(j >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 buffer[j] = '-';
@@ -507,7 +508,7 @@ ay_get_ident_standardized(const char *ident, enum ay_ident_dst opt, ly_bool inte
                 len = strlen("plus-");
                 AY_CHECK_COND(j + len >= AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
                 strcpy(&buffer[j], "plus-");
-                j += len - 1;
+                j += ((int64_t)len) - 1;
                 i++;
             } else {
                 return AYE_IDENT_BAD_CHAR;
@@ -1448,7 +1449,7 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || !iter->ident) {
             continue;
         } else if (iter == node) {
-            rnk = cnt;
+            rnk = (int64_t)cnt;
             continue;
         } else if (iter->type == YN_USES) {
             gr = ay_ynode_get_grouping(tree, iter->ref);

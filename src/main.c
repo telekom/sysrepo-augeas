@@ -406,7 +406,11 @@ aym_insert_filename(const char *name, const char *suffix, int dash, char *filena
     len = strlen(name);
     if (dash) {
         for (i = 0; i < len; i++) {
-            filename[i] = name[i] == '_' ? '-' : name[i];
+            if (name[i] == '_') {
+                filename[i] = (char)'-';
+            } else {
+                filename[i] = name[i];
+            }
         }
         filename[len] = '\0';
     } else {
