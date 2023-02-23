@@ -100,40 +100,35 @@ const char * const ignored_modules[] = {
 static void
 aym_usage(void)
 {
-    fprintf(stderr, "Usage: "AYM_PROGNAME " [OPTIONS] MODULE...\n");
-    fprintf(stderr, "       "AYM_PROGNAME " -a [OPTIONS]\n");
-    fprintf(stderr, "Generate YANG module (.yang) from Augeas MODULE (.aug).\n");
-    fprintf(stderr, "Information about the YANG format is in the RFC 7950.\n");
-    fprintf(stderr, "\nOptions:\n\n");
-    fprintf(stderr,
+    char *msg;
+
+    msg =
+            "Usage: "AYM_PROGNAME " [OPTIONS] MODULE...\n"
+            "       "AYM_PROGNAME " -a [OPTIONS]\n"
+            "Generate YANG module (.yang) from Augeas MODULE (.aug).\n"
+            "Information about the YANG format is in the RFC 7950.\n"
+            "\nOptions:\n\n"
             "  -a, --all          process all augeas modules in Search DIR;\n"
             "                     if the root lense is not found, then the module is ignored;\n"
-            "                     (for example rx.aug, build.aug, ...)\n");
-    fprintf(stderr,
+            "                     (for example rx.aug, build.aug, ...)\n"
             "  -e, --explicit     default value of the -I parameter is not used;\n"
-            "                     only the directories specified by the -I parameter are used\n");
-    fprintf(stderr,
+            "                     only the directories specified by the -I parameter are used\n"
             "  -I, --include DIR  Search DIR for augeas modules; can be given multiple times;\n"
-            "                     default value: %s\n", AUGEAS_LENSES_DIR);
-    fprintf(stderr,
-            "  -n, --name         print the name of the currently processed module\n");
-    fprintf(stderr,
+            "                     default value: " AUGEAS_LENSES_DIR "\n"
+            "  -n, --name         print the name of the currently processed module\n"
             "  -O, --outdir DIR   directory in which the generated yang file is written;\n"
-            "                     default value: ./\n");
-    fprintf(stderr,
-            "  -q, --quiet        generated yang is not printed or written to the file\n");
-    fprintf(stderr,
-            "  -s, --show         print the generated yang only to stdout and not to the file\n");
-    fprintf(stderr,
-            "  -t, --typecheck    typecheck lenses. Recommended to use during lense development.\n");
-    fprintf(stderr,
-            "  -v, --verbose HEX  bitmask for various debug outputs\n");
-    fprintf(stderr,
-            "  -y, --yanglint     validates the YANG module\n");
-    fprintf(stderr, "\nExample:\n"
+            "                     default value: ./\n"
+            "  -q, --quiet        generated yang is not printed or written to the file\n"
+            "  -s, --show         print the generated yang only to stdout and not to the file\n"
+            "  -t, --typecheck    typecheck lenses. Recommended to use during lense development.\n"
+            "  -v, --verbose HEX  bitmask for various debug outputs\n"
+            "  -y, --yanglint     validates the YANG module\n"
+            "\nExample:\n"
             AYM_PROGNAME " passwd backuppchosts\n"
             AYM_PROGNAME " -e -I ./mylenses -O ./genyang someAugfile\n"
-            AYM_PROGNAME " -a -I ./mylenses\n");
+            AYM_PROGNAME " -a -I ./mylenses\n";
+
+    fprintf(stderr, "%s", msg);
 }
 
 /**
