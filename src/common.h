@@ -41,7 +41,7 @@ typedef uint8_t ly_bool;
  * @return AYE_IDENT_LIMIT on error.
  */
 #define AY_CHECK_MAX_IDENT_SIZE(BUFFER, STR) \
-    AY_CHECK_COND(strlen(BUFFER) + strlen(STR) + 1 > AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT);
+    AY_CHECK_COND(strlen(BUFFER) + strlen(STR) + 1 > AY_MAX_IDENT_SIZE, AYE_IDENT_LIMIT)
 
 /**
  * @brief Alignment size of the output text when nesting.
@@ -85,7 +85,7 @@ typedef uint8_t ly_bool;
  * @param[in] SIZE Value to be written.
  */
 #define AY_SET_LY_ARRAY_SIZE(ARRAY, SIZE) \
-    *(((LY_ARRAY_COUNT_TYPE *)ARRAY) - 1) = SIZE;
+    *(((LY_ARRAY_COUNT_TYPE *)(ARRAY)) - 1) = SIZE
 
 struct ay_pnode;
 
@@ -289,7 +289,7 @@ struct ay_ynode {
  * @return Lense of ay_ynode.label or NULL.
  */
 #define AY_LABEL_LENS(YNODE) \
-    YNODE->label ? YNODE->label->lens : NULL
+    (YNODE->label ? YNODE->label->lens : NULL)
 
 /**
  * @brief Check if ynode has L_KEY label with nocase set (caseless regular expression).
@@ -307,7 +307,7 @@ struct ay_ynode {
  * @return Lense of ay_ynode.value or NULL.
  */
 #define AY_VALUE_LENS(YNODE) \
-    YNODE->value ? YNODE->value->lens : NULL
+    (YNODE->value ? YNODE->value->lens : NULL)
 
 /**
  * @brief Get lense from ynode.snode.
@@ -316,7 +316,7 @@ struct ay_ynode {
  * @return Lense of ay_ynode.snode or NULL.
  */
 #define AY_SNODE_LENS(YNODE) \
-    YNODE->snode ? YNODE->snode->lens : NULL
+    (YNODE->snode ? YNODE->snode->lens : NULL)
 
 /**
  * @brief Check if ynode is of type YN_LIST and its lense label is of type L_SEQ.
@@ -387,7 +387,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_LTREE(TREE) \
-    ((struct ay_ynode_root *)TREE)->ltree
+    ((struct ay_ynode_root *)(TREE))->ltree
 
 /**
  * @brief Get ay_ynode_root.labels from ynode tree.
@@ -395,7 +395,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_LABELS(TREE) \
-    ((struct ay_ynode_root *)TREE)->labels
+    ((struct ay_ynode_root *)(TREE))->labels
 
 /**
  * @brief Get ay_ynode_root.values from ynode tree.
@@ -403,7 +403,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_VALUES(TREE) \
-    ((struct ay_ynode_root *)TREE)->values
+    ((struct ay_ynode_root *)(TREE))->values
 
 /**
  * @brief Get ay_ynode_root.patt_table from ynode tree.
@@ -411,7 +411,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_PATT_TABLE(TREE) \
-    ((struct ay_ynode_root *)TREE)->patt_table
+    ((struct ay_ynode_root *)(TREE))->patt_table
 
 /**
  * @brief Get ay_ynode_root.idcnt from ynode tree.
@@ -419,7 +419,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_IDCNT(TREE) \
-    ((struct ay_ynode_root *)TREE)->idcnt
+    ((struct ay_ynode_root *)(TREE))->idcnt
 
 /**
  * @brief Increment ay_ynode_root.idcnt in the ynode tree.
@@ -427,7 +427,7 @@ struct ay_ynode_root {
  * @param[in] TREE Tree of ynodes. First item in the tree must be YN_ROOT.
  */
 #define AY_YNODE_ROOT_IDCNT_INC(TREE) \
-    ((struct ay_ynode_root *)TREE)->idcnt++
+    ((struct ay_ynode_root *)(TREE))->idcnt++
 
 /**
  * @brief Node (item) in the dictionary.

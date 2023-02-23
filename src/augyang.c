@@ -47,14 +47,14 @@
  * @return Child or NULL.
  */
 #define AY_GET_FIRST_LENSE_CHILD(LENSE) \
-    (LENSE->tag == L_REC) && !LENSE->rec_internal ? \
+    ((LENSE->tag == L_REC) && !LENSE->rec_internal ? \
         lens->body : \
     LENSE->tag == L_REC ? \
         NULL : \
     AY_LENSE_HAS_ONE_CHILD(LENSE->tag) ? \
         lens->child : \
     lens->nchildren ? \
-        lens->children[0] : NULL
+        lens->children[0] : NULL)
 
 /**
  * @brief Get address of @p ITEM as if it was in the @p ARRAY1.
@@ -77,7 +77,7 @@
  * @param[in] ITEM_PTR Pointer to item in @p ARRAY.
  */
 #define AY_INDEX(ARRAY, ITEM_PTR) \
-    (ITEM_PTR - ARRAY)
+    ((ITEM_PTR) - (ARRAY))
 
 /**
  * @brief Get error message base on the code.
