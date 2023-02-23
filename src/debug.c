@@ -748,5 +748,5 @@ ay_print_input_terms(struct augeas *aug, const char *filename, char **str)
 
     unref(tree, term);
 
-    return 0;
+    return ret;
 }

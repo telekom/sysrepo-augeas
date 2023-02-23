@@ -3836,7 +3836,7 @@ ay_ynode_insert_case(struct ay_ynode *tree)
 {
     LY_ARRAY_COUNT_TYPE i;
     struct ay_ynode *first, *cas, *iter;
-    const struct ay_lnode *common_choice, *con;
+    const struct ay_lnode *common_choice;
     uint64_t j, cnt;
 
     assert(!tree->ref);
@@ -3852,7 +3852,7 @@ ay_ynode_insert_case(struct ay_ynode *tree)
             /* Get first common choice. */
             common_choice = ay_ynode_common_choice(first->snode, iter->snode, first->choice);
             /* Get last common concatenation. */
-            if (!(con = ay_ynode_common_concat(first, iter, common_choice))) {
+            if (!ay_ynode_common_concat(first, iter, common_choice)) {
                 break;
             }
             cnt++;
@@ -3893,8 +3893,7 @@ ay_ynode_insert_case(struct ay_ynode *tree)
          * The copying itself happens in the ay_ynode_copy_case_nodes(). */
         for (iter = ay_ynode_get_prev(cas); iter; iter = ay_ynode_get_prev(iter)) {
             common_choice = ay_ynode_common_choice(cas->child->snode, iter->snode, cas->choice);
-            if ((first->choice == common_choice) ||
-                    !(con = ay_ynode_common_concat(cas->child->next, iter, cas->choice))) {
+            if ((first->choice == common_choice) || !ay_ynode_common_concat(cas->child->next, iter, cas->choice)) {
                 break;
             }
             iter->ref = cas->id;
