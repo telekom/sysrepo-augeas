@@ -217,7 +217,7 @@ ay_term_info_equal(const struct info *inf1, const struct info *inf2)
             (inf1->first_column != inf2->first_column) ||
             (inf1->last_line != inf2->last_line) ||
             (inf1->last_column != inf2->last_column) ||
-            (strcmp(inf1->filename->str, inf2->filename->str))) {
+            (strcmp(inf1->filename->str, inf2->filename->str) != 0)) {
         return 0;
     } else {
         return 1;
@@ -396,7 +396,7 @@ ay_get_regexp_by_lensname(struct module *mod, char *lensname)
     struct binding *bind_iter;
 
     LY_LIST_FOR(mod->bindings, bind_iter) {
-        if (strcmp(bind_iter->ident->str, lensname) || (bind_iter->value->tag != V_REGEXP)) {
+        if ((strcmp(bind_iter->ident->str, lensname) != 0) || (bind_iter->value->tag != V_REGEXP)) {
             continue;
         }
 

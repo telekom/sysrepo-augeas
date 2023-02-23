@@ -206,13 +206,13 @@ ay_get_spare_lense_name(struct module *mod, const struct ay_ynode *node)
     /* Find a free unused identifier in the module. */
     for (liter = start->parent; liter && (liter != end); liter = liter->parent) {
         LY_LIST_FOR(mod->bindings, bind_iter) {
-            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
+            if ((bind_iter->value->lens == liter->lens) && (strcmp("lns", bind_iter->ident->str) != 0)) {
                 return bind_iter->ident->str;
             }
         }
         /* Try search in ay_lnode.mod */
         LY_LIST_FOR(liter->mod->bindings, bind_iter) {
-            if ((bind_iter->value->lens == liter->lens) && strcmp("lns", bind_iter->ident->str)) {
+            if ((bind_iter->value->lens == liter->lens) && (strcmp("lns", bind_iter->ident->str) != 0)) {
                 return bind_iter->ident->str;
             }
         }
@@ -1244,7 +1244,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             AY_CHECK_MAX_IDENT_SIZE(buffer, "-list");
             strcat(buffer, "-list");
             str = buffer;
-        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label)) && strcmp(tmp, "lns")) {
+        } else if ((tmp = ay_get_lense_name(ctx->mod, node->label)) && (strcmp(tmp, "lns") != 0)) {
             /* label can points to L_STAR lense */
             str = tmp;
         } else if (!ay_get_yang_ident_first_descendants(ctx, node, opt, buffer) && buffer[0]) {
@@ -1347,7 +1347,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
     if (ch_tag) {
         if (((node->type == YN_GROUPING) || (node->type == YN_LIST)) && node->child && node->child->next &&
                 node->child->choice && (node->child->next->choice == node->child->choice) &&
-                ((strlen(buffer) >= 3) && strncmp(buffer, "ch-", 3))) {
+                ((strlen(buffer) >= 3) && (strncmp(buffer, "ch-", 3) != 0))) {
             AY_CHECK_MAX_IDENT_SIZE(buffer, "ch-");
             memmove(buffer + 3, buffer, strlen(buffer) + 1);
             memcpy(buffer, "ch-", 3);
@@ -3109,7 +3109,7 @@ ay_print_yang_choice(struct yprinter_ctx *ctx, struct ay_ynode *node)
     }
 
     ident = node->parent->ident;
-    if ((strlen(ident) <= 3) || strncmp(ident, "ch-", 3)) {
+    if ((strlen(ident) <= 3) || (strncmp(ident, "ch-", 3) != 0)) {
         ly_print(ctx->out, "%*schoice ch-%s", ctx->space, "", ident);
     } else {
         ly_print(ctx->out, "%*schoice %s", ctx->space, "", ident);

@@ -41,7 +41,7 @@ int augl_parse_file(struct augeas *aug, const char *name, struct term **term);
 static int
 ay_test_compare(const char *subject, const char *str1, const char *str2)
 {
-    if (strcmp(str1, str2)) {
+    if (strcmp(str1, str2) != 0) {
         printf(AY_NAME " DEBUG: %s difference\n", subject);
         printf("%s\n", str1);
         printf("----------------------\n");
