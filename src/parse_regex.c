@@ -774,6 +774,8 @@ ay_pattern_identifier_qm_(const char *ptoken, uint64_t ptoken_len, uint8_t *flag
         if (ptoken[i] == '(') {
             flag[group] = 1;
             group++;
+            /* The ay_pattern_remove_parentheses() should guarantee that there are no unnecessary parentheses. */
+            assert(group < total_vari);
             continue;
         } else if ((ptoken[i] == ')') && (ptoken[i + 1] == '?')) {
             ay_bitset_clear_msb(flag, total_vari);
@@ -785,6 +787,7 @@ ay_pattern_identifier_qm_(const char *ptoken, uint64_t ptoken_len, uint8_t *flag
             continue;
         } else if ((ptoken[i + 1] == '?') && !vari[group]) {
             group++;
+            assert(group < total_vari);
             i++;
             continue;
         } else if (((msb = ay_bitset_msb(flag, total_vari))) && !vari[msb - 1]) {
@@ -840,6 +843,7 @@ ay_pattern_identifier_qm(const char *ptoken, uint64_t ptoken_len, char *buffer, 
     uint8_t *flag = NULL, *vari = NULL;
 
     total_vari = ay_pattern_identifier_qm_variations(ptoken, ptoken_len);
+    assert(total_vari);
     flag = malloc(sizeof(uint8_t) * total_vari);
     vari = malloc(sizeof(uint8_t) * total_vari);
     if (!flag || !vari) {

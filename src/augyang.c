@@ -1486,15 +1486,14 @@ ay_ynode_get_repetition(const struct ay_ynode *node)
         return ret;
     }
 
-    for (yiter = node; yiter && !yiter->snode; yiter = yiter->parent) {}
-    lstart = yiter && (yiter->type != YN_ROOT) ? yiter->snode : NULL;
-
-    if (!lstart) {
+    for (yiter = node; (yiter->type != YN_ROOT) && !yiter->snode; yiter = yiter->parent) {}
+    if (yiter->type == YN_ROOT) {
         return ret;
     }
+    lstart = yiter->snode;
 
-    for (yiter = node->parent; yiter && !yiter->snode; yiter = yiter->parent) {}
-    lstop = yiter && (yiter->type != YN_ROOT) ? yiter->snode : NULL;
+    for (yiter = node->parent; (yiter->type != YN_ROOT) && !yiter->snode; yiter = yiter->parent) {}
+    lstop = (yiter->type == YN_ROOT) ? NULL : yiter->snode;
 
     impl_list = AY_YNODE_IS_IMPLICIT_LIST(node->parent);
 
@@ -1868,6 +1867,7 @@ ay_ynode_rule_node_split(const struct ay_ynode *tree, const struct ay_ynode *sub
     const struct ay_ynode *iter;
     uint64_t children_total, count;
 
+    assert(subtree);
     children_total = 0;
     for (iter = subtree->child; iter; iter = iter->next) {
         if (iter->child) {
@@ -2341,6 +2341,8 @@ ay_ynode_insert_wrapper(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter, *wrapper;
 
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
+
     for (iter = node->parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
@@ -2362,6 +2364,7 @@ ay_ynode_insert_parent(struct ay_ynode *tree, struct ay_ynode *child)
     struct ay_ynode *iter, *parent;
     uint32_t index;
 
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
     assert(child && child->parent);
 
     for (iter = child->parent; iter; iter = iter->parent) {
@@ -2386,6 +2389,7 @@ ay_ynode_insert_parent_for_rest(struct ay_ynode *tree, struct ay_ynode *child)
     struct ay_ynode *iter, *parent;
     uint32_t descendants = 0;
 
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
     assert(child);
 
     for (iter = child; iter; iter = iter->next) {
@@ -2413,6 +2417,8 @@ ay_ynode_insert_child(struct ay_ynode *tree, struct ay_ynode *parent)
 {
     struct ay_ynode *iter;
 
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
+
     for (iter = parent; iter; iter = iter->parent) {
         iter->descendants++;
     }
@@ -2431,6 +2437,8 @@ ay_ynode_insert_sibling(struct ay_ynode *tree, struct ay_ynode *node)
 {
     struct ay_ynode *iter, *sibling;
     uint32_t index;
+
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
 
     for (iter = node->parent; iter; iter = iter->parent) {
         iter->descendants++;
@@ -2453,6 +2461,8 @@ static struct ay_ynode *
 ay_ynode_insert_child_last(struct ay_ynode *tree, struct ay_ynode *parent)
 {
     struct ay_ynode *last;
+
+    assert((1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
 
     if (parent->child) {
         last = ay_ynode_get_last(parent->child);
@@ -2656,6 +2666,8 @@ ay_ynode_copy_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
     struct ay_ynode *iter, *last, *copied_subtree, *original_subtree;
     uint32_t subtree_size, src_id;
 
+    assert((src->descendants + 1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
+
     for (last = dst->child; last && last->next; last = last->next) {}
     if (last == src) {
         return;
@@ -2690,6 +2702,8 @@ ay_ynode_copy_subtree_as_sibling(struct ay_ynode *tree, struct ay_ynode *dst, st
 {
     struct ay_ynode *iter, *copied_subtree, *original_subtree;
     uint32_t subtree_size, src_id;
+
+    assert((src->descendants + 1 + LY_ARRAY_COUNT(tree)) <= AY_YNODE_ROOT_ARRSIZE(tree));
 
     src_id = src->id;
     subtree_size = src->descendants + 1;
@@ -2802,7 +2816,7 @@ ay_ynode_mandatory_empty_branch_d2_deleted_node(struct ay_ynode *chnode, const s
             snode = &branch[i];
             if (AY_TAG_IS_VALUE(snode->lens->tag)) {
                 for (iter = snode; iter && (iter->lens->tag != L_SUBTREE) && (iter->lens->tag != L_UNION); iter = iter->parent) {}
-                if (iter->lens->tag == L_UNION) {
+                if (iter && (iter->lens->tag == L_UNION)) {
                     found = 1;
                     break;
                 }
@@ -5797,6 +5811,10 @@ ay_ynode_groupings_ahead(struct ay_ynode *tree)
             cnt++;
         }
     }
+    if (!keys) {
+        assert(!cnt);
+        return ret;
+    }
 
     LY_ARRAY_CREATE_GOTO(NULL, dict, keys * 2 + cnt, ret, cleanup);
     LY_ARRAY_CREATE_GOTO(NULL, sort, keys, ret, cleanup);
@@ -6151,7 +6169,7 @@ static int
 ay_ynode_trans_insert(struct ay_ynode **tree, int (*insert)(struct ay_ynode *), uint32_t items_count)
 {
     int ret;
-    uint64_t free_space, new_size;
+    uint64_t free_space, new_items;
     void *old;
 
     if (items_count == 0) {
@@ -6160,13 +6178,13 @@ ay_ynode_trans_insert(struct ay_ynode **tree, int (*insert)(struct ay_ynode *), 
 
     free_space = AY_YNODE_ROOT_ARRSIZE(*tree) - LY_ARRAY_COUNT(*tree);
     if (free_space < items_count) {
-        new_size = AY_YNODE_ROOT_ARRSIZE(*tree) + (items_count - free_space);
+        new_items = items_count - free_space;
         old = *tree;
-        LY_ARRAY_CREATE(NULL, *tree, new_size, return AYE_MEMORY);
+        LY_ARRAY_CREATE_RET(NULL, *tree, items_count, AYE_MEMORY);
         if (*tree != old) {
             ay_ynode_tree_correction(*tree);
         }
-        AY_YNODE_ROOT_ARRSIZE(*tree) = new_size;
+        AY_YNODE_ROOT_ARRSIZE(*tree) = AY_YNODE_ROOT_ARRSIZE(*tree) + new_items;
     }
     ret = insert(*tree);
 

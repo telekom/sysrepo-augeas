@@ -408,10 +408,11 @@ aym_insert_filename(const char *name, const char *suffix, int dash, char *filena
         for (i = 0; i < len; i++) {
             filename[i] = name[i] == '_' ? '-' : name[i];
         }
+        filename[len] = '\0';
     } else {
         strcpy(filename, name);
     }
-    strcpy(&filename[len], suffix);
+    strcat(filename, suffix);
 }
 
 /**

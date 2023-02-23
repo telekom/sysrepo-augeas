@@ -1399,14 +1399,7 @@ ay_yang_ident_iter(struct ay_ynode *root, struct ay_ynode *iter)
 {
     struct ay_ynode *ret;
 
-    if (!root) {
-        iter = iter->parent;
-        while (iter && (iter->type == YN_CASE)) {
-            iter = iter->parent;
-        }
-        assert(iter);
-        return iter;
-    } else if (!iter) {
+    if (!iter) {
         ret = root->child;
     } else if (!iter->next) {
         for (iter = iter->parent; (iter != root) && !iter->next; iter = iter->parent) {}
@@ -1447,7 +1440,10 @@ ay_yang_ident_duplications(struct ay_ynode *tree, struct ay_ynode *node, char *n
         goto end;
     }
 
-    root = ay_yang_ident_iter(NULL, node);
+    for (iter = node->parent; iter && (iter->type == YN_CASE); iter = iter->parent) {}
+    assert(iter);
+    root = iter;
+
     for (iter = ay_yang_ident_iter(root, NULL); iter; iter = ay_yang_ident_iter(root, iter)) {
         if ((iter->type == YN_KEY) || (iter->type == YN_LEAFREF) || !iter->ident) {
             continue;
@@ -1988,7 +1984,9 @@ ay_print_yang_pattern(struct yprinter_ctx *ctx, const struct ay_ynode *node, con
     if (!(node->flags & AY_WHEN_TARGET) && lnode->pnode && (lnode->pnode->term->tag == A_MINUS)) {
         ay_print_yang_pattern_minus(ctx, lnode->pnode);
         return ret;
-    } else if (lnode->lens->tag == L_VALUE) {
+    }
+    assert(lnode->lens);
+    if (lnode->lens->tag == L_VALUE) {
         ly_print(ctx->out, "%*spattern \"%s\";\n", ctx->space, "", lnode->lens->string->str);
         return ret;
     }
@@ -2052,9 +2050,10 @@ ay_print_yang_type_union_item_from_regex(struct yprinter_ctx *ctx, const struct 
 {
     int ret;
     struct ay_lnode wrapper = {0};
+    struct ay_pnode *pnode;
 
-    if (ay_pnode_peek(regex, A_MINUS)) {
-        wrapper.pnode = ay_pnode_ref_apply(regex);
+    if (ay_pnode_peek(regex, A_MINUS) && (pnode = ay_pnode_ref_apply(regex)) && (pnode->term->tag == A_MINUS)) {
+        wrapper.pnode = pnode;
         ret = ay_print_yang_type_string(ctx, node, &wrapper);
     } else {
         ly_print(ctx->out, "%*stype string", ctx->space, "");
@@ -2198,20 +2197,21 @@ static int
 ay_print_yang_type_item(struct yprinter_ctx *ctx, const struct ay_ynode *node, const struct ay_lnode *lnode)
 {
     int ret;
-    char *str;
+    char *valstr;
 
-    str = (lnode->lens->tag == L_VALUE) ? lnode->lens->string->str : NULL;
+    valstr = (lnode->lens->tag == L_VALUE) ? lnode->lens->string->str : NULL;
     ret = ay_print_yang_type_builtin(ctx, lnode->lens);
-    if (ret) {
-        /* The builtin print failed, so print just string pattern. */
-        if ((lnode->lens->tag == L_VALUE) && (lnode->lens->string->str[0] == '\0')) {
-            /* It is assumed that the empty string has already been printed. */
-            return 0;
-        } else if ((lnode->lens->tag == L_VALUE) && !isspace(str[0]) && !isspace(str[strlen(str) - 1])) {
-            ret = ay_print_yang_enumeration(ctx, lnode->lens);
-        } else {
-            ret = ay_print_yang_type_string(ctx, node, lnode);
-        }
+    if (!ret ||
+            /* If this condition evaluates to true, then it is assumed that the empty string has already been printed. */
+            (valstr && (valstr[0] == '\0'))) {
+        return 0;
+    }
+
+    /* The builtin print failed, so print just string pattern. */
+    if (valstr && !isspace(valstr[0]) && !isspace(valstr[strlen(valstr) - 1])) {
+        ret = ay_print_yang_enumeration(ctx, lnode->lens);
+    } else {
+        ret = ay_print_yang_type_string(ctx, node, lnode);
     }
 
     return ret;
@@ -2300,9 +2300,9 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if (!value &&
+    if (!value && label &&
             (((node->type == YN_LEAF) && (node->label->flags & AY_LNODE_KEY_NOREGEX)) ||
-            (label && (label->tag == L_LABEL)))) {
+            (label->tag == L_LABEL))) {
         ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         return ret;
     } else if ((node->type == YN_VALUE) || (value &&
@@ -2317,7 +2317,7 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
         ret = ay_print_yang_type_string(ctx, node, NULL);
         return ret;
     }
-    assert(lnode);
+    assert(lnode && lnode->lens);
 
     /* Set dnode key if exists. */
     if (lv_type == AY_LV_TYPE_LABEL) {
@@ -2455,6 +2455,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
             break;
         }
     }
+    assert(parent);
 
     if (parent->type == YN_CASE) {
         path_cnt++;

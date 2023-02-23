@@ -594,6 +594,7 @@ ay_pnode_for_regex(struct augeas *aug, struct ay_pnode *ptree, struct ay_pnode *
         return NULL;
     }
 
+    assert(pnode->child && pnode->child->next);
     pnode = pnode->child->next;
     ay_pnode_set_ref(aug, ptree, pnode);
     pnode = ay_pnode_ref_apply(pnode);
