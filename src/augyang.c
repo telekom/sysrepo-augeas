@@ -3084,7 +3084,7 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
             node->flags |= AY_YNODE_MAND_TRUE;
             continue;
         } else if ((node->parent->type == YN_LIST) && (node->parent->child == node) &&
-                (node->parent->descendants == 1)) {
+                (node->parent->descendants == 1) && (node->parent->parent->type != YN_ROOT)) {
             node->flags &= ~AY_YNODE_MAND_MASK;
             node->flags |= AY_YNODE_MAND_TRUE;
             node->min_elems = 1;
