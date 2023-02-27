@@ -229,9 +229,10 @@ ay_bitset_clear_msb(uint8_t *bitset, uint64_t size)
 static void
 ay_bitset_create_from_uint64(uint8_t *bitset, uint64_t size, uint64_t number)
 {
-    uint64_t i;
+    uint8_t i;
 
-    for (i = 0; (i < size) && (i < 64); i++) {
+    assert(size <= 63);
+    for (i = 0; (i < size); i++) {
         if (number & (1 << i)) {
             bitset[i] = 1;
         } else {
@@ -844,6 +845,9 @@ ay_pattern_identifier_qm(const char *ptoken, uint64_t ptoken_len, char *buffer, 
 
     total_vari = ay_pattern_identifier_qm_variations(ptoken, ptoken_len);
     assert(total_vari);
+    if (total_vari > 63) {
+        return AYE_INTERNAL_ERROR;
+    }
     flag = malloc(sizeof(uint8_t) * total_vari);
     vari = malloc(sizeof(uint8_t) * total_vari);
     if (!flag || !vari) {

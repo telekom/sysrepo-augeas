@@ -107,6 +107,8 @@ augyang_get_error_message(int err_code)
         return AY_NAME " ERROR: Invalid character in identifier.\n";
     case AYE_PARSE_FAILED:
         return AY_NAME " ERROR: Augeas failed to parse.\n";
+    case AYE_INTERNAL_ERROR:
+        return AY_NAME " ERROR: Augyang got into an unexpected state.\n";
     default:
         return AY_NAME " INTERNAL ERROR: error message not defined.\n";
     }

@@ -33,6 +33,7 @@
 #define AYE_LTREE_NO_ROOT 7
 #define AYE_IDENT_BAD_CHAR 8
 #define AYE_PARSE_FAILED 9
+#define AYE_INTERNAL_ERROR 10
 
 struct module;
 struct augeas;
