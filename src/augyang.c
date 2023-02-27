@@ -1382,10 +1382,12 @@ ay_ynode_set_root(struct ay_ynode *tree, uint32_t tpatt_size, struct ay_lnode *l
     ay_ynode_shift_right(tree);
 
     tree->type = YN_ROOT;
-    tree->child = tree + 1;
-    for (iter = tree + 1; iter; iter = iter->next) {
-        iter->parent = tree;
-        tree->descendants += iter->descendants + 1;
+    if (LY_ARRAY_COUNT(tree) != 1) {
+        tree->child = tree + 1;
+        for (iter = tree + 1; iter; iter = iter->next) {
+            iter->parent = tree;
+            tree->descendants += iter->descendants + 1;
+        }
     }
 
     AY_YNODE_ROOT_ARRSIZE(tree) = LY_ARRAY_COUNT(tree);
@@ -3031,7 +3033,7 @@ ay_ynode_mandatory_choice_in_list(struct ay_ynode *tree)
     for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
         list = &tree[i];
         /* Get list with mandatory false. */
-        if ((list->type != YN_LIST) ||
+        if ((list->type != YN_LIST) || !list->child ||
                 (!list->choice && ((list->flags & AY_YNODE_MAND_TRUE) || list->min_elems)) ||
                 /* Check if all children has mandatory false. */
                 (!(list->child->choice && (list->child->flags & AY_CHOICE_MAND_FALSE) &&
@@ -3449,7 +3451,11 @@ ay_insert_list_files(struct ay_ynode *tree)
 {
     struct ay_ynode *list;
 
-    ay_ynode_insert_parent(tree, &tree[1]);
+    if (tree->descendants) {
+        ay_ynode_insert_parent(tree, &tree[1]);
+    } else {
+        ay_ynode_insert_child(tree, tree);
+    }
     list = &tree[1];
     list->type = YN_LIST;
 
