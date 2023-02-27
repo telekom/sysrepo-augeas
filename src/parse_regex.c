@@ -12,6 +12,16 @@
  * You may obtain a copy of the License at
  *
  *     https://opensource.org/licenses/BSD-3-Clause
+ *
+ * @section AY_PARSE_REGEX Regex parsing
+ *
+ * Augyang in some cases needs to parse a regular expression that is entered in Augeas lense by the command 'key'
+ * or 'store'. From the expression, the Augyang deduces which nodes need to be added to the Yang file. For example,
+ * from the expression 'key "a" | "b"' deduces that the node named 'a' and node named 'b' need to be added.
+ * Additionally, name derivation becomes even more complicated if '?' is also included. For example, from expression
+ * 'key /values?/' deduces nodes 'value' and 'values'. The minus operator is also problematic. Overall, it would be
+ * much more reliable if some library could be found that could reliably create such name derivations.
+ *
  */
 
 #define _GNU_SOURCE

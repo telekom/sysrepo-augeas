@@ -225,6 +225,11 @@ enum yang_type {
  *
  * Note that choice-case node from yang laguage is not considered as a ynode. The ynode nodes are indirectly connected
  * via ay_ynode.choice pointer, which serves as an identifier of that choice-case relationship.
+ *
+ * From the beginning of the development of Augyang, nodes were stored in a Sized array, because the tree was not
+ * manipulated that much back then. Finally, adding and removing nodes is applied quite a bit. Although there are
+ * advantages to using an array, a list structure would be more appropriate. It might be worth rewriting sometime
+ * in the future.
  */
 struct ay_ynode {
     struct ay_ynode *parent;    /**< Pointer to the parent node. */
@@ -348,6 +353,7 @@ struct ay_ynode {
  * @brief Specific structure for ynode of type YN_ROOT.
  *
  * The ynode of type YN_ROOT is always the first node in the ynode tree (in the Sized Array) and nowhere else.
+ * This data structure must always be the same size as struct ay_ynode!
  */
 struct ay_ynode_root {
     struct ay_ynode *parent;        /**< Always NULL. */

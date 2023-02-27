@@ -12,6 +12,10 @@
  * You may obtain a copy of the License at
  *
  *     https://opensource.org/licenses/BSD-3-Clause
+ *
+ * @section AY_DEBUG Debug
+ *
+ * These functions are useful for debugging. Please refer to the src/.gdbinit file for their usage.
  */
 
 #define _GNU_SOURCE

@@ -37,8 +37,7 @@
  * mapping with the Augeas data tree. Thanks to this mapping, the Sysrepo plugin can manipulate data.
  *
  * The current situation is such that Augyang is further improved on the basis of Augeas modules. It is not known how
- * much is left, because the tasks appear on the fly. However, in the future, reliable regular expression conversion
- * must be added because Augeas and Yang use different formats.
+ * much is left, because the tasks appear on the fly.
  */
 
 #define _GNU_SOURCE
