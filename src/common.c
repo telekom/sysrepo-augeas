@@ -48,6 +48,7 @@ ay_get_module(struct augeas *aug, const char *modname, size_t modname_len)
 
     len = modname_len ? modname_len : strlen(modname);
     LY_LIST_FOR(aug->modules, mod_iter) {
+        assert(mod_iter->name);
         if (!strncmp(mod_iter->name, modname, len)) {
             mod = mod_iter;
             break;

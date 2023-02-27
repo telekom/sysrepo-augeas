@@ -86,6 +86,7 @@ ay_get_lense_name_by_mod(struct module *mod, struct lens *lens)
     }
 
     LY_LIST_FOR(mod->bindings, bind_iter) {
+        assert(bind_iter->value && bind_iter->value->lens);
         if (bind_iter->value->lens == lens) {
             return bind_iter->ident->str;
         }
@@ -93,6 +94,7 @@ ay_get_lense_name_by_mod(struct module *mod, struct lens *lens)
 
     if ((lens->tag == L_STORE) || (lens->tag == L_KEY)) {
         LY_LIST_FOR(mod->bindings, bind_iter) {
+            assert(bind_iter->value);
             if (bind_iter->value->tag != V_REGEXP) {
                 continue;
             }

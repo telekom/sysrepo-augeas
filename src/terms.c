@@ -396,6 +396,7 @@ ay_get_regexp_by_lensname(struct module *mod, char *lensname)
     struct binding *bind_iter;
 
     LY_LIST_FOR(mod->bindings, bind_iter) {
+        assert(bind_iter->ident && bind_iter->value);
         if ((strcmp(bind_iter->ident->str, lensname) != 0) || (bind_iter->value->tag != V_REGEXP)) {
             continue;
         }
