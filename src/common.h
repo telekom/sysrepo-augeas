@@ -328,7 +328,7 @@ struct ay_ynode {
  * @return 1 if ynode is 'seq_list'.
  */
 #define AY_YNODE_IS_SEQ_LIST(YNODE) \
-    (YNODE && (YNODE->type == YN_LIST) && YNODE->label && (YNODE->label->lens->tag == L_SEQ))
+    ((YNODE->type == YN_LIST) && YNODE->label && (YNODE->label->lens->tag == L_SEQ))
 
 /**
  * @brief Check if ynode was created as an implicit list.
@@ -341,7 +341,7 @@ struct ay_ynode {
  * @return 1 if ynode is implicit list.
  */
 #define AY_YNODE_IS_IMPLICIT_LIST(YNODE) \
-    (YNODE && (YNODE->type == YN_LIST) && YNODE->label && YNODE->snode && (YNODE->label == YNODE->snode) && \
+    ((YNODE->type == YN_LIST) && YNODE->label && YNODE->snode && (YNODE->label == YNODE->snode) && \
      (YNODE->label->lens->tag == L_STAR))
 
 /**

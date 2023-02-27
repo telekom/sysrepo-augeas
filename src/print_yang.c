@@ -1498,7 +1498,7 @@ static int
 ay_ynode_ident_write(char **old, char *new)
 {
     assert(new && new[0]);
-    if (*old && new && (strlen(*old) >= strlen(new))) {
+    if (*old && (strlen(*old) >= strlen(new))) {
         strcpy(*old, new);
         return 0;
     } else {
