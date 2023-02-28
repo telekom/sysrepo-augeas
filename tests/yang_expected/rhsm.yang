@@ -1,0 +1,67 @@
+module rhsm {
+  yang-version 1.1;
+  namespace "aug:rhsm";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Rhsm";
+
+  list rhsm {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf record {
+          mandatory true;
+          type string {
+            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|())|#comme([^\\]\n/n][^\\]\n/]*|())|#comm([^\\]\n/e][^\\]\n/]*|())|#com([^\\]\n/m][^\\]\n/]*|())|#co([^\\]\n/m][^\\]\n/]*|())|#c([^\\]\n/o][^\\]\n/]*|())|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+          }
+        }
+        list entry-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf entry {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z][A-Za-z0-9._-]*";
+              }
+            }
+            leaf value {
+              type union {
+                type string {
+                  pattern "(((([^\t\n \"#;])+)((((([^\n#;])+)*)(([^\t\n \"#;])+)){0,1}))(((\n[ \t]+)((([^\t\n \"#;])+)((((([^\n#;])+)*)(([^\t\n \"#;])+)){0,1})))*))|(((\n[ \t]+)((([^\t\n \"#;])+)((((([^\n#;])+)*)(([^\t\n \"#;])+)){0,1})))+)";
+                }
+                type string {
+                  pattern "(((([^\"\n]*)(([;#])+))([^\"\n]*))(((\n[ \t]+)((([^\"\n]*)(([;#])+))([^\"\n]*)))*))|(((\n[ \t]+)((([^\"\n]*)(([;#])+))([^\"\n]*)))+)";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

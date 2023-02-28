@@ -1,0 +1,71 @@
+module services {
+  yang-version 1.1;
+  namespace "aug:services";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Services";
+
+  list services {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container service-name {
+        augex:data-path "service-name";
+        augex:value-yang-path "word";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[a-zA-Z0-9_.+*/:-]+";
+          }
+        }
+        choice ch-service-name {
+          mandatory true;
+          leaf port {
+            type uint64;
+            augex:data-path "port";
+          }
+          case start {
+            leaf start {
+              mandatory true;
+              type uint64;
+              augex:data-path "start";
+            }
+            leaf end {
+              mandatory true;
+              type uint64;
+              augex:data-path "end";
+            }
+          }
+        }
+        leaf protocol {
+          mandatory true;
+          type string {
+            pattern "[a-zA-Z]+";
+          }
+          augex:data-path "protocol";
+        }
+        leaf-list alias {
+          type string {
+            pattern "[a-zA-Z0-9_.+*/:-]+";
+          }
+          ordered-by user;
+          augex:data-path "alias";
+        }
+      }
+    }
+  }
+}

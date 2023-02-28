@@ -1,0 +1,72 @@
+module tmpfiles {
+  yang-version 1.1;
+  namespace "aug:tmpfiles";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Tmpfiles";
+
+  list tmpfiles {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf type {
+        mandatory true;
+        type string {
+          pattern "([fFwdDevqQpLcbCxXrRzZtThHaAm]|[fFwpLcbaA]\\+)!?-?";
+        }
+        augex:data-path "type";
+      }
+      leaf path {
+        mandatory true;
+        type string {
+          pattern "[^# \t\n]+";
+        }
+        augex:data-path "path";
+      }
+      leaf mode {
+        type string {
+          pattern "-|~?[0-7]{3,4}";
+        }
+        augex:data-path "mode";
+      }
+      leaf uid {
+        type string {
+          pattern "[^# \t\n]+";
+        }
+        augex:data-path "uid";
+      }
+      leaf gid {
+        type string {
+          pattern "[^# \t\n]+";
+        }
+        augex:data-path "gid";
+      }
+      leaf age {
+        type string {
+          pattern "-|(~?[0-9]+(s|m|min|h|d|w|ms|us|((second|minute|hour|day|week|millisecond|microsecond)s?))?)+";
+        }
+        augex:data-path "age";
+      }
+      leaf argument {
+        type string {
+          pattern "[^# \t\n][^#\n]*[^# \t\n]|[^# \t\n]";
+        }
+        augex:data-path "argument";
+      }
+    }
+  }
+}

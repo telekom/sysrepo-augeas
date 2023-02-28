@@ -1,0 +1,34 @@
+module shells {
+  yang-version 1.1;
+  namespace "aug:shells";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Shells";
+
+  list shells {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list shell-list {
+      key "_seq";
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf value {
+        type string {
+          pattern "[^# \t\n]+";
+        }
+      }
+    }
+  }
+}

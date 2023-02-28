@@ -1,0 +1,728 @@
+module vsftpd {
+  yang-version 1.1;
+  namespace "aug:vsftpd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Vsftpd";
+
+  list vsftpd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf anonymous-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "anonymous_enable";
+        }
+        leaf isolate {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "isolate";
+        }
+        leaf isolate-network {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "isolate_network";
+        }
+        leaf local-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "local_enable";
+        }
+        leaf pasv-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "pasv_enable";
+        }
+        leaf port-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "port_enable";
+        }
+        leaf chroot-local-user {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "chroot_local_user";
+        }
+        leaf write-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "write_enable";
+        }
+        leaf anon-upload-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "anon_upload_enable";
+        }
+        leaf anon-mkdir-write-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "anon_mkdir_write_enable";
+        }
+        leaf anon-other-write-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "anon_other_write_enable";
+        }
+        leaf chown-uploads {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "chown_uploads";
+        }
+        leaf connect-from-port-20 {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "connect_from_port_20";
+        }
+        leaf xferlog-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "xferlog_enable";
+        }
+        leaf dirmessage-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "dirmessage_enable";
+        }
+        leaf anon-world-readable-only {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "anon_world_readable_only";
+        }
+        leaf async-abor-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "async_abor_enable";
+        }
+        leaf ascii-upload-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ascii_upload_enable";
+        }
+        leaf ascii-download-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ascii_download_enable";
+        }
+        leaf one-process-model {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "one_process_model";
+        }
+        leaf xferlog-std-format {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "xferlog_std_format";
+        }
+        leaf pasv-promiscuous {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "pasv_promiscuous";
+        }
+        leaf deny-email-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "deny_email_enable";
+        }
+        leaf chroot-list-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "chroot_list_enable";
+        }
+        leaf setproctitle-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "setproctitle_enable";
+        }
+        leaf text-userdb-names {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "text_userdb_names";
+        }
+        leaf ls-recurse-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ls_recurse_enable";
+        }
+        leaf log-ftp-protocol {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "log_ftp_protocol";
+        }
+        leaf guest-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "guest_enable";
+        }
+        leaf userlist-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "userlist_enable";
+        }
+        leaf userlist-deny {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "userlist_deny";
+        }
+        leaf use-localtime {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "use_localtime";
+        }
+        leaf check-shell {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "check_shell";
+        }
+        leaf hide-ids {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "hide_ids";
+        }
+        leaf listen {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "listen";
+        }
+        leaf port-promiscuous {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "port_promiscuous";
+        }
+        leaf passwd-chroot-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "passwd_chroot_enable";
+        }
+        leaf no-anon-password {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "no_anon_password";
+        }
+        leaf tcp-wrappers {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "tcp_wrappers";
+        }
+        leaf use-sendfile {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "use_sendfile";
+        }
+        leaf force-dot-files {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "force_dot_files";
+        }
+        leaf listen-ipv6 {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "listen_ipv6";
+        }
+        leaf dual-log-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "dual_log_enable";
+        }
+        leaf syslog-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "syslog_enable";
+        }
+        leaf background {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "background";
+        }
+        leaf virtual-use-local-privs {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "virtual_use_local_privs";
+        }
+        leaf session-support {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "session_support";
+        }
+        leaf download-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "download_enable";
+        }
+        leaf dirlist-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "dirlist_enable";
+        }
+        leaf chmod-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "chmod_enable";
+        }
+        leaf secure-email-list-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "secure_email_list_enable";
+        }
+        leaf run-as-launching-user {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "run_as_launching_user";
+        }
+        leaf no-log-lock {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "no_log_lock";
+        }
+        leaf ssl-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ssl_enable";
+        }
+        leaf allow-anon-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "allow_anon_ssl";
+        }
+        leaf force-local-logins-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "force_local_logins_ssl";
+        }
+        leaf force-local-data-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "force_local_data_ssl";
+        }
+        leaf ssl-sslv2 {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ssl_sslv2";
+        }
+        leaf ssl-sslv3 {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ssl_sslv3";
+        }
+        leaf ssl-tlsv1 {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "ssl_tlsv1";
+        }
+        leaf tilde-user-enable {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "tilde_user_enable";
+        }
+        leaf force-anon-logins-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "force_anon_logins_ssl";
+        }
+        leaf force-anon-data-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "force_anon_data_ssl";
+        }
+        leaf mdtm-write {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "mdtm_write";
+        }
+        leaf lock-upload-files {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "lock_upload_files";
+        }
+        leaf pasv-addr-resolve {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "pasv_addr_resolve";
+        }
+        leaf debug-ssl {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "debug_ssl";
+        }
+        leaf require-cert {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "require_cert";
+        }
+        leaf validate-cert {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "validate_cert";
+        }
+        leaf require-ssl-reuse {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "require_ssl_reuse";
+        }
+        leaf allow-writeable-chroot {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "allow_writeable_chroot";
+        }
+        leaf seccomp-sandbox {
+          type string {
+            pattern "[yY][eE][sS]|[tT][rR][uU][eE]|1|[nN][oO]|[fF][aA][lL][sS][eE]|0";
+          }
+          augex:data-path "seccomp_sandbox";
+        }
+        leaf secure-chroot-dir {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "secure_chroot_dir";
+        }
+        leaf ftp-username {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "ftp_username";
+        }
+        leaf chown-username {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "chown_username";
+        }
+        leaf xferlog-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "xferlog_file";
+        }
+        leaf vsftpd-log-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "vsftpd_log_file";
+        }
+        leaf message-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "message_file";
+        }
+        leaf nopriv-user {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "nopriv_user";
+        }
+        leaf ftpd-banner {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "ftpd_banner";
+        }
+        leaf banned-email-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "banned_email_file";
+        }
+        leaf chroot-list-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "chroot_list_file";
+        }
+        leaf pam-service-name {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "pam_service_name";
+        }
+        leaf guest-username {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "guest_username";
+        }
+        leaf userlist-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "userlist_file";
+        }
+        leaf anon-root {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "anon_root";
+        }
+        leaf local-root {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "local_root";
+        }
+        leaf banner-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "banner_file";
+        }
+        leaf pasv-address {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "pasv_address";
+        }
+        leaf listen-address {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "listen_address";
+        }
+        leaf user-config-dir {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "user_config_dir";
+        }
+        leaf listen-address6 {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "listen_address6";
+        }
+        leaf cmds-allowed {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "cmds_allowed";
+        }
+        leaf hide-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "hide_file";
+        }
+        leaf deny-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "deny_file";
+        }
+        leaf user-sub-token {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "user_sub_token";
+        }
+        leaf email-password-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "email_password_file";
+        }
+        leaf rsa-cert-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "rsa_cert_file";
+        }
+        leaf dsa-cert-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "dsa_cert_file";
+        }
+        leaf ssl-ciphers {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "ssl_ciphers";
+        }
+        leaf rsa-private-key-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "rsa_private_key_file";
+        }
+        leaf dsa-private-key-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "dsa_private_key_file";
+        }
+        leaf ca-certs-file {
+          type string {
+            pattern "[^\n]+";
+          }
+          augex:data-path "ca_certs_file";
+        }
+        leaf accept-timeout {
+          type uint64;
+          augex:data-path "accept_timeout";
+        }
+        leaf connect-timeout {
+          type uint64;
+          augex:data-path "connect_timeout";
+        }
+        leaf local-umask {
+          type uint64;
+          augex:data-path "local_umask";
+        }
+        leaf anon-umask {
+          type uint64;
+          augex:data-path "anon_umask";
+        }
+        leaf ftp-data-port {
+          type uint64;
+          augex:data-path "ftp_data_port";
+        }
+        leaf idle-session-timeout {
+          type uint64;
+          augex:data-path "idle_session_timeout";
+        }
+        leaf data-connection-timeout {
+          type uint64;
+          augex:data-path "data_connection_timeout";
+        }
+        leaf pasv-min-port {
+          type uint64;
+          augex:data-path "pasv_min_port";
+        }
+        leaf pasv-max-port {
+          type uint64;
+          augex:data-path "pasv_max_port";
+        }
+        leaf anon-max-rate {
+          type uint64;
+          augex:data-path "anon_max_rate";
+        }
+        leaf local-max-rate {
+          type uint64;
+          augex:data-path "local_max_rate";
+        }
+        leaf listen-port {
+          type uint64;
+          augex:data-path "listen_port";
+        }
+        leaf max-clients {
+          type uint64;
+          augex:data-path "max_clients";
+        }
+        leaf file-open-mode {
+          type uint64;
+          augex:data-path "file_open_mode";
+        }
+        leaf max-per-ip {
+          type uint64;
+          augex:data-path "max_per_ip";
+        }
+        leaf trans-chunk-size {
+          type uint64;
+          augex:data-path "trans_chunk_size";
+        }
+        leaf delay-failed-login {
+          type uint64;
+          augex:data-path "delay_failed_login";
+        }
+        leaf delay-successful-login {
+          type uint64;
+          augex:data-path "delay_successful_login";
+        }
+        leaf max-login-fails {
+          type uint64;
+          augex:data-path "max_login_fails";
+        }
+        leaf chown-upload-mode {
+          type uint64;
+          augex:data-path "chown_upload_mode";
+        }
+      }
+    }
+  }
+}

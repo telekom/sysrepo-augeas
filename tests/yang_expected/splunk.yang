@@ -1,0 +1,84 @@
+module splunk {
+  yang-version 1.1;
+  namespace "aug:splunk";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Splunk";
+
+  grouping setting-list {
+    list setting-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container setting {
+        augex:data-path "$$";
+        augex:value-yang-path "space-in";
+        presence "Config entry.";
+        leaf setting {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z_][A-Za-z0-9._-]*";
+          }
+        }
+        leaf space-in {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+        }
+      }
+    }
+  }
+  grouping record-list {
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container target {
+        augex:data-path "target";
+        augex:value-yang-path "record-label";
+        presence "Config entry.";
+        leaf record-label {
+          mandatory true;
+          type string {
+            pattern "[^\\]\n]+";
+          }
+        }
+        uses setting-list;
+      }
+    }
+  }
+  list splunk {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    choice ch-splunk {
+      mandatory true;
+      container case {
+        presence "Config entry.";
+        container anon {
+          augex:data-path ".anon";
+          presence "Config entry.";
+          uses setting-list;
+        }
+        uses record-list;
+      }
+      container case2 {
+        presence "Config entry.";
+        uses record-list;
+      }
+    }
+  }
+}

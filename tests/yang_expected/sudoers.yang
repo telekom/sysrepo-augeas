@@ -1,0 +1,799 @@
+module sudoers {
+  yang-version 1.1;
+  namespace "aug:sudoers";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Sudoers";
+
+  grouping negate-node {
+    leaf negate {
+      type empty;
+      augex:data-path "negate";
+    }
+  }
+  grouping parameter-integer-bool {
+    choice ch-parameter-integer-bool {
+      mandatory true;
+      leaf negate {
+        type empty;
+        augex:data-path "negate";
+      }
+      leaf sto-integer {
+        type string {
+          pattern "-?[0-9]+";
+        }
+      }
+    }
+  }
+  grouping parameter-string-bool {
+    choice ch-parameter-string-bool {
+      mandatory true;
+      leaf negate {
+        type empty;
+        augex:data-path "negate";
+      }
+      leaf sto-to-com-dquot {
+        type string {
+          pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+        }
+      }
+    }
+  }
+  grouping parameter-lists {
+    choice ch-parameter-lists {
+      mandatory true;
+      container case {
+        presence "Config entry.";
+        leaf negate {
+          type empty;
+          augex:data-path "negate";
+        }
+      }
+      container case2 {
+        presence "Config entry.";
+        leaf append {
+          type empty;
+          augex:data-path "append";
+        }
+        leaf-list var {
+          min-elements 1;
+          type string {
+            pattern "[^\",# \t\n\\\\]+";
+          }
+          ordered-by user;
+          augex:data-path "var";
+        }
+      }
+      container case3 {
+        presence "Config entry.";
+        leaf remove {
+          type empty;
+          augex:data-path "remove";
+        }
+        leaf-list var {
+          min-elements 1;
+          type string {
+            pattern "[^\",# \t\n\\\\]+";
+          }
+          ordered-by user;
+          augex:data-path "var";
+        }
+      }
+    }
+  }
+  list sudoers {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container includedir {
+          augex:data-path "$$";
+          augex:value-yang-path "fspath";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "(#|@)include(dir)?";
+            }
+          }
+          leaf fspath {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+          }
+        }
+        container user-alias {
+          augex:data-path "User_Alias";
+          presence "Config entry.";
+          list alias-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container alias {
+              augex:data-path "alias";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[A-Z][A-Z0-9_]*";
+                }
+                augex:data-path "name";
+              }
+              leaf-list user {
+                min-elements 1;
+                type string {
+                  pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                }
+                ordered-by user;
+                augex:data-path "user";
+              }
+            }
+          }
+        }
+        container runas-alias {
+          augex:data-path "Runas_Alias";
+          presence "Config entry.";
+          list alias-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container alias {
+              augex:data-path "alias";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[A-Z][A-Z0-9_]*";
+                }
+                augex:data-path "name";
+              }
+              leaf-list runas-user {
+                min-elements 1;
+                type string {
+                  pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                }
+                ordered-by user;
+                augex:data-path "runas_user";
+              }
+            }
+          }
+        }
+        container host-alias {
+          augex:data-path "Host_Alias";
+          presence "Config entry.";
+          list alias-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container alias {
+              augex:data-path "alias";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[A-Z][A-Z0-9_]*";
+                }
+                augex:data-path "name";
+              }
+              leaf-list host {
+                min-elements 1;
+                type string {
+                  pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                }
+                ordered-by user;
+                augex:data-path "host";
+              }
+            }
+          }
+        }
+        container cmnd-alias {
+          augex:data-path "Cmnd_Alias";
+          presence "Config entry.";
+          list alias-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container alias {
+              augex:data-path "alias";
+              presence "Config entry.";
+              leaf name {
+                mandatory true;
+                type string {
+                  pattern "[A-Z][A-Z0-9_]*";
+                }
+                augex:data-path "name";
+              }
+              list command-list {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container command {
+                  augex:data-path "command";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  leaf negate {
+                    type empty;
+                    augex:data-path "negate";
+                  }
+                  leaf value {
+                    mandatory true;
+                    type union {
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                        pattern "(NO)?(PASSWD|EXEC|SETENV)" {
+                          modifier invert-match;
+                        }
+                      }
+                      type string {
+                        pattern "[/a-z]([^,:#()\n\\\\]|\\\\[=:,\\\\])*[^,=:#() \t\n\\\\]|[^,=:#() \t\n\\\\]";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        container defaults {
+          augex:data-path "Defaults";
+          presence "Config entry.";
+          leaf type {
+            type string {
+              pattern "[@:!>][^ \t\n\\\\]+";
+            }
+            augex:data-path "type";
+          }
+          list parameter {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-parameter {
+              mandatory true;
+              container always-set-home {
+                augex:data-path "always_set_home";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container authenticate {
+                augex:data-path "authenticate";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container env-editor {
+                augex:data-path "env_editor";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container env-reset {
+                augex:data-path "env_reset";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container fqdn {
+                augex:data-path "fqdn";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container ignore-dot {
+                augex:data-path "ignore_dot";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container ignore-local-sudoers {
+                augex:data-path "ignore_local_sudoers";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container insults {
+                augex:data-path "insults";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container log-host {
+                augex:data-path "log_host";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container log-year {
+                augex:data-path "log_year";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container long-otp-prompt {
+                augex:data-path "long_otp_prompt";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container mail-always {
+                augex:data-path "mail_always";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container mail-badpass {
+                augex:data-path "mail_badpass";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container mail-no-host {
+                augex:data-path "mail_no_host";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container mail-no-perms {
+                augex:data-path "mail_no_perms";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container mail-no-user {
+                augex:data-path "mail_no_user";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container noexec {
+                augex:data-path "noexec";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container path-info {
+                augex:data-path "path_info";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container passprompt-override {
+                augex:data-path "passprompt_override";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container preserve-groups {
+                augex:data-path "preserve_groups";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container requiretty {
+                augex:data-path "requiretty";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container root-sudo {
+                augex:data-path "root_sudo";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container rootpw {
+                augex:data-path "rootpw";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container runaspw {
+                augex:data-path "runaspw";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container set-home {
+                augex:data-path "set_home";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container set-logname {
+                augex:data-path "set_logname";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container setenv {
+                augex:data-path "setenv";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container shell-noargs {
+                augex:data-path "shell_noargs";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container stay-setuid {
+                augex:data-path "stay_setuid";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container targetpw {
+                augex:data-path "targetpw";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container tty-tickets {
+                augex:data-path "tty_tickets";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container visiblepw {
+                augex:data-path "visiblepw";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container closefrom-override {
+                augex:data-path "closefrom_override";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container closefrom-override2 {
+                augex:data-path "closefrom_override";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container compress-io {
+                augex:data-path "compress_io";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container fast-glob {
+                augex:data-path "fast_glob";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container log-input {
+                augex:data-path "log_input";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container log-output {
+                augex:data-path "log_output";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container pwfeedback {
+                augex:data-path "pwfeedback";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container umask-override {
+                augex:data-path "umask_override";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container use-pty {
+                augex:data-path "use_pty";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container match-group-by-gid {
+                augex:data-path "match_group_by_gid";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              container always-query-group-plugin {
+                augex:data-path "always_query_group_plugin";
+                presence "Config entry.";
+                uses negate-node;
+              }
+              leaf passwd-tries {
+                type string {
+                  pattern "-?[0-9]+";
+                }
+                augex:data-path "passwd_tries";
+              }
+              container loglinelen {
+                augex:data-path "loglinelen";
+                augex:value-yang-path "sto-integer";
+                presence "Config entry.";
+                uses parameter-integer-bool;
+              }
+              container passwd-timeout {
+                augex:data-path "passwd_timeout";
+                augex:value-yang-path "sto-integer";
+                presence "Config entry.";
+                uses parameter-integer-bool;
+              }
+              container timestamp-timeout {
+                augex:data-path "timestamp_timeout";
+                augex:value-yang-path "sto-integer";
+                presence "Config entry.";
+                uses parameter-integer-bool;
+              }
+              container umask {
+                augex:data-path "umask";
+                augex:value-yang-path "sto-integer";
+                presence "Config entry.";
+                uses parameter-integer-bool;
+              }
+              leaf badpass-message {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "badpass_message";
+              }
+              leaf editor {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "editor";
+              }
+              leaf mailsub {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "mailsub";
+              }
+              leaf noexec-file {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "noexec_file";
+              }
+              leaf passprompt {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "passprompt";
+              }
+              leaf runas-default {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "runas_default";
+              }
+              leaf syslog-badpri {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "syslog_badpri";
+              }
+              leaf syslog-goodpri {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "syslog_goodpri";
+              }
+              leaf timestampdir {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "timestampdir";
+              }
+              leaf timestampowner {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "timestampowner";
+              }
+              leaf secure-path {
+                type string {
+                  pattern "([^\",=#() \t\n\\\\]+)|(\"[^\",=#()\n\\\\]+\")";
+                }
+                augex:data-path "secure_path";
+              }
+              container exempt-group {
+                augex:data-path "exempt_group";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container lecture {
+                augex:data-path "lecture";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container lecture-file {
+                augex:data-path "lecture_file";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container listpw {
+                augex:data-path "listpw";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container logfile {
+                augex:data-path "logfile";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container mailerflags {
+                augex:data-path "mailerflags";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container mailerpath {
+                augex:data-path "mailerpath";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container mailto {
+                augex:data-path "mailto";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container mailfrom {
+                augex:data-path "mailfrom";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container syslog {
+                augex:data-path "syslog";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container verifypw {
+                augex:data-path "verifypw";
+                augex:value-yang-path "sto-to-com-dquot";
+                presence "Config entry.";
+                uses parameter-string-bool;
+              }
+              container env-check {
+                augex:data-path "env_check";
+                presence "Config entry.";
+                uses parameter-lists;
+              }
+              container env-delete {
+                augex:data-path "env_delete";
+                presence "Config entry.";
+                uses parameter-lists;
+              }
+              container env-keep {
+                augex:data-path "env_keep";
+                presence "Config entry.";
+                uses parameter-lists;
+              }
+            }
+          }
+        }
+        container spec {
+          augex:data-path "spec";
+          presence "Config entry.";
+          leaf-list user {
+            min-elements 1;
+            type string {
+              pattern "(((([A-Z]([-A-Z0-9]|(\\\\[ \t]))*+\\\\\\\\)){0,1})(((@includedir([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@includedi([+.0-9A-Z_a-qs-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@included([+.0-9A-Z_a-hj-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@include([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@includ([+.0-9A-Z_a-df-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@inclu([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@incl([+.0-9A-Z_a-tv-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@inc([+.0-9A-Z_a-km-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@in([+.0-9A-Z_abd-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@i([+.0-9A-Z_a-mo-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|((@[+.0-9A-Z_a-hj-z-]|[%+a-z][+.0-9A-Z_a-z-])[+.0-9A-Z_a-z-]*\\\\|@\\\\|[%+a-z]\\\\)\\\\[0-9A-Za-z])(([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z])*([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@includedir([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@includedi([+.0-9A-Z_a-qs-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@included([+.0-9A-Z_a-hj-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@include([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@includ([+.0-9A-Z_a-df-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@inclu([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@incl([+.0-9A-Z_a-tv-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@inc([+.0-9A-Z_a-km-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@in([+.0-9A-Z_abd-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|@i([+.0-9A-Z_a-mo-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|((@[+.0-9A-Z_a-hj-z-]|[%+a-z][+.0-9A-Z_a-z-])[+.0-9A-Z_a-z-]*\\\\|@\\\\|[%+a-z]\\\\)[\t ])(([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z](([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z])*([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ]|([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)[\t ])*(([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z](([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z])*([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*|())|[+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*|())|(@includedir([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@includedi([+.0-9A-Z_a-qs-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@included([+.0-9A-Z_a-hj-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@include([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@includ([+.0-9A-Z_a-df-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@inclu([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@incl([+.0-9A-Z_a-tv-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@inc([+.0-9A-Z_a-km-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@in([+.0-9A-Z_abd-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|@i([+.0-9A-Z_a-mo-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z]|((@[+.0-9A-Z_a-hj-z-]|[%+a-z][+.0-9A-Z_a-z-])[+.0-9A-Z_a-z-]*\\\\|@\\\\|[%+a-z]\\\\)\\\\[0-9A-Za-z])(([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*\\\\|\\\\)\\\\[0-9A-Za-z])*([+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*|())|@includedir[+.0-9A-Z_a-z-][+.0-9A-Z_a-z-]*|@includedi([+.0-9A-Z_a-qs-z-][+.0-9A-Z_a-z-]*|())|@included([+.0-9A-Z_a-hj-z-][+.0-9A-Z_a-z-]*|())|@include[+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*|@includ([+.0-9A-Z_a-df-z-][+.0-9A-Z_a-z-]*|())|@inclu([+.0-9A-Z_a-ce-z-][+.0-9A-Z_a-z-]*|())|@incl([+.0-9A-Z_a-tv-z-][+.0-9A-Z_a-z-]*|())|@inc([+.0-9A-Z_a-km-z-][+.0-9A-Z_a-z-]*|())|@in([+.0-9A-Z_abd-z-][+.0-9A-Z_a-z-]*|())|@i([+.0-9A-Z_a-mo-z-][+.0-9A-Z_a-z-]*|())|(@[+.0-9A-Z_a-hj-z-]|[%+a-z][+.0-9A-Z_a-z-])[+.0-9A-Z_a-z-]*|@|[%+a-z]))|([A-Z_]+)";
+            }
+            ordered-by user;
+            augex:data-path "user";
+          }
+          list spec-list-list {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            container host-group {
+              augex:data-path "host_group";
+              presence "Config entry.";
+              leaf-list host {
+                min-elements 1;
+                type string {
+                  pattern "[^,=:#() \t\n\\\\]+";
+                }
+                ordered-by user;
+                augex:data-path "host";
+              }
+              list cmnd-spec-list {
+                key "_id";
+                min-elements 1;
+                ordered-by user;
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                container command {
+                  augex:data-path "command";
+                  augex:value-yang-path "value";
+                  presence "Config entry.";
+                  choice ch-command {
+                    container case {
+                      presence "Config entry.";
+                      leaf-list runas-user {
+                        min-elements 1;
+                        type string {
+                          pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                        }
+                        ordered-by user;
+                        augex:data-path "runas_user";
+                      }
+                      leaf-list runas-group {
+                        type string {
+                          pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                        }
+                        ordered-by user;
+                        augex:data-path "runas_group";
+                      }
+                    }
+                    container case2 {
+                      presence "Config entry.";
+                      leaf-list runas-group {
+                        type string {
+                          pattern "([^,=:#() \t\n\\\\][^,=:#()\n]*[^,=:#() \t\n\\\\])|[^,=:#() \t\n\\\\]";
+                        }
+                        ordered-by user;
+                        augex:data-path "runas_group";
+                      }
+                    }
+                  }
+                  leaf-list tag {
+                    type string {
+                      pattern "(NO)?(PASSWD|EXEC|SETENV)";
+                    }
+                    ordered-by user;
+                    augex:data-path "tag";
+                  }
+                  leaf negate {
+                    type empty;
+                    augex:data-path "negate";
+                  }
+                  leaf value {
+                    mandatory true;
+                    type union {
+                      type string {
+                        pattern "[A-Za-z0-9_.-]+";
+                        pattern "(NO)?(PASSWD|EXEC|SETENV)" {
+                          modifier invert-match;
+                        }
+                      }
+                      type string {
+                        pattern "[/a-z]([^,:#()\n\\\\]|\\\\[=:,\\\\])*[^,=:#() \t\n\\\\]|[^,=:#() \t\n\\\\]";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

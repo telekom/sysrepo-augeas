@@ -1,0 +1,170 @@
+module reprepro-uploaders {
+  yang-version 1.1;
+  namespace "aug:reprepro-uploaders";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Reprepro_Uploaders";
+
+  list reprepro-uploaders {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container allow {
+          augex:data-path "allow";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          choice ch-allow {
+            mandatory true;
+            leaf value {
+              type string {
+                pattern "\\*";
+              }
+            }
+            list and-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              container and {
+                augex:data-path "and";
+                presence "Config entry.";
+                list or-list {
+                  key "_id";
+                  min-elements 1;
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  container or {
+                    augex:data-path "or";
+                    augex:value-yang-path "condition";
+                    presence "Config entry.";
+                    leaf not {
+                      type empty;
+                      augex:data-path "not";
+                    }
+                    leaf condition {
+                      mandatory true;
+                      type string {
+                        pattern "(((((source)|(byhand))|(sections))|(binaries))|(architectures))|(distribution)";
+                      }
+                    }
+                    leaf contain {
+                      type empty;
+                      augex:data-path "contain";
+                    }
+                    leaf-list or {
+                      min-elements 1;
+                      type string {
+                        pattern "[^'\n]+";
+                      }
+                      ordered-by user;
+                      augex:data-path "or";
+                    }
+                  }
+                }
+              }
+            }
+          }
+          container by {
+            augex:data-path "by";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf value {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "(anybody)|(unsigned)";
+                }
+                type enumeration {
+                  enum "key";
+                }
+                type enumeration {
+                  enum "group";
+                }
+              }
+            }
+            choice ch-by {
+              leaf key {
+                type union {
+                  type string {
+                    pattern "any";
+                  }
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                    pattern "any" {
+                      modifier invert-match;
+                    }
+                  }
+                }
+                augex:data-path "key";
+                when "re-match(../value, 'key')";
+              }
+              leaf group {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "group";
+                when "re-match(../value, 'group')";
+              }
+            }
+          }
+        }
+        container group {
+          augex:data-path "group";
+          augex:value-yang-path "word";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          choice ch-group {
+            mandatory true;
+            leaf add {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              augex:data-path "add";
+            }
+            leaf contains {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              augex:data-path "contains";
+            }
+            leaf empty {
+              type empty;
+              augex:data-path "empty";
+            }
+            leaf unused {
+              type empty;
+              augex:data-path "unused";
+            }
+          }
+        }
+      }
+    }
+  }
+}

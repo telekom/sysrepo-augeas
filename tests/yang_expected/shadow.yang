@@ -1,0 +1,198 @@
+module shadow {
+  yang-version 1.1;
+  namespace "aug:shadow";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Shadow";
+
+  list shadow {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container entry {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf word {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+          }
+          leaf password {
+            mandatory true;
+            type union {
+              type empty;
+              type string {
+                pattern "[^:\n]+";
+              }
+            }
+            augex:data-path "password";
+          }
+          leaf lastchange-date {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "lastchange_date";
+          }
+          leaf minage-days {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "minage_days";
+          }
+          leaf maxage-days {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "maxage_days";
+          }
+          leaf warn-days {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "warn_days";
+          }
+          leaf inactive-days {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "inactive_days";
+          }
+          leaf expire-date {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "expire_date";
+          }
+          leaf flag {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "flag";
+          }
+        }
+        container nisdefault {
+          augex:data-path "@nisdefault";
+          presence "Config entry.";
+          leaf password {
+            type union {
+              type string {
+                length 0;
+              }
+              type string {
+                pattern "([A-Za-z0-9_.-]+){0,1}";
+              }
+            }
+            augex:data-path "password";
+          }
+          leaf lastchange-date {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "lastchange_date";
+          }
+          leaf minage-days {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "minage_days";
+          }
+          leaf maxage-days {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "maxage_days";
+          }
+          leaf warn-days {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "warn_days";
+          }
+          leaf inactive-days {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "inactive_days";
+          }
+          leaf expire-date {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "expire_date";
+          }
+          leaf flag {
+            type union {
+              type string {
+                length 0;
+              }
+              type uint64;
+            }
+            augex:data-path "flag";
+          }
+        }
+      }
+    }
+  }
+}

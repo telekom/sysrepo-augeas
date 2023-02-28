@@ -1,0 +1,1082 @@
+module xinetd {
+  yang-version 1.1;
+  namespace "aug:xinetd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Xinetd";
+
+  grouping value {
+    leaf-list value {
+      type string {
+        pattern "[^ \t\n]+";
+      }
+      ordered-by user;
+      augex:data-path "value";
+    }
+  }
+  grouping ch-add {
+    choice ch-add {
+      leaf add {
+        type empty;
+        augex:data-path "add";
+      }
+      leaf del {
+        type empty;
+        augex:data-path "del";
+      }
+    }
+    leaf-list value {
+      type string {
+        pattern "[^ \t\n]+";
+      }
+      ordered-by user;
+      augex:data-path "value";
+    }
+  }
+  list xinetd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include";
+        }
+        leaf includedir {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "includedir";
+        }
+        container defaults {
+          augex:data-path "defaults";
+          presence "Config entry.";
+          list default-attr {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-default-attr {
+              mandatory true;
+              container instances {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)instances";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container bind {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)bind";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container interface {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)interface";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container per-source {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)per_source";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container groups {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)groups";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner-success {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner_success";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner-fail {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner_fail";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container max-load {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)max_load";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container v6only {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)v6only";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container umask {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)umask";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container mdns {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)mdns";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container cps {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf cps {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)cps";
+                  }
+                }
+                uses value;
+              }
+              container log-type {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_type";
+                  }
+                }
+                uses ch-add;
+              }
+              container log-on-success {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_on_success";
+                  }
+                }
+                uses ch-add;
+              }
+              container log-on-failure {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_on_failure";
+                  }
+                }
+                uses ch-add;
+              }
+              container disabled {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)disabled";
+                  }
+                }
+                uses ch-add;
+              }
+              container no-access {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)no_access";
+                  }
+                }
+                uses ch-add;
+              }
+              container only-from {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)only_from";
+                  }
+                }
+                uses ch-add;
+              }
+              container passenv {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)passenv";
+                  }
+                }
+                uses ch-add;
+              }
+              container enabled {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-type {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)enabled";
+                  }
+                }
+                uses ch-add;
+              }
+            }
+          }
+        }
+        container service {
+          augex:data-path "service";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n/]+";
+            }
+          }
+          list service-attr {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-service-attr {
+              mandatory true;
+              container socket-type {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)socket_type";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container protocol {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)protocol";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container wait {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)wait";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container user {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)user";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container group {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)group";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container server {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)server";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container instances {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)instances";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rpc-version {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rpc_version";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rpc-number {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rpc_number";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container id {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)id";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container port {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)port";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container nice {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)nice";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container bind {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)bind";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container interface {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)interface";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container per-source {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)per_source";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container groups {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)groups";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner-success {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner_success";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container banner-fail {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)banner_fail";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container disable {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)disable";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container max-load {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)max_load";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rlimit-as {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rlimit_as";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rlimit-cpu {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rlimit_cpu";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rlimit-data {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rlimit_data";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rlimit-rss {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rlimit_rss";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container rlimit-stack {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)rlimit_stack";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container v6only {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)v6only";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container deny-time {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)deny_time";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container umask {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)umask";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container mdns {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)mdns";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container libwrap {
+                augex:data-path "$$";
+                augex:value-yang-path "value";
+                presence "Config entry.";
+                leaf id {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)libwrap";
+                  }
+                }
+                leaf value {
+                  mandatory true;
+                  type string {
+                    pattern "[^ \t\n]+";
+                  }
+                }
+              }
+              container server-args {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)server_args";
+                  }
+                }
+                uses value;
+              }
+              container log-type {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_type";
+                  }
+                }
+                uses value;
+              }
+              container access-times {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)access_times";
+                  }
+                }
+                uses value;
+              }
+              container type {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)type";
+                  }
+                }
+                uses value;
+              }
+              container flags {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)flags";
+                  }
+                }
+                uses value;
+              }
+              container redirect {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)redirect";
+                  }
+                }
+                uses value;
+              }
+              container cps {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf server-args {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)cps";
+                  }
+                }
+                uses value;
+              }
+              container log-on-success {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_on_success";
+                  }
+                }
+                uses ch-add;
+              }
+              container log-on-failure {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)log_on_failure";
+                  }
+                }
+                uses ch-add;
+              }
+              container only-from {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)only_from";
+                  }
+                }
+                uses ch-add;
+              }
+              container no-access {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)no_access";
+                  }
+                }
+                uses ch-add;
+              }
+              container env {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)env";
+                  }
+                }
+                uses ch-add;
+              }
+              container passenv {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf log-on-success {
+                  mandatory true;
+                  type string {
+                    pattern "(?i)passenv";
+                  }
+                }
+                uses ch-add;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

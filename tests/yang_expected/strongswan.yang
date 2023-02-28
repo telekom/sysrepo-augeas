@@ -1,0 +1,150 @@
+module strongswan {
+  yang-version 1.1;
+  namespace "aug:strongswan";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Strongswan";
+
+  list strongswan {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list include-list {
+      key "_r-id";
+      leaf _r-id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the recursive augeas data.";
+      }
+      choice ch-include-list {
+        mandatory true;
+        leaf include {
+          type string {
+            pattern "[^\n\t ].*";
+          }
+          augex:data-path "include";
+        }
+        container node {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "ah_(proposal((s[^\t\n #./\\\\{}]|[^\t\n #./\\\\s{}])[^\t\n #./\\\\{}]*|())|proposa([^\t\n #./\\\\l{}][^\t\n #./\\\\{}]*|())|propos([^\t\n #./\\\\a{}][^\t\n #./\\\\{}]*|())|propo([^\t\n #./\\\\s{}][^\t\n #./\\\\{}]*|())|prop([^\t\n #./\\\\o{}][^\t\n #./\\\\{}]*|())|pro([^\t\n #./\\\\p{}][^\t\n #./\\\\{}]*|())|pr([^\t\n #./\\\\o{}][^\t\n #./\\\\{}]*|())|p([^\t\n #./\\\\r{}][^\t\n #./\\\\{}]*|())|[^\t\n #./\\\\p{}][^\t\n #./\\\\{}]*|())|ah([^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|[^\t\n #./\\\\_{}])|cert_[^\t\n #./\\\\p{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert_[^\t\n #./\\\\p{}]|cert_|ce[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|ce[^\t\n #./\\\\r{}]|ce|cac[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cac[^\t\n #./\\\\e{}]|cac|cert_pol[^\t\n #./\\\\i{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert_pol[^\t\n #./\\\\i{}]|cert_pol|ca[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|ca[^\t\n #./\\\\c{}]|ca|cer[^\t\n #./\\\\t{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cer[^\t\n #./\\\\t{}]|cer|cert[^\t\n #./\\\\_s{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert[^\t\n #./\\\\_s{}]|cert|certs[^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|certs[^\t\n #./\\\\{}]|cert_po[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert_po[^\t\n #./\\\\l{}]|cert_po|cr[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cr[^\t\n #./\\\\l{}]|cr|cacert[^\t\n #./\\\\s{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cacerts[^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cacerts[^\t\n #./\\\\{}]|cacert[^\t\n #./\\\\s{}]|cacert|cert_p[^\t\n #./\\\\o{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert_p[^\t\n #./\\\\o{}]|cert_p|(cert_policy[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|cert_polic[^\t\n #./\\\\y{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|cert_policy[^\t\n #./\\\\{}]|cert_polic[^\t\n #./\\\\y{}]|cert_polic|crl[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|(crl_uris[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|crl_uri[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|crl_uris[^\t\n #./\\\\{}]|crl_uri[^\t\n #./\\\\s{}]|crl_uri|crl_u[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|crl_u[^\t\n #./\\\\r{}]|crl_u|crl_ur[^\t\n #./\\\\i{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|crl_ur[^\t\n #./\\\\i{}]|crl_ur|crl_[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|crl_[^\t\n #./\\\\u{}]|crl_|crl[^\t\n #./\\\\_{}]|crl|cace[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cace[^\t\n #./\\\\r{}]|cace|cacer[^\t\n #./\\\\t{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cacer[^\t\n #./\\\\t{}]|cacer|cert_poli[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|cert_poli[^\t\n #./\\\\c{}]|cert_poli|(dns[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|dn[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|dns[^\t\n #./\\\\{}]|dn[^\t\n #./\\\\s{}]|dn|(dhcp[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|dhc[^\t\n #./\\\\p{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|dhcp[^\t\n #./\\\\{}]|dhc[^\t\n #./\\\\p{}]|dhc|dh[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|dh[^\t\n #./\\\\c{}]|dh|esp_proposal((s[^\t\n #./\\\\{}]|[^\t\n #./\\\\s{}])[^\t\n #./\\\\{}]*|())|esp_proposa([^\t\n #./\\\\l{}][^\t\n #./\\\\{}]*|())|esp_propos([^\t\n #./\\\\a{}][^\t\n #./\\\\{}]*|())|esp_propo([^\t\n #./\\\\s{}][^\t\n #./\\\\{}]*|())|esp_prop([^\t\n #./\\\\o{}][^\t\n #./\\\\{}]*|())|esp_pro([^\t\n #./\\\\p{}][^\t\n #./\\\\{}]*|())|esp_pr([^\t\n #./\\\\o{}][^\t\n #./\\\\{}]*|())|esp_p([^\t\n #./\\\\r{}][^\t\n #./\\\\{}]*|())|esp_([^\t\n #./\\\\p{}][^\t\n #./\\\\{}]*|())|esp([^\t\n #./\\\\_{}][^\t\n #./\\\\{}]*|())|es([^\t\n #./\\\\p{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|[^\t\n #./\\\\p{}])|(e[^\t\n #./\\\\s{}]|a[^\t\n #./\\\\h{}]|[^\t\n #./\\\\ac-egiln-prsv{}][^\t\n #./\\\\{}])([^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|[^\t\n #./\\\\{}])|e[^\t\n #./\\\\s{}]|a[^\t\n #./\\\\h{}]|[^\t\n #./\\\\ac-egiln-prsv{}][^\t\n #./\\\\{}]|(groups[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|group[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|groups[^\t\n #./\\\\{}]|group[^\t\n #./\\\\s{}]|group|grou[^\t\n #./\\\\p{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|grou[^\t\n #./\\\\p{}]|grou|gr[^\t\n #./\\\\o{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|gr[^\t\n #./\\\\o{}]|gr|gro[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|gro[^\t\n #./\\\\u{}]|gro|(interfaces_ignore[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|interfaces_ignor[^\t\n #./\\\\e{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|interfaces_ignore[^\t\n #./\\\\{}]|interfaces_ignor[^\t\n #./\\\\e{}]|interfaces_ignor|interfaces_igno[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_igno[^\t\n #./\\\\r{}]|interfaces_igno|interfaces_u[^\t\n #./\\\\s{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_u[^\t\n #./\\\\s{}]|interfaces_u|includ[^\t\n #./\\\\e{}][^\t\n #./\\\\{}]([^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|())|incl[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|incl[^\t\n #./\\\\u{}][^\t\n #./\\\\{}]|interfac[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfac[^\t\n #./\\\\e{}]|interfac|include[^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|include[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|interfaces[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces[^\t\n #./\\\\_{}]|interfaces|i[^\t\n #./\\\\n{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|i[^\t\n #./\\\\n{}][^\t\n #./\\\\{}]|i[^\t\n #./\\\\n{}]|inc[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|inc[^\t\n #./\\\\l{}][^\t\n #./\\\\{}]|inter[^\t\n #./\\\\f{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|inter[^\t\n #./\\\\f{}]|inter|interf[^\t\n #./\\\\a{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interf[^\t\n #./\\\\a{}]|interf|inte[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|inte[^\t\n #./\\\\r{}]|inte|interfa[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfa[^\t\n #./\\\\c{}]|interfa|interfaces_[^\t\n #./\\\\iu{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_[^\t\n #./\\\\iu{}]|interfaces_|interface[^\t\n #./\\\\s{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interface[^\t\n #./\\\\s{}]|interface|interfaces_i[^\t\n #./\\\\g{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_i[^\t\n #./\\\\g{}]|interfaces_i|interfaces_ign[^\t\n #./\\\\o{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_ign[^\t\n #./\\\\o{}]|interfaces_ign|int[^\t\n #./\\\\e{}]([^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|())|inclu[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|inclu[^\t\n #./\\\\d{}][^\t\n #./\\\\{}]|interfaces_ig[^\t\n #./\\\\n{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|interfaces_ig[^\t\n #./\\\\n{}]|interfaces_ig|in[^\t\n #./\\\\ct{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|in[^\t\n #./\\\\ct{}][^\t\n #./\\\\{}]|(interfaces_use[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|interfaces_us[^\t\n #./\\\\e{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|interfaces_use[^\t\n #./\\\\{}]|interfaces_us[^\t\n #./\\\\e{}]|interfaces_us|local[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|(local_addrs[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|local_addr[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|local_addrs[^\t\n #./\\\\{}]|local_addr[^\t\n #./\\\\s{}]|local_addr|local_add[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|local_add[^\t\n #./\\\\r{}]|local_add|local_ad[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|local_ad[^\t\n #./\\\\d{}]|local_ad|(local_ts[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|local_t[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|local_ts[^\t\n #./\\\\{}]|local_t[^\t\n #./\\\\s{}]|local_t|local_a[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|local_a[^\t\n #./\\\\d{}]|local_a|local_[^\t\n #./\\\\at{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|local_[^\t\n #./\\\\at{}]|local_|local[^\t\n #./\\\\_{}]|local|loca[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|loca[^\t\n #./\\\\l{}]|loca|loc[^\t\n #./\\\\a{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|loc[^\t\n #./\\\\a{}]|loc|lo[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|lo[^\t\n #./\\\\c{}]|lo|(nbns[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|nbn[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|nbns[^\t\n #./\\\\{}]|nbn[^\t\n #./\\\\s{}]|nbn|(netmask[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|netmas[^\t\n #./\\\\k{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|netmask[^\t\n #./\\\\{}]|netmas[^\t\n #./\\\\k{}]|netmas|netma[^\t\n #./\\\\s{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|netma[^\t\n #./\\\\s{}]|netma|netm[^\t\n #./\\\\a{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|netm[^\t\n #./\\\\a{}]|netm|net[^\t\n #./\\\\m{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|net[^\t\n #./\\\\m{}]|net|ne[^\t\n #./\\\\t{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|ne[^\t\n #./\\\\t{}]|ne|nb[^\t\n #./\\\\n{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|nb[^\t\n #./\\\\n{}]|nb|(oscp_uris[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|oscp_uri[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|oscp_uris[^\t\n #./\\\\{}]|oscp_uri[^\t\n #./\\\\s{}]|oscp_uri|oscp_ur[^\t\n #./\\\\i{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|oscp_ur[^\t\n #./\\\\i{}]|oscp_ur|oscp_u[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|oscp_u[^\t\n #./\\\\r{}]|oscp_u|oscp_[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|oscp_[^\t\n #./\\\\u{}]|oscp_|oscp[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|oscp[^\t\n #./\\\\_{}]|oscp|osc[^\t\n #./\\\\p{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|osc[^\t\n #./\\\\p{}]|osc|os[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|os[^\t\n #./\\\\c{}]|os|(pools[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|pool[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|pools[^\t\n #./\\\\{}]|pool[^\t\n #./\\\\s{}]|pool|poo[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|poo[^\t\n #./\\\\l{}]|poo|(preferred[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|preferre[^\t\n #./\\\\d{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|preferred[^\t\n #./\\\\{}]|preferre[^\t\n #./\\\\d{}]|preferre|preferr[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|preferr[^\t\n #./\\\\e{}]|preferr|prefer[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|prefer[^\t\n #./\\\\r{}]|prefer|prefe[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|prefe[^\t\n #./\\\\r{}]|prefe|pref[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pref[^\t\n #./\\\\e{}]|pref|pre[^\t\n #./\\\\f{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pre[^\t\n #./\\\\f{}]|pre|(pubkeys[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|pubkey[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|pubkeys[^\t\n #./\\\\{}]|pubkey[^\t\n #./\\\\s{}]|pubkey|pubke[^\t\n #./\\\\y{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pubke[^\t\n #./\\\\y{}]|pubke|pubk[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pubk[^\t\n #./\\\\e{}]|pubk|pub[^\t\n #./\\\\k{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pub[^\t\n #./\\\\k{}]|pub|pu[^\t\n #./\\\\b{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|pu[^\t\n #./\\\\b{}]|pu|proposal((s[^\t\n #./\\\\{}]|[^\t\n #./\\\\s{}])[^\t\n #./\\\\{}]*|())|proposa([^\t\n #./\\\\l{}][^\t\n #./\\\\{}]*|())|propos([^\t\n #./\\\\a{}][^\t\n #./\\\\{}]*|())|propo([^\t\n #./\\\\s{}][^\t\n #./\\\\{}]*|())|prop([^\t\n #./\\\\o{}][^\t\n #./\\\\{}]*|())|(pro[^\t\n #./\\\\p{}]|pr[^\t\n #./\\\\eo{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|pro|pr[^\t\n #./\\\\eo{}]|pr|po[^\t\n #./\\\\o{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|po[^\t\n #./\\\\o{}]|po|(remote_addrs[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|remote_addr[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|remote_addrs[^\t\n #./\\\\{}]|remote_addr[^\t\n #./\\\\s{}]|remote_addr|remote_add[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remote_add[^\t\n #./\\\\r{}]|remote_add|remote_ad[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remote_ad[^\t\n #./\\\\d{}]|remote_ad|(remote_ts[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|remote_t[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|remote_ts[^\t\n #./\\\\{}]|remote_t[^\t\n #./\\\\s{}]|remote_t|remote_a[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remote_a[^\t\n #./\\\\d{}]|remote_a|remote_[^\t\n #./\\\\at{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remote_[^\t\n #./\\\\at{}]|remote_|remote[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remote[^\t\n #./\\\\_{}]|remote|remot[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remot[^\t\n #./\\\\e{}]|remot|remo[^\t\n #./\\\\t{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|remo[^\t\n #./\\\\t{}]|remo|rem[^\t\n #./\\\\o{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|rem[^\t\n #./\\\\o{}]|rem|re[^\t\n #./\\\\m{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|re[^\t\n #./\\\\m{}]|re|(server[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|serve[^\t\n #./\\\\r{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|server[^\t\n #./\\\\{}]|serve[^\t\n #./\\\\r{}]|serve|serv[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|serv[^\t\n #./\\\\e{}]|serv|ser[^\t\n #./\\\\v{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|ser[^\t\n #./\\\\v{}]|ser|split_ex[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|(split_exclude[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|split_exclud[^\t\n #./\\\\e{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|split_exclude[^\t\n #./\\\\{}]|split_exclud[^\t\n #./\\\\e{}]|split_exclud|split_exclu[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_exclu[^\t\n #./\\\\d{}]|split_exclu|split_excl[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_excl[^\t\n #./\\\\u{}]|split_excl|split_exc[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_exc[^\t\n #./\\\\l{}]|split_exc|split_ex[^\t\n #./\\\\c{}]|split_ex|(split_include[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|split_includ[^\t\n #./\\\\e{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|split_include[^\t\n #./\\\\{}]|split_includ[^\t\n #./\\\\e{}]|split_includ|split_inclu[^\t\n #./\\\\d{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_inclu[^\t\n #./\\\\d{}]|split_inclu|split_incl[^\t\n #./\\\\u{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_incl[^\t\n #./\\\\u{}]|split_incl|split_inc[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_inc[^\t\n #./\\\\l{}]|split_inc|split_in[^\t\n #./\\\\c{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_in[^\t\n #./\\\\c{}]|split_in|split_i[^\t\n #./\\\\n{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_i[^\t\n #./\\\\n{}]|split_i|split_e[^\t\n #./\\\\x{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_e[^\t\n #./\\\\x{}]|split_e|split_[^\t\n #./\\\\ei{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split_[^\t\n #./\\\\ei{}]|split_|split[^\t\n #./\\\\_{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|split[^\t\n #./\\\\_{}]|split|spli[^\t\n #./\\\\t{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|spli[^\t\n #./\\\\t{}]|spli|spl[^\t\n #./\\\\i{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|spl[^\t\n #./\\\\i{}]|spl|(subnet[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|subne[^\t\n #./\\\\t{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|subnet[^\t\n #./\\\\{}]|subne[^\t\n #./\\\\t{}]|subne|subn[^\t\n #./\\\\e{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|subn[^\t\n #./\\\\e{}]|subn|sub[^\t\n #./\\\\n{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|sub[^\t\n #./\\\\n{}]|sub|su[^\t\n #./\\\\b{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|su[^\t\n #./\\\\b{}]|su|sp[^\t\n #./\\\\l{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|sp[^\t\n #./\\\\l{}]|sp|se[^\t\n #./\\\\r{}][^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|se[^\t\n #./\\\\r{}]|se|(vips[^\t\n #./\\\\{}][^\t\n #./\\\\{}]|vip[^\t\n #./\\\\s{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}]*|vips[^\t\n #./\\\\{}]|vip[^\t\n #./\\\\s{}]|vip|vi[^\t\n #./\\\\p{}]([^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|())|(o[^\t\n #./\\\\s{}][^\t\n #./\\\\{}]|p[^\t\n #./\\\\oru{}][^\t\n #./\\\\{}]|d[^\t\n #./\\\\hn{}][^\t\n #./\\\\{}]|g[^\t\n #./\\\\r{}][^\t\n #./\\\\{}]|l[^\t\n #./\\\\o{}][^\t\n #./\\\\{}]|n[^\t\n #./\\\\be{}][^\t\n #./\\\\{}]|r[^\t\n #./\\\\e{}][^\t\n #./\\\\{}]|s[^\t\n #./\\\\epu{}][^\t\n #./\\\\{}]|v[^\t\n #./\\\\i{}][^\t\n #./\\\\{}]|c[^\t\n #./\\\\aer{}][^\t\n #./\\\\{}])[^\t\n #./\\\\{}][^\t\n #./\\\\{}]*|o[^\t\n #./\\\\s{}][^\t\n #./\\\\{}]|p[^\t\n #./\\\\oru{}][^\t\n #./\\\\{}]|d[^\t\n #./\\\\hn{}][^\t\n #./\\\\{}]|g[^\t\n #./\\\\r{}][^\t\n #./\\\\{}]|l[^\t\n #./\\\\o{}][^\t\n #./\\\\{}]|n[^\t\n #./\\\\be{}][^\t\n #./\\\\{}]|r[^\t\n #./\\\\e{}][^\t\n #./\\\\{}]|s[^\t\n #./\\\\epu{}][^\t\n #./\\\\{}]|v[^\t\n #./\\\\i{}][^\t\n #./\\\\{}]|c[^\t\n #./\\\\aer{}][^\t\n #./\\\\{}]|es|ah|o[^\t\n #./\\\\s{}]|o|g[^\t\n #./\\\\r{}]|g|inclu|incl|incl[^\t\n #./\\\\u{}]|inc|p[^\t\n #./\\\\oru{}]|p|c|d[^\t\n #./\\\\hn{}]|d|e|int|in[^\t\n #./\\\\ct{}]|includ[^\t\n #./\\\\e{}]|includ|include[^\t\n #./\\\\{}]|i|l[^\t\n #./\\\\o{}]|l|n[^\t\n #./\\\\be{}]|n|r[^\t\n #./\\\\e{}]|r|in|inc[^\t\n #./\\\\l{}]|inclu[^\t\n #./\\\\d{}]|s[^\t\n #./\\\\epu{}]|s|vi|v[^\t\n #./\\\\i{}]|v|c[^\t\n #./\\\\aer{}]|[^\t\n #./\\\\ac-egiln-prsv{}]|a";
+            }
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\n\t ].*";
+            }
+          }
+        }
+        container list {
+          augex:data-path "#list";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "(crl|oscp)_uris|(local|remote)_(addrs|ts)|vips|pools|(ca)?certs|pubkeys|groups|cert_policy|dns|nbns|dhcp|netmask|server|subnet|split_(in|ex)clude|interfaces_(ignore|use)|preferred";
+            }
+          }
+          list item-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^\n\t ,][^\n,]*";
+              }
+            }
+          }
+        }
+        container proposals {
+          augex:data-path "#proposals";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "((ah|esp)_)?proposals";
+            }
+          }
+          list item-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            list alg-list {
+              key "_seq";
+              min-elements 1;
+              ordered-by user;
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              leaf _seq {
+                type uint64;
+                description
+                  "Key contains some unique value. The order is based on the actual order of list instances.";
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "[a-z0-9]+";
+                }
+              }
+            }
+          }
+        }
+        container node2 {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf label {
+            mandatory true;
+            type string {
+              pattern "[^/.\\\\{\\\\}#\n\t ]+";
+              pattern "include" {
+                modifier invert-match;
+              }
+            }
+          }
+          list config-entries {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf _include-ref {
+              type leafref {
+                path "../../../../include-list/_r-id";
+              }
+              description
+                "Implicitly generated leaf to maintain recursive augeas data.";
+            }
+          }
+        }
+      }
+    }
+  }
+}

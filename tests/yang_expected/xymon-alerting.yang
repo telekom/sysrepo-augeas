@@ -1,0 +1,368 @@
+module xymon-alerting {
+  yang-version 1.1;
+  namespace "aug:xymon-alerting";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Xymon_Alerting";
+
+  grouping duration {
+    leaf operator {
+      mandatory true;
+      type string {
+        pattern "[<>]";
+      }
+      augex:data-path "operator";
+    }
+    leaf value {
+      mandatory true;
+      type string {
+        pattern "[^ =\t\n#]+";
+      }
+      augex:data-path "value";
+    }
+  }
+  grouping rule-filter {
+    list rule-filter {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-rule-filter {
+        mandatory true;
+        leaf page {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "PAGE";
+        }
+        leaf expage {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "EXPAGE";
+        }
+        leaf group {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "GROUP";
+        }
+        leaf exgroup {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "EXGROUP";
+        }
+        leaf host {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "HOST";
+        }
+        leaf exhost {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "EXHOST";
+        }
+        leaf service {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "SERVICE";
+        }
+        leaf exservice {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "EXSERVICE";
+        }
+        leaf color {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "COLOR";
+        }
+        leaf time {
+          type string {
+            pattern "[^ =\t\n#]+";
+          }
+          augex:data-path "TIME";
+        }
+        container duration {
+          augex:data-path "DURATION";
+          presence "Config entry.";
+          uses duration;
+        }
+        leaf recover {
+          type empty;
+          augex:data-path "RECOVER";
+        }
+        leaf notice {
+          type empty;
+          augex:data-path "NOTICE";
+        }
+      }
+    }
+  }
+  grouping filters-opt {
+    container filters {
+      augex:data-path "filters";
+      presence "Config entry.";
+      uses rule-filter;
+    }
+  }
+  list xymon-alerting {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    choice ch-xymon-alerting {
+      mandatory true;
+      list rules-list {
+        key "_seq";
+        ordered-by user;
+        augex:data-path "$$";
+        leaf _seq {
+          type uint64;
+          description
+            "Key contains some unique value. The order is based on the actual order of list instances.";
+        }
+        container filters {
+          augex:data-path "filters";
+          presence "Config entry.";
+          list rule-filter {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-rule-filter {
+              mandatory true;
+              leaf page {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "PAGE";
+              }
+              leaf expage {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "EXPAGE";
+              }
+              leaf group {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "GROUP";
+              }
+              leaf exgroup {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "EXGROUP";
+              }
+              leaf host {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "HOST";
+              }
+              leaf exhost {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "EXHOST";
+              }
+              leaf service {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "SERVICE";
+              }
+              leaf exservice {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "EXSERVICE";
+              }
+              leaf color {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "COLOR";
+              }
+              leaf time {
+                type string {
+                  pattern "[^ =\t\n#]+";
+                }
+                augex:data-path "TIME";
+              }
+              container duration {
+                augex:data-path "DURATION";
+                presence "Config entry.";
+                uses duration;
+              }
+              leaf recover {
+                type empty;
+                augex:data-path "RECOVER";
+              }
+              leaf notice {
+                type empty;
+                augex:data-path "NOTICE";
+              }
+            }
+          }
+        }
+        container recipients {
+          augex:data-path "recipients";
+          presence "Config entry.";
+          list recipient {
+            key "_id";
+            min-elements 1;
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-recipient {
+              mandatory true;
+              container mail {
+                augex:data-path "MAIL";
+                augex:value-yang-path "store-word";
+                presence "Config entry.";
+                leaf store-word {
+                  mandatory true;
+                  type string {
+                    pattern "[^ =\t\n#]+";
+                  }
+                }
+                uses filters-opt;
+              }
+              container script {
+                augex:data-path "SCRIPT";
+                presence "Config entry.";
+                leaf script {
+                  mandatory true;
+                  type string {
+                    pattern "[^ =\t\n#]+";
+                  }
+                  augex:data-path "script";
+                }
+                leaf recipient {
+                  mandatory true;
+                  type string {
+                    pattern "[^ =\t\n#]+";
+                  }
+                  augex:data-path "recipient";
+                }
+                container filters {
+                  augex:data-path "filters";
+                  presence "Config entry.";
+                  uses rule-filter;
+                }
+              }
+              container ignore {
+                augex:data-path "IGNORE";
+                presence "Config entry.";
+                uses filters-opt;
+              }
+              container format {
+                augex:data-path "FORMAT";
+                augex:value-yang-path "store-word";
+                presence "Config entry.";
+                leaf store-word {
+                  mandatory true;
+                  type string {
+                    pattern "[^ =\t\n#]+";
+                  }
+                }
+                uses filters-opt;
+              }
+              container repeat {
+                augex:data-path "REPEAT";
+                augex:value-yang-path "store-word";
+                presence "Config entry.";
+                leaf store-word {
+                  mandatory true;
+                  type string {
+                    pattern "[^ =\t\n#]+";
+                  }
+                }
+                uses filters-opt;
+              }
+              container unmatched {
+                augex:data-path "UNMATCHED";
+                presence "Config entry.";
+                uses filters-opt;
+              }
+              container stop {
+                augex:data-path "STOP";
+                presence "Config entry.";
+                uses filters-opt;
+              }
+              container macro {
+                augex:data-path "$$";
+                presence "Config entry.";
+                leaf label {
+                  mandatory true;
+                  type string {
+                    pattern "$[^ =\t\n#/]+";
+                  }
+                }
+                uses filters-opt;
+              }
+            }
+          }
+        }
+      }
+      list config-entries {
+        key "_id";
+        ordered-by user;
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        choice ch-config-entries {
+          mandatory true;
+          container macrodefinition {
+            augex:data-path "$$";
+            augex:value-yang-path "space-in";
+            presence "Config entry.";
+            leaf label {
+              mandatory true;
+              type string {
+                pattern "$[^ =\t\n#/]+";
+              }
+            }
+            leaf space-in {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
+            }
+          }
+          leaf include {
+            type string {
+              pattern "[^ =\t\n#]+";
+            }
+            augex:data-path "include";
+          }
+        }
+      }
+    }
+  }
+}

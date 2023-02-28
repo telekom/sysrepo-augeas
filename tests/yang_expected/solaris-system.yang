@@ -1,0 +1,129 @@
+module solaris-system {
+  yang-version 1.1;
+  namespace "aug:solaris-system";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Solaris_System";
+
+  list solaris-system {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container moddir {
+          augex:data-path "moddir";
+          presence "Config entry.";
+          list modpath-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^ :\t\n]+";
+              }
+            }
+          }
+        }
+        leaf rootdev {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "rootdev";
+        }
+        leaf rootfs {
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+          augex:data-path "rootfs";
+        }
+        leaf exclude {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "exclude";
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "include";
+        }
+        leaf forceload {
+          type string {
+            pattern "[^ \t\n]+";
+          }
+          augex:data-path "forceload";
+        }
+        container set {
+          augex:data-path "set";
+          presence "Config entry.";
+          choice ch-set {
+            mandatory true;
+            container case {
+              presence "Config entry.";
+              leaf variable {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "variable";
+              }
+            }
+            container case2 {
+              presence "Config entry.";
+              leaf module {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "module";
+              }
+              leaf variable {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "variable";
+              }
+            }
+          }
+          leaf operator {
+            mandatory true;
+            type string {
+              pattern "[=&|]";
+            }
+            augex:data-path "operator";
+          }
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n]+";
+            }
+            augex:data-path "value";
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+module samba {
+  yang-version 1.1;
+  namespace "aug:samba";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Samba";
+
+  list samba {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container target {
+        augex:data-path "target";
+        augex:value-yang-path "record-label";
+        presence "Config entry.";
+        leaf record-label {
+          mandatory true;
+          type string {
+            pattern "[^\\]\n]+";
+          }
+        }
+        list entry-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf entry {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_.-][A-Za-z0-9 _.:\\\\*-]*[A-Za-z0-9_.\\\\*-]";
+              }
+            }
+            leaf value {
+              type string {
+                pattern "[^;# \t\n][^;#\n]*[^;# \t\n]|[^;# \t\n]";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,361 @@
+module yum {
+  yang-version 1.1;
+  namespace "aug:yum";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Yum";
+
+  grouping entry {
+    container entry {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf entry {
+        mandatory true;
+        type string {
+          pattern "baseur((l[.0-9A-Z_a-z-]|[.0-9A-Z_a-km-z-])[.0-9A-Z_a-z-]*|())|baseu([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|base([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|bas([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|ba([.0-9A-Z_a-rt-z-][.0-9A-Z_a-z-]*|())|exclud((e[.0-9A-Z_a-z-]|[.0-9A-Z_a-df-z-])[.0-9A-Z_a-z-]*|())|exclu([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|excl([.0-9A-Z_a-tv-z-][.0-9A-Z_a-z-]*|())|exc([.0-9A-Z_a-km-z-][.0-9A-Z_a-z-]*|())|ex([.0-9A-Z_abd-z-][.0-9A-Z_a-z-]*|())|gpgke((y[.0-9A-Z_a-z-]|[.0-9A-Z_a-xz-])[.0-9A-Z_a-z-]*|())|gpgk([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|gpg([.0-9A-Z_a-jl-z-][.0-9A-Z_a-z-]*|())|gp([.0-9A-Z_a-fh-z-][.0-9A-Z_a-z-]*|())|(g[.0-9A-Z_a-oq-z-]|e[.0-9A-Z_a-wyz-]|b[.0-9A-Z_b-z-]|[A-Zacdfh-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|g|e|b|[A-Zacdfh-z]";
+        }
+      }
+      leaf value {
+        type union {
+          type string {
+            pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+          }
+          type string {
+            pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+          }
+        }
+      }
+    }
+  }
+  list yum {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf record {
+          mandatory true;
+          type string {
+            pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|())|#comme([^\\]\n/n][^\\]\n/]*|())|#comm([^\\]\n/e][^\\]\n/]*|())|#com([^\\]\n/m][^\\]\n/]*|())|#co([^\\]\n/m][^\\]\n/]*|())|#c([^\\]\n/o][^\\]\n/]*|())|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
+          }
+        }
+        list entry-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          uses entry;
+        }
+        choice ch-record {
+          mandatory true;
+          container case {
+            presence "Config entry.";
+            leaf-list baseurl {
+              type string {
+                pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+              }
+              ordered-by user;
+              augex:data-path "baseurl";
+            }
+            list entry-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              uses entry;
+            }
+            choice ch-case {
+              container case {
+                presence "Config entry.";
+                leaf-list gpgkey {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "gpgkey";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list exclude {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "exclude";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+              container case2 {
+                presence "Config entry.";
+                leaf-list exclude {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "exclude";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list gpgkey {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "gpgkey";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+            }
+          }
+          container case2 {
+            presence "Config entry.";
+            leaf-list gpgkey {
+              type string {
+                pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+              }
+              ordered-by user;
+              augex:data-path "gpgkey";
+            }
+            list entry-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              uses entry;
+            }
+            choice ch-case2 {
+              container case {
+                presence "Config entry.";
+                leaf-list baseurl {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "baseurl";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list exclude {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "exclude";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+              container case2 {
+                presence "Config entry.";
+                leaf-list exclude {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "exclude";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list baseurl {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "baseurl";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+            }
+          }
+          container case3 {
+            presence "Config entry.";
+            leaf-list exclude {
+              type string {
+                pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+              }
+              ordered-by user;
+              augex:data-path "exclude";
+            }
+            list entry-list {
+              key "_id";
+              ordered-by user;
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              uses entry;
+            }
+            choice ch-case3 {
+              container case {
+                presence "Config entry.";
+                leaf-list gpgkey {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "gpgkey";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list baseurl {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "baseurl";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+              container case2 {
+                presence "Config entry.";
+                leaf-list baseurl {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "baseurl";
+                }
+                list entry-list {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+                leaf-list gpgkey {
+                  type string {
+                    pattern "[^# \t\n,][^ \t\n,]*[^# \t\n,]|[^# \t\n,]";
+                  }
+                  ordered-by user;
+                  augex:data-path "gpgkey";
+                }
+                list entry-list2 {
+                  key "_id";
+                  ordered-by user;
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  uses entry;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

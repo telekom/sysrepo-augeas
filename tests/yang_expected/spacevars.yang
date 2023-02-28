@@ -1,0 +1,43 @@
+module spacevars {
+  yang-version 1.1;
+  namespace "aug:spacevars";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Spacevars";
+
+  list spacevars {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list simple-lns {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "space-in";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9._-]+(\\[[0-9]+\\])?";
+          }
+        }
+        leaf space-in {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+        }
+      }
+    }
+  }
+}

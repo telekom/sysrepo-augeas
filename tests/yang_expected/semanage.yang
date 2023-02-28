@@ -1,0 +1,112 @@
+module semanage {
+  yang-version 1.1;
+  namespace "aug:semanage";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Semanage";
+
+  grouping elem-list {
+    list elem-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "fspath";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf fspath {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n;#]+";
+        }
+      }
+    }
+  }
+  grouping gr {
+    container node {
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      presence "Config entry.";
+      leaf label {
+        mandatory true;
+        type string {
+          pattern "ignoredir((s[.0-9A-Z_a-z-]|[.0-9A-Z_a-rt-z-])[.0-9A-Z_a-z-]*|())|ignoredi([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|ignored([.0-9A-Z_a-hj-z-][.0-9A-Z_a-z-]*|())|ignore([.0-9A-Z_a-ce-z-][.0-9A-Z_a-z-]*|())|ignor([.0-9A-Z_a-df-z-][.0-9A-Z_a-z-]*|())|igno([.0-9A-Z_a-qs-z-][.0-9A-Z_a-z-]*|())|ign([.0-9A-Z_a-np-z-][.0-9A-Z_a-z-]*|())|ig([.0-9A-Z_a-mo-z-][.0-9A-Z_a-z-]*|())|(i[.0-9A-Z_a-fh-z-]|[A-Za-hj-z][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|i|[A-Za-hj-z]";
+        }
+      }
+      leaf value {
+        type union {
+          type string {
+            pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+          }
+          type string {
+            pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+          }
+        }
+      }
+    }
+  }
+  list semanage {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container ignoredirs {
+          augex:data-path "ignoredirs";
+          presence "Config entry.";
+          uses elem-list;
+        }
+        case gr {
+          uses gr;
+        }
+        container group {
+          augex:data-path "@group";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "#com[^\\]\n/m][^\\]\n/][^\\]\n/]*|#com[^\\]\n/m]|#com|#c[^\\]\n/o][^\\]\n/][^\\]\n/]*|#c[^\\]\n/o]|#c|#co[^\\]\n/m][^\\]\n/][^\\]\n/]*|#co[^\\]\n/m]|#co|(#comment[^\\]\n/][^\\]\n/]|#commen[^\\]\n/t][^\\]\n/])[^\\]\n/]*|#comment[^\\]\n/]|#commen[^\\]\n/t]|#commen|#comme[^\\]\n/n][^\\]\n/][^\\]\n/]*|#comme[^\\]\n/n]|#comme|#[^\\]\n/c]([^\\]\n/][^\\]\n/]*|())|#comm[^\\]\n/e][^\\]\n/][^\\]\n/]*|#comm[^\\]\n/e]|#comm|\\^end(($[^\\]\n/]|[^\\]\n$/])[^\\]\n/]*|())|\\^en([^\\]\n/d][^\\]\n/]*|())|(\\^e[^\\]\n/n]|(\\^[^\\]\n/e]|[^\\]\n#/^][^\\]\n/])[^\\]\n/])[^\\]\n/]*|\\^e|\\^[^\\]\n/e]|[^\\]\n#/^][^\\]\n/]|[^\\]\n#/^]|#|\\^";
+            }
+          }
+          list entry {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-entry {
+              mandatory true;
+              container ignoredirs {
+                augex:data-path "ignoredirs";
+                presence "Config entry.";
+                uses elem-list;
+              }
+              case gr {
+                uses gr;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

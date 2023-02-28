@@ -1,0 +1,753 @@
+module stunnel {
+  yang-version 1.1;
+  namespace "aug:stunnel";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Stunnel";
+
+  grouping rc-anon {
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf chroot {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "chroot";
+        }
+        leaf compression {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "compression";
+        }
+        leaf debug {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "debug";
+        }
+        leaf egd {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "EGD";
+        }
+        leaf engine {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "engine";
+        }
+        leaf engine-ctrl {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "engineCtrl";
+        }
+        leaf fips {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "fips";
+        }
+        leaf foreground {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "foreground";
+        }
+        leaf output {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "output";
+        }
+        leaf pid {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "pid";
+        }
+        leaf rndbytes {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "RNDbytes";
+        }
+        leaf rndfile {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "RNDfile";
+        }
+        leaf rndoverwrite {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "RNDoverwrite";
+        }
+        leaf service {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "service";
+        }
+        leaf setgid {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "setgid";
+        }
+        leaf setuid {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "setuid";
+        }
+        leaf socket {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "socket";
+        }
+        leaf syslog {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "syslog";
+        }
+        leaf taskbar {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "taskbar";
+        }
+        leaf accept {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "accept";
+        }
+        leaf capath {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "CApath";
+        }
+        leaf cafile {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "CAfile";
+        }
+        leaf cert {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "cert";
+        }
+        leaf ciphers {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "ciphers";
+        }
+        leaf client {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "client";
+        }
+        leaf connect {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "connect";
+        }
+        leaf crlpath {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "CRLpath";
+        }
+        leaf crlfile {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "CRLfile";
+        }
+        leaf curve {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "curve";
+        }
+        leaf delay {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "delay";
+        }
+        leaf engine-num {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "engineNum";
+        }
+        leaf exec {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "exec";
+        }
+        leaf execargs {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "execargs";
+        }
+        leaf failover {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "failover";
+        }
+        leaf ident {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "ident";
+        }
+        leaf key {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "key";
+        }
+        leaf local {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "local";
+        }
+        leaf ocsp {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "OCSP";
+        }
+        leaf ocspflag {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "OCSPflag";
+        }
+        leaf options {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "options";
+        }
+        leaf protocol {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "protocol";
+        }
+        leaf protocol-authentication {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "protocolAuthentication";
+        }
+        leaf protocol-host {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "protocolHost";
+        }
+        leaf protocol-password {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "protocolPassword";
+        }
+        leaf protocol-username {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "protocolUsername";
+        }
+        leaf pty {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "pty";
+        }
+        leaf retry {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "retry";
+        }
+        leaf session {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "session";
+        }
+        leaf sessiond {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "sessiond";
+        }
+        leaf sni {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "sni";
+        }
+        leaf ssl-version {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "sslVersion";
+        }
+        leaf stack {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "stack";
+        }
+        leaf timeoutbusy {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "TIMEOUTbusy";
+        }
+        leaf timeoutclose {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "TIMEOUTclose";
+        }
+        leaf timeoutconnect {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "TIMEOUTconnect";
+        }
+        leaf timeoutidle {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "TIMEOUTidle";
+        }
+        leaf transparent {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "transparent";
+        }
+        leaf verify {
+          type union {
+            type empty;
+            type string {
+              pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+            }
+            type string {
+              pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+            }
+          }
+          augex:data-path "verify";
+        }
+      }
+    }
+  }
+  list stunnel {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    container anon {
+      augex:data-path ".anon";
+      presence "Config entry.";
+      uses rc-anon;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "#comme[^\\]\n/n][^\\]\n/][^\\]\n/]*|#comme[^\\]\n/n]|#comme|(#comment[^\\]\n/][^\\]\n/]|#commen[^\\]\n/t][^\\]\n/])[^\\]\n/]*|#comment[^\\]\n/]|#commen[^\\]\n/t]|#commen|#comm[^\\]\n/e][^\\]\n/][^\\]\n/]*|#comm[^\\]\n/e]|#comm|#com[^\\]\n/m][^\\]\n/][^\\]\n/]*|#com[^\\]\n/m]|#com|#co[^\\]\n/m][^\\]\n/][^\\]\n/]*|#co[^\\]\n/m]|#co|#c[^\\]\n/o][^\\]\n/][^\\]\n/]*|#c[^\\]\n/o]|#c|#[^\\]\n/c]([^\\]\n/][^\\]\n/]*|())|\\.ano((n[^\\]\n/]|[^\\]\n/n])[^\\]\n/]*|())|\\.an([^\\]\n/o][^\\]\n/]*|())|(\\.a[^\\]\n/n]|(\\.[^\\]\n/a]|[^\\]\n#./][^\\]\n/])[^\\]\n/])[^\\]\n/]*|\\.a|\\.[^\\]\n/a]|[^\\]\n#./][^\\]\n/]|[^\\]\n#./]|#|\\.";
+          }
+        }
+        uses rc-anon;
+      }
+    }
+  }
+}

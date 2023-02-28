@@ -1,0 +1,180 @@
+module wine {
+  yang-version 1.1;
+  namespace "aug:wine";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Wine";
+
+  list wine {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    leaf registry {
+      mandatory true;
+      type string {
+        pattern "[a-zA-Z0-9 \t]*[a-zA-Z0-9]";
+      }
+      augex:data-path "registry";
+    }
+    leaf version {
+      mandatory true;
+      type string {
+        pattern "[0-9.]+";
+      }
+      augex:data-path "version";
+    }
+    list section-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container section {
+        augex:data-path "section";
+        augex:value-yang-path "value";
+        presence "Config entry.";
+        leaf value {
+          mandatory true;
+          type string {
+            pattern "[^\\]\n]+";
+          }
+        }
+        leaf timestamp {
+          type uint64;
+          augex:data-path "timestamp";
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            container entry {
+              augex:data-path "entry";
+              presence "Config entry.";
+              leaf key {
+                mandatory true;
+                type string {
+                  pattern "([^\"\n]|\\\\.)*";
+                  pattern "@|\"@\"" {
+                    modifier invert-match;
+                  }
+                }
+                augex:data-path "key";
+              }
+              choice ch-entry {
+                mandatory true;
+                container case {
+                  presence "Config entry.";
+                  leaf value {
+                    type string {
+                      pattern "([^\"\n]|\\\\.)*";
+                      pattern "@|\"@\"" {
+                        modifier invert-match;
+                      }
+                    }
+                    augex:data-path "value";
+                  }
+                }
+                container case2 {
+                  presence "Config entry.";
+                  leaf type {
+                    mandatory true;
+                    type union {
+                      type string {
+                        pattern "dword|hex(\\([0-9]+\\))?";
+                      }
+                      type string {
+                        pattern "str\\([0-9]+\\)";
+                      }
+                    }
+                    augex:data-path "type";
+                  }
+                  choice ch-case2 {
+                    mandatory true;
+                    leaf value {
+                      type string {
+                        pattern "[a-zA-Z0-9,()]+(\\\\\n[ \t]*[a-zA-Z0-9,]+)*";
+                      }
+                      augex:data-path "value";
+                      when "re-match(../type, 'dword|hex(\\([0-9]+\\))?')";
+                    }
+                    leaf value2 {
+                      type string {
+                        pattern "[^\"\n]*";
+                      }
+                      augex:data-path "value";
+                      when "re-match(../type, 'str\\([0-9]+\\)')";
+                    }
+                  }
+                }
+              }
+            }
+            container anon {
+              augex:data-path "anon";
+              presence "Config entry.";
+              choice ch-anon {
+                mandatory true;
+                container case {
+                  presence "Config entry.";
+                  leaf value {
+                    type string {
+                      pattern "([^\"\n]|\\\\.)*";
+                      pattern "@|\"@\"" {
+                        modifier invert-match;
+                      }
+                    }
+                    augex:data-path "value";
+                  }
+                }
+                container case2 {
+                  presence "Config entry.";
+                  leaf type {
+                    mandatory true;
+                    type union {
+                      type string {
+                        pattern "dword|hex(\\([0-9]+\\))?";
+                      }
+                      type string {
+                        pattern "str\\([0-9]+\\)";
+                      }
+                    }
+                    augex:data-path "type";
+                  }
+                  choice ch-case2 {
+                    mandatory true;
+                    leaf value {
+                      type string {
+                        pattern "[a-zA-Z0-9,()]+(\\\\\n[ \t]*[a-zA-Z0-9,]+)*";
+                      }
+                      augex:data-path "value";
+                      when "re-match(../type, 'dword|hex(\\([0-9]+\\))?')";
+                    }
+                    leaf value2 {
+                      type string {
+                        pattern "[^\"\n]*";
+                      }
+                      augex:data-path "value";
+                      when "re-match(../type, 'str\\([0-9]+\\)')";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

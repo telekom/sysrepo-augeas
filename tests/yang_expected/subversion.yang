@@ -1,0 +1,122 @@
+module subversion {
+  yang-version 1.1;
+  namespace "aug:subversion";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Subversion";
+
+  grouping elem-list {
+    list elem-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "no-spaces";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf no-spaces {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+      }
+    }
+  }
+  list subversion {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container record {
+        augex:data-path "$$";
+        presence "Config entry.";
+        leaf entry {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z][A-Za-z0-9._-]*";
+          }
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            container std {
+              augex:data-path "$$";
+              augex:value-yang-path "value";
+              presence "Config entry.";
+              leaf std {
+                mandatory true;
+                type string {
+                  pattern "global-ignore((s[^\t\n #/=]|[^\t\n #/=s])[^\t\n #/=]*|())|global-ignor([^\t\n #/=e][^\t\n #/=]*|())|global-igno([^\t\n #/=r][^\t\n #/=]*|())|global-ign([^\t\n #/=o][^\t\n #/=]*|())|global-ig([^\t\n #/=n][^\t\n #/=]*|())|global-i([^\t\n #/=g][^\t\n #/=]*|())|global-([^\t\n #/=i][^\t\n #/=]*|())|global([^\t\n #/=-][^\t\n #/=]*|())|globa([^\t\n #/=l][^\t\n #/=]*|())|glob([^\t\n #/=a][^\t\n #/=]*|())|glo([^\t\n #/=b][^\t\n #/=]*|())|gl([^\t\n #/=o][^\t\n #/=]*|())|password-store((s[^\t\n #/=]|[^\t\n #/=s])[^\t\n #/=]*|())|password-stor([^\t\n #/=e][^\t\n #/=]*|())|password-sto([^\t\n #/=r][^\t\n #/=]*|())|password-st([^\t\n #/=o][^\t\n #/=]*|())|password-s([^\t\n #/=t][^\t\n #/=]*|())|password-([^\t\n #/=s][^\t\n #/=]*|())|password([^\t\n #/=-][^\t\n #/=]*|())|passwor([^\t\n #/=d][^\t\n #/=]*|())|passwo([^\t\n #/=r][^\t\n #/=]*|())|passw([^\t\n #/=o][^\t\n #/=]*|())|pass([^\t\n #/=w][^\t\n #/=]*|())|pas([^\t\n #/=s][^\t\n #/=]*|())|preserved-conflict-file-ext((s[^\t\n #/=]|[^\t\n #/=s])[^\t\n #/=]*|())|preserved-conflict-file-ex([^\t\n #/=t][^\t\n #/=]*|())|preserved-conflict-file-e([^\t\n #/=x][^\t\n #/=]*|())|preserved-conflict-file-([^\t\n #/=e][^\t\n #/=]*|())|preserved-conflict-file([^\t\n #/=-][^\t\n #/=]*|())|preserved-conflict-fil([^\t\n #/=e][^\t\n #/=]*|())|preserved-conflict-fi([^\t\n #/=l][^\t\n #/=]*|())|preserved-conflict-f([^\t\n #/=i][^\t\n #/=]*|())|preserved-conflict-([^\t\n #/=f][^\t\n #/=]*|())|preserved-conflict([^\t\n #/=-][^\t\n #/=]*|())|preserved-conflic([^\t\n #/=t][^\t\n #/=]*|())|preserved-confli([^\t\n #/=c][^\t\n #/=]*|())|preserved-confl([^\t\n #/=i][^\t\n #/=]*|())|preserved-conf([^\t\n #/=l][^\t\n #/=]*|())|preserved-con([^\t\n #/=f][^\t\n #/=]*|())|preserved-co([^\t\n #/=n][^\t\n #/=]*|())|preserved-c([^\t\n #/=o][^\t\n #/=]*|())|preserved-([^\t\n #/=c][^\t\n #/=]*|())|preserved([^\t\n #/=-][^\t\n #/=]*|())|preserve([^\t\n #/=d][^\t\n #/=]*|())|preserv([^\t\n #/=e][^\t\n #/=]*|())|preser([^\t\n #/=v][^\t\n #/=]*|())|prese([^\t\n #/=r][^\t\n #/=]*|())|pres([^\t\n #/=e][^\t\n #/=]*|())|pre([^\t\n #/=s][^\t\n #/=]*|())|pr([^\t\n #/=e][^\t\n #/=]*|())|pa([^\t\n #/=s][^\t\n #/=]*|())|(p[^\t\n #/=ar]|g[^\t\n #/=l]|[^\t\n #/=gp][^\t\n #/=])[^\t\n #/=]*|p|g|[^\t\n #/=gp]";
+                }
+              }
+              leaf value {
+                type union {
+                  type string {
+                    pattern "(((([^\t\n \"#])+)((((([^\n#])+)*)(([^\t\n \"#])+)){0,1}))(((\n[ \t]+)((([^\t\n \"#])+)((((([^\n#])+)*)(([^\t\n \"#])+)){0,1})))*))|(((\n[ \t]+)((([^\t\n \"#])+)((((([^\n#])+)*)(([^\t\n \"#])+)){0,1})))+)";
+                  }
+                  type string {
+                    pattern "(((([^\"\n]*)((#)+))([^\"\n]*))(((\n[ \t]+)((([^\"\n]*)((#)+))([^\"\n]*)))*))|(((\n[ \t]+)((([^\"\n]*)((#)+))([^\"\n]*)))+)";
+                  }
+                }
+              }
+            }
+            container password-stores {
+              augex:data-path "password-stores";
+              presence "Config entry.";
+              list elem-list {
+                key "_seq";
+                min-elements 1;
+                ordered-by user;
+                augex:data-path "$$";
+                augex:value-yang-path "word";
+                leaf _seq {
+                  type uint64;
+                  description
+                    "Key contains some unique value. The order is based on the actual order of list instances.";
+                }
+                leaf word {
+                  mandatory true;
+                  type string {
+                    pattern "[A-Za-z0-9_.-]+";
+                  }
+                }
+              }
+            }
+            container global-ignores {
+              augex:data-path "global-ignores";
+              presence "Config entry.";
+              uses elem-list;
+            }
+            container preserved-conflict-file-exts {
+              augex:data-path "preserved-conflict-file-exts";
+              presence "Config entry.";
+              uses elem-list;
+            }
+          }
+        }
+      }
+    }
+  }
+}

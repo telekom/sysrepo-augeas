@@ -1,0 +1,339 @@
+module xorg {
+  yang-version 1.1;
+  namespace "aug:xorg";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Xorg";
+
+  grouping red {
+    leaf red {
+      mandatory true;
+      type uint64;
+      augex:data-path "red";
+    }
+    leaf green {
+      mandatory true;
+      type uint64;
+      augex:data-path "green";
+    }
+    leaf blue {
+      mandatory true;
+      type uint64;
+      augex:data-path "blue";
+    }
+  }
+  grouping x {
+    leaf x {
+      mandatory true;
+      type uint64;
+      augex:data-path "x";
+    }
+    leaf y {
+      mandatory true;
+      type uint64;
+      augex:data-path "y";
+    }
+  }
+  grouping section-entry {
+    list section-entry {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-section-entry {
+        mandatory true;
+        container option {
+          augex:data-path "Option";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\"\n]+";
+            }
+          }
+          leaf-list value2 {
+            type string {
+              pattern "[^\"\n]*";
+            }
+            ordered-by user;
+            augex:data-path "value";
+          }
+        }
+        container screen {
+          augex:data-path "Screen";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf num {
+            type uint64;
+            augex:data-path "num";
+          }
+          leaf value {
+            type string {
+              pattern "[^\"\n]+";
+            }
+          }
+          leaf position {
+            type string {
+              pattern "[^ \t\n](.*[^ \t\n])?";
+            }
+            augex:data-path "position";
+          }
+        }
+        container display {
+          augex:data-path "Display";
+          presence "Config entry.";
+          list display-entry {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            choice ch-display-entry {
+              mandatory true;
+              leaf depth {
+                type uint64;
+                augex:data-path "Depth";
+              }
+              leaf fb-bpp {
+                type uint64;
+                augex:data-path "FbBpp";
+              }
+              container weight {
+                augex:data-path "Weight";
+                presence "Config entry.";
+                uses red;
+              }
+              container virtual {
+                augex:data-path "Virtual";
+                presence "Config entry.";
+                uses x;
+              }
+              container view-port {
+                augex:data-path "ViewPort";
+                presence "Config entry.";
+                uses x;
+              }
+              container modes {
+                augex:data-path "Modes";
+                presence "Config entry.";
+                leaf-list mode {
+                  min-elements 1;
+                  type string {
+                    pattern "[^\"\n]+";
+                  }
+                  ordered-by user;
+                  augex:data-path "mode";
+                }
+              }
+              leaf visual {
+                type string {
+                  pattern "[^\"\n]+";
+                }
+                augex:data-path "Visual";
+              }
+              container black {
+                augex:data-path "Black";
+                presence "Config entry.";
+                uses red;
+              }
+              container white {
+                augex:data-path "White";
+                presence "Config entry.";
+                uses red;
+              }
+              leaf options {
+                type string {
+                  pattern "[^\"\n]+";
+                }
+                augex:data-path "Options";
+              }
+            }
+          }
+        }
+        container extmod {
+          augex:data-path "extmod";
+          presence "Config entry.";
+          leaf-list option {
+            type string {
+              pattern "[^\"\n]+";
+            }
+            ordered-by user;
+            augex:data-path "Option";
+          }
+        }
+        container input-device {
+          augex:data-path "InputDevice";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf value {
+            mandatory true;
+            type string {
+              pattern "[^\"\n]+";
+            }
+          }
+          leaf-list option {
+            type string {
+              pattern "[^\"\n]+";
+            }
+            ordered-by user;
+            augex:data-path "option";
+          }
+        }
+        leaf driver {
+          type string {
+            pattern "[^\"\n]+";
+          }
+          augex:data-path "Driver";
+        }
+        leaf identifier {
+          type string {
+            pattern "[^\"\n]+";
+          }
+          augex:data-path "Identifier";
+        }
+        leaf video-ram {
+          type uint64;
+          augex:data-path "VideoRam";
+        }
+        leaf default-depth {
+          type uint64;
+          augex:data-path "DefaultDepth";
+        }
+        leaf device {
+          type string {
+            pattern "[^\"\n]+";
+          }
+          augex:data-path "Device";
+        }
+        container entry-generic {
+          augex:data-path "$$";
+          augex:value-yang-path "to-eol";
+          presence "Config entry.";
+          leaf generic-entry {
+            mandatory true;
+            type string {
+              pattern "[^# \t\n/]+";
+              pattern "[oO]ption|[sS]creen|[iI]nput[dD]evice|[dD]river|[sS]ub[sS]ection|[dD]isplay|[iI]dentifier|[vV]ideo[rR]am|[dD]efault[dD]epth|[dD]evice" {
+                modifier invert-match;
+              }
+            }
+          }
+          leaf to-eol {
+            mandatory true;
+            type string {
+              pattern "[^ \t\n](.*[^ \t\n])?";
+            }
+          }
+        }
+      }
+    }
+  }
+  list xorg {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container extensions {
+          augex:data-path "Extensions";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container files {
+          augex:data-path "Files";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container server-flags {
+          augex:data-path "ServerFlags";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container module {
+          augex:data-path "Module";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container input-device {
+          augex:data-path "InputDevice";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container input-class {
+          augex:data-path "InputClass";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container device {
+          augex:data-path "Device";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container video-adaptor {
+          augex:data-path "VideoAdaptor";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container monitor {
+          augex:data-path "Monitor";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container modes {
+          augex:data-path "Modes";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container screen {
+          augex:data-path "Screen";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container server-layout {
+          augex:data-path "ServerLayout";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container dri {
+          augex:data-path "DRI";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container vendor {
+          augex:data-path "Vendor";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container keyboard {
+          augex:data-path "Keyboard";
+          presence "Config entry.";
+          uses section-entry;
+        }
+        container pointer {
+          augex:data-path "Pointer";
+          presence "Config entry.";
+          uses section-entry;
+        }
+      }
+    }
+  }
+}

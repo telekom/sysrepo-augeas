@@ -1,0 +1,43 @@
+module webmin {
+  yang-version 1.1;
+  namespace "aug:webmin";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Webmin";
+
+  list webmin {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "sto-to-eol";
+        presence "Config entry.";
+        leaf word {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        leaf sto-to-eol {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+        }
+      }
+    }
+  }
+}

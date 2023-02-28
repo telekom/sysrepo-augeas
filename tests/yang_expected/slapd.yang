@@ -1,0 +1,640 @@
+module slapd {
+  yang-version 1.1;
+  namespace "aug:slapd";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Slapd";
+
+  grouping by-list {
+    list by-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container by {
+        augex:data-path "by";
+        augex:value-yang-path "sto-to-spc";
+        presence "Config entry.";
+        leaf sto-to-spc {
+          mandatory true;
+          type string {
+            pattern "[^\\\\# \t\n]+";
+          }
+        }
+        leaf access {
+          type string {
+            pattern "[^\\\\# \t\n]+";
+            pattern "by|stop|continue|break" {
+              modifier invert-match;
+            }
+          }
+          augex:data-path "access";
+        }
+        leaf control {
+          type string {
+            pattern "((stop)|(continue))|(break)";
+          }
+          augex:data-path "control";
+        }
+      }
+    }
+  }
+  list slapd {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf allow {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "allow";
+        }
+        leaf argsfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "argsfile";
+        }
+        leaf attributeoptions {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "attributeoptions";
+        }
+        leaf attributetype {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "attributetype";
+        }
+        leaf authz-policy {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "authz-policy";
+        }
+        leaf ldap {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "ldap";
+        }
+        leaf dn {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "dn";
+        }
+        leaf concurrency {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "concurrency";
+        }
+        leaf cron-max-pending {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "cron_max_pending";
+        }
+        leaf conn-max-pending-auth {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "conn_max_pending_auth";
+        }
+        leaf defaultsearchbase {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "defaultsearchbase";
+        }
+        leaf disallow {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "disallow";
+        }
+        leaf ditcontentrule {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "ditcontentrule";
+        }
+        leaf gentlehup {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "gentlehup";
+        }
+        leaf idletimeout {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "idletimeout";
+        }
+        leaf include {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "include";
+        }
+        leaf index-substr-if-minlen {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "index_substr_if_minlen";
+        }
+        leaf index-substr-if-maxlen {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "index_substr_if_maxlen";
+        }
+        leaf index-substr-any-len {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "index_substr_any_len";
+        }
+        leaf index-substr-any-step {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "index_substr_any_step";
+        }
+        leaf local-ssf {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "localSSF";
+        }
+        leaf loglevel {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "loglevel";
+        }
+        leaf moduleload {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "moduleload";
+        }
+        leaf modulepath {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "modulepath";
+        }
+        leaf objectclass {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "objectclass";
+        }
+        leaf objectidentifier {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "objectidentifier";
+        }
+        leaf password-hash {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "password-hash";
+        }
+        leaf password-crypt-salt-format {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "password-crypt-salt-format";
+        }
+        leaf pidfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "pidfile";
+        }
+        leaf referral {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "referral";
+        }
+        leaf replica-argsfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "replica-argsfile";
+        }
+        leaf replica-pidfile {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "replica-pidfile";
+        }
+        leaf replicationinterval {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "replicationinterval";
+        }
+        leaf require {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "require";
+        }
+        leaf reverse-lookup {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "reverse-lookup";
+        }
+        leaf root-dse {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "rootDSE";
+        }
+        leaf sasl-host {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl-host";
+        }
+        leaf sasl-realm {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl-realm";
+        }
+        leaf sasl-secprops {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sasl-secprops";
+        }
+        leaf schemadn {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "schemadn";
+        }
+        leaf security {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "security";
+        }
+        leaf sizelimit {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sizelimit";
+        }
+        leaf sockbuf-max-incoming {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sockbuf_max_incoming ";
+        }
+        leaf sockbuf-max-incoming-auth {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "sockbuf_max_incoming_auth";
+        }
+        leaf threads {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "threads";
+        }
+        leaf timelimit-time {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "timelimit time";
+        }
+        leaf tool-threads {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "tool-threads";
+        }
+        leaf tlscipher-suite {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCipherSuite";
+        }
+        leaf tlscacertificate-file {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCACertificateFile";
+        }
+        leaf tlscacertificate-path {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCACertificatePath";
+        }
+        leaf tlscertificate-file {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCertificateFile";
+        }
+        leaf tlscertificate-key-file {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCertificateKeyFile";
+        }
+        leaf tlsdhparam-file {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSDHParamFile";
+        }
+        leaf tlsrand-file {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSRandFile";
+        }
+        leaf tlsverify-client {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSVerifyClient";
+        }
+        leaf tlscrlcheck {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "TLSCRLCheck";
+        }
+        leaf backend {
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+          augex:data-path "backend";
+        }
+        container access-to {
+          augex:data-path "access to";
+          augex:value-yang-path "sto-to-spc";
+          presence "Config entry.";
+          leaf sto-to-spc {
+            mandatory true;
+            type string {
+              pattern "[^\\\\# \t\n]+";
+            }
+          }
+          uses by-list;
+        }
+      }
+    }
+    list database-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container database {
+        augex:data-path "database";
+        augex:value-yang-path "sto-to-eol";
+        presence "Config entry.";
+        leaf sto-to-eol {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+          }
+        }
+        list config-entries {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-config-entries {
+            mandatory true;
+            leaf suffix {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "suffix";
+            }
+            leaf lastmod {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "lastmod";
+            }
+            leaf limits {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "limits";
+            }
+            leaf maxderefdepth {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "maxderefdepth";
+            }
+            leaf overlay {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "overlay";
+            }
+            leaf readonly {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "readonly";
+            }
+            leaf replica-uri {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "replica uri";
+            }
+            leaf replogfile {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "replogfile";
+            }
+            leaf restrict {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "restrict";
+            }
+            leaf rootdn {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "rootdn";
+            }
+            leaf rootpw {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "rootpw";
+            }
+            leaf subordinate {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "subordinate";
+            }
+            leaf syncrepl-rid {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "syncrepl rid";
+            }
+            leaf updatedn {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "updatedn";
+            }
+            leaf updateref {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "updateref";
+            }
+            leaf cachesize {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "cachesize";
+            }
+            leaf cachefree {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "cachefree";
+            }
+            leaf checkpoint {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "checkpoint";
+            }
+            leaf dbconfig {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "dbconfig";
+            }
+            leaf dbnosync {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "dbnosync";
+            }
+            leaf directory {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "directory";
+            }
+            leaf dirtyread {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "dirtyread";
+            }
+            leaf idlcachesize {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "idlcachesize";
+            }
+            leaf index {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "index";
+            }
+            leaf linearindex {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "linearindex";
+            }
+            leaf lockdetect {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "lockdetect";
+            }
+            leaf mode {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "mode";
+            }
+            leaf searchstack {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "searchstack";
+            }
+            leaf shm-key {
+              type string {
+                pattern "[^\n\t \"]([^\n\"]*[^\n\t \"])?";
+              }
+              augex:data-path "shm_key";
+            }
+            container access-to {
+              augex:data-path "access to";
+              augex:value-yang-path "sto-to-spc";
+              presence "Config entry.";
+              leaf sto-to-spc {
+                mandatory true;
+                type string {
+                  pattern "[^\\\\# \t\n]+";
+                }
+              }
+              uses by-list;
+            }
+          }
+        }
+      }
+    }
+  }
+}

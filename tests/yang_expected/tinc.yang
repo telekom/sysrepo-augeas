@@ -1,0 +1,50 @@
+module tinc {
+  yang-version 1.1;
+  namespace "aug:tinc";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Tinc";
+
+  list tinc {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list entry-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "$$";
+        augex:value-yang-path "no-spaces-no-equals";
+        presence "Config entry.";
+        leaf label {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z]+";
+          }
+        }
+        leaf no-spaces-no-equals {
+          mandatory true;
+          type string {
+            pattern "[^ \t\n=]+";
+          }
+        }
+      }
+    }
+    leaf key {
+      type string {
+        pattern "[A-Za-z0-9+/=\n]+[A-Za-z0-9+/=]";
+      }
+      augex:data-path "#key";
+    }
+  }
+}

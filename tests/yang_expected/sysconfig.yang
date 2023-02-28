@@ -1,0 +1,101 @@
+module sysconfig {
+  yang-version 1.1;
+  namespace "aug:sysconfig";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Sysconfig";
+
+  grouping var-action-list {
+    list var-action-list {
+      key "_seq";
+      min-elements 1;
+      ordered-by user;
+      augex:data-path "$$";
+      augex:value-yang-path "value";
+      leaf _seq {
+        type uint64;
+        description
+          "Key contains some unique value. The order is based on the actual order of list instances.";
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "(export(([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-z-][0-9A-Z_a-z-]*)|expor(([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|expo(([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*|())|exp(([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-np-z-][0-9A-Z_a-z-]*|())|ex(([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*|())|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])[,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])\\]|unset[0-9A-Z_a-z-][0-9A-Z_a-z-]*|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*|())|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*|())|(u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*|u|e|[0-9A-Z_a-df-tv-z])|((($\\{!)(export(([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-z-][0-9A-Z_a-z-]*)|expor(([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|expo(([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*|())|exp(([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-np-z-][0-9A-Z_a-z-]*|())|ex(([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*|())|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])[,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])\\]|unset[0-9A-Z_a-z-][0-9A-Z_a-z-]*|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*|())|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*|())|(u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*|u|e|[0-9A-Z_a-df-tv-z]))([\\\\*@]\\}))";
+        }
+      }
+    }
+  }
+  list sysconfig {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        leaf source {
+          type string {
+            pattern "[^;=# \t\n]+";
+          }
+          augex:data-path ".source";
+        }
+        container key {
+          augex:data-path "$$";
+          augex:value-yang-path "value";
+          presence "Config entry.";
+          leaf key {
+            mandatory true;
+            type string {
+              pattern "export(([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-z-][0-9A-Z_a-z-]*)|expor(([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|expo(([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-qs-z-][0-9A-Z_a-z-]*|())|exp(([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-np-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-np-z-][0-9A-Z_a-z-]*|())|ex(([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z][,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|([0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]\\]|[0-9A-Z_a-oq-z-][0-9A-Z_a-z-]*|())|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])[,0-9A-Z_a-z][,0-9A-Z_a-z]*\\]|(unset([0-9A-Z_a-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*\\[|\\[)[,0-9A-Z_a-z]|((u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*\\[|u\\[|e\\[|[0-9A-Z_a-df-tv-z]\\[)[,0-9A-Z_a-z])\\]|unset[0-9A-Z_a-z-][0-9A-Z_a-z-]*|unse([0-9A-Z_a-su-z-][0-9A-Z_a-z-]*|())|uns([0-9A-Z_a-df-z-][0-9A-Z_a-z-]*|())|un([0-9A-Z_a-rt-z-][0-9A-Z_a-z-]*|())|(u[0-9A-Z_a-mo-z-]|e[0-9A-Z_a-wyz-]|[0-9A-Z_a-df-tv-z][0-9A-Z_a-z-])[0-9A-Z_a-z-]*|u|e|[0-9A-Z_a-df-tv-z]";
+            }
+          }
+          leaf export {
+            type empty;
+            augex:data-path "export";
+          }
+          leaf value {
+            mandatory true;
+            type union {
+              type string {
+                length 0;
+              }
+              type string {
+                pattern "([^; \t\n\"'\\\\]|\\\\.)+";
+              }
+              type string {
+                pattern "(((([^; \t\n\"'\\\\]|\\\\.)*)([; \t]))(([^; \t\n\"'\\\\]|\\\\.)*))+";
+              }
+              type string {
+                pattern "(((([^\"\\\\]|\\\\.)*)('))(([^\"\\\\]|\\\\.)*))+";
+              }
+              type string {
+                pattern "(((([^'\\\\]|\\\\[^\"])*)(\"))(([^'\\\\]|\\\\[^\"])*))+";
+              }
+            }
+          }
+        }
+        container unset {
+          augex:data-path "@unset";
+          presence "Config entry.";
+          uses var-action-list;
+        }
+        container export {
+          augex:data-path "@export";
+          presence "Config entry.";
+          uses var-action-list;
+        }
+      }
+    }
+  }
+}

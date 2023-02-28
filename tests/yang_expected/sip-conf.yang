@@ -1,0 +1,96 @@
+module sip-conf {
+  yang-version 1.1;
+  namespace "aug:sip-conf";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Sip_Conf";
+
+  list sip-conf {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    list record-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container title {
+        augex:data-path "title";
+        augex:value-yang-path "text";
+        presence "Config entry.";
+        leaf text {
+          mandatory true;
+          type string {
+            pattern "[A-Za-z0-9_.-]+";
+          }
+        }
+        list tmpl {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          choice ch-tmpl {
+            mandatory true;
+            leaf is-template {
+              type empty;
+              augex:data-path "@is_template";
+            }
+            leaf use-template {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              augex:data-path "@use_template";
+            }
+          }
+        }
+        leaf title-comment {
+          type string {
+            pattern "[ \t]*[#;].*$";
+          }
+          augex:data-path "#title_comment";
+        }
+        list entry-list {
+          key "_id";
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container entry {
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            presence "Config entry.";
+            leaf entry {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z][A-Za-z0-9._-]*";
+              }
+            }
+            leaf value {
+              type union {
+                type string {
+                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                }
+                type string {
+                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

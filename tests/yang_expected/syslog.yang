@@ -1,0 +1,194 @@
+module syslog {
+  yang-version 1.1;
+  namespace "aug:syslog";
+  prefix aug;
+
+  import augeas-extension {
+    prefix augex;
+  }
+
+  augex:augeas-mod-name "Syslog";
+
+  grouping entries {
+    list entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container entry {
+        augex:data-path "entry";
+        presence "Config entry.";
+        list selector-list {
+          key "_id";
+          min-elements 1;
+          ordered-by user;
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          container selector {
+            augex:data-path "selector";
+            presence "Config entry.";
+            leaf-list facility {
+              min-elements 1;
+              type string {
+                pattern "[A-Za-z0-9]+|\\*";
+              }
+              ordered-by user;
+              augex:data-path "facility";
+            }
+            leaf comparison {
+              type string {
+                pattern "!|[<=>]+|![<=>]+";
+              }
+              augex:data-path "comparison";
+            }
+            leaf level {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9]+|\\*";
+              }
+              augex:data-path "level";
+            }
+          }
+        }
+        container action {
+          augex:data-path "action";
+          presence "Config entry.";
+          choice ch-action {
+            mandatory true;
+            case no-sync {
+              leaf no-sync {
+                type empty;
+                augex:data-path "no_sync";
+              }
+              leaf file {
+                mandatory true;
+                type string {
+                  pattern "/[^ \t\n;]+";
+                }
+                augex:data-path "file";
+              }
+            }
+            case protocol {
+              leaf protocol {
+                mandatory true;
+                type string {
+                  pattern "@{1,2}";
+                }
+                augex:data-path "protocol";
+              }
+              leaf hostname {
+                mandatory true;
+                type string {
+                  pattern "([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)|(((\\[)(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))(\\]))";
+                }
+                augex:data-path "hostname";
+              }
+              leaf port {
+                type uint64;
+                augex:data-path "port";
+              }
+            }
+            leaf-list user {
+              min-elements 1;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              ordered-by user;
+              augex:data-path "user";
+            }
+            leaf program {
+              type string {
+                pattern "[^ \t\n][^\n]+[^ \t\n]";
+              }
+              augex:data-path "program";
+            }
+            leaf discard {
+              type empty;
+              augex:data-path "discard";
+            }
+          }
+        }
+      }
+    }
+  }
+  list syslog {
+    key "config-file";
+    leaf config-file {
+      type string;
+    }
+    uses entries;
+    list config-entries {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      choice ch-config-entries {
+        mandatory true;
+        container program {
+          augex:data-path "program";
+          presence "Config entry.";
+          leaf reverse {
+            type empty;
+            augex:data-path "reverse";
+          }
+          leaf-list program {
+            min-elements 1;
+            type union {
+              type string {
+                pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+              }
+              type string {
+                pattern "\\*";
+              }
+            }
+            ordered-by user;
+            augex:data-path "program";
+          }
+          uses entries;
+        }
+        container hostname {
+          augex:data-path "hostname";
+          presence "Config entry.";
+          leaf reverse {
+            type empty;
+            augex:data-path "reverse";
+          }
+          leaf-list hostname {
+            min-elements 1;
+            type union {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              type string {
+                pattern "\\*";
+              }
+            }
+            ordered-by user;
+            augex:data-path "hostname";
+          }
+          uses entries;
+        }
+        leaf include {
+          type string {
+            pattern "/[^ \t\n;]+";
+          }
+          augex:data-path "include";
+        }
+      }
+    }
+  }
+}
