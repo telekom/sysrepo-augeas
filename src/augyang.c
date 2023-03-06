@@ -79,12 +79,6 @@
 #define AY_INDEX(ARRAY, ITEM_PTR) \
     ((ITEM_PTR) - (ARRAY))
 
-/**
- * @brief Get error message base on the code.
- *
- * @param[in] err_code Error code;
- * @return String with message.
- */
 const char *
 augyang_get_error_message(int err_code)
 {
@@ -419,7 +413,7 @@ ay_ynode_common_choice(const struct ay_lnode *node1, const struct ay_lnode *node
  * Use if the unified choice value (from ::ay_ynode_unite_choice()) is no longer needed.
  *
  * @param[in,out] node Node whose choice will be reset.
- * @param[in] choice Upper search limit.
+ * @param[in] stop Upper search limit.
  */
 static void
 ay_ynode_reset_choice(struct ay_ynode *node, const struct ay_lnode *stop)
@@ -881,6 +875,7 @@ ay_ynode_subtree_contains_lnode(const struct ay_ynode *subtree, const struct ay_
  *
  * @param[in] chnode First branch which will be searched.
  * @param[in] choice Choice according to which it is iterated over the branches.
+ * @param[in] lnode node to find.
  * @return 1 if choice contains lnode.
  */
 static ly_bool
@@ -952,7 +947,7 @@ ay_lnode_has_maybe(const struct ay_lnode *node, ly_bool choice_stop, ly_bool sta
  * @brief Check if the attribute (etc. choice, asterisk) is bound to the @p node.
  *
  * @param[in] node Node to check.
- * @param[in] attribut Searched parent lnode.
+ * @param[in] attribute Searched parent lnode.
  * @return Pointer to attribute or NULL.
  */
 static const struct ay_lnode *
@@ -1365,9 +1360,9 @@ ay_ynode_shift_right(struct ay_ynode *tree)
  * @brief Set root node for @p tree.
  *
  * @param[in,out] tree Tree of ynodes.
- * @param[in] ltree Tree of lnodes (Sized array). If function succeeds then the ownership of memory is moved to @tree,
- * so the memory of ltree should be therefore released by ::ay_ynode_tree_free().
  * @param[in] tpatt_size Required memory space for ay_ynode_root.patt_table LY_ARRAY.
+ * @param[in] ltree Tree of lnodes (Sized array). If function succeeds then the ownership of memory is moved to @p tree,
+ * so the memory of ltree should be therefore released by ::ay_ynode_tree_free().
  * @return 0 on success.
  */
 static int
@@ -1915,7 +1910,7 @@ ay_ynode_rule_ordered_entries(const struct ay_lnode *tree)
 /**
  * @brief Rule decide how many nodes must be inserted to create a recursive form.
  *
- * @param[in] tree Tree of ynodes.
+ * @param[in] node Node to check.
  * @return Number of nodes to insert.
  */
 static uint32_t
@@ -2603,6 +2598,7 @@ ay_ynode_move_subtree_as_last_child(struct ay_ynode *tree, struct ay_ynode *dst,
  *
  * Only ay_ynode_copy_subtree_* functions should call this function.
  *
+ * @param[in,out] tree Tree of ynodes.
  * @param[in] dst Index of the place where the subtree is copied. Gaps are inserted on this index.
  * @param[in] src Index to the root of subtree.
  */
@@ -3579,7 +3575,7 @@ ay_ynode_more_keys_for_node_insert_nodes(struct ay_ynode *tree, struct ay_dnode 
  * [ key lns1 | key lns2 ... ] -> [ key lns1 ] | [ key lns2 ] ...
  * More details are int the ay_ynode_more_keys_for_node_insert_nodes().
  *
- * @param[in,out] Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  * @return 0 on success.
  */
 static int
@@ -3629,6 +3625,7 @@ ay_ynode_more_keys_for_node(struct ay_ynode *tree)
 /**
  * @brief Set choice to YN_VALUE node.
  *
+ * @param[in] tree Tree of ynodes.
  * @param[in,out] node Node to process.
  */
 static void
@@ -4315,6 +4312,7 @@ ay_ynode_merge_cases_(struct ay_ynode *tree, struct ay_ynode *br1, struct ay_yno
  * @param[in,out] tree Tree of ynodes.
  * @param[in,out] br1 First branch.
  * @param[in,out] br2 Second branch.
+ * @param[out] err Code is non-zero on error. It does not need to be set if successful.
  * @return 1 for success and the @p br2 subtree can be deleted.
  * @return 0 if the branches are differ, function will not change any data.
  */
@@ -5057,7 +5055,6 @@ ay_ynode_snode_unset_pnode(struct ay_ynode *subt, struct ay_ynode *del_subt, ly_
  * This function is preparation before calling ::ay_ynode_create_groupings_toplevel().
  *
  * @param[in,out] tree Tree of ynodes.
- * @return 0.
  */
 static void
 ay_ynode_set_ref(struct ay_ynode *tree)
@@ -5559,7 +5556,7 @@ ay_ynode_ordered_entries(struct ay_ynode *tree)
  * In other words, two L_STAR belong to an ynode, so an additional implicit
  * list containing the top star must be inserted.
  *
- * @param[in,out] Tree tree of ynodes.
+ * @param[in,out] tree Tree tree of ynodes.
  * @return 0 on success.
  */
 static int
@@ -5764,7 +5761,7 @@ ay_ynode_recursive_form(struct ay_ynode *tree)
 /**
  * @brief Delete all nodes of type YN_REC.
  *
- * @param[in,out] Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  * @return 0 on success.
  */
 static int
@@ -5923,7 +5920,7 @@ cleanup:
  *
  * See ay_ynode_grouping_reduction().
  *
- * @param[in,out] Tree of ynodes. Only flags can be modified.
+ * @param[in,out] tree Tree of ynodes. Only flags can be modified.
  * @return Number of nodes that must be inserted if grouping reduction is applied.
  */
 static uint64_t
@@ -5982,7 +5979,7 @@ ay_ynode_grouping_reduction_count(struct ay_ynode *tree)
  *
  * It is applied only for groupings which has AY_GROUPING_REDUCTION flag set.
  *
- * @param[in,out] Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  * @return 0 on success.
  */
 static int
@@ -6069,7 +6066,7 @@ ay_ynode_grouping_reduction(struct ay_ynode *tree)
  *
  * This prevents duplicate nodes.
  *
- * @param[in,out] Tree of ynodes.
+ * @param[in,out] tree Tree of ynodes.
  * @return 0 on success.
  */
 static int
@@ -6224,7 +6221,7 @@ ay_ynode_trans_ident_insert(struct yprinter_ctx *ctx, int (*insert)(struct ay_yn
  *
  * @param[in] mod Augeas module.
  * @param[in,out] tree Tree of ynodes.
- * @reutrn 0 on success.
+ * @return 0 on success.
  */
 static int
 ay_ynode_transformations_ident(struct module *mod, struct ay_ynode **tree)

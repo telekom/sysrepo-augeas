@@ -148,12 +148,6 @@ ay_ident_character_is_valid(const char *ch, uint32_t *shift)
     }
 }
 
-/**
- * @brief Get main lense which augeas will use for parsing.
- *
- * @param[in] mod Current augeas module.
- * @return Main lense or NULL.
- */
 struct lens *
 ay_lense_get_root(struct module *mod)
 {

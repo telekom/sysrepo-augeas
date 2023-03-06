@@ -35,7 +35,7 @@ int ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, c
 /**
  * @brief Set ay_ynode.ident for every ynode in the tree.
  *
- * @param[in,out] tree Context for printing.
+ * @param[in,out] ctx Context for printing.
  * @param[in] solve_duplicates Flag for call ay_yang_ident_duplications().
  * @return 0 on success.
  */
@@ -46,6 +46,7 @@ int ay_ynode_idents(struct yprinter_ctx *ctx, ly_bool solve_duplicates);
  *
  * @param[in] tree Tree of ynodes.
  * @param[in] node Node for which the duplicates will be searched.
+ * @param[in] node_ident name to be verified.
  * @param[out] dupl_rank Duplicate number for @p ident. Rank may be greater than @p dupl_count because it is also
  * derived from the number of the previous duplicate identifier.
  * @param[out] dupl_count Number of all duplicates.

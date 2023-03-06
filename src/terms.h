@@ -80,7 +80,7 @@ struct ay_pnode {
  *
  * @param[in] aug Augeas context.
  * @param[in] filename Name of the module to parse.
- * @param[in,out] tree Tree of lnodes.
+ * @param[in,out] ltree Tree of lnodes.
  * @param[out] ptree Tree of pnodes. For every lnode set parsed node. Only lnodes tagged L_STORE and L_KEY
  * can have pnode set.
  * @return 0 on success.

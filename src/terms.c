@@ -297,6 +297,7 @@ ay_pnode_find_func(struct ay_pnode *ident)
 /**
  * @brief For A_IDENT term, find a corresponding A_BIND pnode.
  *
+ * @param[in] tree Tree of pnodes.
  * @param[in] ident Pnode with tag A_IDENT.
  * @return Pnode with the same name as @p ident or NULL.
  */

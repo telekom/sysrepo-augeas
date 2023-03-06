@@ -976,11 +976,6 @@ fail:
     goto clean;
 }
 
-/**
- * @brief Release ay_transl.substr in translation record.
- *
- * @param[in] entry Record from translation table.
- */
 void
 ay_transl_table_substr_free(struct ay_transl *entry)
 {

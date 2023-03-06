@@ -130,7 +130,7 @@ ay_get_lense_name_by_modname(const char *modname, struct lens *lens)
  * @brief Get lense name.
  *
  * @param[in] mod Module that augyang is currently processing. Takes precedence over lnode.mod when searching.
- * @param[in] lens Lense for which to find the name.
+ * @param[in] lnode Node for which to find the name.
  * @return Lense name or NULL.
  */
 static char *
@@ -785,6 +785,7 @@ ay_print_yang_nesting_begin(struct yprinter_ctx *ctx)
  * Conditionaly print debugging ID as comment.
  *
  * @param[in,out] ctx Context for printing.
+ * @param[in] id Numeric identifier of the node.
  */
 static void
 ay_print_yang_nesting_begin2(struct yprinter_ctx *ctx, uint32_t id)
@@ -886,7 +887,7 @@ ay_regex_remove_parentheses(char **src)
 /**
  * @brief Greedy search for a substring to skip (and finally delete).
  *
- * Searched substrings are for example: \$?, \r ...
+ * Searched substrings are for example: \\$?, \\r ...
  *
  * @param[in] curr Current position in pattern to search substring.
  * @return Pointer to character that must not be skiped (deleted).
@@ -1494,7 +1495,7 @@ end:
  *
  * @param[in,out] old Array of identifiers.
  * @param[in] new New identifier. Old one can be freed.
- * @retrun 0 on success.
+ * @return 0 on success.
  */
 static int
 ay_ynode_ident_write(char **old, char *new)
@@ -2074,7 +2075,7 @@ ay_print_yang_type_union_item_from_regex(struct yprinter_ctx *ctx, const struct 
  *
  * @param[in] ctx Context for printing.
  * @param[in] node Node of type ynode to which the union is to be printed.
- * @param[in] regex Subtree of pnodes related to regexp.
+ * @param[in] lnode Node of type lnode which belongs to @p node.
  * @return 0 on success.
  */
 static int
@@ -3304,15 +3305,6 @@ ay_print_yang_imports(struct ly_out *out, struct ay_ynode *tree)
     ly_print(out, "\n");
 }
 
-/**
- * @brief Print ynode tree in yang format.
- *
- * @param[in] mod Module in which the tree is located.
- * @param[in] tree Ynode tree to print.
- * @param[in] vercode Decide if debugging information should be printed.
- * @param[out] str_out Printed tree in yang format. Call free() after use.
- * @return 0 on success.
- */
 int
 ay_print_yang(struct module *mod, struct ay_ynode *tree, uint64_t vercode, char **str_out)
 {
