@@ -447,7 +447,7 @@ Let's connect to the server via the local Unix socket:
 Now we can, for example, read the [ay_data_example.txt](#configuration-file) configuration file:
 
 ```
-> get-data --datastore startup --filter-xpath=ay-lense-example
+> get-data --datastore startup --filter-xpath=/ay-lense-example:*
 DATA
 <data xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-nmda">
   <ay-lense-example xmlns="aug:ay-lense-example">
