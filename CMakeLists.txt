@@ -10,6 +10,7 @@ project(augyang C)
 # include custom Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
+include(GNUInstallDirs)
 include(ExternalProject)
 include(SourceFormat)
 
@@ -248,7 +249,8 @@ add_custom_command(TARGET augyang
 #
 # installation
 #
-
+install(TARGETS srds_augeas DESTINATION ${CMAKE_INSTALL_LIBDIR}/sysrepo/plugins)
+install(TARGETS augyang ay_startup DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/modules/" DESTINATION ${YANG_MODULE_DIR})
 foreach(YANG IN LISTS YANG_LIST)
     list(APPEND YANG_FILES_LIST ${CMAKE_CURRENT_BINARY_DIR}/${YANG}.yang)
