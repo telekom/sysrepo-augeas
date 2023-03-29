@@ -170,6 +170,12 @@ target_link_libraries(srds_augeas ${AUGEAS_LIBRARIES})
 target_link_libraries(ay_startup ${AUGEAS_LIBRARIES})
 include_directories(${AUGEAS_INCLUDE_DIRS})
 
+# libxml2
+find_package(LibXML2 REQUIRED)
+target_link_libraries(srds_augeas ${LIBXML2_LIBRARIES})
+target_link_libraries(ay_startup ${LIBXML2_LIBRARIES})
+include_directories(${LIBXML2_INCLUDE_DIRS})
+
 # pcre2
 find_package(PCRE2 10.21 REQUIRED)
 target_link_libraries(srds_augeas ${PCRE2_LIBRARIES})
