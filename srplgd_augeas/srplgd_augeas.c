@@ -97,7 +97,7 @@ cleanup:
     return rc;
 }
 
-#ifdef PATH_ACTIVEMQ
+#ifdef ACTIVEMQ_EXECUTABLE
 
 static int
 aug_actimemq_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
@@ -111,7 +111,33 @@ aug_actimemq_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *m
     (void)request_id;
     (void)private_data;
 
-    return aug_execl(PATH_ACTIVEMQ, "restart", NULL);
+    /* TODO activemq service */
+    return aug_execl(ACTIVEMQ_EXECUTABLE, "restart", NULL);
+}
+
+#endif
+
+#ifdef AVAHI_DAEMON_EXECUTABLE
+
+static int
+aug_avahi_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    /* TODO avahi-daemon service */
+    if ((r = aug_execl(AVAHI_DAEMON_EXECUTABLE, "--kill", NULL))) {
+        return r;
+    }
+    return aug_execl(AVAHI_DAEMON_EXECUTABLE, "--syslog", "--daemonize", NULL);
 }
 
 #endif
@@ -131,18 +157,39 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
     ly_ctx = sr_session_acquire_context(session);
     i = ly_ctx_internal_modules_count(ly_ctx);
     while ((ly_mod = ly_ctx_get_module_iter(ly_ctx, &i))) {
-#ifdef PATH_ACTIVEMQ
         if (!strcmp(ly_mod->name, "activemq-conf")) {
+#ifdef ACTIVEMQ_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
-        } else if (!strcmp(ly_mod->name, "activemq-xml")) {
-            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
-        }
 #endif
+        } else if (!strcmp(ly_mod->name, "activemq-xml")) {
+#ifdef ACTIVEMQ_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "avahi")) {
+#ifdef AVAHI_DAEMON_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_avahi_change_cb, NULL, 0, 0, &subscr);
+#endif
+        }
         if (rc) {
             goto cleanup;
         }
 
         /* access - config for pam_access.so, is reread on every login */
+        /* afs-cellalias - cellalias(5), no process to use the config file? */
+        /* aliases - local(8), should reread the aliases on each mail delivery */
+        /* anaconda - https://anaconda-installer.readthedocs.io/en/latest/configuration-files.html, install config file */
+        /* anacron - anacron(8), should reread jobs desription on each execution */
+        /* approx - approx(8), no daemon, config file read on every exec by inetd */
+        /* apt-update-manager - no deamon, config file read on every exec? */
+        /* aptcacherngsecurity - no dameon, config file read on every exec? */
+        /* aptconf - no dameon, config file read on every exec? */
+        /* aptpreferences - no dameon, config file read on every exec? */
+        /* aptsources - no dameon, config file read on every exec? */
+        /* authinfo2 - https://github.com/s3ql/s3ql, no deamon */
+        /* authorized-keys - reread on every use */
+        /* authselectpam - pam config, reread on every use */
+        /* automaster - autofs(8), no daemon, script config file */
+        /* automounter - autofs(5), no daemon */
     }
 
 cleanup:

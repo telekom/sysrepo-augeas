@@ -73,9 +73,6 @@ set(SRDS_AUGEAS_SRC
     srds_augeas/srdsa_store.c
     srds_augeas/srdsa_common.c)
 
-set(SRPLGD_AUGEAS_SRC
-    srplgd_augeas/srplgd_augeas.c)
-
 set(AY_STARTUP_SRC
     srds_augeas/ay_startup.c)
 
@@ -91,7 +88,6 @@ set(AUGYANG_SRC
 # source files to be covered by the 'format' target
 set(format_sources
     ${SRDS_AUGEAS_SRC}
-    ${SRPLGD_AUGEAS_SRC}
     ${AUGYANG_SRC})
 
 #
