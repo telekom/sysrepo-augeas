@@ -67,14 +67,17 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
 # sources
 #
 set(SRDS_AUGEAS_SRC
-    ${PROJECT_SOURCE_DIR}/plugins/srds_augeas.c
-    ${PROJECT_SOURCE_DIR}/plugins/srdsa_init.c
-    ${PROJECT_SOURCE_DIR}/plugins/srdsa_load.c
-    ${PROJECT_SOURCE_DIR}/plugins/srdsa_store.c
-    ${PROJECT_SOURCE_DIR}/plugins/srdsa_common.c)
+    srds_augeas/srds_augeas.c
+    srds_augeas/srdsa_init.c
+    srds_augeas/srdsa_load.c
+    srds_augeas/srdsa_store.c
+    srds_augeas/srdsa_common.c)
+
+set(SRPLGD_AUGEAS_SRC
+    srplgd_augeas/srplgd_augeas.c)
 
 set(AY_STARTUP_SRC
-    ${PROJECT_SOURCE_DIR}/plugins/ay_startup.c)
+    srds_augeas/ay_startup.c)
 
 set(AUGYANG_SRC
     src/main.c
@@ -88,6 +91,7 @@ set(AUGYANG_SRC
 # source files to be covered by the 'format' target
 set(format_sources
     ${SRDS_AUGEAS_SRC}
+    ${SRPLGD_AUGEAS_SRC}
     ${AUGYANG_SRC})
 
 #
@@ -221,7 +225,7 @@ target_link_libraries(augyang ${SELINUX_LIBRARIES})
 include_directories(${SELINUX_INCLUDE_DIRS})
 
 # generate files
-configure_file("${PROJECT_SOURCE_DIR}/plugins/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/srds_augeas/plg_config.h.in" "${PROJECT_BINARY_DIR}/plg_config.h" ESCAPE_QUOTES @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/ayg_config.h.in" "${PROJECT_BINARY_DIR}/ayg_config.h" ESCAPE_QUOTES @ONLY)
 
 # install latest lenses with our patches
@@ -266,6 +270,9 @@ if(INSTALL_MODULES)
         endif()
     ")
 endif()
+
+# augeas sysrepo-plugind plugin (srplgd_augeas target)
+add_subdirectory(srplgd_augeas)
 
 # tests
 if(ENABLE_TESTS)

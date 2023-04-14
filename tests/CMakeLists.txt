@@ -45,7 +45,7 @@ set(tests test_passwd test_simplevars test_postfix_sasl_smtpd test_dhclient test
     test_star test_up2date test_vmware_config test_xymon test_logrotate test_resolv test_rsyslog test_thttpd test_ldif
     test_automounter test_dovecot test_squid test_netplan)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/plugins)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/srds_augeas)
 include_directories(SYSTEM ${CMOCKA_INCLUDE_DIR})
 foreach(test_name IN LISTS tests)
     add_executable(${test_name} ${test_name}.c ${TLIB_SRC})

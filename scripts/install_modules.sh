@@ -17,8 +17,19 @@ else
     SYSREPOCTL=`command -v sysrepoctl`
 fi
 
+if [ -n "$SYSREPO_PLUGIND_EXECUTABLE" ]; then
+    SYSREPO_PLUGIND="$SYSREPO_PLUGIND_EXECUTABLE"
+elif [ `id -u` -eq 0 ]; then
+    SYSREPO_PLUGIND=`su -c 'command -v sysrepo-plugind' -l $USER`
+else
+    SYSREPO_PLUGIND=`command -v sysrepoplugind`
+fi
+
 # install augeas DS plugin
 $SYSREPOCTL -P "$BINARY_DIR/srds_augeas.so"
+
+# install augeas sysrepo-plugind plugin
+$SYSREPO_PLUGIND -P "$BINARY_DIR/srplgd_augeas.so"
 
 # get current modules
 SCTL_MODULES=`$SYSREPOCTL -l`
