@@ -78,6 +78,7 @@ static int
 aug_cachefilesd_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
         sr_event_t event, uint32_t request_id, void *private_data)
 {
+    int r;
     pid_t pid;
 
     (void)session;
@@ -98,6 +99,37 @@ aug_cachefilesd_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char
     }
 
     return aug_send_sighup(PLG_NAME, pid);
+}
+
+#endif
+
+#ifdef CARBON_SERVICES
+
+static int
+aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    /* service files on github https://github.com/graphite-project/carbon/tree/master/distro/redhat/init.d */
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-cache"))) {
+        return r;
+    }
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-relay"))) {
+        return r;
+    }
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-aggregator"))) {
+        return r;
+    }
+    return SR_ERR_OK;
 }
 
 #endif
@@ -132,6 +164,10 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         } else if (!strcmp(ly_mod->name, "cachefilesd")) {
 #ifdef CACHEFILESD_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cachefilesd_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "carbon")) {
+#ifdef CARBON_SERVICES
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_carbon_change_cb, NULL, 0, 0, &subscr);
 #endif
         }
         if (rc) {
