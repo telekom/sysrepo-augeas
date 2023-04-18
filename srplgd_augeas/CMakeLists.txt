@@ -5,11 +5,11 @@ function(find_service FOUND SERVICE)
     # check service exists
     execute_process(COMMAND ${SYSTEMCTL_EXECUTABLE} status ${SERVICE} RESULT_VARIABLE RET OUTPUT_QUIET ERROR_QUIET)
     if(${RET})
+        # leave ${FOUND} var undefined
         message(STATUS "Service ${SERVICE} - not found")
-        set(${FOUND} FALSE PARENT_SCOPE)
     else()
         message(STATUS "Service ${SERVICE} - found")
-        set(${FOUND} TRUE PARENT_SCOPE)
+        set(${FOUND} 1 PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -46,6 +46,8 @@ find_service(CARBON_AGGREGATOR_SERVICE "carbon-aggregator")
 if(CARBON_CACHE_SERVICE AND CARBON_RELAY_SERVICE AND CARBON_AGGREGATOR_SERVICE)
     set(CARBON_SERVICES 1)
 endif()
+
+find_service(CGCONFIG_SERVICE "cgconfig")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 

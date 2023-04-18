@@ -134,6 +134,30 @@ aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
 
 #endif
 
+#ifdef CGCONFIG_SERVICE
+
+static int
+aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cgconfig"))) {
+        return r;
+    }
+    return SR_ERR_OK;
+}
+
+#endif
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
@@ -169,6 +193,10 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef CARBON_SERVICES
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_carbon_change_cb, NULL, 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "carbon")) {
+#ifdef CGCONFIG_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cgconfig_change_cb, NULL, 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -194,6 +222,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* backuppchosts - https://backuppc.github.io/backuppc/BackupPC.html, config file is reread automatically */
         /* bbhosts - hobbitlaunch(8), a config file is being monitored for changes but not sure if it is this one? */
         /* bootconf - no daemon */
+        /* ceph - https://ubuntu.com/ceph/docs/client-setup, only client, no daemon? */
     }
 
 cleanup:
