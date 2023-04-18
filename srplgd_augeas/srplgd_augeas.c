@@ -137,7 +137,7 @@ aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
 #ifdef CGCONFIG_SERVICE
 
 static int
-aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+aug_cgconfig_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
         sr_event_t event, uint32_t request_id, void *private_data)
 {
     int r;
@@ -151,6 +151,81 @@ aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
     (void)private_data;
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cgconfig"))) {
+        return r;
+    }
+    return SR_ERR_OK;
+}
+
+#endif
+
+#ifdef CHRONY_SERVICE
+
+static int
+aug_chrony_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "chrony"))) {
+        return r;
+    }
+    return SR_ERR_OK;
+}
+
+#endif
+
+#ifdef CLAMAV_SERVICES
+
+static int
+aug_clamav_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-daemon"))) {
+        return r;
+    }
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-freshclam"))) {
+        return r;
+    }
+    return SR_ERR_OK;
+}
+
+#endif
+
+#ifdef COCKPIT_SERVICE
+
+static int
+aug_cockpit_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
+        sr_event_t event, uint32_t request_id, void *private_data)
+{
+    int r;
+
+    (void)session;
+    (void)sub_id;
+    (void)module_name;
+    (void)xpath;
+    (void)event;
+    (void)request_id;
+    (void)private_data;
+
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cockpit"))) {
         return r;
     }
     return SR_ERR_OK;
@@ -173,11 +248,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
     ly_ctx = sr_session_acquire_context(session);
     i = ly_ctx_internal_modules_count(ly_ctx);
     while ((ly_mod = ly_ctx_get_module_iter(ly_ctx, &i))) {
-        if (!strcmp(ly_mod->name, "activemq-conf")) {
-#ifdef ACTIVEMQ_EXECUTABLE
-            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
-#endif
-        } else if (!strcmp(ly_mod->name, "activemq-xml")) {
+        if (!strcmp(ly_mod->name, "activemq-conf") || !strcmp(ly_mod->name, "activemq-xml")) {
 #ifdef ACTIVEMQ_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
 #endif
@@ -193,9 +264,21 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef CARBON_SERVICES
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_carbon_change_cb, NULL, 0, 0, &subscr);
 #endif
-        } else if (!strcmp(ly_mod->name, "carbon")) {
+        } else if (!strcmp(ly_mod->name, "cgconfig") || !strcmp(ly_mod->name, "cgrules")) {
 #ifdef CGCONFIG_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cgconfig_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "chrony")) {
+#ifdef CHRONY_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_chrony_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "clamav")) {
+#ifdef CLAMAV_SERVICES
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_clamav_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "cockpit")) {
+#ifdef COCKPIT_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cockpit_change_cb, NULL, 0, 0, &subscr);
 #endif
         }
         if (rc) {
@@ -223,6 +306,9 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* bbhosts - hobbitlaunch(8), a config file is being monitored for changes but not sure if it is this one? */
         /* bootconf - no daemon */
         /* ceph - https://ubuntu.com/ceph/docs/client-setup, only client, no daemon? */
+        /* channels - no daemon? */
+        /* cmdline - kernel command-line parameters */
+        /* cobblermodules, cobblersettings - package manager, no daemon */
     }
 
 cleanup:

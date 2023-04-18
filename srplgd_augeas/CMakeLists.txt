@@ -48,6 +48,15 @@ if(CARBON_CACHE_SERVICE AND CARBON_RELAY_SERVICE AND CARBON_AGGREGATOR_SERVICE)
 endif()
 
 find_service(CGCONFIG_SERVICE "cgconfig")
+find_service(CHRONY_SERVICE "chrony")
+
+find_service(CLAMAV_DAEMON_SERVICE "clamav-daemon")
+find_service(CLAMAV_FRESHCLAM_SERVICE "clamav-freshclam")
+if(CLAMAV_DAEMON_SERVICE AND CLAMAV_FRESHCLAM_SERVICE)
+    set(CLAMAV_SERVICES 1)
+endif()
+
+find_service(COCKPIT_SERVICE "cockpit")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
