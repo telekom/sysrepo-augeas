@@ -156,7 +156,7 @@ aug_send_sighup(const char *plg_name, pid_t pid)
     int rc = SR_ERR_OK;
 
     if (kill(pid, SIGHUP) == -1) {
-        SRPLG_LOG_ERR(plg_name, "Failed to send SIGHUP.");
+        SRPLG_LOG_ERR(plg_name, "Failed to send SIGHUP (%s).", strerror(errno));
         rc = SR_ERR_SYS;
     }
 

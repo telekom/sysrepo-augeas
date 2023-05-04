@@ -22,8 +22,8 @@ function(find_program_msg VAR PROGRAM)
 endfunction()
 
 set(SRPLGD_AUGEAS_SRC
-    srplgd_augeas.c
-    srplgda_common.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/srplgd_augeas.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/srplgda_common.c)
 
 # augeas sysrepo-plugind plugin
 add_library(srplgd_augeas MODULE ${SRPLGD_AUGEAS_SRC})
@@ -60,4 +60,4 @@ find_service(COCKPIT_SERVICE "cockpit")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
-set(format_sources ${SRPLGD_AUGEAS_SRC} PARENT_SCOPE)
+set(format_sources ${format_sources} ${SRPLGD_AUGEAS_SRC} PARENT_SCOPE)

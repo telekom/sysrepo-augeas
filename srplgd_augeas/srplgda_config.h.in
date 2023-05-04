@@ -16,6 +16,12 @@
 #ifndef SRPLGDA_CONFIG_H_
 #define SRPLGDA_CONFIG_H_
 
+#if defined (__GNUC__) || defined (__llvm__)
+# define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
+#else
+# define UNUSED(x) UNUSED_ ## x
+#endif
+
 #cmakedefine SYSTEMCTL_EXECUTABLE "@SYSTEMCTL_EXECUTABLE@"
 
 #cmakedefine ACTIVEMQ_EXECUTABLE "@ACTIVEMQ_EXECUTABLE@"

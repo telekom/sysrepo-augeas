@@ -13,6 +13,8 @@
  *
  *     https://opensource.org/licenses/BSD-3-Clause
  */
+#ifndef SRPLGDA_COMMON_H_
+#define SRPLGDA_COMMON_H_
 
 #include <sys/wait.h>
 
@@ -44,3 +46,5 @@ int aug_pidfile(const char *plg_name, const char *path, pid_t *pid);
  * @return SR_ERR value.
  */
 int aug_send_sighup(const char *plg_name, pid_t pid);
+
+#endif /* SRPLGDA_COMMON_H_ */

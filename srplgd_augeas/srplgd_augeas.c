@@ -30,17 +30,9 @@
 #ifdef ACTIVEMQ_EXECUTABLE
 
 static int
-aug_actimemq_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_actimemq_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
-
     /* TODO activemq service */
     return aug_execl(PLG_NAME, ACTIVEMQ_EXECUTABLE, "restart", NULL);
 }
@@ -50,18 +42,10 @@ aug_actimemq_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *m
 #ifdef AVAHI_DAEMON_EXECUTABLE
 
 static int
-aug_avahi_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_avahi_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     /* TODO avahi-daemon service */
     if ((r = aug_execl(PLG_NAME, AVAHI_DAEMON_EXECUTABLE, "--kill", NULL))) {
@@ -75,19 +59,11 @@ aug_avahi_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *modu
 #ifdef CACHEFILESD_EXECUTABLE
 
 static int
-aug_cachefilesd_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_cachefilesd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
     pid_t pid;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     /* TODO cachefilesd service */
     if ((r = aug_pidfile(PLG_NAME, "/var/run/cachefilesd.pid", &pid))) {
@@ -106,18 +82,10 @@ aug_cachefilesd_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char
 #ifdef CARBON_SERVICES
 
 static int
-aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_carbon_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     /* service files on github https://github.com/graphite-project/carbon/tree/master/distro/redhat/init.d */
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-cache"))) {
@@ -137,18 +105,10 @@ aug_carbon_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
 #ifdef CGCONFIG_SERVICE
 
 static int
-aug_cgconfig_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_cgconfig_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cgconfig"))) {
         return r;
@@ -161,18 +121,10 @@ aug_cgconfig_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *m
 #ifdef CHRONY_SERVICE
 
 static int
-aug_chrony_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_chrony_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "chrony"))) {
         return r;
@@ -185,18 +137,10 @@ aug_chrony_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
 #ifdef CLAMAV_SERVICES
 
 static int
-aug_clamav_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-daemon"))) {
         return r;
@@ -212,18 +156,10 @@ aug_clamav_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *mod
 #ifdef COCKPIT_SERVICE
 
 static int
-aug_cockpit_change_cb(sr_session_ctx_t *session, uint32_t sub_id, const char *module_name, const char *xpath,
-        sr_event_t event, uint32_t request_id, void *private_data)
+aug_cockpit_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
-
-    (void)session;
-    (void)sub_id;
-    (void)module_name;
-    (void)xpath;
-    (void)event;
-    (void)request_id;
-    (void)private_data;
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cockpit"))) {
         return r;
