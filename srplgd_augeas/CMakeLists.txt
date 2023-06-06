@@ -57,6 +57,21 @@ if(CLAMAV_DAEMON_SERVICE AND CLAMAV_FRESHCLAM_SERVICE)
 endif()
 
 find_service(COCKPIT_SERVICE "cockpit")
+find_service(COLLECTD_SERVICE "collectd")
+find_service(CRON_SERVICE "cron")
+find_service(CUPS_SERVICE "cups")
+find_service(DARKICE_SERVICE "darkice")
+find_service(DEVFS_SERVICE "devfs")
+
+find_program(DHCPD_EXECUTABLE "dhcpd")
+find_program_msg(${DHCPD_EXECUTABLE} "dhcpd")
+
+find_service(DOVECOT_SERVICE "dovecot")
+
+find_program(EXPORTFS_EXECUTABLE "exportfs")
+find_program_msg(${EXPORTFS_EXECUTABLE} "exportfs")
+
+find_service(FAIL2BAN_SERVICE "fail2ban")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 

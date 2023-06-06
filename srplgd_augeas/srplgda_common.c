@@ -151,12 +151,12 @@ cleanup:
 }
 
 int
-aug_send_sighup(const char *plg_name, pid_t pid)
+aug_send_sig(const char *plg_name, pid_t pid, int sig)
 {
     int rc = SR_ERR_OK;
 
-    if (kill(pid, SIGHUP) == -1) {
-        SRPLG_LOG_ERR(plg_name, "Failed to send SIGHUP (%s).", strerror(errno));
+    if (kill(pid, sig) == -1) {
+        SRPLG_LOG_ERR(plg_name, "Failed to send signal %d (%s).", sig, strerror(errno));
         rc = SR_ERR_SYS;
     }
 

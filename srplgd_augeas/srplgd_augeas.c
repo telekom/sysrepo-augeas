@@ -16,6 +16,7 @@
 
 #include "srplgda_config.h"
 
+#include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -26,6 +27,19 @@
 #include "srplgda_common.h"
 
 #define PLG_NAME "srplgd_augeas"
+
+static int
+aug_service_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *private_data)
+{
+    const char *service_name = private_data;
+    int r;
+
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", service_name, NULL))) {
+        return r;
+    }
+    return SR_ERR_OK;
+}
 
 #ifdef ACTIVEMQ_EXECUTABLE
 
@@ -74,7 +88,7 @@ aug_cachefilesd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub
         return SR_ERR_OK;
     }
 
-    return aug_send_sighup(PLG_NAME, pid);
+    return aug_send_sig(PLG_NAME, pid, SIGHUP);
 }
 
 #endif
@@ -88,45 +102,13 @@ aug_carbon_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
     int r;
 
     /* service files on github https://github.com/graphite-project/carbon/tree/master/distro/redhat/init.d */
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-cache"))) {
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-cache", NULL))) {
         return r;
     }
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-relay"))) {
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-relay", NULL))) {
         return r;
     }
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-aggregator"))) {
-        return r;
-    }
-    return SR_ERR_OK;
-}
-
-#endif
-
-#ifdef CGCONFIG_SERVICE
-
-static int
-aug_cgconfig_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
-{
-    int r;
-
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cgconfig"))) {
-        return r;
-    }
-    return SR_ERR_OK;
-}
-
-#endif
-
-#ifdef CHRONY_SERVICE
-
-static int
-aug_chrony_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
-{
-    int r;
-
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "chrony"))) {
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-aggregator", NULL))) {
         return r;
     }
     return SR_ERR_OK;
@@ -142,10 +124,10 @@ aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 {
     int r;
 
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-daemon"))) {
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-daemon", NULL))) {
         return r;
     }
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-freshclam"))) {
+    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-freshclam", NULL))) {
         return r;
     }
     return SR_ERR_OK;
@@ -153,18 +135,43 @@ aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 #endif
 
-#ifdef COCKPIT_SERVICE
+#ifdef DHCPD_EXECUTABLE
 
 static int
-aug_cockpit_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+aug_dhcpd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
+    pid_t pid;
 
-    if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "cockpit"))) {
+    /* TODO on Ubuntu service isc-dhcp-server with PID file /run/dhcp-server/dhcpd.pid */
+    if ((r = aug_pidfile(PLG_NAME, "/var/run/dhcpd.pid", &pid))) {
+        return r;
+    }
+    if (!pid) {
+        /* daemon not running */
+        return SR_ERR_OK;
+    }
+
+    /* terminate and restart manually (see dhcpd(8)) */
+    if ((r = aug_send_sig(PLG_NAME, pid, SIGTERM))) {
+        return r;
+    }
+    if ((r = aug_execl(PLG_NAME, DHCPD_EXECUTABLE, NULL))) {
         return r;
     }
     return SR_ERR_OK;
+}
+
+#endif
+
+#ifdef EXPORTFS_EXECUTABLE
+
+static int
+aug_exports_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, EXPORTFS_EXECUTABLE, "-ra", NULL);
 }
 
 #endif
@@ -202,11 +209,11 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #endif
         } else if (!strcmp(ly_mod->name, "cgconfig") || !strcmp(ly_mod->name, "cgrules")) {
 #ifdef CGCONFIG_SERVICE
-            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cgconfig_change_cb, NULL, 0, 0, &subscr);
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "cgconfig", 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "chrony")) {
 #ifdef CHRONY_SERVICE
-            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_chrony_change_cb, NULL, 0, 0, &subscr);
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "chrony", 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "clamav")) {
 #ifdef CLAMAV_SERVICES
@@ -214,7 +221,47 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #endif
         } else if (!strcmp(ly_mod->name, "cockpit")) {
 #ifdef COCKPIT_SERVICE
-            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_cockpit_change_cb, NULL, 0, 0, &subscr);
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "cockpit", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "collectd")) {
+#ifdef COLLECTD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "collectd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "cron_user") || !strcmp(ly_mod->name, "cron")) {
+#ifdef CRON_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "cron", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "cups")) {
+#ifdef CUPS_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "cups", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "cyrus-imapd")) {
+#ifdef CYRUS_IMAPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "cyrus-imapd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "darkice")) {
+#ifdef DARKICE_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "darkice", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "devfsrules")) {
+#ifdef DEVFS_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "devfs", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "dhcpd")) {
+#ifdef DHCPD_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_dhcpd_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "dovecot")) {
+#ifdef DOVECOT_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "dovecot", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "exports")) {
+#ifdef EXPORTFS_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_exports_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "fail2ban")) {
+#ifdef FAIL2BAN_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "fail2ban", 0, 0, &subscr);
 #endif
         }
         if (rc) {
@@ -245,6 +292,17 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* channels - no daemon? */
         /* cmdline - kernel command-line parameters */
         /* cobblermodules, cobblersettings - package manager, no daemon */
+        /* cpanel - not able to find any relevant info? */
+        /* crypttab - systemd-cryptsetup@.service(8) service needs generated service files on boot */
+        /* desktop - lots of affected applications */
+        /* device_map - grub configuration */
+        /* dhclient - should work as a service but not sure what service to restart? */
+        /* dns_zone - no specific process to use the files */
+        /* dnsmasq - dnsmasq(8), unless --no-poll is used, the config file is watched for changes */
+        /* dpkg - no daemon */
+        /* dput - no daemon */
+        /* ethers - ethers(5), no (specific) daemon */
+        /* fai_diskconfig - installation configuration */
     }
 
 cleanup:

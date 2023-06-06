@@ -39,12 +39,13 @@ int aug_execl(const char *plg_name, const char *pathname, ...);
 int aug_pidfile(const char *plg_name, const char *path, pid_t *pid);
 
 /**
- * @brief Send SIGHUP to a process.
+ * @brief Send a signal to a process.
  *
  * @param[in] plg_name Plugin name to use for logging.
  * @param[in] pid Pid of the process to signal.
+ * @param[in] sig Number of the signal to send.
  * @return SR_ERR value.
  */
-int aug_send_sighup(const char *plg_name, pid_t pid);
+int aug_send_sig(const char *plg_name, pid_t pid, int sig);
 
 #endif /* SRPLGDA_COMMON_H_ */
