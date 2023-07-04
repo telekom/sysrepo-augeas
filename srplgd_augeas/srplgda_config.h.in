@@ -60,4 +60,6 @@
 
 #cmakedefine FAIL2BAN_SERVICE @FAIL2BAN_SERVICE@
 
+#cmakedefine HTTPD_SERVICE @HTTPD_SERVICE@
+
 #endif /* SRPLGDA_CONFIG_H_ */

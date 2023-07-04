@@ -72,6 +72,7 @@ find_program(EXPORTFS_EXECUTABLE "exportfs")
 find_program_msg(${EXPORTFS_EXECUTABLE} "exportfs")
 
 find_service(FAIL2BAN_SERVICE "fail2ban")
+find_service(HTTPD_SERVICE "httpd")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 

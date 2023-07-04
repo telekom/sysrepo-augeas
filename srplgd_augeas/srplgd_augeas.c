@@ -263,6 +263,10 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef FAIL2BAN_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "fail2ban", 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "httpd")) {
+#ifdef HTTPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "httpd", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -303,6 +307,21 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* dput - no daemon */
         /* ethers - ethers(5), no (specific) daemon */
         /* fai_diskconfig - installation configuration */
+        /* fonts - no daemon */
+        /* fstab - no daemon */
+        /* fuse - no daemon */
+        /* gdm - has daemon but restarting it causes all users to log out */
+        /* getcap - no daemon */
+        /* group - would cause log out */
+        /* grub - no daemon */
+        /* grubenv - no daemon */
+        /* gshadow - would cause log out */
+        /* gtkbookmarks - applied as needed? */
+        /* host_conf - no daemon */
+        /* hostname - no daemon */
+        /* hosts_access - tcpd(8), used only by other daemons? */
+        /* hosts - hosts(5), no daemon */
+        /* htpasswd - restart httpd, rsyncd? */
     }
 
 cleanup:
