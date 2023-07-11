@@ -73,6 +73,9 @@ find_program_msg(${EXPORTFS_EXECUTABLE} "exportfs")
 
 find_service(FAIL2BAN_SERVICE "fail2ban")
 find_service(HTTPD_SERVICE "httpd")
+find_service(ISCSID_SERVICE "iscsid")
+find_service(KDUMP_SERVICE "kdump")
+find_service(KEEPALIVED_SERVICE "keepalived")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 

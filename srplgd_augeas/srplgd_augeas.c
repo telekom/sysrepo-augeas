@@ -191,7 +191,8 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
     ly_ctx = sr_session_acquire_context(session);
     i = ly_ctx_internal_modules_count(ly_ctx);
     while ((ly_mod = ly_ctx_get_module_iter(ly_ctx, &i))) {
-        if (!strcmp(ly_mod->name, "activemq-conf") || !strcmp(ly_mod->name, "activemq-xml")) {
+        if (!strcmp(ly_mod->name, "activemq-conf") || !strcmp(ly_mod->name, "activemq-xml") ||
+                !strcmp(ly_mod->name, "jmxaccess") || !strcmp(ly_mod->name, "jmxpassword")) {
 #ifdef ACTIVEMQ_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_actimemq_change_cb, NULL, 0, 0, &subscr);
 #endif
@@ -267,6 +268,18 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef HTTPD_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "httpd", 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "iscsid")) {
+#ifdef ISCSID_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "iscsid", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "kdump")) {
+#ifdef KDUMP_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "kdump", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "keepalived")) {
+#ifdef KEEPALIVED_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "keepalived", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -322,6 +335,14 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* hosts_access - tcpd(8), used only by other daemons? */
         /* hosts - hosts(5), no daemon */
         /* htpasswd - restart httpd, rsyncd? */
+        /* inetd - inetd(8), should restart it? */
+        /* inittab - applied on next boot */
+        /* inputrc - readline(3), no daemon */
+        /* interaces - interfaces(5), specific inetrfaces would need to be disabled and enabled */
+        /* iproute2 - ip-route(8), no simple way of applying changes */
+        /* iptables - iptables(8), some changes should be possible to apply with iptables-restore */
+        /* jaas - not sure if has any daemon */
+        /* jettyrealm - Java app */
     }
 
 cleanup:
