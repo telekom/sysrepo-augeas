@@ -176,6 +176,13 @@ aug_exports_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 #endif
 
+static int
+aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, "/sbin/ldconfig", NULL);
+}
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
@@ -280,6 +287,24 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef KEEPALIVED_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "keepalived", 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "ldif")) {
+#ifdef SLAPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "slapd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "ldso")) {
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_ldso_change_cb, NULL, 0, 0, &subscr);
+        } else if (!strcmp(ly_mod->name, "lightdm")) {
+#ifdef LIGHTDM_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "lightdm", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "logrotate")) {
+#ifdef LOGROTATE_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "logrotate", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "mailscanner_rules") || !strcmp(ly_mod->name, "mailscanner")) {
+#ifdef MAILSCANNER_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "MailScanner", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -343,6 +368,14 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* iptables - iptables(8), some changes should be possible to apply with iptables-restore */
         /* jaas - not sure if has any daemon */
         /* jettyrealm - Java app */
+        /* known_hosts - no daemon */
+        /* koji - several daemons, need restart? */
+        /* krb5 - service name(s) differs across distributions? */
+        /* limits - limits.conf(5), no daemon */
+        /* login_defs - applied when creating new users */
+        /* logwatch - executed by cron */
+        /* lokkit - interactive configuration */
+        /* lvm - not a good idea to restart the manager */
     }
 
 cleanup:

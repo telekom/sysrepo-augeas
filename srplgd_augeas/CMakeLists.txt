@@ -4,7 +4,7 @@ find_program(SYSTEMCTL_EXECUTABLE "systemctl" REQUIRED)
 function(find_service FOUND SERVICE)
     # check service exists
     execute_process(COMMAND ${SYSTEMCTL_EXECUTABLE} status ${SERVICE} RESULT_VARIABLE RET OUTPUT_QUIET ERROR_QUIET)
-    if(${RET})
+    if(${RET} EQUAL 4)
         # leave ${FOUND} var undefined
         message(STATUS "Service ${SERVICE} - not found")
     else()
@@ -76,6 +76,10 @@ find_service(HTTPD_SERVICE "httpd")
 find_service(ISCSID_SERVICE "iscsid")
 find_service(KDUMP_SERVICE "kdump")
 find_service(KEEPALIVED_SERVICE "keepalived")
+find_service(SLAPD_SERVICE "slapd")
+find_service(LIGHTDM_SERVICE "lightdm")
+find_service(LOGROTATE_SERVICE "logrotate")
+find_service(MAILSCANNER_SERVICE "MailScanner")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
