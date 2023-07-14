@@ -305,6 +305,55 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef MAILSCANNER_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "MailScanner", 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "mcollective")) {
+#ifdef MCOLLECTIVE_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "mcollective", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "memcached")) {
+#ifdef MEMCACHED_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "memcached", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "mongodbserver")) {
+#ifdef MONGOD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "mongod", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "monit")) {
+#ifdef MONIT_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "monit", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "multipath")) {
+#ifdef MULTIPATHD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "multipathd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "mysql")) {
+#ifdef MYSQL_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "mysql", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "nagioscfg") || !strcmp(ly_mod->name, "nagiosobjects") ||
+                !strcmp(ly_mod->name, "nrpe")) {
+#ifdef NAGIOS_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "nagios", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "nginx")) {
+#ifdef NGINX_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "nginx", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "nslcd")) {
+#ifdef NSLCD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "nslcd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "ntp") || !strcmp(ly_mod->name, "ntpd")) {
+#ifdef NTPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "ntpd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "opendkim")) {
+#ifdef OPENDKIM_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "opendkim", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "openvpn")) {
+#ifdef OPENVPN_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "openvpn.target", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -376,6 +425,20 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* logwatch - executed by cron */
         /* lokkit - interactive configuration */
         /* lvm - not a good idea to restart the manager */
+        /* masterpasswd - no deamon */
+        /* mdadm_conf - requires a restart */
+        /* mke2fs - no daemon */
+        /* modprobe - default options for modprobe exec, rather leave it to the user */
+        /* modules_conf - default options for modprobe exec */
+        /* modules - read on boot */
+        /* netmasks - specific interface restart required */
+        /* networkmanager - better not restart it */
+        /* networks - no daemon */
+        /* nsswitch - no single daemon */
+        /* odbc - no daemon */
+        /* openshift_config - many managed projects */
+        /* openshift_http - managed by openshift? */
+        /* openshift_quickstarts - applied on start */
     }
 
 cleanup:
