@@ -14,11 +14,14 @@
  *     https://opensource.org/licenses/BSD-3-Clause
  */
 
+#define _GNU_SOURCE
+
 #include "srplgda_config.h"
 
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 
 #include <libyang/libyang.h>
@@ -182,6 +185,61 @@ aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), c
 {
     return aug_execl(PLG_NAME, "/sbin/ldconfig", NULL);
 }
+
+#ifdef PG_CTL_EXECUTABLE
+
+static int
+aug_pg_hba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, PG_CTL_EXECUTABLE, "reload", NULL);
+}
+
+#endif
+
+#ifdef POSTMAP_EXECUTABLE
+
+static int
+aug_postmap_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *private_data)
+{
+    const char *file_name = private_data;
+    char *path;
+    int r;
+
+    if (asprintf(&path, "/etc/postfix/%s", file_name) == -1) {
+        return SR_ERR_NO_MEMORY;
+    }
+    r = aug_execl(PLG_NAME, POSTMAP_EXECUTABLE, path, NULL);
+    free(path);
+    if (r) {
+        return r;
+    }
+
+    if (asprintf(&path, "/usr/local/etc/postfix/%s", file_name) == -1) {
+        return SR_ERR_NO_MEMORY;
+    }
+    r = aug_execl(PLG_NAME, POSTMAP_EXECUTABLE, path, NULL);
+    free(path);
+    if (r) {
+        return r;
+    }
+
+    return SR_ERR_OK;
+}
+
+#endif
+
+#ifdef POSTFIX_EXECUTABLE
+
+static int
+aug_postfix_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, POSTFIX_EXECUTABLE, "reload", NULL);
+}
+
+#endif
 
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
@@ -354,6 +412,38 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef OPENVPN_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "openvpn.target", 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "pagekite")) {
+#ifdef PAGEKITE_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "pagekite", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "pg_hba")) {
+#ifdef PG_CTL_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_pg_hba_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "pgbouncer")) {
+#ifdef PGBOUNCER_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "pgbouncer", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "postfix_access") || !strcmp(ly_mod->name, "postfix_passwordmap")) {
+#ifdef POSTMAP_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postmap_change_cb, "access", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "postfix_main") || !strcmp(ly_mod->name, "postfix_master")) {
+#ifdef POSTFIX_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postfix_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "postfix_sasl_smtpd")) {
+#ifdef SASLAUTHD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "postfix_sasl_smtpd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "postfix_transport")) {
+#ifdef POSTMAP_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postmap_change_cb, "transport", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "postfix_virtual")) {
+#ifdef POSTMAP_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postmap_change_cb, "virtual", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -439,6 +529,13 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* openshift_config - many managed projects */
         /* openshift_http - managed by openshift? */
         /* openshift_quickstarts - applied on start */
+        /* oz - no daemon */
+        /* pam - no daemon */
+        /* pamconf - no daemon */
+        /* passwd - no daemon */
+        /* pbuilder - no daemon */
+        /* php - no daemon */
+        /* phpvars - squirrelmail, a web service */
     }
 
 cleanup:

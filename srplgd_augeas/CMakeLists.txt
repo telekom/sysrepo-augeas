@@ -92,6 +92,20 @@ find_service(NSLCD_SERVICE "nslcd")
 find_service(NTPD_SERVICE "ntpd")
 find_service(OPENDKIM_SERVICE "opendkim")
 find_service(OPENVPN_SERVICE "openvpn.target")
+find_service(PAGEKITE_SERVICE "pagekite")
+
+find_program(PG_CTL_EXECUTABLE "pg_ctl")
+find_program_msg(${PG_CTL_EXECUTABLE} "pg_ctl")
+
+find_service(PGBOUNCER_SERVICE "pgbouncer")
+
+find_program(POSTMAP_EXECUTABLE "postmap")
+find_program_msg(${POSTMAP_EXECUTABLE} "postmap")
+
+find_program(POSTFIX_EXECUTABLE "postfix")
+find_program_msg(${POSTFIX_EXECUTABLE} "postfix")
+
+find_service(SASLAUTHD_SERVICE "saslauthd")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
