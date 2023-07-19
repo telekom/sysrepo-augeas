@@ -241,6 +241,33 @@ aug_postfix_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 #endif
 
+#ifdef RTADVD_EXECUTABLE
+
+static int
+aug_rtadvd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    int r;
+    pid_t pid;
+
+    if ((r = aug_pidfile(PLG_NAME, "/var/run/rtadvd.pid", &pid))) {
+        return r;
+    }
+    if (!pid) {
+        /* daemon not running */
+        return SR_ERR_OK;
+    }
+
+    /* rtadvd(8) */
+    if ((r = aug_send_sig(PLG_NAME, pid, SIGHUP))) {
+        return r;
+    }
+
+    return SR_ERR_OK;
+}
+
+#endif
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
@@ -416,7 +443,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef PAGEKITE_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "pagekite", 0, 0, &subscr);
 #endif
-        } else if (!strcmp(ly_mod->name, "pg_hba")) {
+        } else if (!strcmp(ly_mod->name, "pg_hba") || !strcmp(ly_mod->name, "postgresql")) {
 #ifdef PG_CTL_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_pg_hba_change_cb, NULL, 0, 0, &subscr);
 #endif
@@ -443,6 +470,39 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         } else if (!strcmp(ly_mod->name, "postfix_virtual")) {
 #ifdef POSTMAP_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postmap_change_cb, "virtual", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "puppet_auth") || !strcmp(ly_mod->name, "puppet") ||
+                !strcmp(ly_mod->name, "puppetfileserver")) {
+#ifdef PUPPET_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "puppet", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "qpid")) {
+#ifdef QPIDD_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "qpidd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "rabbitmq")) {
+#ifdef RABBITMQ_SERVER_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "rabbitmq-server", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "radicale")) {
+#ifdef RADICALE_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "radicale", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "redis")) {
+#ifdef REDIS_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "redis.target", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "rsyncd")) {
+#ifdef RSYNCD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "rsyncd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "rsyslog")) {
+#ifdef RSYSLOG_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "rsyslog", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "rtadvd")) {
+#ifdef RTADVD_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_rtadvd_change_cb, NULL, 0, 0, &subscr);
 #endif
         }
         if (rc) {
@@ -536,6 +596,13 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* pbuilder - no daemon */
         /* php - no daemon */
         /* phpvars - squirrelmail, a web service */
+        /* protocols - no daemon */
+        /* pylonspaste - no single daemon? */
+        /* pythonpaste - no single daemon? */
+        /* rancid - no daemon */
+        /* resolv - no daemon */
+        /* rhsm - Java apps? */
+        /* rmt - no daemon */
     }
 
 cleanup:

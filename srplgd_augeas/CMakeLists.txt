@@ -106,6 +106,16 @@ find_program(POSTFIX_EXECUTABLE "postfix")
 find_program_msg(${POSTFIX_EXECUTABLE} "postfix")
 
 find_service(SASLAUTHD_SERVICE "saslauthd")
+find_service(PUPPET_SERVICE "puppet")
+find_service(QPIDD_SERVICE "qpidd")
+find_service(RABBITMQ_SERVER_SERVICE "rabbitmq-server")
+find_service(RADICALE_SERVICE "radicale")
+find_service(REDIS_SERVICE "redis.target")
+find_service(RSYNCD_SERVICE "rsyncd")
+find_service(RSYSLOG_SERVICE "rsyslog")
+
+find_program(RTADVD_EXECUTABLE "rtadvd")
+find_program_msg(${RTADVD_EXECUTABLE} "rtadvd")
 
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
