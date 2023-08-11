@@ -117,6 +117,17 @@ find_service(RSYSLOG_SERVICE "rsyslog")
 find_program(RTADVD_EXECUTABLE "rtadvd")
 find_program_msg(${RTADVD_EXECUTABLE} "rtadvd")
 
+find_program(SMBCONTROL_EXECUTABLE "smbcontrol")
+find_program_msg(${SMBCONTROL_EXECUTABLE} "smbcontrol")
+
+find_service(ASTERISK_SERVICE "asterisk")
+find_service(SPLUNK_SERVICE "splunk")
+find_service(SPLUNK_SERVICE "squid")
+find_service(SSHD_SERVICE "sshd")
+find_service(SSSD_SERVICE "sssd")
+find_service(SSSD_SERVICE "strongswan")
+find_service(SSSD_SERVICE "stunnel")
+
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
 set(format_sources ${format_sources} ${SRPLGD_AUGEAS_SRC} PARENT_SCOPE)

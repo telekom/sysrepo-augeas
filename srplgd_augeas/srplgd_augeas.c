@@ -268,6 +268,22 @@ aug_rtadvd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 #endif
 
+#ifdef SMBCONTROL_EXECUTABLE
+
+static int
+aug_samba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    /* ignore return value in case the daemons are not running */
+    aug_execl(PLG_NAME, SMBCONTROL_EXECUTABLE, "reload-config", "nmbd", NULL);
+    aug_execl(PLG_NAME, SMBCONTROL_EXECUTABLE, "reload-config", "smbd", NULL);
+    aug_execl(PLG_NAME, SMBCONTROL_EXECUTABLE, "reload-config", "winbindd", NULL);
+
+    return SR_ERR_OK;
+}
+
+#endif
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
@@ -372,7 +388,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef KEEPALIVED_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "keepalived", 0, 0, &subscr);
 #endif
-        } else if (!strcmp(ly_mod->name, "ldif")) {
+        } else if (!strcmp(ly_mod->name, "ldif") || !strcmp(ly_mod->name, "slapd")) {
 #ifdef SLAPD_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "slapd", 0, 0, &subscr);
 #endif
@@ -504,6 +520,38 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 #ifdef RTADVD_EXECUTABLE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_rtadvd_change_cb, NULL, 0, 0, &subscr);
 #endif
+        } else if (!strcmp(ly_mod->name, "samba") || !strcmp(ly_mod->name, "smbusers")) {
+#ifdef SMBCONTROL_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_samba_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "sip_conf")) {
+#ifdef ASTERISK_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "asterisk", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "splunk")) {
+#ifdef SPLUNK_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "splunk", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "squid")) {
+#ifdef SQUID_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "squid", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "sshd")) {
+#ifdef SSHD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "sshd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "sssd")) {
+#ifdef SSSD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "sssd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "strongswan")) {
+#ifdef STRONGSWAN_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "strongswan", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "stunnel")) {
+#ifdef STUNNEL_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "stunnel", 0, 0, &subscr);
+#endif
         }
         if (rc) {
             SRPLG_LOG_ERR(PLG_NAME, "Failed to subscribe to module \"%s\" (%s).", ly_mod->name, sr_strerror(rc));
@@ -603,6 +651,25 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* resolv - no daemon */
         /* rhsm - Java apps? */
         /* rmt - no daemon */
+        /* schroot - applied on next schroot access */
+        /* securetty - applied on next login */
+        /* semanage - library configuration */
+        /* services - library configuration */
+        /* shadow - no daemon */
+        /* shells - no daemon */
+        /* shellvars_list - no daemon */
+        /* shellvars - many config files */
+        /* simplelines - files reread on use */
+        /* simplevars - many config files */
+        /* solaris_system - no daemon */
+        /* soma - could not find info? */
+        /* sos - no daemon */
+        /* spacevars - many config files */
+        /* ssh - no daemon */
+        /* star - no daemon */
+        /* subversion - no daemon */
+        /* sudoers - no daemon */
+        /* sysconfig_route - restart NetworkManager service? */
     }
 
 cleanup:
