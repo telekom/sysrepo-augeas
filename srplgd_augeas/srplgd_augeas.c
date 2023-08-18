@@ -284,6 +284,29 @@ aug_samba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
 
 #endif
 
+#ifdef SYSCTL_EXECUTABLE
+
+static int
+aug_sysctl_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    /* load kernel parameters from the config file */
+    return aug_execl(PLG_NAME, SYSCTL_EXECUTABLE, "--load", NULL);
+}
+
+#endif
+
+#ifdef WEBMIN_EXECUTABLE
+
+static int
+aug_webmin_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, "/etc/webmin/restart", NULL);
+}
+
+#endif
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
 {
@@ -488,8 +511,8 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_postmap_change_cb, "virtual", 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "puppet_auth") || !strcmp(ly_mod->name, "puppet") ||
-                !strcmp(ly_mod->name, "puppetfileserver")) {
-#ifdef PUPPET_EXECUTABLE
+                !strcmp(ly_mod->name, "puppetfileserver") || !strcmp(ly_mod->name, "trapperkeeper")) {
+#ifdef PUPPET_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "puppet", 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "qpid")) {
@@ -551,6 +574,47 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         } else if (!strcmp(ly_mod->name, "stunnel")) {
 #ifdef STUNNEL_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "stunnel", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "sysctl")) {
+#ifdef SYSCTL_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_sysctl_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "syslog")) {
+#ifdef SYSLOG_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "syslog", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "thttpd")) {
+#ifdef THTTPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "thttpd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "tinc")) {
+#ifdef TINC_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "tinc", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "tmpfiles")) {
+#ifdef SYSTEMD_TMPFILES_CLEAN_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "systemd-tmpfiles-clean",
+                    0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "tuned")) {
+#ifdef TUNED_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "tuned", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "vsftpd")) {
+#ifdef VSFTPD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "vsftpd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "webmin")) {
+#ifdef WEBMIN_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_webmin_change_cb, NULL, 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "xinetd")) {
+#ifdef XINETD_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "xinetd", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "xymon")) {
+#ifdef XYMONLAUNCH_SERVICE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "xymonlaunch", 0, 0, &subscr);
 #endif
         }
         if (rc) {
@@ -670,6 +734,16 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
         /* subversion - no daemon */
         /* sudoers - no daemon */
         /* sysconfig_route - restart NetworkManager service? */
+        /* systemd - restart the changed services? */
+        /* termcap - no daemon */
+        /* up2date - no daemons? */
+        /* updatedb - updatedb(8) run preiodically */
+        /* vfstab - no daemon */
+        /* vmware_config - applied automatically? */
+        /* xml - too generic */
+        /* xorg - Xorg(1), system needs restart */
+        /* xymon_alerting - no daemon? */
+        /* yum - no daemon? */
     }
 
 cleanup:

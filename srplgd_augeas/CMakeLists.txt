@@ -128,6 +128,22 @@ find_service(SSSD_SERVICE "sssd")
 find_service(SSSD_SERVICE "strongswan")
 find_service(SSSD_SERVICE "stunnel")
 
+find_program(SYSCTL_EXECUTABLE "sysctl")
+find_program_msg(${SYSCTL_EXECUTABLE} "sysctl")
+
+find_service(SYSLOG_SERVICE "syslog")
+find_service(THTTPD_SERVICE "thttpd")
+find_service(TINC_SERVICE "tinc")
+find_service(SYSTEMD_TMPFILES_CLEAN_SERVICE "systemd-tmpfiles-clean")
+find_service(TUNED_SERVICE "tuned")
+find_service(VSFTPD_SERVICE "vsftpd")
+
+find_program(WEBMIN_EXECUTABLE "webmin")
+find_program_msg(${WEBMIN_EXECUTABLE} "webmin")
+
+find_service(XINETD_SERVICE "xinetd")
+find_service(XYMONLAUNCH_SERVICE "xymonlaunch")
+
 configure_file("srplgda_config.h.in" "${PROJECT_BINARY_DIR}/srplgda_config.h" ESCAPE_QUOTES @ONLY)
 
 set(format_sources ${format_sources} ${SRPLGD_AUGEAS_SRC} PARENT_SCOPE)
