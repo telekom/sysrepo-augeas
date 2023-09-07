@@ -186,6 +186,17 @@ aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), c
     return aug_execl(PLG_NAME, "/sbin/ldconfig", NULL);
 }
 
+#ifdef NETPLAN_EXECUTABLE
+
+static int
+aug_netplan_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
+        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+{
+    return aug_execl(PLG_NAME, NETPLAN_EXECUTABLE, "apply", NULL);
+}
+
+#endif
+
 #ifdef PG_CTL_EXECUTABLE
 
 static int
@@ -457,6 +468,10 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
                 !strcmp(ly_mod->name, "nrpe")) {
 #ifdef NAGIOS_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "nagios", 0, 0, &subscr);
+#endif
+        } else if (!strcmp(ly_mod->name, "netplan")) {
+#ifdef NETPLAN_EXECUTABLE
+            rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_netplan_change_cb, NULL, 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "nginx")) {
 #ifdef NGINX_SERVICE

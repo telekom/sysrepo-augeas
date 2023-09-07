@@ -87,6 +87,10 @@ find_service(MONIT_SERVICE "monit")
 find_service(MULTIPATHD_SERVICE "multipathd")
 find_service(MYSQL_SERVICE "mysql")
 find_service(NAGIOS_SERVICE "nagios")
+
+find_program(NETPLAN_EXECUTABLE "netplan")
+find_program_msg(${NETPLAN_EXECUTABLE} "netplan")
+
 find_service(NGINX_SERVICE "nginx")
 find_service(NSLCD_SERVICE "nslcd")
 find_service(NTPD_SERVICE "ntpd")
