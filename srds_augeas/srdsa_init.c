@@ -167,6 +167,50 @@ augds_init_auginfo_add_pattern2(struct lysc_pattern **ly_patterns, struct augnod
 }
 
 /**
+ * @brief Compile a pattern.
+ *
+ * @param[in] pattern Pattern to compile.
+ * @param[out] pcode Compiled PCRE2 code.
+ * @return SR error code.
+ */
+static int
+augds_init_auginfo_compile_pattern(const char *pattern, pcre2_code **pcode)
+{
+    char *pattern_d = NULL;
+    int err_code;
+    uint32_t compile_opts;
+    PCRE2_SIZE err_offset;
+
+    /* prepare options and pattern */
+    compile_opts = PCRE2_UTF | PCRE2_ANCHORED | PCRE2_DOLLAR_ENDONLY | PCRE2_NO_AUTO_CAPTURE;
+
+    /* handle end anchor */
+#ifdef PCRE2_ENDANCHORED
+    compile_opts |= PCRE2_ENDANCHORED;
+#else
+    asprintf(&pattern_d, "%s$", pattern);
+    pattern = pattern_d;
+#endif
+
+    /* compile the pattern */
+    *pcode = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, compile_opts, &err_code,
+            &err_offset, NULL);
+    free(pattern_d);
+
+    if (!*pcode) {
+        PCRE2_UCHAR err_msg[AUG_PCRE2_MSG_LIMIT] = {0};
+
+        pcre2_get_error_message(err_code, err_msg, AUG_PCRE2_MSG_LIMIT);
+
+        SRPLG_LOG_ERR(srpds_name, "Regular expression \"%s\" is not valid (\"%s\": %s).", pattern,
+                pattern + err_offset, (const char *)err_msg);
+        return SR_ERR_INTERNAL;
+    }
+
+    return SR_ERR_OK;
+}
+
+/**
  * @brief Get pattern to match Augeas labels for this node.
  *
  * @param[in] auginfo Base auginfo structure with the compiled uint64 pattern cache.
@@ -182,10 +226,7 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
     const struct lysc_type *type;
     const struct lysc_type_str *stype;
     const struct lysc_type_union *utype;
-    const char *pattern;
-    int err_code, rc;
-    uint32_t compile_opts;
-    PCRE2_SIZE err_offset;
+    int rc;
     LY_ARRAY_COUNT_TYPE u;
 
     /* get the type */
@@ -205,30 +246,9 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
         }
     } else if (type->basetype == LY_TYPE_UINT64) {
         /* use the pattern compiled ourselves */
-        if (!auginfo->pcode_uint64) {
-            /* prepare options and pattern */
-            compile_opts = PCRE2_UTF | PCRE2_ANCHORED | PCRE2_DOLLAR_ENDONLY | PCRE2_NO_AUTO_CAPTURE;
-#ifdef PCRE2_ENDANCHORED
-            compile_opts |= PCRE2_ENDANCHORED;
-            pattern = "[0-9]+";
-#else
-            pattern = "[0-9]+$";
-#endif
-
-            /* compile the pattern */
-            auginfo->pcode_uint64 = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, compile_opts, &err_code,
-                    &err_offset, NULL);
-            if (!auginfo->pcode_uint64) {
-                PCRE2_UCHAR err_msg[AUG_PCRE2_MSG_LIMIT] = {0};
-
-                pcre2_get_error_message(err_code, err_msg, AUG_PCRE2_MSG_LIMIT);
-
-                SRPLG_LOG_ERR(srpds_name, "Regular expression \"%s\" is not valid (\"%s\": %s).", pattern,
-                        pattern + err_offset, (const char *)err_msg);
-                return SR_ERR_INTERNAL;
-            }
+        if (!auginfo->pcode_uint64 && (rc = augds_init_auginfo_compile_pattern("[0-9]+", &auginfo->pcode_uint64))) {
+            return rc;
         }
-
         if ((rc = augds_init_auginfo_add_pattern(auginfo->pcode_uint64, 0, patterns, pattern_count))) {
             return rc;
         }
