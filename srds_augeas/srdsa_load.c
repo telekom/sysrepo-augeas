@@ -514,7 +514,8 @@ augds_aug2yang_augnode_labels_case_r(augeas *aug, struct augnode *augnode, const
 {
     int rc = SR_ERR_OK, i, m;
     uint32_t j;
-    const char *value, *label_node;
+    struct augnode_case_node *acnode;
+    const char *label_node;
     char *label, *label_node_d = NULL;
     enum augds_ext_node_type node_type;
     struct lyd_node *new_node;
@@ -532,26 +533,24 @@ augds_aug2yang_augnode_labels_case_r(augeas *aug, struct augnode *augnode, const
     }
     label_node = augds_get_label_node(label, &label_node_d);
 
-    for (j = 0; j < augnode->case_count; ++j) {
-        m = augds_ext_label_node_equal(augnode->cases[j].data_path, label_node, &node_type);
-        free(label_node_d);
-        label_node_d = NULL;
+    for (j = 0; j < augnode->cnode_count; ++j) {
+        acnode = &augnode->case_nodes[j];
+
+        m = augds_ext_label_node_equal(acnode->data_path, label_node, &node_type);
         if (!m) {
             /* not the expected label */
             continue;
         }
 
-        /* value must match the pattern */
-        if (aug_get(aug, label, &value) != 1) {
-            AUG_LOG_ERRAUG_GOTO(aug, rc, cleanup);
-        }
-        if ((rc = augds_pattern_label_match(augnode->cases[j].patterns, augnode->cases[j].pattern_count,
-                value, &m))) {
-            goto cleanup;
-        }
-        if (!m) {
-            /* not a matching value */
-            continue;
+        if (node_type == AUGDS_EXT_NODE_LABEL) {
+            /* label must match the pattern */
+            if ((rc = augds_pattern_label_match(acnode->patterns, acnode->pattern_count, label_node, &m))) {
+                goto cleanup;
+            }
+            if (!m) {
+                /* not a matching label */
+                continue;
+            }
         }
 
         /* create the node */

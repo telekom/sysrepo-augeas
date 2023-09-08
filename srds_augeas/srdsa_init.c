@@ -266,9 +266,7 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
                 AUG_LOG_ERRINT_RET;
             }
         }
-    } else {
-        AUG_LOG_ERRINT_RET;
-    }
+    } /* else no pattern, label match is enough */
 
     return SR_ERR_OK;
 }
@@ -280,17 +278,18 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
  * @param[in] auginfo Base auginfo structure.
  * @param[in] node Schema node with the value or one of its descendants.
  * @param[in,out] anode Augnode to finish initializing.
- * @param[in,out] acase Current augnode case to add to.
+ * @param[in,out] mand_found Set if a mandatory child node with data-path has been found.
  * @return SR error value.
  */
 static int
 augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, struct augnode *anode,
-        struct augnode_case **acase)
+        int *mand_found)
 {
-    int rc = SR_ERR_OK;
-    const struct lysc_node *iter;
+    int r;
+    struct augnode_case_node *acnode;
+    const struct lysc_node *child;
     enum augds_ext_node_type node_type;
-    const char *data_path, *value_path;
+    const char *data_path;
 
     assert(node);
 
@@ -300,51 +299,63 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
     }
 
     /* get data path of the node, if any */
-    augds_node_get_type(node, &node_type, &data_path, &value_path);
+    augds_node_get_type(node, &node_type, &data_path, NULL);
 
     if (data_path) {
-        /* we have the node required to exist */
-        if (!*acase) {
-            if ((rc = augds_init_auginfo_add_case(anode, data_path, acase))) {
-                return rc;
-            }
+        /* we have the node required to exist, add a case node */
+        if ((r = augds_init_auginfo_add_case_node(anode, data_path, &acnode))) {
+            return r;
         }
 
         if (node->nodetype == LYS_CONTAINER) {
-            /* use the value-path node pattern */
-            if (value_path) {
-                iter = NULL;
-                while ((iter = lys_getnext(iter, node, NULL, 0))) {
-                    if (!strcmp(value_path, iter->name)) {
-                        rc = augds_init_auginfo_get_pattern(auginfo, iter, &(*acase)->patterns, &(*acase)->pattern_count);
-                        break;
-                    }
+            /* container with data-path is always "mandatory" */
+            *mand_found = 1;
+
+            if (node_type == AUGDS_EXT_NODE_LABEL) {
+                /* use the label pattern of the first child */
+                child = lys_getnext(NULL, node, NULL, 0);
+                if ((r = augds_init_auginfo_get_pattern(auginfo, child, &acnode->patterns, &acnode->pattern_count))) {
+                    return r;
                 }
-                assert(iter);
-            }
+            } /* otherwise matching the label is enough */
         } else {
             /* use term node pattern of the value */
             assert((node->nodetype & LYD_NODE_TERM) && (node_type == AUGDS_EXT_NODE_VALUE));
-            rc = augds_init_auginfo_get_pattern(auginfo, node, &(*acase)->patterns, &(*acase)->pattern_count);
+            if ((r = augds_init_auginfo_get_pattern(auginfo, node, &acnode->patterns, &acnode->pattern_count))) {
+                return r;
+            }
+
+            if (node->flags & LYS_MAND_TRUE) {
+                *mand_found = 1;
+            }
         }
 
-        return rc;
+        /* either exact label match or we have its pattern(s) */
+        assert((node_type == AUGDS_EXT_NODE_VALUE) || acnode->pattern_count);
+        return SR_ERR_OK;
     }
 
     assert(node->nodetype & (LYS_LIST | LYS_CONTAINER | LYS_CHOICE));
     if (node->nodetype & (LYS_LIST | LYS_CONTAINER)) {
         /* go into an implicit list/container */
-        rc = augds_init_auginfo_case(auginfo, lysc_node_child(node), anode, acase);
+        LY_LIST_FOR(lysc_node_child(node), child) {
+            if ((r = augds_init_auginfo_case(auginfo, child, anode, mand_found))) {
+                return r;
+            }
+            if (*mand_found) {
+                break;
+            }
+        }
     } else if (node->nodetype == LYS_CHOICE) {
         /* use patterns of all the data in the nested choice, recursively */
-        LY_LIST_FOR(lysc_node_child(node), iter) {
-            if ((rc = augds_init_auginfo_case(auginfo, lysc_node_child(iter), anode, acase))) {
-                break;
+        LY_LIST_FOR(lysc_node_child(node), child) {
+            if ((r = augds_init_auginfo_case(auginfo, lysc_node_child(child), anode, mand_found))) {
+                return r;
             }
         }
     }
 
-    return rc;
+    return SR_ERR_OK;
 }
 
 /**
@@ -365,10 +376,9 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
     enum augds_ext_node_type node_type;
     const char *data_path, *value_path;
     struct augnode *anode;
-    struct augnode_case *acase;
     void *mem;
     uint32_t i, j;
-    int r;
+    int r, mand_found;
 
     while ((node = lys_getnext(node, parent ? parent->schema : NULL, mod ? mod->compiled : NULL, 0))) {
         /* learn about the node */
@@ -412,10 +422,11 @@ augds_init_auginfo_siblings_r(struct auginfo *auginfo, const struct lys_module *
             /* get the pattern */
             augds_init_auginfo_get_pattern(auginfo, node, &anode->patterns, &anode->pattern_count);
         } else if ((node_type == AUGDS_EXT_NODE_NONE) && node->parent && (node->parent->nodetype == LYS_CASE)) {
-            /* special case handling to be able to properly load these data, there can be more suitable cases if
-             * there is a nested choice */
-            acase = NULL;
-            augds_init_auginfo_case(auginfo, node, anode, &acase);
+            /* special case handling to be able to properly load these data, 1) there may be optional nodes and we need
+             * to handle situations without them (every node has its own case struct) or 2) there can be more suitable
+             * cases if there is a nested choice */
+            mand_found = 0;
+            augds_init_auginfo_case(auginfo, node, anode, &mand_found);
         }
 
         /* fill augnode children, recursively */
