@@ -335,8 +335,18 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
         return SR_ERR_OK;
     }
 
-    assert(node->nodetype & (LYS_LIST | LYS_CONTAINER | LYS_CHOICE));
-    if (node->nodetype & (LYS_LIST | LYS_CONTAINER)) {
+    switch (node->nodetype) {
+    case LYS_LEAF:
+        /* leaf without data-path must be a leafref, dereference it */
+        if (!(child = lysc_node_lref_target(node))) {
+            return SR_ERR_INTERNAL;
+        }
+        if ((r = augds_init_auginfo_case(auginfo, child, anode, mand_found))) {
+            return r;
+        }
+        break;
+    case LYS_LIST:
+    case LYS_CONTAINER:
         /* go into an implicit list/container */
         LY_LIST_FOR(lysc_node_child(node), child) {
             if ((r = augds_init_auginfo_case(auginfo, child, anode, mand_found))) {
@@ -346,13 +356,17 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
                 break;
             }
         }
-    } else if (node->nodetype == LYS_CHOICE) {
+        break;
+    case LYS_CHOICE:
         /* use patterns of all the data in the nested choice, recursively */
         LY_LIST_FOR(lysc_node_child(node), child) {
             if ((r = augds_init_auginfo_case(auginfo, lysc_node_child(child), anode, mand_found))) {
                 return r;
             }
         }
+        break;
+    default:
+        AUG_LOG_ERRINT_RET;
     }
 
     return SR_ERR_OK;
