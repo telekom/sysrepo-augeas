@@ -1214,7 +1214,7 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
     int rc = SR_ERR_OK, applied_r = 0, aug_before = 0, aug_moved_back = 0, mand_child = 0;
     enum augds_diff_op cur_op, cur_op2;
     enum augds_ext_node_type node_type, type2;
-    char *aug_path = NULL, *aug_anchor_path = NULL;
+    char *aug_path = NULL, *aug_anchor_path = NULL, *path = NULL;
     const char *aug_value, *data_path, *value_path, *dpath2;
     struct lyd_node *diff_data_node, *anchor, *diff_node2;
     const struct lyd_node *diff_path_node, *diff_node_child;
@@ -1421,6 +1421,18 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
         diff_node_child = diff_node_child->next;
     }
 
+    if ((cur_op == AUGDS_OP_REPLACE) && lysc_is_userordered(diff_node->schema)) {
+        /* move all the rescendants that are not part of the diff */
+        path = lyd_path(diff_node, LYD_PATH_STD, NULL, 0);
+        lyd_find_path(diff_data, path, 0, &anchor);
+        assert(anchor);
+        LY_LIST_FOR(lyd_child_no_keys(anchor), anchor) {
+            if ((rc = augds_store_diff_r(aug, anchor, aug_path ? aug_path : parent_path, cur_op, diff_data))) {
+                goto cleanup;
+            }
+        }
+    }
+
     if (!applied_r) {
         /* process children recursively */
         LY_LIST_FOR(diff_node_child, diff_node_child) {
@@ -1440,5 +1452,6 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
 cleanup:
     free(aug_path);
     free(aug_anchor_path);
+    free(path);
     return rc;
 }
