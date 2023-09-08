@@ -66,8 +66,8 @@ enum augds_diff_op {
 struct augnode {
     const char *data_path;          /**< data-path of the augeas-extension in the schema node */
     const char *value_path;         /**< value-yang-path of the augeas-extension in the schema node */
-    struct augnode_case {
-        const char *data_path;      /**< data-path whose value must match pattern(s) for this node to be created */
+    struct augnode_case_node {
+        const char *data_path;      /**< data-path of the node */
         struct augnode_pattern {
             struct augnode_pattern_group {
                 const pcre2_code *pcode;
@@ -76,9 +76,8 @@ struct augnode {
             uint32_t group_count;
         } *patterns;                /**< optional compiled PCRE2 pattern(s) of the schema pattern matching Augeas labels */
         uint32_t pattern_count;     /**< count of patterns */
-    } *cases;                       /**< array of nested cases, set only if this case existence cannot be decided
-                                         based on its own data-path/pattern */
-    uint32_t case_count;
+    } *case_nodes;                  /**< nodes from which one must match for the case to be created */
+    uint32_t cnode_count;
 
     const struct lysc_node *schema; /**< schema node */
     const struct lysc_node *schema2;    /**< optional second node if the data-path references 2 YANG nodes */

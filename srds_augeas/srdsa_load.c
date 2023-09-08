@@ -725,7 +725,7 @@ augds_aug2yang_augnode_labels_r(augeas *aug, struct augnode *augnodes, uint32_t 
                     label_matches, label_count, new_node, first))) {
                 goto cleanup;
             }
-        } else if (augnodes[i].case_count) {
+        } else if (augnodes[i].cnode_count) {
             /* create the correct case data */
             if ((rc = augds_aug2yang_augnode_labels_case_r(aug, &augnodes[i], parent_label, label_matches, label_count,
                     parent, first))) {

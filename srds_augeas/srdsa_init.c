@@ -48,13 +48,13 @@ augds_free_info_node(struct augnode *augnode)
 {
     uint32_t i, j;
 
-    for (i = 0; i < augnode->case_count; ++i) {
-        for (j = 0; j < augnode->cases[i].pattern_count; ++j) {
-            free(augnode->cases[i].patterns[j].groups);
+    for (i = 0; i < augnode->cnode_count; ++i) {
+        for (j = 0; j < augnode->case_nodes[i].pattern_count; ++j) {
+            free(augnode->case_nodes[i].patterns[j].groups);
         }
-        free(augnode->cases[i].patterns);
+        free(augnode->case_nodes[i].patterns);
     }
-    free(augnode->cases);
+    free(augnode->case_nodes);
 
     for (i = 0; i < augnode->pattern_count; ++i) {
         free(augnode->patterns[i].groups);
@@ -68,28 +68,28 @@ augds_free_info_node(struct augnode *augnode)
 }
 
 /**
- * @brief Add a new case to an array.
+ * @brief Add a new case node to an array.
  *
  * @param[in] anode Augnode to modify.
- * @param[in] data_path Case data path to store.
- * @param[out] acase Added case.
+ * @param[in] data_path Case node data-path to store.
+ * @param[out] acnode Added case node.
  * @return SR error value.
  */
 static int
-augds_init_auginfo_add_case(struct augnode *anode, const char *data_path, struct augnode_case **acase)
+augds_init_auginfo_add_case_node(struct augnode *anode, const char *data_path, struct augnode_case_node **acnode)
 {
     void *mem;
 
-    mem = realloc(anode->cases, (anode->case_count + 1) * sizeof *anode->cases);
+    mem = realloc(anode->case_nodes, (anode->cnode_count + 1) * sizeof *anode->case_nodes);
     if (!mem) {
         AUG_LOG_ERRMEM_RET;
     }
-    anode->cases = mem;
-    *acase = &anode->cases[anode->case_count];
-    memset(*acase, 0, sizeof **acase);
+    anode->case_nodes = mem;
+    *acnode = &anode->case_nodes[anode->cnode_count];
+    memset(*acnode, 0, sizeof **acnode);
 
-    (*acase)->data_path = data_path;
-    ++anode->case_count;
+    (*acnode)->data_path = data_path;
+    ++anode->cnode_count;
     return SR_ERR_OK;
 }
 
