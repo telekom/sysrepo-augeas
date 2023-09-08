@@ -26,7 +26,7 @@ module tmpfiles {
       leaf type {
         mandatory true;
         type string {
-          pattern "([fFwdDevqQpLcbCxXrRzZtThHaAm]|[fFwpLcbaA]\\+)!?-?";
+          pattern "([fFwdDevqQpLcbCxXrRzZtThHaAm]|[fFwpLcbaA]\\+)[-!=~^]*";
         }
         augex:data-path "type";
       }
@@ -39,7 +39,7 @@ module tmpfiles {
       }
       leaf mode {
         type string {
-          pattern "-|~?[0-7]{3,4}";
+          pattern "-|(~|:)?[0-7]{3,4}";
         }
         augex:data-path "mode";
       }

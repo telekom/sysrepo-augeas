@@ -398,6 +398,34 @@ module sshd {
             }
           }
         }
+        container pubkey-accepted-algorithms {
+          augex:data-path "$$";
+          presence "Config entry.";
+          leaf pubkey-accepted-algorithms {
+            mandatory true;
+            type string {
+              pattern "(?i)PubkeyAcceptedAlgorithms";
+            }
+          }
+          list pubkey-accepted-algorithms-list {
+            key "_seq";
+            min-elements 1;
+            ordered-by user;
+            augex:data-path "$$";
+            augex:value-yang-path "value";
+            leaf _seq {
+              type uint64;
+              description
+                "Key contains some unique value. The order is based on the actual order of list instances.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^, \t\n=]+";
+              }
+            }
+          }
+        }
         container other-entry {
           augex:data-path "$$";
           augex:value-yang-path "value";
@@ -406,7 +434,7 @@ module sshd {
             mandatory true;
             type string {
               pattern "[A-Za-z0-9]+";
-              pattern "(?i)MACs|Match|AcceptEnv|Subsystem|Ciphers|((GSSAPI|)Kex|HostKey|CASignature)Algorithms|PubkeyAcceptedKeyTypes|(Allow|Deny)(Groups|Users)" {
+              pattern "(?i)MACs|Match|AcceptEnv|Subsystem|Ciphers|((GSSAPI|)Kex|HostKey|CASignature|PubkeyAccepted)Algorithms|PubkeyAcceptedKeyTypes|(Allow|Deny)(Groups|Users)" {
                 modifier invert-match;
               }
             }
