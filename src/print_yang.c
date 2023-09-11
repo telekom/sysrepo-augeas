@@ -2525,9 +2525,9 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     str = (value->tag == L_VALUE) ? value->string->str : value->regexp->pattern->str;
     if (is_simple && !value->regexp->nocase) {
         /* String is just simple name. */
-        ly_print(ctx->out, "=\'", str);
+        ly_print(ctx->out, "=\'");
         ay_print_string_standardized(ctx->out, str);
-        ly_print(ctx->out, "\'\";\n", str);
+        ly_print(ctx->out, "\'\";\n");
     } else {
         /* The 'when' expression is more complex, continue with printing of re-match function. */
         ly_print(ctx->out, ", \'");
