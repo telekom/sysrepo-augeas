@@ -266,7 +266,9 @@ augds_init_auginfo_get_pattern(struct auginfo *auginfo, const struct lysc_node *
                 AUG_LOG_ERRINT_RET;
             }
         }
-    } /* else no pattern, label match is enough */
+    } else {
+        AUG_LOG_ERRINT_RET;
+    }
 
     return SR_ERR_OK;
 }
@@ -319,12 +321,8 @@ augds_init_auginfo_case(struct auginfo *auginfo, const struct lysc_node *node, s
                 }
             } /* otherwise matching the label is enough */
         } else {
-            /* use term node pattern of the value */
+            /* term with data-path and exact label match */
             assert((node->nodetype & LYD_NODE_TERM) && (node_type == AUGDS_EXT_NODE_VALUE));
-            if ((r = augds_init_auginfo_get_pattern(auginfo, node, &acnode->patterns, &acnode->pattern_count))) {
-                return r;
-            }
-
             if (node->flags & LYS_MAND_TRUE) {
                 *mand_found = 1;
             }
