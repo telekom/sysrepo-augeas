@@ -1,0 +1,13 @@
+--- xml_old.aug	2023-09-11 14:57:48.272852901 +0200
++++ xml_new.aug	2023-09-11 14:56:30.222214659 +0200
+@@ -64,8 +64,8 @@
+                      enum
+ 
+ let id_def        = [ sep_spc . key /PUBLIC/ .
+-                      [ label "#literal" . sep_spc . sto_dquote ]* ] |
+-                    [ sep_spc . key /SYSTEM/ . sep_spc . sto_dquote ]
++                      [ label "#literal" . sep_spc . (sto_dquote|sto_squote) ]* ] |
++                    [ sep_spc . key /SYSTEM/ . sep_spc . (sto_dquote|sto_squote) ]
+ 
+ let notation_def  = decl_def /!NOTATION/ id_def
+ 

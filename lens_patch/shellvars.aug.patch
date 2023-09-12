@@ -1,0 +1,28 @@
+--- augeas/src/augeas_ext/lenses/shellvars.aug	2023-09-12 08:30:50.143641930 +0200
++++ /usr/share/augeas/lenses/dist/shellvars.aug	2023-09-12 11:25:40.124831761 +0200
+@@ -22,7 +22,7 @@
+   let semicol_eol = del (/[ \t]*[;\n]/ . empty_part_re*) "\n"
+   let brace_eol = del /[ \t\n]+/ "\n"
+ 
+-  let key_re = /[A-Za-z0-9_][-A-Za-z0-9_]*(\[[0-9A-Za-z_,]+\])?/ - ("unset" | "export")
++  let key_re = /[-A-Za-z0-9_]+(\[[0-9A-Za-z_,]+\])?/ - ("unset" | "export")
+   let matching_re = "${!" . key_re . /[\*@]\}/
+   let eq = Util.del_str "="
+ 
+@@ -80,13 +80,13 @@
+   let source =
+     Util.indent
+     . del /\.|source/ "." . label ".source"
+-    . Util.del_ws_spc . store /[^;=# \t\n]+/
++    . Util.del_ws_spc . store /[^;=# \t\n]+([^;=#\n]*[^;=# \t\n]+)*/
+ 
+-  let shell_builtin_cmds = "ulimit" | "shift" | "exit"
++  let shell_builtin_cmds = "ulimit" | "shift" | "exit" | ":"
+ 
+   let eval =
+     Util.indent . Util.del_str "eval" . Util.del_ws_spc
+-    . label "@eval" . store anyquot
++    . label "@eval" . sto_to_semicol
+ 
+   let alias =
+     Util.indent . Util.del_str "alias" . Util.del_ws_spc

@@ -153,6 +153,38 @@ module mke2fs {
                 type uint64;
                 augex:data-path "num_backup_sb";
               }
+              leaf hugefiles-uid {
+                type uint64;
+                augex:data-path "hugefiles_uid";
+              }
+              leaf hugefiles-gid {
+                type uint64;
+                augex:data-path "hugefiles_gid";
+              }
+              leaf hugefiles-umask {
+                type uint64;
+                augex:data-path "hugefiles_umask";
+              }
+              leaf num-hugefiles {
+                type uint64;
+                augex:data-path "num_hugefiles";
+              }
+              leaf hugefiles-slack {
+                type uint64;
+                augex:data-path "hugefiles_slack";
+              }
+              leaf hugefiles-size {
+                type uint64;
+                augex:data-path "hugefiles_size";
+              }
+              leaf hugefiles-align {
+                type uint64;
+                augex:data-path "hugefiles_align";
+              }
+              leaf hugefiles-digits {
+                type uint64;
+                augex:data-path "hugefiles_digits";
+              }
               leaf auto-64-bit-support {
                 type string {
                   pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
@@ -189,6 +221,30 @@ module mke2fs {
                 }
                 augex:data-path "packed_meta_blocks";
               }
+              leaf make-hugefiles {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "make_hugefiles";
+              }
+              leaf hugefiles-align-disk {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "hugefiles_align_disk";
+              }
+              leaf warn-y2038-dates {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "warn_y2038_dates";
+              }
+              leaf zero-hugefiles {
+                type string {
+                  pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                }
+                augex:data-path "zero_hugefiles";
+              }
               leaf encoding {
                 type string {
                   pattern "[A-Za-z0-9_.-]+";
@@ -200,6 +256,18 @@ module mke2fs {
                   pattern "[A-Za-z0-9_.-]+";
                 }
                 augex:data-path "journal_location";
+              }
+              leaf hugefiles-dir {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "hugefiles_dir";
+              }
+              leaf hugefiles-name {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                augex:data-path "hugefiles_name";
               }
               leaf reserved-ratio {
                 type string {
@@ -308,6 +376,38 @@ module mke2fs {
                     type uint64;
                     augex:data-path "num_backup_sb";
                   }
+                  leaf hugefiles-uid {
+                    type uint64;
+                    augex:data-path "hugefiles_uid";
+                  }
+                  leaf hugefiles-gid {
+                    type uint64;
+                    augex:data-path "hugefiles_gid";
+                  }
+                  leaf hugefiles-umask {
+                    type uint64;
+                    augex:data-path "hugefiles_umask";
+                  }
+                  leaf num-hugefiles {
+                    type uint64;
+                    augex:data-path "num_hugefiles";
+                  }
+                  leaf hugefiles-slack {
+                    type uint64;
+                    augex:data-path "hugefiles_slack";
+                  }
+                  leaf hugefiles-size {
+                    type uint64;
+                    augex:data-path "hugefiles_size";
+                  }
+                  leaf hugefiles-align {
+                    type uint64;
+                    augex:data-path "hugefiles_align";
+                  }
+                  leaf hugefiles-digits {
+                    type uint64;
+                    augex:data-path "hugefiles_digits";
+                  }
                   leaf auto-64-bit-support {
                     type string {
                       pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
@@ -344,6 +444,30 @@ module mke2fs {
                     }
                     augex:data-path "packed_meta_blocks";
                   }
+                  leaf make-hugefiles {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "make_hugefiles";
+                  }
+                  leaf hugefiles-align-disk {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "hugefiles_align_disk";
+                  }
+                  leaf warn-y2038-dates {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "warn_y2038_dates";
+                  }
+                  leaf zero-hugefiles {
+                    type string {
+                      pattern "(((((((((((y)|(yes))|(true))|(t))|(1))|(on))|(n))|(no))|(false))|(nil))|(0))|(off)";
+                    }
+                    augex:data-path "zero_hugefiles";
+                  }
                   leaf encoding {
                     type string {
                       pattern "[A-Za-z0-9_.-]+";
@@ -355,6 +479,18 @@ module mke2fs {
                       pattern "[A-Za-z0-9_.-]+";
                     }
                     augex:data-path "journal_location";
+                  }
+                  leaf hugefiles-dir {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "hugefiles_dir";
+                  }
+                  leaf hugefiles-name {
+                    type string {
+                      pattern "[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "hugefiles_name";
                   }
                   leaf reserved-ratio {
                     type string {

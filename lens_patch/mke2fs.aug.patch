@@ -1,0 +1,29 @@
+--- mke2fs_old.aug	2023-09-11 15:01:47.668151885 +0200
++++ mke2fs_new.aug	2023-09-11 15:21:53.281716205 +0200
+@@ -76,17 +76,23 @@
+ (* View: common_entries_int
+     Entries with an integer value *)
+ let common_entries_int = ("cluster_size"|"flex_bg_size"|"force_undo"
+-                         |"inode_ratio"|"inode_size"|"num_backup_sb")
++                         |"inode_ratio"|"inode_size"|"num_backup_sb"
++                         |"hugefiles_uid"|"hugefiles_gid"|"hugefiles_umask"
++                         |"num_hugefiles"|"hugefiles_slack"|"hugefiles_size"
++                         |"hugefiles_align"|"hugefiles_digits")
+ 
+ (* View: common_entries_bool
+     Entries with a boolean value *)
+ let common_entries_bool = ("auto_64-bit_support"|"discard"
+                           |"enable_periodic_fsck"|"lazy_itable_init"
+-                          |"lazy_journal_init"|"packed_meta_blocks")
++                          |"lazy_journal_init"|"packed_meta_blocks"
++                          |"make_hugefiles"|"hugefiles_align_disk"
++                          |"warn_y2038_dates"|"zero_hugefiles")
+ 
+ (* View: common_entries_string
+     Entries with a string value *)
+-let common_entries_string = ("encoding"|"journal_location")
++let common_entries_string = ("encoding"|"journal_location"
++                            |"hugefiles_dir"|"hugefiles_name")
+ 
+ (* View: common_entries_double
+     Entries with a double value *)
