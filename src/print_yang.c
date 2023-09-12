@@ -2418,6 +2418,14 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     } else {
         ly_print(ctx->out, "%*swhen \"", ctx->space, "");
     }
+
+    /* Print 'not(...) or' */
+    if (node->flags & AY_WHEN_ORNOT) {
+        ly_print(ctx->out, "not(");
+        ay_print_yang_when_print_target(ctx, path_cnt, target);
+        ly_print(ctx->out, ") or ");
+    }
+
     value = node->when_val->lens;
     assert((value->tag == L_VALUE) || (value->tag == L_STORE));
     if (ay_lense_pattern_is_label(value)) {

@@ -3181,6 +3181,40 @@ ay_ynode_tree_set_mandatory(struct ay_ynode *tree)
 }
 
 /**
+ * @brief Set AY_WHEN_ORNOT flag for 'when-stmt'.
+ *
+ * @param[in,out] tree Tree of ynodes.
+ */
+static void
+ay_ynode_when_ornot(struct ay_ynode *tree)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct ay_ynode *iter, *target;
+    const struct ay_lnode *lnode;
+
+    for (i = 1; i < LY_ARRAY_COUNT(tree); i++) {
+        iter = &tree[i];
+        if (!iter->when_val) {
+            continue;
+        }
+        target = ay_ynode_when_target(tree, iter, NULL);
+        if (target->flags & AY_YNODE_MAND_TRUE) {
+            /* 'or not()' is valid only for nodes with mandatory false */
+            continue;
+        }
+        /* Move to the [] */
+        for (lnode = iter->when_val; lnode && (lnode->lens->tag != L_SUBTREE); lnode = lnode->parent) {}
+        /* Search '?' */
+        for (lnode = lnode->parent; lnode && (lnode != target->choice); lnode = lnode->parent) {
+            if (lnode->lens->tag == L_MAYBE) {
+                iter->flags |= AY_WHEN_ORNOT;
+                break;
+            }
+        }
+    }
+}
+
+/**
  * @brief Delete nodes with unkown type.
  *
  * @param[in,out] tree Tree of ynodes.
@@ -6341,6 +6375,11 @@ ay_ynode_transformations(struct module *mod, struct ay_ynode **tree)
     ay_ynode_dependence_on_value(*tree);
 
     ay_ynode_tree_set_mandatory(*tree);
+
+    /* Decide if the 'or not(...)' should be added into when-stmt.
+     * Set if the target node is not mandatory for the given 'when'.
+     */
+    ay_ynode_when_ornot(*tree);
 
     /* Groupings algorithms. */
 

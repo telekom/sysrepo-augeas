@@ -50,7 +50,7 @@ module automaster {
         mandatory true;
         container case {
           presence "Config entry.";
-          when "re-match(../type, 'lda((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|ld([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|(l[.0-9A-Z_a-ce-z-]|[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|l|[.0-9A-Z_a-km-z-]')";
+          when "not(../type) or re-match(../type, 'lda((p[.0-9A-Z_a-z-]|[.0-9A-Z_a-oq-z-])[.0-9A-Z_a-z-]*|())|ld([.0-9A-Z_b-z-][.0-9A-Z_a-z-]*|())|(l[.0-9A-Z_a-ce-z-]|[.0-9A-Z_a-km-z-][.0-9A-Z_a-z-])[.0-9A-Z_a-z-]*|l|[.0-9A-Z_a-km-z-]')";
           leaf format {
             type string {
               pattern "[A-Za-z0-9_.-]+";
