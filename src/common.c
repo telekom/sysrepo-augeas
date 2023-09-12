@@ -438,6 +438,101 @@ ay_ynode_when_value_is_valid(const struct ay_ynode *node)
     return 1;
 }
 
+struct ay_ynode *
+ay_ynode_get_value_node(const struct ay_ynode *tree, struct ay_ynode *node, const struct ay_lnode *label,
+        const struct ay_lnode *value)
+{
+    struct ay_ynode *iter, *gr, *valnode;
+    uint64_t i;
+
+    valnode = NULL;
+    for (i = 0; i < node->descendants; i++) {
+        iter = &node[i + 1];
+        if ((iter->type == YN_VALUE) && (iter->label->lens == label->lens) && (iter->value->lens == value->lens)) {
+            valnode = iter;
+            break;
+        } else if (iter->type == YN_USES) {
+            gr = ay_ynode_get_grouping(tree, iter->ref);
+            assert(gr);
+            valnode = ay_ynode_get_value_node(tree, gr, label, value);
+            if (valnode) {
+                break;
+            }
+        }
+    }
+
+    return valnode;
+}
+
+struct ay_ynode *
+ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt)
+{
+    struct ay_ynode *refnode, *parent, *child, *target;
+    uint64_t i, path;
+
+    /* Get referenced node. */
+    refnode = NULL;
+    path = 0;
+    for (parent = node->parent; parent; parent = parent->parent) {
+        if (parent->type != YN_CASE) {
+            ++path;
+        }
+        if (parent->id == node->when_ref) {
+            refnode = parent;
+            break;
+        }
+        /* The entire subtree is searched, but the 'parent' child should actually be found. Additionally, it can be
+         * wrapped in a YN_LIST, complicating a simple search using a 'for' loop.
+         */
+        for (i = 0; i < parent->descendants; i++) {
+            child = &parent[i + 1];
+            if (child->id == node->when_ref) {
+                refnode = child;
+                break;
+            }
+        }
+        if (refnode) {
+            break;
+        }
+    }
+    assert(parent);
+
+    if (parent->type == YN_CASE) {
+        path++;
+    }
+    if ((node->type == YN_CASE) && (path > 0)) {
+        /* In YANG, the case-stmt is not counted in the path. */
+        assert(path);
+        path--;
+    }
+
+    if (path_cnt) {
+        *path_cnt = path;
+    }
+
+    if ((refnode->type != YN_VALUE) && (refnode->type != YN_LEAF)) {
+        target = ay_ynode_get_value_node(tree, refnode, refnode->label, refnode->value);
+    } else {
+        target = refnode;
+    }
+
+    return target;
+}
+
+struct ay_ynode *
+ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id)
+{
+    struct ay_ynode *iter;
+
+    for (iter = tree->child; iter; iter = iter->next) {
+        if ((iter->type == YN_GROUPING) && (iter->id == id)) {
+            return iter;
+        }
+    }
+
+    return NULL;
+}
+
 uint64_t
 ay_ynode_splitted_seq_index(const struct ay_ynode *node)
 {

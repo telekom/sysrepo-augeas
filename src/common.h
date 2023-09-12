@@ -275,7 +275,7 @@ struct ay_ynode {
 #define AY_VALUE_MAND_FALSE     0x010   /**< The YN_VALUE node must be mandatory false. */
 #define AY_VALUE_IN_CHOICE      0x020   /**< YN_VALUE of node must be in choice statement. */
 #define AY_GROUPING_CHILDREN    0x040   /**< Grouping is applied to the subtree except the root. */
-/* #define AY_FREE_FLAG         0x080 */
+#define AY_WHEN_ORNOT           0x080   /**< Set if the not() function should be added into 'when'. */
 #define AY_GROUPING_REDUCTION   0x100   /**< Grouping is reduced due to node name collisions. */
 #define AY_HINT_MAND_TRUE       0x200   /**< Node can be mandatory false only due to the maybe operator. */
 #define AY_HINT_MAND_FALSE      0x400   /**< maybe operator > AY_HINT_MAND_TRUE > AY_HINT_MAND_FALSE. */
@@ -673,12 +673,43 @@ struct ay_ynode *ay_ynode_get_first_in_choice(const struct ay_ynode *parent, con
 ly_bool ay_ynode_alone_in_choice(struct ay_ynode *node);
 
 /**
+ * @brief Find YN_VALUE node of @p node.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] node Parent node in which is YN_VALUE node.
+ * @param[in] label Label by which the YN_VALUE node is to be found.
+ * @param[in] value Value by which the YN_VALUE node is to be found.
+ * @return The YN_VALUE node placed as a child or NULL.
+ */
+struct ay_ynode *ay_ynode_get_value_node(const struct ay_ynode *tree, struct ay_ynode *node,
+        const struct ay_lnode *label, const struct ay_lnode *value);
+
+/**
  * @brief Check if 'when' value is valid and can therefore be printed.
  *
  * @param[in] node Node with ay_ynode.when_val to check.
  * @return 1 if 'when' value should be valid.
  */
 ly_bool ay_ynode_when_value_is_valid(const struct ay_ynode *node);
+
+/**
+ * @brief Get the target node referenced by when-stmt.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] node Node with ay_ynode.when_val.
+ * @param[out] path_cnt Number of '../' in the path.
+ * @return Target node.
+ */
+struct ay_ynode *ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt);
+
+/**
+ * @brief Get top-level grouping with @p id.
+ *
+ * @param[in] tree Tree of ynodes.
+ * @param[in] id Unique ynode number (ay_ynode.id).
+ * @return Grouping or NULL.
+ */
+struct ay_ynode *ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id);
 
 /**
  * @brief Find the order number of the divided node whose pattern consists of identifiers.

@@ -623,62 +623,6 @@ ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node,
 }
 
 /**
- * @brief Get top-level grouping with @p id.
- *
- * @param[in] tree Tree of ynodes.
- * @param[in] id Unique ynode number (ay_ynode.id).
- * @return Grouping or NULL.
- */
-static struct ay_ynode *
-ay_ynode_get_grouping(const struct ay_ynode *tree, uint32_t id)
-{
-    struct ay_ynode *iter;
-
-    for (iter = tree->child; iter; iter = iter->next) {
-        if ((iter->type == YN_GROUPING) && (iter->id == id)) {
-            return iter;
-        }
-    }
-
-    return NULL;
-}
-
-/**
- * @brief Find YN_VALUE node of @p node.
- *
- * @param[in] tree Tree of ynodes.
- * @param[in] node Parent node in which is YN_VALUE node.
- * @param[in] label Label by which the YN_VALUE node is to be found.
- * @param[in] value Value by which the YN_VALUE node is to be found.
- * @return The YN_VALUE node placed as a child or NULL.
- */
-static struct ay_ynode *
-ay_ynode_get_value_node(const struct ay_ynode *tree, struct ay_ynode *node, const struct ay_lnode *label,
-        const struct ay_lnode *value)
-{
-    struct ay_ynode *iter, *gr, *valnode;
-    uint64_t i;
-
-    valnode = NULL;
-    for (i = 0; i < node->descendants; i++) {
-        iter = &node[i + 1];
-        if ((iter->type == YN_VALUE) && (iter->label->lens == label->lens) && (iter->value->lens == value->lens)) {
-            valnode = iter;
-            break;
-        } else if (iter->type == YN_USES) {
-            gr = ay_ynode_get_grouping(tree, iter->ref);
-            assert(gr);
-            valnode = ay_ynode_get_value_node(tree, gr, label, value);
-            if (valnode) {
-                break;
-            }
-        }
-    }
-
-    return valnode;
-}
-
-/**
  * @brief Try to find a name by pnode.
  *
  * @param[in] pnode Node for processing.
@@ -2415,6 +2359,28 @@ ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
     return ret;
 }
 
+static void
+ay_print_yang_when_print_target(struct yprinter_ctx *ctx, uint64_t path_cnt, struct ay_ynode *target)
+{
+    struct ay_ynode *parent;
+    uint64_t i;
+
+    /* Print path to referenced node. */
+    parent = target;
+    for (i = 0; i < path_cnt; i++) {
+        ly_print(ctx->out, "../");
+        parent = parent->parent;
+    }
+
+    if (path_cnt && (target->type == YN_VALUE) && (parent != target->parent)) {
+        ay_print_yang_ident(ctx, target->parent, AY_IDENT_NODE_NAME);
+        ly_print(ctx->out, "/");
+        ay_print_yang_ident(ctx, target, AY_IDENT_NODE_NAME);
+    } else {
+        ay_print_yang_ident(ctx, target, AY_IDENT_NODE_NAME);
+    }
+}
+
 /**
  * @brief Print yang when-stmt.
  *
@@ -2424,52 +2390,19 @@ ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
 static void
 ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
-    struct ay_ynode *child, *parent, *refnode, *valnode;
+    struct ay_ynode *target;
     struct lens *value;
     ly_bool is_simple;
     const char *str;
-    uint64_t i, j, path_cnt;
+    uint64_t path_cnt;
 
-    if (!node->when_ref) {
+    if (!node->when_val) {
         return;
     }
 
-    /* Get referenced node. */
-    refnode = NULL;
-    path_cnt = 0;
-    for (parent = node->parent; parent; parent = parent->parent) {
-        if (parent->type != YN_CASE) {
-            ++path_cnt;
-        }
-        if (parent->id == node->when_ref) {
-            refnode = parent;
-            break;
-        }
-        /* The entire subtree is searched, but the 'parent' child should actually be found. Additionally, it can be
-         * wrapped in a YN_LIST, complicating a simple search using a 'for' loop.
-         */
-        for (j = 0; j < parent->descendants; j++) {
-            child = &parent[j + 1];
-            if (child->id == node->when_ref) {
-                refnode = child;
-                break;
-            }
-        }
-        if (refnode) {
-            break;
-        }
-    }
-    assert(parent);
+    target = ay_ynode_when_target(ctx->tree, node, &path_cnt);
 
-    if (parent->type == YN_CASE) {
-        path_cnt++;
-    }
-    if ((node->type == YN_CASE) && (path_cnt > 0)) {
-        /* In YANG, the case-stmt is not counted in the path. */
-        assert(path_cnt);
-        path_cnt--;
-    }
-    if (!refnode) {
+    if (!target) {
         /* Warning: when is ignored. */
         fprintf(stderr, "augyang warn: 'when' has invalid path and therefore will not be generated "
                 "(id = %" PRIu32 ", when_ref = %" PRIu32 ").\n", node->id, node->when_ref);
@@ -2496,44 +2429,22 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
         is_simple = 0;
     }
 
-    /* Print path to referenced node. */
-    for (i = 0; i < path_cnt; i++) {
-        ly_print(ctx->out, "../");
-    }
-    if ((refnode->parent->type == YN_LIST) && (refnode->parent->parent == parent)) {
-        /* Print list name. */
-        ay_print_yang_ident(ctx, refnode->parent, AY_IDENT_NODE_NAME);
-        ly_print(ctx->out, "/");
-    }
+    ay_print_yang_when_print_target(ctx, path_cnt, target);
 
-    /* Print name of referenced node. */
-    valnode = ay_ynode_get_value_node(ctx->tree, refnode, refnode->label, refnode->value);
-    if ((refnode != parent) && valnode) {
-        /* Print name of referenced node. */
-        ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
-        ly_print(ctx->out, "/");
-        /* Print name of referenced node's value. */
-        ay_print_yang_ident(ctx, valnode, AY_IDENT_NODE_NAME);
-    } else if (valnode) {
-        /* Print name of referenced node's child (value). */
-        ay_print_yang_ident(ctx, valnode, AY_IDENT_NODE_NAME);
-    } else {
-        /* Print name of referenced node. */
-        ay_print_yang_ident(ctx, refnode, AY_IDENT_NODE_NAME);
-    }
     /* Print value/regex for comparison. */
     str = (value->tag == L_VALUE) ? value->string->str : value->regexp->pattern->str;
     if (is_simple && !value->regexp->nocase) {
         /* String is just simple name. */
         ly_print(ctx->out, "=\'");
         ay_print_string_standardized(ctx->out, str);
-        ly_print(ctx->out, "\'\";\n");
+        ly_print(ctx->out, "\'");
     } else {
         /* The 'when' expression is more complex, continue with printing of re-match function. */
         ly_print(ctx->out, ", \'");
         ay_print_regex_standardized(ctx->out, str);
-        ly_print(ctx->out, "\')\";\n");
+        ly_print(ctx->out, "\')");
     }
+    ly_print(ctx->out, "\";\n");
 }
 
 /**
