@@ -277,16 +277,26 @@ module activemq-xml {
                       augex:data-path "PUBLIC";
                       presence "Config entry.";
                       leaf-list literal {
-                        type string {
-                          pattern "[^\"]*";
+                        type union {
+                          type string {
+                            pattern "[^\"]*";
+                          }
+                          type string {
+                            pattern "[^']*";
+                          }
                         }
                         ordered-by user;
                         augex:data-path "#literal";
                       }
                     }
                     leaf system {
-                      type string {
-                        pattern "[^\"]*";
+                      type union {
+                        type string {
+                          pattern "[^\"]*";
+                        }
+                        type string {
+                          pattern "[^']*";
+                        }
                       }
                       augex:data-path "SYSTEM";
                     }
@@ -298,16 +308,26 @@ module activemq-xml {
               augex:data-path "PUBLIC";
               presence "Config entry.";
               leaf-list literal {
-                type string {
-                  pattern "[^\"]*";
+                type union {
+                  type string {
+                    pattern "[^\"]*";
+                  }
+                  type string {
+                    pattern "[^']*";
+                  }
                 }
                 ordered-by user;
                 augex:data-path "#literal";
               }
             }
             leaf system {
-              type string {
-                pattern "[^\"]*";
+              type union {
+                type string {
+                  pattern "[^\"]*";
+                }
+                type string {
+                  pattern "[^']*";
+                }
               }
               augex:data-path "SYSTEM";
             }
