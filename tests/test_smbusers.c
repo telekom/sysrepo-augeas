@@ -58,29 +58,44 @@ test_load(void **state)
             "    <_id>1</_id>\n"
             "    <entry>\n"
             "      <word>jarwin</word>\n"
-            "      <username>JosephArwin</username>\n"
+            "      <username-list>\n"
+            "        <_id>1</_id>\n"
+            "        <username>JosephArwin</username>\n"
+            "      </username-list>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>2</_id>\n"
             "    <entry>\n"
             "      <word>manderso</word>\n"
-            "      <username>MarkAnderson</username>\n"
-            "      <username>MarkusAndersonus</username>\n"
+            "      <username-list>\n"
+            "        <_id>1</_id>\n"
+            "        <username>MarkAnderson</username>\n"
+            "      </username-list>\n"
+            "      <username-list>\n"
+            "        <_id>2</_id>\n"
+            "        <username>MarkusAndersonus</username>\n"
+            "      </username-list>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>3</_id>\n"
             "    <entry>\n"
             "      <word>users</word>\n"
-            "      <username>@account</username>\n"
+            "      <username-list>\n"
+            "        <_id>1</_id>\n"
+            "        <username>@account</username>\n"
+            "      </username-list>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "  <entry-list>\n"
             "    <_id>4</_id>\n"
             "    <entry>\n"
             "      <word>nobody</word>\n"
-            "      <username>*</username>\n"
+            "      <username-list>\n"
+            "        <_id>1</_id>\n"
+            "        <username>*</username>\n"
+            "      </username-list>\n"
             "    </entry>\n"
             "  </entry-list>\n"
             "</" AUG_TEST_MODULE ">\n");
@@ -98,12 +113,14 @@ test_store_add(void **state)
 
     /* add some new list instances */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/word", "root", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/username", "owner", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='5']/entry/username-list[_id='1']/"
+            "username", "owner", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='2']/entry/username", "MA", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/entry/username[.='MarkAnderson']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "entry-list[_id='2']/entry/username-list[_id='3']/"
+            "username", "MA", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/entry/username-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
     /* store new data */
@@ -151,7 +168,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/entry/username[.='MarkusAndersonus']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='2']/entry/username-list[_id='2']/username", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry-list[_id='3']", 0, &node));
     lyd_free_tree(node);

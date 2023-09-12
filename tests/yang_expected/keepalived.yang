@@ -46,13 +46,21 @@ module keepalived {
       }
     }
   }
-  grouping word {
-    leaf-list word {
-      type string {
-        pattern "[A-Za-z0-9_.-]+";
-      }
+  grouping word-list {
+    list word-list {
+      key "_id";
       ordered-by user;
-      augex:data-path "$$";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf word {
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "$$";
+      }
     }
   }
   grouping gr {
@@ -148,12 +156,20 @@ module keepalived {
               container notification-email {
                 augex:data-path "notification_email";
                 presence "Config entry.";
-                leaf-list email {
-                  type string {
-                    pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
-                  }
+                list email-list {
+                  key "_id";
                   ordered-by user;
-                  augex:data-path "email";
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  leaf email {
+                    type string {
+                      pattern "[A-Za-z0-9_+.-]+@[A-Za-z0-9_.-]+";
+                    }
+                    augex:data-path "email";
+                  }
                 }
               }
               leaf notification-email-from {
@@ -303,7 +319,7 @@ module keepalived {
               container group {
                 augex:data-path "group";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
             }
           }
@@ -494,12 +510,12 @@ module keepalived {
               container track-interface {
                 augex:data-path "track_interface";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
               container track-script {
                 augex:data-path "track_script";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
               container unicast-peer {
                 augex:data-path "unicast_peer";

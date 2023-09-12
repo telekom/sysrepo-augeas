@@ -90,7 +90,7 @@ module ssh {
           augex:data-path "$$";
           augex:value-yang-path "value-to-eol";
           presence "Config entry.";
-          leaf id {
+          leaf proxy-command {
             mandatory true;
             type string {
               pattern "(?i)ProxyCommand";
@@ -103,7 +103,7 @@ module ssh {
             }
           }
         }
-        container remote-forward {
+        container remote-fw {
           augex:data-path "$$";
           presence "Config entry.";
           leaf remote-forward {
@@ -114,7 +114,7 @@ module ssh {
           }
           uses remote-fw;
         }
-        container local-forward {
+        container local-fw {
           augex:data-path "$$";
           presence "Config entry.";
           leaf local-forward {
@@ -180,7 +180,7 @@ module ssh {
           }
           uses commas-entry-list;
         }
-        container global-known-hosts-file {
+        container global-knownhosts-file {
           augex:data-path "$$";
           presence "Config entry.";
           leaf global-known-hosts-file {
@@ -274,7 +274,7 @@ module ssh {
           augex:data-path "$$";
           augex:value-yang-path "value-to-eol";
           presence "Config entry.";
-          leaf id {
+          leaf host {
             mandatory true;
             type string {
               pattern "(?i)Host";

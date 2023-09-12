@@ -37,12 +37,21 @@ module hosts {
         }
         augex:data-path "canonical";
       }
-      leaf-list alias {
-        type string {
-          pattern "[^# \n\t]+";
-        }
+      list alias-list {
+        key "_id";
         ordered-by user;
-        augex:data-path "alias";
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        leaf alias {
+          mandatory true;
+          type string {
+            pattern "[^# \n\t]+";
+          }
+          augex:data-path "alias";
+        }
       }
     }
   }

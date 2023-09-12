@@ -70,9 +70,18 @@ test_load(void **state)
             "    <_id>4</_id>\n"
             "    <tabooext>\n"
             "      <value>+</value>\n"
-            "      <list-item>.old</list-item>\n"
-            "      <list-item>.orig</list-item>\n"
-            "      <list-item>.ignore</list-item>\n"
+            "      <list-item-list>\n"
+            "        <_id>1</_id>\n"
+            "        <list-item>.old</list-item>\n"
+            "      </list-item-list>\n"
+            "      <list-item-list>\n"
+            "        <_id>2</_id>\n"
+            "        <list-item>.orig</list-item>\n"
+            "      </list-item-list>\n"
+            "      <list-item-list>\n"
+            "        <_id>3</_id>\n"
+            "        <list-item>.ignore</list-item>\n"
+            "      </list-item-list>\n"
             "    </tabooext>\n"
             "  </attrs>\n"
             "  <attrs>\n"
@@ -82,8 +91,14 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>6</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/wtmp</file>\n"
-            "      <file>/var/log/wtmp2</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/wtmp</file>\n"
+            "      </file-list>\n"
+            "      <file-list>\n"
+            "        <_id>2</_id>\n"
+            "        <file>/var/log/wtmp2</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <missingok>missingok</missingok>\n"
@@ -109,8 +124,14 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>7</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/btmp</file>\n"
-            "      <file>/var/log/btmp*</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/btmp</file>\n"
+            "      </file-list>\n"
+            "      <file-list>\n"
+            "        <_id>2</_id>\n"
+            "        <file>/var/log/btmp*</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <missingok>missingok</missingok>\n"
@@ -136,7 +157,10 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>8</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/vsftpd.log</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/vsftpd.log</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <compress>nocompress</compress>\n"
@@ -162,7 +186,10 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>9</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/apache2/*.log</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/apache2/*.log</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <schedule>weekly</schedule>\n"
@@ -210,7 +237,10 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>10</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/mailman/digest</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/mailman/digest</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <su>\n"
@@ -259,7 +289,10 @@ test_load(void **state)
             "  <attrs>\n"
             "    <_id>11</_id>\n"
             "    <rule>\n"
-            "      <file>/var/log/ntp</file>\n"
+            "      <file-list>\n"
+            "        <_id>1</_id>\n"
+            "        <file>/var/log/ntp</file>\n"
+            "      </file-list>\n"
             "      <config-entries>\n"
             "        <_id>1</_id>\n"
             "        <compress>compress</compress>\n"
@@ -317,10 +350,11 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='11']/rule/config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='9']/rule/file",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='9']/rule/file-list[_id='2']/file",
             "/usr/local/var/log/apache2/*.log", 0, &entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/file", "/root_file", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/file-list[_id='1']/file",
+            "/root_file", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='1']/"
             "su", NULL, 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "attrs[_id='12']/rule/config-entries[_id='2']/"
@@ -397,7 +431,7 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='4']/tabooext/list-item[.='.orig']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='4']/tabooext/list-item-list[_id='2']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "attrs[_id='10']/rule/config-entries[_id='1']/su/group", 0, &node));
     lyd_free_tree(node);

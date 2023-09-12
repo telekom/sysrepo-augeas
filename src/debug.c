@@ -313,9 +313,6 @@ ay_print_ynode_extension(struct lprinter_ctx *ctx)
     case YN_LEAFREF:
         ly_print(ctx->out, "%*s ynode_type: YN_LEAFREF", ctx->space, "");
         break;
-    case YN_LEAFLIST:
-        ly_print(ctx->out, "%*s ynode_type: YN_LEAFLIST", ctx->space, "");
-        break;
     case YN_LIST:
         ly_print(ctx->out, "%*s ynode_type: YN_LIST", ctx->space, "");
         break;

@@ -46,6 +46,29 @@ module xml {
       }
     }
   }
+  grouping literal-list {
+    list literal-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf literal {
+        mandatory true;
+        type union {
+          type string {
+            pattern "[^\"]*";
+          }
+          type string {
+            pattern "[^']*";
+          }
+        }
+        augex:data-path "#literal";
+      }
+    }
+  }
   grouping pi-instruction {
     leaf target {
       mandatory true;
@@ -276,18 +299,7 @@ module xml {
                     container public {
                       augex:data-path "PUBLIC";
                       presence "Config entry.";
-                      leaf-list literal {
-                        type union {
-                          type string {
-                            pattern "[^\"]*";
-                          }
-                          type string {
-                            pattern "[^']*";
-                          }
-                        }
-                        ordered-by user;
-                        augex:data-path "#literal";
-                      }
+                      uses literal-list;
                     }
                     leaf system {
                       type union {
@@ -307,18 +319,7 @@ module xml {
             container public {
               augex:data-path "PUBLIC";
               presence "Config entry.";
-              leaf-list literal {
-                type union {
-                  type string {
-                    pattern "[^\"]*";
-                  }
-                  type string {
-                    pattern "[^']*";
-                  }
-                }
-                ordered-by user;
-                augex:data-path "#literal";
-              }
+              uses literal-list;
             }
             leaf system {
               type union {

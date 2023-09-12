@@ -59,22 +59,34 @@ test_load(void **state)
             "    <host>host</host>\n"
             "    <dhcp>dhcp</dhcp>\n"
             "    <user>user</user>\n"
-            "    <moreusers>moreUsers</moreusers>\n"
+            "    <moreusers-list>\n"
+            "      <_id>1</_id>\n"
+            "      <moreusers>moreUsers</moreusers>\n"
+            "    </moreusers-list>\n"
             "  </host-list>\n"
             "  <host-list>\n"
             "    <_seq>2</_seq>\n"
             "    <host>hostname1</host>\n"
             "    <dhcp>0</dhcp>\n"
             "    <user>user1</user>\n"
-            "    <moreusers>anotheruser</moreusers>\n"
-            "    <moreusers>athirduser</moreusers>\n"
+            "    <moreusers-list>\n"
+            "      <_id>1</_id>\n"
+            "      <moreusers>anotheruser</moreusers>\n"
+            "    </moreusers-list>\n"
+            "    <moreusers-list>\n"
+            "      <_id>2</_id>\n"
+            "      <moreusers>athirduser</moreusers>\n"
+            "    </moreusers-list>\n"
             "  </host-list>\n"
             "  <host-list>\n"
             "    <_seq>3</_seq>\n"
             "    <host>hostname2</host>\n"
             "    <dhcp>1</dhcp>\n"
             "    <user>user2</user>\n"
-            "    <moreusers>stillanotheruser</moreusers>\n"
+            "    <moreusers-list>\n"
+            "      <_id>1</_id>\n"
+            "      <moreusers>stillanotheruser</moreusers>\n"
+            "    </moreusers-list>\n"
             "  </host-list>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -94,8 +106,10 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='4']/dhcp", "maybe", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='4']/user", "nobody", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='2']/moreusers", "forthuser", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/moreusers[.='anotheruser']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='2']/moreusers-list[_id='3']/moreusers",
+            "forthuser", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/moreusers-list[_id='1']",
+            0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
     /* store new data */
@@ -150,10 +164,12 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/moreusers[.='athirduser']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/moreusers-list[_id='2']/moreusers",
+            0, &node));
     lyd_free_tree(node);
 
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/moreusers[.='stillanotheruser']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/moreusers-list[_id='1']/moreusers",
+            0, &node));
     lyd_free_tree(node);
 
     /* store new data */

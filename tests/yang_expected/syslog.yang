@@ -33,13 +33,22 @@ module syslog {
           container selector {
             augex:data-path "selector";
             presence "Config entry.";
-            leaf-list facility {
+            list facility-list {
+              key "_id";
               min-elements 1;
-              type string {
-                pattern "[A-Za-z0-9]+|\\*";
-              }
               ordered-by user;
-              augex:data-path "facility";
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf facility {
+                mandatory true;
+                type string {
+                  pattern "[A-Za-z0-9]+|\\*";
+                }
+                augex:data-path "facility";
+              }
             }
             leaf comparison {
               type string {
@@ -94,18 +103,26 @@ module syslog {
                 augex:data-path "port";
               }
             }
-            leaf-list user {
-              min-elements 1;
-              type union {
-                type string {
-                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-                }
-                type string {
-                  pattern "\\*";
-                }
-              }
+            list user-list {
+              key "_id";
               ordered-by user;
-              augex:data-path "user";
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf user {
+                mandatory true;
+                type union {
+                  type string {
+                    pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+                  }
+                  type string {
+                    pattern "\\*";
+                  }
+                }
+                augex:data-path "user";
+              }
             }
             leaf program {
               type string {
@@ -145,18 +162,27 @@ module syslog {
             type empty;
             augex:data-path "reverse";
           }
-          leaf-list program {
+          list program-list {
+            key "_id";
             min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
             ordered-by user;
-            augex:data-path "program";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf program {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              augex:data-path "program";
+            }
           }
           uses entries;
         }
@@ -167,18 +193,27 @@ module syslog {
             type empty;
             augex:data-path "reverse";
           }
-          leaf-list hostname {
+          list hostname-list {
+            key "_id";
             min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9_.-]+";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
             ordered-by user;
-            augex:data-path "hostname";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf hostname {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              augex:data-path "hostname";
+            }
           }
           uses entries;
         }

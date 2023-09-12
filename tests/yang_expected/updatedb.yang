@@ -9,14 +9,23 @@ module updatedb {
 
   augex:augeas-mod-name "UpdateDB";
 
-  grouping entry {
-    leaf-list entry {
+  grouping entry-list {
+    list entry-list {
+      key "_id";
       min-elements 1;
-      type string {
-        pattern "[^ \t\n]+";
-      }
       ordered-by user;
-      augex:data-path "entry";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf entry {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "entry";
+      }
     }
   }
   list updatedb {
@@ -37,17 +46,17 @@ module updatedb {
         container prunefs {
           augex:data-path "PRUNEFS";
           presence "Config entry.";
-          uses entry;
+          uses entry-list;
         }
         container prunenames {
           augex:data-path "PRUNENAMES";
           presence "Config entry.";
-          uses entry;
+          uses entry-list;
         }
         container prunepaths {
           augex:data-path "PRUNEPATHS";
           presence "Config entry.";
-          uses entry;
+          uses entry-list;
         }
         leaf prune-bind-mounts {
           type string {

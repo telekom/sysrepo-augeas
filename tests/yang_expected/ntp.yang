@@ -85,13 +85,22 @@ module ntp {
       }
     }
   }
-  grouping flag {
-    leaf-list flag {
-      type string {
-        pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
-      }
+  grouping flag-list {
+    list flag-list {
+      key "_id";
       ordered-by user;
-      augex:data-path "flag";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf flag {
+        mandatory true;
+        type string {
+          pattern "auth|bclient|calibrate|kernel|monitor|ntp|pps|stats";
+        }
+        augex:data-path "flag";
+      }
     }
   }
   list ntp {
@@ -239,12 +248,21 @@ module ntp {
               pattern "[^,# \n\t-][^,# \n\t]*";
             }
           }
-          leaf-list action {
-            type string {
-              pattern "[^,# \n\t-][^,# \n\t]*";
-            }
+          list action-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "action";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf action {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t-][^,# \n\t]*";
+              }
+              augex:data-path "action";
+            }
           }
         }
         leaf broadcastdelay {
@@ -256,12 +274,12 @@ module ntp {
         container enable {
           augex:data-path "enable";
           presence "Config entry.";
-          uses flag;
+          uses flag-list;
         }
         container disable {
           augex:data-path "disable";
           presence "Config entry.";
-          uses flag;
+          uses flag-list;
         }
         leaf driftfile {
           type string {
@@ -427,13 +445,22 @@ module ntp {
         container trustedkey {
           augex:data-path "trustedkey";
           presence "Config entry.";
-          leaf-list key {
+          list key-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[^,# \n\t]+";
-            }
             ordered-by user;
-            augex:data-path "key";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf key {
+              mandatory true;
+              type string {
+                pattern "[^,# \n\t]+";
+              }
+              augex:data-path "key";
+            }
           }
         }
         container tinker {

@@ -9,13 +9,22 @@ module xinetd {
 
   augex:augeas-mod-name "Xinetd";
 
-  grouping value {
-    leaf-list value {
-      type string {
-        pattern "[^ \t\n]+";
-      }
+  grouping value-list {
+    list value-list {
+      key "_id";
       ordered-by user;
-      augex:data-path "value";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+        }
+        augex:data-path "value";
+      }
     }
   }
   grouping ch-add {
@@ -29,13 +38,7 @@ module xinetd {
         augex:data-path "del";
       }
     }
-    leaf-list value {
-      type string {
-        pattern "[^ \t\n]+";
-      }
-      ordered-by user;
-      augex:data-path "value";
-    }
+    uses value-list;
   }
   list xinetd {
     key "config-file";
@@ -290,7 +293,7 @@ module xinetd {
                     pattern "(?i)cps";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container log-type {
                 augex:data-path "$$";
@@ -939,7 +942,7 @@ module xinetd {
                     pattern "(?i)server_args";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container log-type {
                 augex:data-path "$$";
@@ -950,7 +953,7 @@ module xinetd {
                     pattern "(?i)log_type";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container access-times {
                 augex:data-path "$$";
@@ -961,7 +964,7 @@ module xinetd {
                     pattern "(?i)access_times";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container type {
                 augex:data-path "$$";
@@ -972,7 +975,7 @@ module xinetd {
                     pattern "(?i)type";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container flags {
                 augex:data-path "$$";
@@ -983,7 +986,7 @@ module xinetd {
                     pattern "(?i)flags";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container redirect {
                 augex:data-path "$$";
@@ -994,7 +997,7 @@ module xinetd {
                     pattern "(?i)redirect";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container cps {
                 augex:data-path "$$";
@@ -1005,7 +1008,7 @@ module xinetd {
                     pattern "(?i)cps";
                   }
                 }
-                uses value;
+                uses value-list;
               }
               container log-on-success {
                 augex:data-path "$$";

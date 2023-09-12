@@ -9,6 +9,24 @@ module mdadm-conf {
 
   augex:augeas-mod-name "Mdadm_conf";
 
+  grouping value-list {
+    list value-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf value {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n#]+";
+        }
+        augex:data-path "value";
+      }
+    }
+  }
   grouping pol-options {
     list pol-options {
       key "_id";
@@ -194,35 +212,17 @@ module mdadm-conf {
         container mailaddr {
           augex:data-path "mailaddr";
           presence "Config entry.";
-          leaf-list value {
-            type string {
-              pattern "[^ \t\n#]+";
-            }
-            ordered-by user;
-            augex:data-path "value";
-          }
+          uses value-list;
         }
         container mailfrom {
           augex:data-path "mailfrom";
           presence "Config entry.";
-          leaf-list value {
-            type string {
-              pattern "[^ \t\n#]+";
-            }
-            ordered-by user;
-            augex:data-path "value";
-          }
+          uses value-list;
         }
         container program {
           augex:data-path "program";
           presence "Config entry.";
-          leaf-list value {
-            type string {
-              pattern "[^ \t\n#]+";
-            }
-            ordered-by user;
-            augex:data-path "value";
-          }
+          uses value-list;
         }
         container create {
           augex:data-path "create";
@@ -279,13 +279,7 @@ module mdadm-conf {
         container homehost {
           augex:data-path "homehost";
           presence "Config entry.";
-          leaf-list value {
-            type string {
-              pattern "[^ \t\n#]+";
-            }
-            ordered-by user;
-            augex:data-path "value";
-          }
+          uses value-list;
         }
         container auto {
           augex:data-path "auto";

@@ -258,7 +258,7 @@ module sshd {
             }
           }
         }
-        container kex-algorithms {
+        container kexalgorithms {
           augex:data-path "$$";
           presence "Config entry.";
           leaf kex-algorithms {
@@ -286,7 +286,7 @@ module sshd {
             }
           }
         }
-        container host-key-algorithms {
+        container hostkeyalgorithms {
           augex:data-path "$$";
           presence "Config entry.";
           leaf host-key-algorithms {
@@ -314,7 +314,7 @@ module sshd {
             }
           }
         }
-        container gssapikex-algorithms {
+        container gssapikexalgorithms {
           augex:data-path "$$";
           presence "Config entry.";
           leaf gssapikex-algorithms {
@@ -342,7 +342,7 @@ module sshd {
             }
           }
         }
-        container casignature-algorithms {
+        container casignaturealgorithms {
           augex:data-path "$$";
           presence "Config entry.";
           leaf casignature-algorithms {
@@ -370,7 +370,7 @@ module sshd {
             }
           }
         }
-        container pubkey-accepted-key-types {
+        container pubkeyacceptedkeytypes {
           augex:data-path "$$";
           presence "Config entry.";
           leaf pubkey-accepted-key-types {
@@ -398,7 +398,7 @@ module sshd {
             }
           }
         }
-        container pubkey-accepted-algorithms {
+        container pubkeyacceptedalgorithms {
           augex:data-path "$$";
           presence "Config entry.";
           leaf pubkey-accepted-algorithms {

@@ -195,14 +195,23 @@ module chrony {
       }
     }
   }
-  grouping directory {
-    leaf-list directory {
+  grouping directory-list {
+    list directory-list {
+      key "_id";
       min-elements 1;
-      type string {
-        pattern "[^ \t\n!;#%]+";
-      }
       ordered-by user;
-      augex:data-path "directory";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf directory {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n!;#%]+";
+        }
+        augex:data-path "directory";
+      }
     }
   }
   grouping ratelimit {
@@ -401,13 +410,22 @@ module chrony {
             }
             augex:data-path "threshold";
           }
-          leaf-list address {
+          list store-address-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
-            }
             ordered-by user;
-            augex:data-path "address";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf address {
+              mandatory true;
+              type string {
+                pattern "((((((((25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))(\\.))(25[0-5]?|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\\-]*[A-Za-z0-9]))";
+              }
+              augex:data-path "address";
+            }
           }
         }
         container local {
@@ -660,12 +678,12 @@ module chrony {
         container confdir {
           augex:data-path "confdir";
           presence "Config entry.";
-          uses directory;
+          uses directory-list;
         }
         container sourcedir {
           augex:data-path "sourcedir";
           presence "Config entry.";
-          uses directory;
+          uses directory-list;
         }
         container hwtimestamp {
           augex:data-path "hwtimestamp";

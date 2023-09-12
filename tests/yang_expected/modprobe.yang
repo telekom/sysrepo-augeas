@@ -133,19 +133,37 @@ module modprobe {
               pattern "[^:# \t\n\\\\\\\\]+";
             }
           }
-          leaf-list pre {
-            type string {
-              pattern "[^:# \t\n\\\\\\\\]+";
-            }
+          list pre-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "pre";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf pre {
+              mandatory true;
+              type string {
+                pattern "[^:# \t\n\\\\\\\\]+";
+              }
+              augex:data-path "pre";
+            }
           }
-          leaf-list post {
-            type string {
-              pattern "[^:# \t\n\\\\\\\\]+";
-            }
+          list post-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "post";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf post {
+              mandatory true;
+              type string {
+                pattern "[^:# \t\n\\\\\\\\]+";
+              }
+              augex:data-path "post";
+            }
           }
         }
       }

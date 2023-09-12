@@ -96,15 +96,11 @@ module thttpd {
           }
           augex:data-path "max_age";
         }
-        container flagline {
-          augex:data-path "$$";
-          presence "Config entry.";
-          leaf flagentry {
-            mandatory true;
-            type string {
-              pattern "(no){0,1}(chroot|symlinks|vhost|globalpasswd)";
-            }
+        leaf flagline {
+          type string {
+            pattern "(no){0,1}(chroot|symlinks|vhost|globalpasswd)";
           }
+          augex:data-path "$$";
         }
       }
     }

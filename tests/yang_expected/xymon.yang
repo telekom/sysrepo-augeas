@@ -27,12 +27,21 @@ module xymon {
       }
       augex:data-path "fqdn";
     }
-    leaf-list tag {
-      type string {
-        pattern "[^ \n\t]+";
-      }
+    list tag-list {
+      key "_id";
       ordered-by user;
-      augex:data-path "tag";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf tag {
+        mandatory true;
+        type string {
+          pattern "[^ \n\t]+";
+        }
+        augex:data-path "tag";
+      }
     }
   }
   grouping group {
@@ -152,13 +161,22 @@ module xymon {
         augex:data-path "group-only";
         augex:value-yang-path "value-to-eol";
         presence "Config entry.";
-        leaf-list col {
+        list group-only-col-list {
+          key "_id";
           min-elements 1;
-          type string {
-            pattern "[A-Za-z0-9_.-]+";
-          }
           ordered-by user;
-          augex:data-path "col";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf col {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "col";
+          }
         }
         leaf value-to-eol {
           mandatory true;

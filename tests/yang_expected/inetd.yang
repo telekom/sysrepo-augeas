@@ -169,13 +169,22 @@ module inetd {
             }
             augex:data-path "endpoint-type";
           }
-          leaf-list protocol {
+          list protocol-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[^ \t\n,#]+";
-            }
             ordered-by user;
-            augex:data-path "protocol";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf protocol {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n,#]+";
+              }
+              augex:data-path "protocol";
+            }
           }
           leaf wait {
             mandatory true;

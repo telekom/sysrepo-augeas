@@ -32,13 +32,22 @@ module postfix-virtual {
             pattern "[A-Za-z0-9@\\\\*.+=_-]+";
           }
         }
-        leaf-list destination {
+        list destination-list {
+          key "_id";
           min-elements 1;
-          type string {
-            pattern "[A-Za-z0-9@\\\\*.+=_-]+";
-          }
           ordered-by user;
-          augex:data-path "destination";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf destination {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9@\\\\*.+=_-]+";
+            }
+            augex:data-path "destination";
+          }
         }
       }
     }

@@ -554,12 +554,6 @@ module grub {
                   pattern "kernel$?";
                 }
               }
-              leaf value {
-                mandatory true;
-                type string {
-                  pattern "(\\([a-z0-9,]+\\))?/[^ \t\n]*";
-                }
-              }
               list config-entries {
                 key "_id";
                 ordered-by user;
@@ -580,6 +574,12 @@ module grub {
                     type empty;
                     augex:data-path "no-mem-option";
                   }
+                }
+              }
+              leaf value {
+                mandatory true;
+                type string {
+                  pattern "(\\([a-z0-9,]+\\))?/[^ \t\n]*";
                 }
               }
               leaf path {

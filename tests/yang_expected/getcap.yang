@@ -25,20 +25,38 @@ module getcap {
       container record {
         augex:data-path "record";
         presence "Config entry.";
-        leaf-list name {
+        list name-list {
+          key "_id";
           min-elements 1;
-          type string {
-            pattern "[^#:\\\\\\\\\t\n|][^:\\\\\\\\\t\n|]*";
-          }
           ordered-by user;
-          augex:data-path "name";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf name {
+            mandatory true;
+            type string {
+              pattern "[^#:\\\\\\\\\t\n|][^:\\\\\\\\\t\n|]*";
+            }
+            augex:data-path "name";
+          }
         }
-        leaf-list capability {
-          type string {
-            pattern "[a-zA-Z0-9-]+([%^$#\\\\]?@|[%^$#\\\\=]([^:\\\\\\\\^]|\\\\[0-7]{1,3}|\\\\[bBcCeEfFnNrRtT\\\\^]|\\^.)*)?";
-          }
+        list capability-list {
+          key "_id";
           ordered-by user;
-          augex:data-path "capability";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf capability {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z0-9-]+([%^$#\\\\]?@|[%^$#\\\\=]([^:\\\\\\\\^]|\\\\[0-7]{1,3}|\\\\[bBcCeEfFnNrRtT\\\\^]|\\^.)*)?";
+            }
+            augex:data-path "capability";
+          }
         }
       }
     }

@@ -58,12 +58,21 @@ module services {
           }
           augex:data-path "protocol";
         }
-        leaf-list alias {
-          type string {
-            pattern "[a-zA-Z0-9_.+*/:-]+";
-          }
+        list alias-list {
+          key "_id";
           ordered-by user;
-          augex:data-path "alias";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf alias {
+            mandatory true;
+            type string {
+              pattern "[a-zA-Z0-9_.+*/:-]+";
+            }
+            augex:data-path "alias";
+          }
         }
       }
     }

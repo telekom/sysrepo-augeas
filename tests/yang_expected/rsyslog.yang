@@ -22,13 +22,22 @@ module rsyslog {
       container selector {
         augex:data-path "selector";
         presence "Config entry.";
-        leaf-list facility {
+        list facility-list {
+          key "_id";
           min-elements 1;
-          type string {
-            pattern "[A-Za-z0-9]+|\\*";
-          }
           ordered-by user;
-          augex:data-path "facility";
+          leaf _id {
+            type uint64;
+            description
+              "Implicitly generated list key to maintain the order of the augeas data.";
+          }
+          leaf facility {
+            mandatory true;
+            type string {
+              pattern "[A-Za-z0-9]+|\\*";
+            }
+            augex:data-path "facility";
+          }
         }
         leaf comparison {
           type string {
@@ -46,8 +55,8 @@ module rsyslog {
       }
     }
   }
-  grouping action-list {
-    list action-list {
+  grouping user-list {
+    list user-list {
       key "_id";
       min-elements 1;
       ordered-by user;
@@ -56,99 +65,16 @@ module rsyslog {
         description
           "Implicitly generated list key to maintain the order of the augeas data.";
       }
-      container action {
-        augex:data-path "action";
-        presence "Config entry.";
-        choice ch-action {
-          mandatory true;
-          case no-sync {
-            leaf no-sync {
-              type empty;
-              augex:data-path "no_sync";
-            }
-            leaf file {
-              mandatory true;
-              type string {
-                pattern "/[^ \t\n;]+";
-              }
-              augex:data-path "file";
-            }
-            leaf template {
-              type string {
-                pattern "[A-Za-z0-9_.-]+";
-              }
-              augex:data-path "template";
-            }
+      leaf user {
+        type union {
+          type string {
+            pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
           }
-          case protocol {
-            leaf protocol {
-              mandatory true;
-              type string {
-                pattern "@{1,2}";
-              }
-              augex:data-path "protocol";
-            }
-            leaf hostname {
-              mandatory true;
-              type string {
-                pattern "([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)|(((\\[)(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))(\\]))";
-              }
-              augex:data-path "hostname";
-            }
-            leaf port {
-              type uint64;
-              augex:data-path "port";
-            }
-          }
-          leaf-list user {
-            min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
-            ordered-by user;
-            augex:data-path "user";
-          }
-          leaf program {
-            type string {
-              pattern "[^ \t\n][^\n]+[^ \t\n]";
-            }
-            augex:data-path "program";
-          }
-          leaf discard {
-            type empty;
-            augex:data-path "discard";
-          }
-          leaf-list omusrmsg {
-            min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
-            ordered-by user;
-            augex:data-path "omusrmsg";
-          }
-          leaf dynamic {
-            type string {
-              pattern "[A-Za-z0-9_.-]+";
-            }
-            augex:data-path "dynamic";
-          }
-          leaf pipe {
-            type string {
-              pattern "/[^ \t\n;]+";
-            }
-            augex:data-path "pipe";
+          type string {
+            pattern "\\*";
           }
         }
+        augex:data-path "user";
       }
     }
   }
@@ -232,18 +158,8 @@ module rsyslog {
                 augex:data-path "port";
               }
             }
-            leaf-list user {
-              min-elements 1;
-              type union {
-                type string {
-                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-                }
-                type string {
-                  pattern "\\*";
-                }
-              }
-              ordered-by user;
-              augex:data-path "user";
+            case user-list {
+              uses user-list;
             }
             leaf program {
               type string {
@@ -255,6 +171,110 @@ module rsyslog {
               type empty;
               augex:data-path "discard";
             }
+          }
+        }
+      }
+    }
+  }
+  grouping action-list {
+    list action-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      container action {
+        augex:data-path "action";
+        presence "Config entry.";
+        choice ch-action {
+          mandatory true;
+          case no-sync {
+            leaf no-sync {
+              type empty;
+              augex:data-path "no_sync";
+            }
+            leaf file {
+              mandatory true;
+              type string {
+                pattern "/[^ \t\n;]+";
+              }
+              augex:data-path "file";
+            }
+            leaf template {
+              type string {
+                pattern "[A-Za-z0-9_.-]+";
+              }
+              augex:data-path "template";
+            }
+          }
+          case protocol {
+            leaf protocol {
+              mandatory true;
+              type string {
+                pattern "@{1,2}";
+              }
+              augex:data-path "protocol";
+            }
+            leaf hostname {
+              mandatory true;
+              type string {
+                pattern "([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)|(((\\[)(((((((((((((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}))|((([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})))|(((([0-9A-Fa-f]{1,4}:){6})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((([0-9A-Fa-f]{1,4}:){0,5}:)(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(((::([0-9A-Fa-f]{1,4}:){0,5})(((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2})))\\.){3}))((((25[0-5])|(1[0-9]{2})|(2[0-4][0-9])|([0-9]{1,2}))))))|(([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5})([0-9A-Fa-f]{1,4})))|((::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})))|((([0-9A-Fa-f]{1,4}:){1,7}:))))(\\]))";
+              }
+              augex:data-path "hostname";
+            }
+            leaf port {
+              type uint64;
+              augex:data-path "port";
+            }
+          }
+          case user-list {
+            uses user-list;
+          }
+          leaf program {
+            type string {
+              pattern "[^ \t\n][^\n]+[^ \t\n]";
+            }
+            augex:data-path "program";
+          }
+          leaf discard {
+            type empty;
+            augex:data-path "discard";
+          }
+          list omusrmsg-list {
+            key "_id";
+            ordered-by user;
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf omusrmsg {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              augex:data-path "omusrmsg";
+            }
+          }
+          leaf dynamic {
+            type string {
+              pattern "[A-Za-z0-9_.-]+";
+            }
+            augex:data-path "dynamic";
+          }
+          leaf pipe {
+            type string {
+              pattern "/[^ \t\n;]+";
+            }
+            augex:data-path "pipe";
           }
         }
       }
@@ -398,13 +418,21 @@ module rsyslog {
           container then {
             augex:data-path "then";
             presence "Config entry.";
-            leaf-list cmd {
+            list cmd-list {
+              key "_id";
               min-elements 1;
-              type string {
-                pattern "[^# \t\n][^\n]*[^ \t\n]";
-              }
               ordered-by user;
-              augex:data-path "cmd";
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf cmd {
+                type string {
+                  pattern "[^# \t\n][^\n]*[^ \t\n]";
+                }
+                augex:data-path "cmd";
+              }
             }
           }
         }
@@ -427,18 +455,27 @@ module rsyslog {
             type empty;
             augex:data-path "reverse";
           }
-          leaf-list program {
+          list program-list {
+            key "_id";
             min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
             ordered-by user;
-            augex:data-path "program";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf program {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9][A-Za-z0-9_.-]*";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              augex:data-path "program";
+            }
           }
           uses entries;
         }
@@ -449,18 +486,27 @@ module rsyslog {
             type empty;
             augex:data-path "reverse";
           }
-          leaf-list hostname {
+          list hostname-list {
+            key "_id";
             min-elements 1;
-            type union {
-              type string {
-                pattern "[A-Za-z0-9_.-]+";
-              }
-              type string {
-                pattern "\\*";
-              }
-            }
             ordered-by user;
-            augex:data-path "hostname";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf hostname {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "[A-Za-z0-9_.-]+";
+                }
+                type string {
+                  pattern "\\*";
+                }
+              }
+              augex:data-path "hostname";
+            }
           }
           uses entries;
         }

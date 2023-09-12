@@ -25,14 +25,23 @@ module openvpn {
       augex:data-path "remote";
     }
   }
-  grouping flag {
-    leaf-list flag {
+  grouping flag-list {
+    list flag-list {
+      key "_id";
       min-elements 1;
-      type string {
-        pattern "local|autolocal|def1|bypass-dhcp|bypass-dns|block-local";
-      }
       ordered-by user;
-      augex:data-path "flag";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf flag {
+        mandatory true;
+        type string {
+          pattern "local|autolocal|def1|bypass-dhcp|bypass-dns|block-local";
+        }
+        augex:data-path "flag";
+      }
     }
   }
   grouping setenv {
@@ -1460,12 +1469,12 @@ module openvpn {
         container redirect-gateway {
           augex:data-path "redirect-gateway";
           presence "Config entry.";
-          uses flag;
+          uses flag-list;
         }
         container redirect-private {
           augex:data-path "redirect-private";
           presence "Config entry.";
-          uses flag;
+          uses flag-list;
         }
         container inactive {
           augex:data-path "inactive";
@@ -1596,13 +1605,22 @@ module openvpn {
         container ignore-unknown-option {
           augex:data-path "ignore-unknown-option";
           presence "Config entry.";
-          leaf-list opt {
+          list opt-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[A-Za-z0-9_-]+";
-            }
             ordered-by user;
-            augex:data-path "opt";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf opt {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9_-]+";
+              }
+              augex:data-path "opt";
+            }
           }
         }
         container auth-user-pass-verify {
@@ -1667,13 +1685,22 @@ module openvpn {
         container tls-cipher {
           augex:data-path "tls-cipher";
           presence "Config entry.";
-          leaf-list cipher {
+          list cipher-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[A-Za-z0-9!_-]+";
-            }
             ordered-by user;
-            augex:data-path "cipher";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf cipher {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9!_-]+";
+              }
+              augex:data-path "cipher";
+            }
           }
         }
         container cryptoapicert {
@@ -1719,13 +1746,22 @@ module openvpn {
         container remote-cert-ku {
           augex:data-path "remote-cert-ku";
           presence "Config entry.";
-          leaf-list usage {
+          list usage-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[A-Za-z0-9]{1,2}";
-            }
             ordered-by user;
-            augex:data-path "usage";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf usage {
+              mandatory true;
+              type string {
+                pattern "[A-Za-z0-9]{1,2}";
+              }
+              augex:data-path "usage";
+            }
           }
         }
         container remote-cert-eku {

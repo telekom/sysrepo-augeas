@@ -73,6 +73,28 @@ module access {
       }
     }
   }
+  grouping origin-list {
+    list origin-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf origin {
+        mandatory true;
+        type string {
+          pattern "[^ \t\n]+";
+          pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
+            modifier invert-match;
+          }
+        }
+        augex:data-path "origin";
+      }
+    }
+  }
   list access {
     key "config-file";
     leaf config-file {
@@ -102,31 +124,11 @@ module access {
           presence "Config entry.";
           uses entry;
         }
-        leaf-list origin {
-          min-elements 1;
-          type string {
-            pattern "[^ \t\n]+";
-            pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
-              modifier invert-match;
-            }
-          }
-          ordered-by user;
-          augex:data-path "origin";
-        }
+        uses origin-list;
         container except2 {
           augex:data-path "except";
           presence "Config entry.";
-          leaf-list origin {
-            min-elements 1;
-            type string {
-              pattern "[^ \t\n]+";
-              pattern "[Ee][Xx][Cc][Ee][Pp][Tt]" {
-                modifier invert-match;
-              }
-            }
-            ordered-by user;
-            augex:data-path "origin";
-          }
+          uses origin-list;
         }
       }
     }

@@ -9,17 +9,26 @@ module mke2fs {
 
   augex:augeas-mod-name "Mke2fs";
 
-  grouping word {
-    leaf-list word {
+  grouping word-list {
+    list word-list {
+      key "_id";
       min-elements 1;
-      type string {
-        pattern "[A-Za-z0-9_.-]+";
-      }
       ordered-by user;
-      augex:data-path "$$";
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf word {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "$$";
+      }
     }
   }
-  grouping word-list {
+  grouping word-list2 {
     list word-list {
       key "_id";
       min-elements 1;
@@ -45,7 +54,7 @@ module mke2fs {
       }
     }
   }
-  grouping word-list2 {
+  grouping word-list3 {
     list word-list {
       key "_id";
       min-elements 1;
@@ -117,17 +126,17 @@ module mke2fs {
               container base-features {
                 augex:data-path "base_features";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
               container default-features {
                 augex:data-path "default_features";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
               container default-mntopts {
                 augex:data-path "default_mntopts";
                 presence "Config entry.";
-                uses word;
+                uses word-list;
               }
               leaf cluster-size {
                 type uint64;
@@ -296,12 +305,12 @@ module mke2fs {
               container features {
                 augex:data-path "features";
                 presence "Config entry.";
-                uses word-list;
+                uses word-list2;
               }
               container options {
                 augex:data-path "options";
                 presence "Config entry.";
-                uses word-list2;
+                uses word-list3;
               }
             }
           }
@@ -340,17 +349,17 @@ module mke2fs {
                   container base-features {
                     augex:data-path "base_features";
                     presence "Config entry.";
-                    uses word;
+                    uses word-list;
                   }
                   container default-features {
                     augex:data-path "default_features";
                     presence "Config entry.";
-                    uses word;
+                    uses word-list;
                   }
                   container default-mntopts {
                     augex:data-path "default_mntopts";
                     presence "Config entry.";
-                    uses word;
+                    uses word-list;
                   }
                   leaf cluster-size {
                     type uint64;
@@ -519,12 +528,12 @@ module mke2fs {
                   container features {
                     augex:data-path "features";
                     presence "Config entry.";
-                    uses word-list;
+                    uses word-list2;
                   }
                   container options {
                     augex:data-path "options";
                     presence "Config entry.";
-                    uses word-list2;
+                    uses word-list3;
                   }
                 }
               }

@@ -9,6 +9,44 @@ module pg-hba {
 
   augex:augeas-mod-name "Pg_Hba";
 
+  grouping database-list {
+    list database-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf database {
+        mandatory true;
+        type string {
+          pattern "[^,# \n\t]+";
+        }
+        augex:data-path "database";
+      }
+    }
+  }
+  grouping user-list {
+    list user-list {
+      key "_id";
+      min-elements 1;
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf user {
+        mandatory true;
+        type string {
+          pattern "[^,# \n\t]+";
+        }
+        augex:data-path "user";
+      }
+    }
+  }
   grouping option-list {
     list option-list {
       key "_id";
@@ -73,22 +111,8 @@ module pg-hba {
         container case {
           presence "Config entry.";
           when "../type='local'";
-          leaf-list database {
-            min-elements 1;
-            type string {
-              pattern "[^,# \n\t]+";
-            }
-            ordered-by user;
-            augex:data-path "database";
-          }
-          leaf-list user {
-            min-elements 1;
-            type string {
-              pattern "[^,# \n\t]+";
-            }
-            ordered-by user;
-            augex:data-path "user";
-          }
+          uses database-list;
+          uses user-list;
           container method {
             augex:data-path "method";
             augex:value-yang-path "value";
@@ -105,22 +129,8 @@ module pg-hba {
         container case2 {
           presence "Config entry.";
           when "re-match(../type, '((host)|(hostssl))|(hostnossl)')";
-          leaf-list database {
-            min-elements 1;
-            type string {
-              pattern "[^,# \n\t]+";
-            }
-            ordered-by user;
-            augex:data-path "database";
-          }
-          leaf-list user {
-            min-elements 1;
-            type string {
-              pattern "[^,# \n\t]+";
-            }
-            ordered-by user;
-            augex:data-path "user";
-          }
+          uses database-list;
+          uses user-list;
           leaf address {
             mandatory true;
             type string {

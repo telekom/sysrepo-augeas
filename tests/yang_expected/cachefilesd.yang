@@ -44,15 +44,11 @@ module cachefilesd {
             }
           }
         }
-        container nocull {
-          augex:data-path "$$";
-          presence "Config entry.";
-          leaf nocull {
-            mandatory true;
-            type string {
-              pattern "(?i)nocull";
-            }
+        leaf nocull {
+          type string {
+            pattern "(?i)nocull";
           }
+          augex:data-path "$$";
         }
       }
     }

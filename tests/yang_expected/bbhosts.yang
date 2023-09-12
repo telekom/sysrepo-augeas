@@ -706,12 +706,21 @@ module bbhosts {
               container downtime {
                 augex:data-path "DOWNTIME";
                 presence "Config entry.";
-                leaf-list probe {
-                  type string {
-                    pattern "([A-Za-z0-9_.-]+)|(\\*)";
-                  }
+                list probe-list {
+                  key "_id";
                   ordered-by user;
-                  augex:data-path "probe";
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  leaf probe {
+                    mandatory true;
+                    type string {
+                      pattern "([A-Za-z0-9_.-]+)|(\\*)";
+                    }
+                    augex:data-path "probe";
+                  }
                 }
                 leaf day {
                   mandatory true;
@@ -810,13 +819,22 @@ module bbhosts {
               augex:data-path "group-only";
               augex:value-yang-path "value-to-eol";
               presence "Config entry.";
-              leaf-list col {
+              list group-only-col-list {
+                key "_id";
                 min-elements 1;
-                type string {
-                  pattern "[^|;# \n\t]+";
-                }
                 ordered-by user;
-                augex:data-path "col";
+                leaf _id {
+                  type uint64;
+                  description
+                    "Implicitly generated list key to maintain the order of the augeas data.";
+                }
+                leaf col {
+                  mandatory true;
+                  type string {
+                    pattern "[^|;# \n\t]+";
+                  }
+                  augex:data-path "col";
+                }
               }
               leaf value-to-eol {
                 mandatory true;

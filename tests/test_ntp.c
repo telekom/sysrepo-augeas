@@ -82,14 +82,20 @@ test_load(void **state)
             "    <_id>4</_id>\n"
             "    <restrict>\n"
             "      <value>default</value>\n"
-            "      <action>ignore</action>\n"
+            "      <action-list>\n"
+            "        <_id>1</_id>\n"
+            "        <action>ignore</action>\n"
+            "      </action-list>\n"
             "    </restrict>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>5</_id>\n"
             "    <restrict>\n"
             "      <value>192.168.0.150</value>\n"
-            "      <action>nomodify</action>\n"
+            "      <action-list>\n"
+            "        <_id>1</_id>\n"
+            "        <action>nomodify</action>\n"
+            "      </action-list>\n"
             "    </restrict>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
@@ -243,9 +249,12 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='6']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag", "kernel", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag", "stats", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag", "auth", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag-list[_id='1']/flag",
+            "kernel", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag-list[_id='2']/flag",
+            "stats", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='21']/enable/flag-list[_id='3']/flag",
+            "auth", 0, NULL));
 
     /* store new data */
     assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));

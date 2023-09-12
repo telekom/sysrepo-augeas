@@ -215,7 +215,7 @@ ay_lense_pattern_is_label(struct lens *lens)
     char *ch;
     uint32_t shift;
 
-    if (!lens || ((lens->tag != L_STORE) && (lens->tag != L_KEY)) || lens->regexp->nocase) {
+    if (!lens || ((lens->tag != L_STORE) && (lens->tag != L_KEY))) {
         return 0;
     }
 
@@ -227,6 +227,35 @@ ay_lense_pattern_is_label(struct lens *lens)
     }
 
     return *ch == '\0';
+}
+
+ly_bool
+ay_lense_pattern_in_datapath(struct lens *lens)
+{
+    char *ch;
+
+    if (!lens || ((lens->tag != L_STORE) && (lens->tag != L_KEY))) {
+        return 0;
+    }
+
+    for (ch = lens->regexp->pattern->str; *ch != '\0'; ch++) {
+        switch (*ch) {
+        case '[':
+        case ']':
+        case '*':
+        case '+':
+        case '(':
+        case ')':
+        case '|':
+        case '?':
+        case '^':
+            return 0;
+        default:
+            break;
+        }
+    }
+
+    return 1;
 }
 
 ly_bool

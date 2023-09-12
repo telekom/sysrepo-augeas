@@ -70,8 +70,14 @@ test_load(void **state)
             "      <type>auth</type>\n"
             "      <control>required</control>\n"
             "      <module>pam_unix.so</module>\n"
-            "      <argument>try_first_pass</argument>\n"
-            "      <argument>quiet</argument>\n"
+            "      <argument-list>\n"
+            "        <_id>1</_id>\n"
+            "        <argument>try_first_pass</argument>\n"
+            "      </argument-list>\n"
+            "      <argument-list>\n"
+            "        <_id>2</_id>\n"
+            "        <argument>quiet</argument>\n"
+            "      </argument-list>\n"
             "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
@@ -90,8 +96,14 @@ test_load(void **state)
             "      <type>account</type>\n"
             "      <control>optional</control>\n"
             "      <module>pam_env.so</module>\n"
-            "      <argument>revoke</argument>\n"
-            "      <argument>force</argument>\n"
+            "      <argument-list>\n"
+            "        <_id>1</_id>\n"
+            "        <argument>revoke</argument>\n"
+            "      </argument-list>\n"
+            "      <argument-list>\n"
+            "        <_id>2</_id>\n"
+            "        <argument>force</argument>\n"
+            "      </argument-list>\n"
             "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
@@ -101,8 +113,14 @@ test_load(void **state)
             "      <type>session</type>\n"
             "      <control>include</control>\n"
             "      <module>pam_systemd.so</module>\n"
-            "      <argument>onerr=succeed</argument>\n"
-            "      <argument>sense=allow</argument>\n"
+            "      <argument-list>\n"
+            "        <_id>1</_id>\n"
+            "        <argument>onerr=succeed</argument>\n"
+            "      </argument-list>\n"
+            "      <argument-list>\n"
+            "        <_id>2</_id>\n"
+            "        <argument>sense=allow</argument>\n"
+            "      </argument-list>\n"
             "    </record-svc>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
@@ -137,9 +155,10 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='7']/record-svc/module",
             "my_module.so", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record-svc/argument",
-            "quiet", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument[.='revoke']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='4']/record-svc/"
+            "argument-list[_id='3']/argument", "quiet", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument-list[_id='1']",
+            0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='3']/record-svc/optional", NULL, 0, NULL));
@@ -204,7 +223,8 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument[.='revoke']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/record-svc/argument-list[_id='1']/"
+            "argument", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

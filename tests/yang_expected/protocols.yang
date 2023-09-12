@@ -35,12 +35,21 @@ module protocols {
         type uint64;
         augex:data-path "number";
       }
-      leaf-list alias {
-        type string {
-          pattern "[^# \t\n]+";
-        }
+      list alias-list {
+        key "_id";
         ordered-by user;
-        augex:data-path "alias";
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        leaf alias {
+          mandatory true;
+          type string {
+            pattern "[^# \t\n]+";
+          }
+          augex:data-path "alias";
+        }
       }
     }
   }

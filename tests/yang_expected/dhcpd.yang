@@ -67,18 +67,27 @@ module dhcpd {
           leaf value {
             type boolean;
           }
-          leaf-list arg {
+          list arg-list {
+            key "_id";
             min-elements 1;
-            type union {
-              type string {
-                pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
-              }
-              type string {
-                pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
-              }
-            }
             ordered-by user;
-            augex:data-path "arg";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf arg {
+              mandatory true;
+              type union {
+                type string {
+                  pattern "([^ \t\n\"'\\\\{}#,()/]|\\\\.)+";
+                }
+                type string {
+                  pattern "(((([^ \t\n\"'\\\\{}#,()/]|\\\\.)*)([ \t'/]))(([^ \t\n\"'\\\\{}#,()/]|\\\\.)*))+";
+                }
+              }
+              augex:data-path "arg";
+            }
           }
         }
       }
@@ -803,13 +812,22 @@ module dhcpd {
               container args {
                 augex:data-path "args";
                 presence "Config entry.";
-                leaf-list arg {
+                list arg-list {
+                  key "_id";
                   min-elements 2;
-                  type string {
-                    pattern "([^ \t\n,\\\\(\\\\)][^,\\\\(\\\\)]*[^ \t\n,\\\\(\\\\)]|[^ \t\n,\\\\(\\\\)]+)|(([A-Za-z0-9_.-]+(\\[[0-9]+\\])?)([ \t]*\\([^)]*\\)))";
-                  }
                   ordered-by user;
-                  augex:data-path "arg";
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  leaf arg {
+                    mandatory true;
+                    type string {
+                      pattern "([^ \t\n,\\\\(\\\\)][^,\\\\(\\\\)]*[^ \t\n,\\\\(\\\\)]|[^ \t\n,\\\\(\\\\)]+)|(([A-Za-z0-9_.-]+(\\[[0-9]+\\])?)([ \t]*\\([^)]*\\)))";
+                    }
+                    augex:data-path "arg";
+                  }
                 }
               }
             }
@@ -837,6 +855,7 @@ module dhcpd {
               }
             }
             leaf value {
+              mandatory true;
               type union {
                 type string {
                   pattern "[^\" \t\n;]+";
@@ -854,6 +873,7 @@ module dhcpd {
         augex:data-path "subclass";
         presence "Config entry.";
         leaf name {
+          mandatory true;
           type union {
             type string {
               pattern "[^\" \t\n;]+";
@@ -865,6 +885,7 @@ module dhcpd {
           augex:data-path "name";
         }
         leaf value {
+          mandatory true;
           type union {
             type string {
               pattern "[^\" \t\n;]+";

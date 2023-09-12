@@ -122,6 +122,7 @@ struct ay_lnode {
                                              This flag is set even if some identifier is composed of prefixes
                                              or suffixes (like: '(pref1|pref2)name|name2'). */
 #define AY_LNODE_KEY_NOREGEX    0x03    /**< A lense has tag L_KEY but it is rather a name than regular expression. */
+#define AY_LNODE_KEY_IN_DP      0x04    /**< A lense has tag L_KEY and can be used in augex:data-path. */
 /** @} lenseflags */
 
 /**
@@ -188,7 +189,6 @@ enum yang_type {
     YN_UNKNOWN = 0,     /**< Unknown or undefined type. */
     YN_LEAF,            /**< Yang statement "leaf". */
     YN_LEAFREF,         /**< Yang statement "leaf" of type leafref. */
-    YN_LEAFLIST,        /**< Yang statement "leaf-list". */
     YN_LIST,            /**< Yang statement "list". */
     YN_CONTAINER,       /**< Yang statement "container". */
     YN_CASE,            /**< Yang statement "case" in choice-stmt. */
@@ -266,8 +266,7 @@ struct ay_ynode {
  *
  * @{
  */
-#define AY_YNODE_MAND_TRUE      0x01    /**< Yang mandatory-stmt. The ynode has "mandatory true;". In the case of
-                                             type YN_LEAFLIST, the set bit means "min-elements 1;". */
+#define AY_YNODE_MAND_TRUE      0x001    /**< Yang mandatory-stmt. The ynode has "mandatory true;". */
 #define AY_YNODE_MAND_FALSE     0x002   /**< No mandatory-stmt is printed. */
 #define AY_YNODE_MAND_MASK      0x003   /**< Mask for mandatory-stmt. */
 #define AY_CHOICE_MAND_FALSE    0x004   /**< Choice statement must be false. */
@@ -646,6 +645,14 @@ struct ay_transl *ay_transl_find(struct ay_transl *table, const char *origin);
  * @return 1 if pattern is label.
  */
 ly_bool ay_lense_pattern_is_label(struct lens *lens);
+
+/**
+ * @brief Check if pattern can be inserted into the 'data path'.
+ *
+ * @param[in] lens Lense to check.
+ * @return 1 if pattern can be used in 'data path'.
+ */
+ly_bool ay_lense_pattern_in_datapath(struct lens *lens);
 
 /**
  * @brief Check if "type empty;" should be printed.

@@ -9,6 +9,24 @@ module group {
 
   augex:augeas-mod-name "Group";
 
+  grouping user-list {
+    list user-list {
+      key "_id";
+      ordered-by user;
+      leaf _id {
+        type uint64;
+        description
+          "Implicitly generated list key to maintain the order of the augeas data.";
+      }
+      leaf user {
+        mandatory true;
+        type string {
+          pattern "[A-Za-z0-9_.-]+";
+        }
+        augex:data-path "user";
+      }
+    }
+  }
   list group {
     key "config-file";
     leaf config-file {
@@ -45,13 +63,7 @@ module group {
             type uint64;
             augex:data-path "gid";
           }
-          leaf-list user {
-            type string {
-              pattern "[A-Za-z0-9_.-]+";
-            }
-            ordered-by user;
-            augex:data-path "user";
-          }
+          uses user-list;
         }
         container nisdefault {
           augex:data-path "@nisdefault";
@@ -76,13 +88,7 @@ module group {
             }
             augex:data-path "gid";
           }
-          leaf-list user {
-            type string {
-              pattern "[A-Za-z0-9_.-]+";
-            }
-            ordered-by user;
-            augex:data-path "user";
-          }
+          uses user-list;
         }
       }
     }

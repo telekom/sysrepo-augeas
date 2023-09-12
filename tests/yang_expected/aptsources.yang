@@ -87,12 +87,21 @@ module aptsources {
         }
         augex:data-path "distribution";
       }
-      leaf-list component {
-        type string {
-          pattern "[^\\]\\[# \n\t]+";
-        }
+      list component-list {
+        key "_id";
         ordered-by user;
-        augex:data-path "component";
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        leaf component {
+          mandatory true;
+          type string {
+            pattern "[^\\]\\[# \n\t]+";
+          }
+          augex:data-path "component";
+        }
       }
     }
   }

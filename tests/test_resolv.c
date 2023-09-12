@@ -69,8 +69,14 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
             "    <search>\n"
-            "      <domain>mynet.com</domain>\n"
-            "      <domain>anotherorg.net</domain>\n"
+            "      <domain-list>\n"
+            "        <_id>1</_id>\n"
+            "        <domain>mynet.com</domain>\n"
+            "      </domain-list>\n"
+            "      <domain-list>\n"
+            "        <_id>2</_id>\n"
+            "        <domain>anotherorg.net</domain>\n"
+            "      </domain-list>\n"
             "    </search>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
@@ -255,7 +261,8 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/search/domain[.='mynet.com']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='4']/search/domain-list[_id='1']/domain",
+            0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='8']", 0, &node));
     lyd_free_tree(node);

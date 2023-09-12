@@ -68,9 +68,18 @@ test_load(void **state)
             "        <_id>2</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>After</entry-multi-kw>\n"
-            "          <value>network.target</value>\n"
-            "          <value>remote-fs.target</value>\n"
-            "          <value>nss-lookup.target</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>network.target</value>\n"
+            "          </entry-value-list>\n"
+            "          <entry-value-list>\n"
+            "            <_id>2</_id>\n"
+            "            <value>remote-fs.target</value>\n"
+            "          </entry-value-list>\n"
+            "          <entry-value-list>\n"
+            "            <_id>3</_id>\n"
+            "            <value>nss-lookup.target</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
@@ -83,14 +92,20 @@ test_load(void **state)
             "        <_id>1</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>Type</entry-multi-kw>\n"
-            "          <value>notify</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>notify</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>2</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>EnvironmentFile</entry-multi-kw>\n"
-            "          <value>/etc/sysconfig/httpd</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>/etc/sysconfig/httpd</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
@@ -171,14 +186,20 @@ test_load(void **state)
             "        <_id>7</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>KillSignal</entry-multi-kw>\n"
-            "          <value>SIGCONT</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>SIGCONT</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "      <config-entries>\n"
             "        <_id>8</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>PrivateTmp</entry-multi-kw>\n"
-            "          <value>true</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>true</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
@@ -191,7 +212,10 @@ test_load(void **state)
             "        <_id>1</_id>\n"
             "        <entry-multi>\n"
             "          <entry-multi-kw>WantedBy</entry-multi-kw>\n"
-            "          <value>multi-user.target</value>\n"
+            "          <entry-value-list>\n"
+            "            <_id>1</_id>\n"
+            "            <value>multi-user.target</value>\n"
+            "          </entry-value-list>\n"
             "        </entry-multi>\n"
             "      </config-entries>\n"
             "    </record>\n"
@@ -213,20 +237,20 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
             "/entry-multi/entry-multi-kw", "Documentation", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry-multi/value", "man:apache(8)", 0, NULL));
+            "/entry-multi/entry-value-list[_id='1']/value", "man:apache(8)", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/config-entries[_id='3']"
-            "/entry-multi/value", "man:httpd(8)", 0, NULL));
+            "/entry-multi/entry-value-list[_id='2']/value", "man:httpd(8)", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/config-entries[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='2']/record/config-entries[_id='2']"
-            "/entry-multi/value", "/etc/sysconfig/apache", 0, &entries));
+            "/entry-multi/entry-value-list[_id='2']/value", "/etc/sysconfig/apache", 0, &entries));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/record", "Socket", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"
             "/entry-multi/entry-multi-kw", "ListenStream", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='4']/record/config-entries[_id='1']"
-            "/entry-multi/value", "/run/www/apache.socket", 0, NULL));
+            "/entry-multi/entry-value-list[_id='1']/value", "/run/www/apache.socket", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -297,7 +321,7 @@ test_store_remove(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='2']/record/config-entries[_id='7']", 0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/config-entries[_id='2']"
-            "/entry-multi/value[.='network.target']", 0, &node));
+            "/entry-multi/entry-value-list[_id='1']/value", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

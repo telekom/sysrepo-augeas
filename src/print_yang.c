@@ -591,7 +591,7 @@ ay_get_yang_ident_from_label(const struct ay_ynode *tree, struct ay_ynode *node,
     str = NULL;
     if ((label->tag == L_LABEL) || (label->tag == L_SEQ)) {
         str = label->string->str;
-    } else if (node->label->flags & AY_LNODE_KEY_IS_LABEL) {
+    } else if ((node->label->flags & AY_LNODE_KEY_IS_LABEL)) {
         if ((opt == AY_IDENT_DATA_PATH) || (opt == AY_IDENT_VALUE_YPATH)) {
             /* remove backslashes */
             ay_string_remove_characters(label->regexp->pattern->str, '\\', buffer);
@@ -1256,7 +1256,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
         } else {
             str = "value";
         }
-    } else if ((opt == AY_IDENT_NODE_NAME) && ((node->type == YN_LEAF) || (node->type == YN_LEAFLIST))) {
+    } else if ((opt == AY_IDENT_NODE_NAME) && (node->type == YN_LEAF)) {
         if (((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) ||
                 (tmp = ay_get_lense_name(ctx->mod, node->snode)) ||
                 (tmp = ay_get_lense_name(ctx->mod, node->label)) ||
@@ -1267,7 +1267,7 @@ ay_get_yang_ident(struct yprinter_ctx *ctx, struct ay_ynode *node, enum ay_ident
             str = "node";
         }
     } else if ((opt == AY_IDENT_DATA_PATH) &&
-            ((node->type == YN_CONTAINER) || (node->type == YN_LEAF) || (node->type == YN_LEAFLIST))) {
+            ((node->type == YN_CONTAINER) || (node->type == YN_LEAF))) {
         if ((tmp = ay_get_yang_ident_from_label(tree, node, opt, buffer, &stand, &ret))) {
             AY_CHECK_RET(ret);
             str = tmp;
@@ -2248,9 +2248,10 @@ ay_print_yang_type(struct yprinter_ctx *ctx, struct ay_ynode *node)
 
     label = AY_LABEL_LENS(node);
     value = AY_VALUE_LENS(node);
-    if (!value && label &&
-            (((node->type == YN_LEAF) && (node->label->flags & AY_LNODE_KEY_NOREGEX)) ||
-            (label->tag == L_LABEL))) {
+    if (!value && label && (
+                (label->tag == L_LABEL) ||
+                ((node->label->flags & AY_LNODE_KEY_IN_DP) && !label->regexp->nocase) ||
+                ((node->label->flags & AY_LNODE_KEY_HAS_IDENTS) && !label->regexp->nocase))) {
         ly_print(ctx->out, "%*stype empty;\n", ctx->space, "");
         return ret;
     } else if ((node->type == YN_VALUE) || (value &&
@@ -2545,36 +2546,6 @@ ay_print_yang_minelements(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 /**
- * @brief Print yang leaf-list-stmt.
- *
- * @param[in] ctx Context for printing.
- * @param[in] node Node of type YN_LEAFLIST.
- * @return 0 on success.
- */
-static int
-ay_print_yang_leaflist(struct yprinter_ctx *ctx, struct ay_ynode *node)
-{
-    int ret = 0;
-
-    ly_print(ctx->out, "%*sleaf-list ", ctx->space, "");
-    ret = ay_print_yang_ident(ctx, node, AY_IDENT_NODE_NAME);
-    AY_CHECK_RET(ret);
-    ay_print_yang_nesting_begin2(ctx, node->id);
-
-    ay_print_yang_minelements(ctx, node);
-    ret = ay_print_yang_type(ctx, node);
-    AY_CHECK_RET(ret);
-    ay_print_yang_when(ctx, node);
-    ly_print(ctx->out, "%*sordered-by user;\n", ctx->space, "");
-    ret = ay_print_yang_data_path(ctx, node);
-    AY_CHECK_RET(ret);
-
-    ay_print_yang_nesting_end(ctx);
-
-    return ret;
-}
-
-/**
  * @brief Print yang mandatory-stmt.
  *
  * @param[in] ctx Context for printing.
@@ -2585,8 +2556,15 @@ ay_print_yang_mandatory(struct yprinter_ctx *ctx, struct ay_ynode *node)
 {
     if (ay_ynode_alone_in_choice(node) && (node->flags & AY_CHOICE_MAND_FALSE)) {
         return;
-    }
-    if ((node->flags & AY_YNODE_MAND_TRUE) && !node->choice && !node->when_val) {
+    } else if (!(node->flags & AY_YNODE_MAND_TRUE)) {
+        return;
+    } else if (node->when_val) {
+        return;
+    } else if (node->choice && (node->type == YN_LEAF) &&
+            (node->parent->type == YN_LIST) && (node->parent->descendants == 1) &&
+            !ay_ynode_alone_in_choice(node->parent) && (node->choice == node->parent->choice)) {
+        ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
+    } else if (!node->choice) {
         ly_print(ctx->out, "%*smandatory true;\n", ctx->space, "");
     }
 }
@@ -2942,9 +2920,6 @@ ay_print_yang_node_(struct yprinter_ctx *ctx, struct ay_ynode *node)
         break;
     case YN_LEAFREF:
         ret = ay_print_yang_leafref(ctx, node);
-        break;
-    case YN_LEAFLIST:
-        ret = ay_print_yang_leaflist(ctx, node);
         break;
     case YN_LIST:
         ret = ay_print_yang_list(ctx, node);

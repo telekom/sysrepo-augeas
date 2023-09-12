@@ -62,12 +62,21 @@ module pam {
             }
             augex:data-path "module";
           }
-          leaf-list argument {
-            type string {
-              pattern "\\[[^\\]#\n]+\\]|[^\\[#\n \t\\\\][^#\n \t\\\\]*";
-            }
+          list argument-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "argument";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf argument {
+              mandatory true;
+              type string {
+                pattern "\\[[^\\]#\n]+\\]|[^\\[#\n \t\\\\][^#\n \t\\\\]*";
+              }
+              augex:data-path "argument";
+            }
           }
         }
       }

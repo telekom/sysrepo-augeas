@@ -68,15 +68,11 @@ test_load(void **state)
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>4</_id>\n"
-            "    <flagline>\n"
-            "      <flagentry>chroot</flagentry>\n"
-            "    </flagline>\n"
+            "    <flagline>chroot</flagline>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>5</_id>\n"
-            "    <flagline>\n"
-            "      <flagentry>novhost</flagentry>\n"
-            "    </flagline>\n"
+            "    <flagline>novhost</flagline>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>6</_id>\n"
@@ -84,9 +80,7 @@ test_load(void **state)
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>7</_id>\n"
-            "    <flagline>\n"
-            "      <flagentry>nosymlinks</flagentry>\n"
-            "    </flagline>\n"
+            "    <flagline>nosymlinks</flagline>\n"
             "  </config-entries>\n"
             "</" AUG_TEST_MODULE ">\n");
     free(str);
@@ -106,7 +100,7 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='9']/flagline/flagentry",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='9']/flagline",
             "globalpasswd", 0, &entries));
 
     /* store new data */
@@ -131,7 +125,7 @@ test_store_modify(void **state)
     /* modify some values */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='2']/host", "localhost",
             LYD_NEW_PATH_UPDATE, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/flagline/flagentry", "vhost",
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='5']/flagline", "vhost",
             LYD_NEW_PATH_UPDATE, NULL));
 
     /* store new data */

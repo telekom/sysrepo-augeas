@@ -2035,12 +2035,21 @@ module squid {
             type uint64;
             augex:data-path "max";
           }
-          leaf-list option {
-            type string {
-              pattern "((((((((((override-expire)|(override-lastmod))|(reload-into-ims))|(ignore-reload))|(ignore-no-cache))|(ignore-no-store))|(ignore-must-revalidate))|(ignore-private))|(ignore-auth))|(refresh-ims))|(store-stale)";
-            }
+          list option-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "option";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf option {
+              mandatory true;
+              type string {
+                pattern "((((((((((override-expire)|(override-lastmod))|(reload-into-ims))|(ignore-reload))|(ignore-no-cache))|(ignore-no-store))|(ignore-must-revalidate))|(ignore-private))|(ignore-auth))|(refresh-ims))|(store-stale)";
+              }
+              augex:data-path "option";
+            }
           }
         }
         container extension-methods {

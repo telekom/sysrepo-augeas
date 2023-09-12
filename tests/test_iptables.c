@@ -283,11 +283,11 @@ test_store_add(void **state)
 
     /* add some new list instances */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
-            "append/ipt-match[_id='4']/tcp-flags/mask", "ALL", 0, NULL));
+            "append/ipt-match[_id='4']/tcp-flags/mask-list[_id='1']/mask", "ALL", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
-            "append/ipt-match[_id='4']/tcp-flags/set", "FIN", 0, NULL));
+            "append/ipt-match[_id='4']/tcp-flags/set-list[_id='1']/set", "FIN", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='1']/table/config-entries[_id='4']/"
-            "append/ipt-match[_id='4']/tcp-flags/set", "PSH", 0, NULL));
+            "append/ipt-match[_id='4']/tcp-flags/set-list[_id='2']/set", "PSH", 0, NULL));
 
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='4']/table/value", "mytable", 0, &entries));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "table-list[_id='4']/table/config-entries[_id='1']/"

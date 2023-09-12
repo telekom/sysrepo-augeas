@@ -58,21 +58,36 @@ test_load(void **state)
             "    <_seq>1</_seq>\n"
             "    <ipaddr>127.0.0.1</ipaddr>\n"
             "    <canonical>foo</canonical>\n"
-            "    <alias>foo.example.com</alias>\n"
+            "    <alias-list>\n"
+            "      <_id>1</_id>\n"
+            "      <alias>foo.example.com</alias>\n"
+            "    </alias-list>\n"
             "  </host-list>\n"
             "  <host-list>\n"
             "    <_seq>2</_seq>\n"
             "    <ipaddr>192.168.0.1</ipaddr>\n"
             "    <canonical>pigiron.example.com</canonical>\n"
-            "    <alias>pigiron</alias>\n"
-            "    <alias>pigiron.example</alias>\n"
+            "    <alias-list>\n"
+            "      <_id>1</_id>\n"
+            "      <alias>pigiron</alias>\n"
+            "    </alias-list>\n"
+            "    <alias-list>\n"
+            "      <_id>2</_id>\n"
+            "      <alias>pigiron.example</alias>\n"
+            "    </alias-list>\n"
             "  </host-list>\n"
             "  <host-list>\n"
             "    <_seq>3</_seq>\n"
             "    <ipaddr>::1</ipaddr>\n"
             "    <canonical>localhost</canonical>\n"
-            "    <alias>ipv6-localhost</alias>\n"
-            "    <alias>ipv6-loopback</alias>\n"
+            "    <alias-list>\n"
+            "      <_id>1</_id>\n"
+            "      <alias>ipv6-localhost</alias>\n"
+            "    </alias-list>\n"
+            "    <alias-list>\n"
+            "      <_id>2</_id>\n"
+            "      <alias>ipv6-loopback</alias>\n"
+            "    </alias-list>\n"
             "  </host-list>\n"
             "  <host-list>\n"
             "    <_seq>4</_seq>\n"
@@ -118,10 +133,12 @@ test_store_add(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='6']/alias", "6all", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='6']/alias-list[_id='1']/alias",
+            "6all", 0, &entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='3']/alias", "6loop", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias[.='ipv6-localhost']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "host-list[_seq='3']/alias-list[_id='3']/alias",
+            "6loop", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_before(node, entries));
 
     /* store new data */
@@ -182,9 +199,9 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='4']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias[.='ipv6-loopback']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='3']/alias-list[_id='2']/alias", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/alias[.='pigiron']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "host-list[_seq='2']/alias-list[_id='1']/alias", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

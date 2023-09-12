@@ -264,8 +264,14 @@ test_load(void **state)
             "      <min>0</min>\n"
             "      <percent>20</percent>\n"
             "      <max>4320</max>\n"
-            "      <option>ignore-reload</option>\n"
-            "      <option>ignore-auth</option>\n"
+            "      <option-list>\n"
+            "        <_id>1</_id>\n"
+            "        <option>ignore-reload</option>\n"
+            "      </option-list>\n"
+            "      <option-list>\n"
+            "        <_id>2</_id>\n"
+            "        <option>ignore-auth</option>\n"
+            "      </option-list>\n"
             "    </refresh-pattern>\n"
             "  </entry>\n"
             "  <entry>\n"
@@ -429,7 +435,8 @@ test_store_remove(void **state)
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='26']/acl/word/parameters", 0, &node));
     lyd_free_tree(node);
 
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='25']/refresh-pattern/option[.='ignore-reload']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='25']/refresh-pattern/option-list[_id='1']/"
+            "option", 0, &node));
     lyd_free_tree(node);
 
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "entry[_id='1']", 0, &node));

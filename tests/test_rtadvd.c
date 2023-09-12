@@ -57,25 +57,67 @@ test_load(void **state)
             "  <record-list>\n"
             "    <_id>1</_id>\n"
             "    <record>\n"
-            "      <name>default</name>\n"
-            "      <capability>chlim#64</capability>\n"
-            "      <capability>raflags#0</capability>\n"
-            "      <capability>rltime#1800</capability>\n"
-            "      <capability>rtime#0</capability>\n"
-            "      <capability>retrans#0</capability>\n"
-            "      <capability>pinfoflags=\"la\"</capability>\n"
-            "      <capability>vltime#2592000</capability>\n"
-            "      <capability>pltime#604800</capability>\n"
-            "      <capability>mtu#0</capability>\n"
+            "      <name-list>\n"
+            "        <_id>1</_id>\n"
+            "        <name>default</name>\n"
+            "      </name-list>\n"
+            "      <capability-list>\n"
+            "        <_id>1</_id>\n"
+            "        <capability>chlim#64</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>2</_id>\n"
+            "        <capability>raflags#0</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>3</_id>\n"
+            "        <capability>rltime#1800</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>4</_id>\n"
+            "        <capability>rtime#0</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>5</_id>\n"
+            "        <capability>retrans#0</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>6</_id>\n"
+            "        <capability>pinfoflags=\"la\"</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>7</_id>\n"
+            "        <capability>vltime#2592000</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>8</_id>\n"
+            "        <capability>pltime#604800</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>9</_id>\n"
+            "        <capability>mtu#0</capability>\n"
+            "      </capability-list>\n"
             "    </record>\n"
             "  </record-list>\n"
             "  <record-list>\n"
             "    <_id>2</_id>\n"
             "    <record>\n"
-            "      <name>ef0</name>\n"
-            "      <capability>addr=\"2001:db8:ffff:1000::\"</capability>\n"
-            "      <capability>prefixlen#64</capability>\n"
-            "      <capability>tc=default</capability>\n"
+            "      <name-list>\n"
+            "        <_id>1</_id>\n"
+            "        <name>ef0</name>\n"
+            "      </name-list>\n"
+            "      <capability-list>\n"
+            "        <_id>1</_id>\n"
+            "        <capability>addr=\"2001:db8:ffff:1000::\"</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>2</_id>\n"
+            "        <capability>prefixlen#64</capability>\n"
+            "      </capability-list>\n"
+            "      <capability-list>\n"
+            "        <_id>3</_id>\n"
+            "        <capability>tc=default</capability>\n"
+            "      </capability-list>\n"
             "    </record>\n"
             "  </record-list>\n"
             "</" AUG_TEST_MODULE ">\n");
@@ -92,14 +134,19 @@ test_store_add(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* add some new list instances */
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/name", "loopback", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/name-list[_id='2']/name",
+            "loopback", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/capability", "ttl#128", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability[.='rtime#0']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/capability-list[_id='10']/"
+            "capability", "ttl#128", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability-list[_id='4']",
+            0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/name", "eth0", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/capability", "katimeout#20", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/name-list[_id='1']/name",
+            "eth0", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='3']/record/capability-list[_id='1']/"
+            "capability", "katimeout#20", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']", 0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
@@ -131,14 +178,19 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/name[.='default']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/name-list[_id='1']/name",
+            0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/name", "eth25", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/name-list[_id='1']/name",
+            "eth25", 0, NULL));
 
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability[.='retrans#0']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability-list[_id='5']/"
+            "capability", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/capability", "retrans#5", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability[.='rtime#0']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "record-list[_id='1']/record/capability-list[_id='10']/"
+            "capability", "retrans#5", 0, &entries));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability-list[_id='4']",
+            0, &node));
     assert_int_equal(LY_SUCCESS, lyd_insert_after(node, entries));
 
     /* store new data */
@@ -164,9 +216,11 @@ test_store_remove(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* remove list values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability[.='rltime#1800']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability-list[_id='3']/"
+            "capability", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability[.='vltime#2592000']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "record-list[_id='1']/record/capability-list[_id='7']/"
+            "capability", 0, &node));
     lyd_free_tree(node);
 
     /* store new data */

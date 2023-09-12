@@ -131,21 +131,39 @@ module iptables {
         container tcp-flags {
           augex:data-path "tcp-flags";
           presence "Config entry.";
-          leaf-list mask {
+          list mask-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
-            }
             ordered-by user;
-            augex:data-path "mask";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf mask {
+              mandatory true;
+              type string {
+                pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+              }
+              augex:data-path "mask";
+            }
           }
-          leaf-list set {
+          list set-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
-            }
             ordered-by user;
-            augex:data-path "set";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf set {
+              mandatory true;
+              type string {
+                pattern "SYN|ACK|FIN|RST|URG|PSH|ALL|NONE";
+              }
+              augex:data-path "set";
+            }
           }
         }
         container any-param {

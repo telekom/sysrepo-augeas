@@ -42,13 +42,22 @@ module openshift-http {
         container wordlist {
           augex:data-path "wordlist";
           presence "Config entry.";
-          leaf-list arg {
+          list arg-wl-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "(((([^\\\\ '\"},\t\n]|[^ '\"},\t\n]+[^\\\\ '\"},\t\n]))+)|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
-            }
             ordered-by user;
-            augex:data-path "arg";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf arg {
+              mandatory true;
+              type string {
+                pattern "(((([^\\\\ '\"},\t\n]|[^ '\"},\t\n]+[^\\\\ '\"},\t\n]))+)|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
+              }
+              augex:data-path "arg";
+            }
           }
         }
       }
@@ -97,12 +106,21 @@ module openshift-http {
                 }
               }
             }
-            leaf-list arg {
-              type string {
-                pattern "((((([^\\\\ '\"\t\n>]|[^ '\"\t\n>]+[^\\\\ \t\n>])|\\\\\"|\\\\'|\\\\ )+)|([<>=]?=))|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
-              }
+            list arg-sec-list {
+              key "_id";
               ordered-by user;
-              augex:data-path "arg";
+              leaf _id {
+                type uint64;
+                description
+                  "Implicitly generated list key to maintain the order of the augeas data.";
+              }
+              leaf arg {
+                mandatory true;
+                type string {
+                  pattern "((((([^\\\\ '\"\t\n>]|[^ '\"\t\n>]+[^\\\\ \t\n>])|\\\\\"|\\\\'|\\\\ )+)|([<>=]?=))|(((\")((([^\"\\\\\n])|(\\\\(.|\n)))*))(\")))|(((')((([^'\\\\\n])|(\\\\(.|\n)))*))('))";
+                }
+                augex:data-path "arg";
+              }
             }
             list config-entries {
               key "_id";

@@ -59,12 +59,21 @@ module xorg {
               pattern "[^\"\n]+";
             }
           }
-          leaf-list value2 {
-            type string {
-              pattern "[^\"\n]*";
-            }
+          list value-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "value";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf value {
+              mandatory true;
+              type string {
+                pattern "[^\"\n]*";
+              }
+              augex:data-path "value";
+            }
           }
         }
         container screen {
@@ -126,13 +135,22 @@ module xorg {
               container modes {
                 augex:data-path "Modes";
                 presence "Config entry.";
-                leaf-list mode {
+                list mode-list {
+                  key "_id";
                   min-elements 1;
-                  type string {
-                    pattern "[^\"\n]+";
-                  }
                   ordered-by user;
-                  augex:data-path "mode";
+                  leaf _id {
+                    type uint64;
+                    description
+                      "Implicitly generated list key to maintain the order of the augeas data.";
+                  }
+                  leaf mode {
+                    mandatory true;
+                    type string {
+                      pattern "[^\"\n]+";
+                    }
+                    augex:data-path "mode";
+                  }
                 }
               }
               leaf visual {
@@ -163,12 +181,20 @@ module xorg {
         container extmod {
           augex:data-path "extmod";
           presence "Config entry.";
-          leaf-list option {
-            type string {
-              pattern "[^\"\n]+";
-            }
+          list option-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "Option";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf option {
+              type string {
+                pattern "[^\"\n]+";
+              }
+              augex:data-path "Option";
+            }
           }
         }
         container input-device {
@@ -181,12 +207,21 @@ module xorg {
               pattern "[^\"\n]+";
             }
           }
-          leaf-list option {
-            type string {
-              pattern "[^\"\n]+";
-            }
+          list option-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "option";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf option {
+              mandatory true;
+              type string {
+                pattern "[^\"\n]+";
+              }
+              augex:data-path "option";
+            }
           }
         }
         leaf driver {

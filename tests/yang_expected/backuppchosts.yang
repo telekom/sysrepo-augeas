@@ -44,12 +44,21 @@ module backuppchosts {
         }
         augex:data-path "user";
       }
-      leaf-list moreusers {
-        type string {
-          pattern "[^#, \n\t/]+";
-        }
+      list moreusers-list {
+        key "_id";
         ordered-by user;
-        augex:data-path "moreusers";
+        leaf _id {
+          type uint64;
+          description
+            "Implicitly generated list key to maintain the order of the augeas data.";
+        }
+        leaf moreusers {
+          mandatory true;
+          type string {
+            pattern "[^#, \n\t/]+";
+          }
+          augex:data-path "moreusers";
+        }
       }
     }
   }

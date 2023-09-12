@@ -132,14 +132,20 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>13</_id>\n"
             "    <server>\n"
-            "      <domain>localnet</domain>\n"
+            "      <domain-list>\n"
+            "        <_id>1</_id>\n"
+            "        <domain>localnet</domain>\n"
+            "      </domain-list>\n"
             "      <value>192.168.0.1</value>\n"
             "    </server>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>14</_id>\n"
             "    <server>\n"
-            "      <domain>3.168.192.in-addr.arpa</domain>\n"
+            "      <domain-list>\n"
+            "        <_id>1</_id>\n"
+            "        <domain>3.168.192.in-addr.arpa</domain>\n"
+            "      </domain-list>\n"
             "      <value>10.1.2.3</value>\n"
             "    </server>\n"
             "  </config-entries>\n"
@@ -153,14 +159,20 @@ test_load(void **state)
             "  <config-entries>\n"
             "    <_id>16</_id>\n"
             "    <address>\n"
-            "      <domain>double-click.net</domain>\n"
+            "      <domain-list>\n"
+            "        <_id>1</_id>\n"
+            "        <domain>double-click.net</domain>\n"
+            "      </domain-list>\n"
             "      <sto-no-slash>127.0.0.1</sto-no-slash>\n"
             "    </address>\n"
             "  </config-entries>\n"
             "  <config-entries>\n"
             "    <_id>17</_id>\n"
             "    <address>\n"
-            "      <domain>www.thekelleys.org.uk</domain>\n"
+            "      <domain-list>\n"
+            "        <_id>1</_id>\n"
+            "        <domain>www.thekelleys.org.uk</domain>\n"
+            "      </domain-list>\n"
             "      <sto-no-slash>fe80::20d:60ff:fe36:f83</sto-no-slash>\n"
             "    </address>\n"
             "  </config-entries>\n"
@@ -584,10 +596,10 @@ test_store_add(void **state)
     /* add some new list instances */
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/value",
             "127.0.0.1", 0, &entries));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/domain",
-            "localhost.myhome.com", 0, NULL));
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/domain",
-            "localhost2.myhome.com", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/domain-list[_id='1']/"
+            "domain", "localhost.myhome.com", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/domain-list[_id='2']/"
+            "domain", "localhost2.myhome.com", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='77']/server/port",
             "1001", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='14']", 0, &node));
@@ -628,9 +640,11 @@ test_store_modify(void **state)
     assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
 
     /* modify some values */
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='13']/server/domain[.='localnet']", 0, &node));
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='13']/server/domain-list[_id='1']/domain",
+            0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='13']/server/domain", "mynet", 0, NULL));
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='13']/server/domain-list[_id='1']/"
+            "domain", "mynet", 0, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='19']/server/source/value", "eth0",
             LYD_NEW_PATH_UPDATE, NULL));
     assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "config-entries[_id='63']/entry/sto-to-eol",
@@ -673,7 +687,7 @@ test_store_remove(void **state)
     /* remove list values */
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='9']", 0, &node));
     lyd_free_tree(node);
-    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='14']/server/domain[.='3.168.192.in-addr.arpa']",
+    assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='14']/server/domain-list[_id='1']/domain",
             0, &node));
     lyd_free_tree(node);
     assert_int_equal(LY_SUCCESS, lyd_find_path(st->data, "config-entries[_id='20']/server/source/port", 0, &node));

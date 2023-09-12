@@ -30,13 +30,22 @@ module yaml {
         container mval {
           augex:data-path "@mval";
           presence "Config entry.";
-          leaf-list line {
+          list line-list {
+            key "_id";
             min-elements 1;
-            type string {
-              pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
-            }
             ordered-by user;
-            augex:data-path "@line";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf line {
+              mandatory true;
+              type string {
+                pattern "[^ \t\n].*[^ \t\n]|[^ \t\n]";
+              }
+              augex:data-path "@line";
+            }
           }
         }
       }

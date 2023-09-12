@@ -313,12 +313,21 @@ module debctrl {
             }
             augex:data-path "summary";
           }
-          leaf-list text {
-            type string {
-              pattern ".*[^ \t\n].*";
-            }
+          list text-list {
+            key "_id";
             ordered-by user;
-            augex:data-path "text";
+            leaf _id {
+              type uint64;
+              description
+                "Implicitly generated list key to maintain the order of the augeas data.";
+            }
+            leaf text {
+              mandatory true;
+              type string {
+                pattern ".*[^ \t\n].*";
+              }
+              augex:data-path "text";
+            }
           }
         }
       }
