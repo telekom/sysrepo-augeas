@@ -301,7 +301,7 @@ module ldif {
           choice ch-record-list2 {
             list attr-val-spec-list {
               key "_id";
-              when "../change-type/value='add'";
+              when "../value='add'";
               ordered-by user;
               leaf _id {
                 type uint64;
@@ -312,7 +312,7 @@ module ldif {
             }
             list change-modify {
               key "_id";
-              when "../change-type/value='modify'";
+              when "../value='modify'";
               ordered-by user;
               leaf _id {
                 type uint64;
@@ -361,7 +361,7 @@ module ldif {
             }
             list change-modrdn {
               key "_id";
-              when "re-match(../change-type/value, 'modr?dn')";
+              when "re-match(../value, 'modr?dn')";
               ordered-by user;
               leaf _id {
                 type uint64;
