@@ -31,7 +31,7 @@ module lightdm {
             pattern "#commen((t[^\\]\n/]|[^\\]\n/t])[^\\]\n/]*|())|#comme([^\\]\n/n][^\\]\n/]*|())|#comm([^\\]\n/e][^\\]\n/]*|())|#com([^\\]\n/m][^\\]\n/]*|())|#co([^\\]\n/m][^\\]\n/]*|())|#c([^\\]\n/o][^\\]\n/]*|())|(#[^\\]\n/c]|[^\\]\n#/][^\\]\n/])[^\\]\n/]*|#|[^\\]\n#/]";
           }
         }
-        list entry-list {
+        list config-entries {
           key "_id";
           ordered-by user;
           leaf _id {
@@ -39,11 +39,11 @@ module lightdm {
             description
               "Implicitly generated list key to maintain the order of the augeas data.";
           }
-          container entry {
+          container node {
             augex:data-path "$$";
             augex:value-yang-path "value";
             presence "Config entry.";
-            leaf entry {
+            leaf label {
               mandatory true;
               type string {
                 pattern "[A-Za-z][A-Za-z0-9._-]*";
@@ -52,10 +52,10 @@ module lightdm {
             leaf value {
               type union {
                 type string {
-                  pattern "([^\t\n \"#;])((((([^\n#;])+)*)([^\t\n \"#;])){0,1})";
+                  pattern "([^\t\n \"#])((((([^\n#])+)*)([^\t\n \"#])){0,1})";
                 }
                 type string {
-                  pattern "(([^\"\n]*)(([;#])+))([^\"\n]*)";
+                  pattern "(([^\"\n]*)((#)+))([^\"\n]*)";
                 }
               }
             }

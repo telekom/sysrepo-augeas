@@ -1,0 +1,11 @@
+--- lightdm_old.aug	2023-09-13 14:50:42.611494507 +0200
++++ lightdm_new.aug	2023-09-13 13:56:42.995865757 +0200
+@@ -34,7 +34,7 @@
+  *                        ENTRY
+  * lightdm.conf uses standard INI File entries
+  *************************************************************************)
+-let entry   = IniFile.indented_entry IniFile.entry_re sep comment
++let entry   = IniFile.entry_generic (Util.indent . key IniFile.entry_re) sep "#" comment
+ 
+ 
+ (************************************************************************
