@@ -666,6 +666,16 @@ augds_aug2yang_augnode_recursive_labels_r(augeas *aug, const struct augnode *aug
             goto cleanup;
         }
 
+        if (!lyd_child_no_keys(new_node)) {
+            /* no children matched, free */
+            assert(label_matches[j]);
+            lyd_free_tree(new_node);
+            --an_list->next_idx;
+            continue;
+        }
+
+        assert(!label_matches[j]);
+
         /* create the leafref reference to the new recursive list */
         if ((rc = augds_aug2yang_augnode_create_node(augnode->schema, idx_str, parent, NULL, NULL))) {
             goto cleanup;
