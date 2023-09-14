@@ -38,7 +38,7 @@ module aptconf {
             leaf name {
               mandatory true;
               type string {
-                pattern "[A-Za-z][A-Za-z-]*";
+                pattern "[0-9A-Za-z][0-9A-Za-z-]*";
               }
             }
             choice ch-name {
@@ -87,7 +87,7 @@ module aptconf {
           leaf-list name {
             min-elements 1;
             type string {
-              pattern "[A-Za-z][A-Za-z:-]*";
+              pattern "[0-9A-Za-z][0-9A-Za-z:-]*";
             }
             ordered-by user;
             augex:data-path "name";

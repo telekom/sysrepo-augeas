@@ -1,0 +1,16 @@
+--- aptconf_old.aug	2023-09-14 13:20:41.772611288 +0200
++++ aptconf_new.aug	2023-09-14 13:19:20.548766447 +0200
+@@ -58,11 +58,11 @@
+ 
+ (* View: name_re
+    Regex for entry names *)
+-let name_re = /[A-Za-z][A-Za-z-]*/
++let name_re = /[0-9A-Za-z][0-9A-Za-z-]*/
+ 
+ (* View: name_re_colons
+    Regex for entry names with colons *)
+-let name_re_colons = /[A-Za-z][A-Za-z:-]*/
++let name_re_colons = /[0-9A-Za-z][0-9A-Za-z:-]*/
+ 
+ 
+ (* View: entry
