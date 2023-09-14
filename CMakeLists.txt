@@ -10,6 +10,7 @@ project(augyang C)
 # include custom Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
+include(GNUInstallDirs)
 include(ExternalProject)
 include(SourceFormat)
 
