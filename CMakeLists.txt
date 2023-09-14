@@ -204,6 +204,11 @@ add_dependencies(augyang augeas_ext)
 target_link_libraries(augyang ${AUGEAS_SRC_DIR}/.libs/libaugeas.a ${AUGEAS_SRC_DIR}/.libs/libfa.a)
 target_include_directories(augyang PRIVATE ${AUGEAS_DIR}/src ${AUGEAS_SRC_DIR})
 
+# libxml2
+find_package(LibXml2 REQUIRED)
+target_link_libraries(augyang ${LIBXML2_LIBRARIES})
+include_directories(${LIBXML2_INCLUDE_DIRS})
+
 # yacc
 find_program(BISON_FOUND yacc)
 if(NOT BISON_FOUND)
