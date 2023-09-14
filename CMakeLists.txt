@@ -192,7 +192,7 @@ include_directories(${SYSREPO_INCLUDE_DIRS})
 
 # augeas external project
 set(AUGEAS_DOWNLOAD_COMMAND git clone https://github.com/hercules-team/augeas "${AUGEAS_DIR}" 2> /dev/null || true)
-set(GNULIB_DOWNLOAD_COMMAND git clone https://git.savannah.gnu.org/git/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
+set(GNULIB_DOWNLOAD_COMMAND git clone https://github.com/coreutils/gnulib.git "${GNULIB_DIR}" 2> /dev/null || true)
 ExternalProject_Add(augeas_ext
         PREFIX ${AUGEAS_PREFIX}
         DOWNLOAD_COMMAND ${AUGEAS_DOWNLOAD_COMMAND} && ${GNULIB_DOWNLOAD_COMMAND}
