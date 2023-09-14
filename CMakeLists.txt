@@ -292,3 +292,6 @@ add_custom_target(cclean
         COMMAND find . -iname '*cmake*' -not -name CMakeLists.txt -not -path './CMakeModules*' -exec rm -rf {} +
         COMMAND rm -rf Makefile Doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+# uninstall
+add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_MODULE_PATH}/uninstall.cmake")
