@@ -465,7 +465,7 @@ ay_ynode_get_value_node(const struct ay_ynode *tree, struct ay_ynode *node, cons
 }
 
 struct ay_ynode *
-ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt)
+ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt, const char **parent_name)
 {
     struct ay_ynode *refnode, *parent, *child, *target;
     uint64_t i, path;
@@ -508,6 +508,12 @@ ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *pat
 
     if (path_cnt) {
         *path_cnt = path;
+    }
+    if (parent_name) {
+        *parent_name = ((parent != refnode) &&
+                (refnode->type != YN_VALUE) && (refnode->type != YN_LEAF) &&
+                (node->type != YN_CASE)) ?
+                refnode->ident : NULL;
     }
 
     if ((refnode->type != YN_VALUE) && (refnode->type != YN_LEAF)) {

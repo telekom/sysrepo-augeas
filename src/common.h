@@ -698,9 +698,11 @@ ly_bool ay_ynode_when_value_is_valid(const struct ay_ynode *node);
  * @param[in] tree Tree of ynodes.
  * @param[in] node Node with ay_ynode.when_val.
  * @param[out] path_cnt Number of '../' in the path.
+ * @param[out] parent_name Parent identifier string. It is set to NULL if it is not valid for printing the path.
  * @return Target node.
  */
-struct ay_ynode *ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt);
+struct ay_ynode *ay_ynode_when_target(struct ay_ynode *tree, struct ay_ynode *node, uint64_t *path_cnt,
+        const char **parent_name);
 
 /**
  * @brief Get top-level grouping with @p id.

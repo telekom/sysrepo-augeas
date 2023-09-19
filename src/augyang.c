@@ -3197,7 +3197,7 @@ ay_ynode_when_ornot(struct ay_ynode *tree)
         if (!iter->when_val) {
             continue;
         }
-        target = ay_ynode_when_target(tree, iter, NULL);
+        target = ay_ynode_when_target(tree, iter, NULL, NULL);
         if (target->flags & AY_YNODE_MAND_TRUE) {
             /* 'or not()' is valid only for nodes with mandatory false */
             continue;

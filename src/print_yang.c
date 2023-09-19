@@ -2360,25 +2360,20 @@ ay_print_yang_children(struct yprinter_ctx *ctx, struct ay_ynode *node)
 }
 
 static void
-ay_print_yang_when_print_target(struct yprinter_ctx *ctx, uint64_t path_cnt, struct ay_ynode *target)
+ay_print_yang_when_print_target(struct yprinter_ctx *ctx, uint64_t path_cnt, const char *parent_name,
+        struct ay_ynode *target)
 {
-    struct ay_ynode *parent;
     uint64_t i;
 
     /* Print path to referenced node. */
-    parent = target;
     for (i = 0; i < path_cnt; i++) {
         ly_print(ctx->out, "../");
-        parent = parent->parent;
     }
 
-    if (path_cnt && (target->type == YN_VALUE) && (parent != target->parent)) {
-        ay_print_yang_ident(ctx, target->parent, AY_IDENT_NODE_NAME);
-        ly_print(ctx->out, "/");
-        ay_print_yang_ident(ctx, target, AY_IDENT_NODE_NAME);
-    } else {
-        ay_print_yang_ident(ctx, target, AY_IDENT_NODE_NAME);
+    if (parent_name) {
+        ly_print(ctx->out, "%s/", parent_name);
     }
+    ly_print(ctx->out, "%s", target->ident);
 }
 
 /**
@@ -2393,14 +2388,14 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     struct ay_ynode *target;
     struct lens *value;
     ly_bool is_simple;
-    const char *str;
+    const char *str, *parent_name;
     uint64_t path_cnt;
 
     if (!node->when_val) {
         return;
     }
 
-    target = ay_ynode_when_target(ctx->tree, node, &path_cnt);
+    target = ay_ynode_when_target(ctx->tree, node, &path_cnt, &parent_name);
 
     if (!target) {
         /* Warning: when is ignored. */
@@ -2422,7 +2417,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
     /* Print 'not(...) or' */
     if (node->flags & AY_WHEN_ORNOT) {
         ly_print(ctx->out, "not(");
-        ay_print_yang_when_print_target(ctx, path_cnt, target);
+        ay_print_yang_when_print_target(ctx, path_cnt, parent_name, target);
         ly_print(ctx->out, ") or ");
     }
 
@@ -2437,7 +2432,7 @@ ay_print_yang_when(struct yprinter_ctx *ctx, struct ay_ynode *node)
         is_simple = 0;
     }
 
-    ay_print_yang_when_print_target(ctx, path_cnt, target);
+    ay_print_yang_when_print_target(ctx, path_cnt, parent_name, target);
 
     /* Print value/regex for comparison. */
     str = (value->tag == L_VALUE) ? value->string->str : value->regexp->pattern->str;

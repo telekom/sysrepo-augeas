@@ -823,7 +823,7 @@ module dhcpd {
                 }
               }
               augex:data-path "value";
-              when "re-match(../value, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
+              when "re-match(../function/value, '((((((((((((((((((substring)|(binary-to-ascii))|(suffix))|(lcase))|(ucase))|(gethostbyname))|(packet))|(concat))|(reverse))|(encode-int))|(extract-int))|(lease-time))|(client-state))|(exists))|(known))|(static))|(pick-first-value))|(log))|(execute)')";
             }
           }
           container option {
