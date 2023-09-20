@@ -960,7 +960,7 @@ main(int argc, char **argv)
             }
 
             /* Parse generated YANG module. */
-            if (lys_parse_mem(ctx, str, LYS_IN_YANG, NULL)) {
+            if (lys_parse_mem(ctx, str, LYS_IN_YANG, NULL) || *ly_last_errmsg()) {
                 ret = 1;
             }
         }

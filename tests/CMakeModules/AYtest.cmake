@@ -55,7 +55,11 @@ if(ret EQUAL 1)
 endif()
 
 # check if generated file is valid yang module
-execute_process(COMMAND ${YANGLINT_BIN} ${PROJECT_DIR}/modules/augeas-extension.yang ${GENFILE} RESULT_VARIABLE ret)
-if(NOT ret EQUAL 0)
+execute_process(COMMAND ${YANGLINT_BIN} ${PROJECT_DIR}/modules/augeas-extension.yang ${GENFILE}
+    RESULT_VARIABLE ret ERROR_VARIABLE out)
+if(NOT out STREQUAL "")
+    message(SEND_ERROR "${out}")
+endif()
+if(NOT ret EQUAL 0 OR NOT out STREQUAL "")
     message(FATAL_ERROR "[aytest] Yanglint validation for '${MOD}' module failed.")
 endif()
