@@ -268,7 +268,7 @@ module nginx {
               presence "Config entry.";
               leaf comp {
                 type string {
-                  pattern "=|~|~\\*|\\^~";
+                  pattern "=|~|~\\*|^~";
                 }
                 augex:data-path "#comp";
               }

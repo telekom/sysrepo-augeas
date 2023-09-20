@@ -1046,6 +1046,13 @@ ay_print_regex_standardized(struct ly_out *out, const char *patt)
                 }
                 ch++;
                 break;
+            case '^':
+                if (charClassExpr) {
+                    ly_print(out, "\\\\");
+                    ly_print(out, "\\\\");
+                }
+                /* else ignore escaping */
+                break;
             default:
                 if (charClassExpr) {
                     /* Write backslash character inside of []. */
