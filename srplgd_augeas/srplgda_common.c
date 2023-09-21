@@ -38,13 +38,23 @@ aug_execl(const char *plg_name, const char *pathname, ...)
     void *mem;
     pid_t ch_pid;
 
+    /* prepare arguments */
+    args = calloc(2, sizeof *args);
+    if (!args) {
+        SRPLG_LOG_ERR(plg_name, "Memory allocation failed (%s:%d).", __FILE__, __LINE__);
+        rc = SR_ERR_NO_MEMORY;
+        goto cleanup;
+    }
+    args[0] = pathname;
+    arg_count = 1;
+
     /* process variable args into an array */
     va_start(ap, pathname);
     do {
         arg = va_arg(ap, const char *);
 
         /* add new arg */
-        mem = realloc(args, (arg_count + 1) * sizeof *args);
+        mem = realloc(args, (arg_count + 2) * sizeof *args);
         if (!mem) {
             SRPLG_LOG_ERR(plg_name, "Memory allocation failed (%s:%d).", __FILE__, __LINE__);
             rc = SR_ERR_NO_MEMORY;
@@ -54,6 +64,7 @@ aug_execl(const char *plg_name, const char *pathname, ...)
 
         args[arg_count] = arg;
         ++arg_count;
+        args[arg_count] = NULL;
     } while (arg);
     va_end(ap);
 
