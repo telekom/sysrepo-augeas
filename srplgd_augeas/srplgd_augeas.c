@@ -38,7 +38,7 @@ aug_service_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
     const char *service_name = private_data;
     int r;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -54,7 +54,7 @@ static int
 aug_actimemq_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -72,7 +72,7 @@ aug_avahi_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
 {
     int r;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -94,7 +94,7 @@ aug_cachefilesd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub
     int r;
     pid_t pid;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -120,7 +120,7 @@ aug_carbon_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 {
     int r;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -147,7 +147,7 @@ aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 {
     int r;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -171,7 +171,7 @@ aug_dhcpd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
     int r;
     pid_t pid;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -202,7 +202,7 @@ static int
 aug_exports_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -215,7 +215,7 @@ static int
 aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -228,7 +228,7 @@ static int
 aug_netplan_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -243,7 +243,7 @@ static int
 aug_pg_hba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -262,7 +262,7 @@ aug_postmap_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
     char *path;
     int r;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -295,7 +295,7 @@ static int
 aug_postfix_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -313,7 +313,7 @@ aug_rtadvd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
     int r;
     pid_t pid;
 
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -341,7 +341,7 @@ static int
 aug_samba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -361,7 +361,7 @@ static int
 aug_sysctl_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
@@ -377,7 +377,7 @@ static int
 aug_webmin_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
         const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
-    if (event != SR_EV_CHANGE) {
+    if (event != SR_EV_DONE) {
         return SR_ERR_OK;
     }
 
