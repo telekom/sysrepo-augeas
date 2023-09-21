@@ -26,9 +26,11 @@ else
 fi
 
 # install augeas DS plugin
+echo "-- Installing Augeas SR startup datastore plugin..."
 $SYSREPOCTL -P "$BINARY_DIR/srds_augeas.so"
 
 # install augeas sysrepo-plugind plugin
+echo "-- Installing Augeas sysrepo-plugind plugin..."
 $SYSREPO_PLUGIND -P "$BINARY_DIR/srplgd_augeas.so"
 
 # get current modules
