@@ -33,10 +33,14 @@
 
 static int
 aug_service_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *private_data)
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *private_data)
 {
     const char *service_name = private_data;
     int r;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", service_name, NULL))) {
         return r;
@@ -48,8 +52,12 @@ aug_service_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 static int
 aug_actimemq_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     /* TODO activemq service */
     return aug_execl(PLG_NAME, ACTIVEMQ_EXECUTABLE, "restart", NULL);
 }
@@ -60,9 +68,13 @@ aug_actimemq_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id
 
 static int
 aug_avahi_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     /* TODO avahi-daemon service */
     if ((r = aug_execl(PLG_NAME, AVAHI_DAEMON_EXECUTABLE, "--kill", NULL))) {
@@ -77,10 +89,14 @@ aug_avahi_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
 
 static int
 aug_cachefilesd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
     pid_t pid;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     /* TODO cachefilesd service */
     if ((r = aug_pidfile(PLG_NAME, "/var/run/cachefilesd.pid", &pid))) {
@@ -100,9 +116,13 @@ aug_cachefilesd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub
 
 static int
 aug_carbon_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     /* service files on github https://github.com/graphite-project/carbon/tree/master/distro/redhat/init.d */
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "carbon-cache", NULL))) {
@@ -123,9 +143,13 @@ aug_carbon_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 static int
 aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     if ((r = aug_execl(PLG_NAME, SYSTEMCTL_EXECUTABLE, "try-restart", "clamav-daemon", NULL))) {
         return r;
@@ -142,10 +166,14 @@ aug_clamav_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 static int
 aug_dhcpd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
     pid_t pid;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     /* TODO on Ubuntu service isc-dhcp-server with PID file /run/dhcp-server/dhcpd.pid */
     if ((r = aug_pidfile(PLG_NAME, "/var/run/dhcpd.pid", &pid))) {
@@ -172,8 +200,12 @@ aug_dhcpd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
 
 static int
 aug_exports_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, EXPORTFS_EXECUTABLE, "-ra", NULL);
 }
 
@@ -181,8 +213,12 @@ aug_exports_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 static int
 aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, "/sbin/ldconfig", NULL);
 }
 
@@ -190,8 +226,12 @@ aug_ldso_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), c
 
 static int
 aug_netplan_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, NETPLAN_EXECUTABLE, "apply", NULL);
 }
 
@@ -201,8 +241,12 @@ aug_netplan_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 static int
 aug_pg_hba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, PG_CTL_EXECUTABLE, "reload", NULL);
 }
 
@@ -212,11 +256,15 @@ aug_pg_hba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 static int
 aug_postmap_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *private_data)
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *private_data)
 {
     const char *file_name = private_data;
     char *path;
     int r;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     if (asprintf(&path, "/etc/postfix/%s", file_name) == -1) {
         return SR_ERR_NO_MEMORY;
@@ -245,8 +293,12 @@ aug_postmap_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 static int
 aug_postfix_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, POSTFIX_EXECUTABLE, "reload", NULL);
 }
 
@@ -256,10 +308,14 @@ aug_postfix_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id)
 
 static int
 aug_rtadvd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
     int r;
     pid_t pid;
+
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
 
     if ((r = aug_pidfile(PLG_NAME, "/var/run/rtadvd.pid", &pid))) {
         return r;
@@ -283,8 +339,12 @@ aug_rtadvd_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 static int
 aug_samba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     /* ignore return value in case the daemons are not running */
     aug_execl(PLG_NAME, SMBCONTROL_EXECUTABLE, "reload-config", "nmbd", NULL);
     aug_execl(PLG_NAME, SMBCONTROL_EXECUTABLE, "reload-config", "smbd", NULL);
@@ -299,8 +359,12 @@ aug_samba_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), 
 
 static int
 aug_sysctl_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     /* load kernel parameters from the config file */
     return aug_execl(PLG_NAME, SYSCTL_EXECUTABLE, "--load", NULL);
 }
@@ -311,8 +375,12 @@ aug_sysctl_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id),
 
 static int
 aug_webmin_change_cb(sr_session_ctx_t *UNUSED(session), uint32_t UNUSED(sub_id), const char *UNUSED(module_name),
-        const char *UNUSED(xpath), sr_event_t UNUSED(event), uint32_t UNUSED(request_id), void *UNUSED(private_data))
+        const char *UNUSED(xpath), sr_event_t event, uint32_t UNUSED(request_id), void *UNUSED(private_data))
 {
+    if (event != SR_EV_CHANGE) {
+        return SR_ERR_OK;
+    }
+
     return aug_execl(PLG_NAME, "/etc/webmin/restart", NULL);
 }
 
