@@ -67,6 +67,7 @@ find_program(DHCPD_EXECUTABLE "dhcpd")
 find_program_msg(${DHCPD_EXECUTABLE} "dhcpd")
 
 find_service(DOVECOT_SERVICE "dovecot")
+find_service(DNSMASQ_SERVICE "dnsmasq")
 
 find_program(EXPORTFS_EXECUTABLE "exportfs")
 find_program_msg(${EXPORTFS_EXECUTABLE} "exportfs")
