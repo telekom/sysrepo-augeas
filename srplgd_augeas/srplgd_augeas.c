@@ -395,7 +395,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_dhcpd_change_cb, NULL, 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "dovecot")) {
-#ifdef DOVECOT_EXECUTABLE
+#ifdef DOVECOT_SERVICE
             rc = sr_module_change_subscribe(session, ly_mod->name, NULL, aug_service_change_cb, "dovecot", 0, 0, &subscr);
 #endif
         } else if (!strcmp(ly_mod->name, "exports")) {
