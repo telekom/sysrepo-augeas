@@ -316,8 +316,8 @@ augds_aug2yang_augnode_labels_value_r(augeas *aug, struct augnode *augnode, char
 
         label_node = augds_get_label_node(label, &label_node_d);
         if (!augds_ext_label_node_equal(augnode->data_path, label_node, &node_type)) {
-            /* not a match */
-            goto next_iter;
+            /* not a match, augeas/YANG nodes are ordered and label cannot be skipped */
+            goto cleanup;
         }
 
         value = NULL;
@@ -337,7 +337,7 @@ augds_aug2yang_augnode_labels_value_r(augeas *aug, struct augnode *augnode, char
                 goto cleanup;
             }
             if (!m) {
-                goto next_iter;
+                goto cleanup;
             }
 
             /* use the label directly */
@@ -383,10 +383,10 @@ augds_aug2yang_augnode_labels_value_r(augeas *aug, struct augnode *augnode, char
 
         if (augnode->schema->nodetype == LYS_LEAF) {
             /* match was found for a leaf, there can be no more matches */
-            break;
+            goto cleanup;
         }
 
-next_iter:
+        /* next iter */
         free(label_node_d);
         label_node_d = NULL;
         free(pos_str);
