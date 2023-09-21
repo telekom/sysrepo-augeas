@@ -395,7 +395,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_data)
     uint32_t i;
     int rc = SR_ERR_OK;
 
-    sr_session_switch_ds(session, SR_DS_RUNNING);
+    sr_session_switch_ds(session, SR_DS_STARTUP);
 
     /* subscribe to the found supported modules */
     ly_ctx = sr_session_acquire_context(session);
