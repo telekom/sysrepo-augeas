@@ -288,7 +288,13 @@ augds_store_label_index(const struct lyd_node *diff_node, const char *aug_label,
     }
 
     /* get path to all the relevant instances */
-    if ((lyd_parent(data_node)->schema->nodetype == LYS_LIST) && !strcmp(LYD_NAME(lyd_first_sibling(data_node)), "_id")) {
+    if (!lyd_parent(data_node)) {
+        assert(!strcmp(LYD_NAME(lyd_child(data_node)), "config-file"));
+        path = lyd_path(data_node, LYD_PATH_STD_NO_LAST_PRED, NULL, 0);
+        if (!path) {
+            AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+        }
+    } else if ((lyd_parent(data_node)->schema->nodetype == LYS_LIST) && !strcmp(LYD_NAME(lyd_first_sibling(data_node)), "_id")) {
         /* implicit lists have no data-path meaning they are not present in Augeas data so we must take all these
          * YANG data list instances into consideration */
         path = lyd_path(lyd_parent(data_node), LYD_PATH_STD_NO_LAST_PRED, NULL, 0);
@@ -474,8 +480,8 @@ augds_store_path(const struct lyd_node *diff_node, const char *parent_aug_path, 
         enum augds_ext_node_type node_type, struct lyd_node *diff_data, char **aug_path)
 {
     int rc = SR_ERR_OK;
-    const char *label;
-    char index_str[24];
+    const char *label, *lens_name;
+    char index_str[24], *label_d = NULL;
     uint32_t aug_index;
 
     *aug_path = NULL;
@@ -508,6 +514,24 @@ augds_store_path(const struct lyd_node *diff_node, const char *parent_aug_path, 
         rc = augds_store_recursive_path(diff_node, parent_aug_path, diff_data, aug_path);
         goto cleanup;
     case AUGDS_EXT_NODE_NONE:
+        if (!diff_node->parent) {
+            /* special case, a configuration file is being changed */
+            assert(!strcmp(LYD_NAME(lyd_child(diff_node)), "config-file"));
+            if ((rc = augds_get_lens(lyd_node_module(diff_node), &lens_name))) {
+                goto cleanup;
+            }
+            if (asprintf(&label_d, "/augeas/load/%s/incl", lens_name) == -1) {
+                AUG_LOG_ERRMEM_GOTO(rc, cleanup);
+            }
+            label = label_d;
+            if ((rc = augds_store_label_index(diff_node, label, diff_data, &aug_index))) {
+                goto cleanup;
+            }
+            break;
+        }
+
+        /* no path */
+        goto cleanup;
     case AUGDS_EXT_NODE_REC_LREF:
         /* no path */
         goto cleanup;
@@ -525,6 +549,7 @@ augds_store_path(const struct lyd_node *diff_node, const char *parent_aug_path, 
     }
 
 cleanup:
+    free(label_d);
     return rc;
 }
 
@@ -562,8 +587,8 @@ augds_store_value(const struct lyd_node *diff_node, const char *value_path, enum
             lyd_find_path(lyd_parent(diff_node), value_path, 0, diff_node2);
         }
         *aug_value = augds_get_term_value(*diff_node2);
-    } else if ((diff_node->schema->nodetype == LYS_LEAF) && (node_type != AUGDS_EXT_NODE_LABEL)) {
-        /* get value from the YANG leaf node, but only if it is not the label */
+    } else if (((diff_node->schema->nodetype == LYS_LEAF) && (node_type != AUGDS_EXT_NODE_LABEL)) || !lyd_parent(diff_node)) {
+        /* get value from the YANG node, but only if it is not the label */
         if ((rc = augds_store_get_value(diff_node, diff_data, aug_value, diff_node2))) {
             goto cleanup;
         }
@@ -1047,15 +1072,25 @@ augds_store_diff_data_update(const struct lyd_node *diff_node, enum augds_diff_o
         struct lyd_node **diff_data_node)
 {
     int rc = SR_ERR_OK, before;
-    struct lyd_node *data_node = NULL, *data_parent, *anchor;
+    struct lyd_node *data_node = NULL, *data_parent = NULL, *anchor;
     char *path = NULL;
 
     assert(!diff_data_node || (op == AUGDS_OP_INSERT));
 
     switch (op) {
     case AUGDS_OP_INSERT:
-        /* find our parent, cannot be top-level */
-        assert(lyd_parent(diff_node));
+        if (!lyd_parent(diff_node)) {
+            /* creating a new config file, duplicate and append to the tree */
+            if (lyd_dup_single(diff_node, NULL, LYD_DUP_NO_META, &data_node)) {
+                AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_node), rc, cleanup);
+            }
+            if (lyd_insert_sibling(diff_data, data_node, NULL)) {
+                AUG_LOG_ERRLY_GOTO(LYD_CTX(diff_node), rc, cleanup);
+            }
+            break;
+        }
+
+        /* find our parent */
         if ((rc = augds_store_find_inst(lyd_parent(diff_node), diff_data, &data_parent))) {
             goto cleanup;
         }
@@ -1289,8 +1324,9 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
             goto cleanup;
         }
 
-        /* creating data where the order matters, find the anchor */
-        if ((rc = augds_store_anchor(diff_data_node, &anchor, &aug_before))) {
+        /* if creating data where the order matters, find the anchor */
+        anchor = NULL;
+        if (lyd_parent(diff_data_node) && (rc = augds_store_anchor(diff_data_node, &anchor, &aug_before))) {
             goto cleanup;
         }
 
@@ -1424,6 +1460,13 @@ augds_store_diff_r(augeas *aug, const struct lyd_node *diff_node, const char *pa
 
         /* process all following children normally */
         diff_node_child = diff_node_child->next;
+    }
+
+    if (!lyd_parent(diff_path_node)) {
+        /* config file has special label, do not use it for children */
+        assert(!strcmp(LYD_NAME(lyd_child(diff_path_node)), "config-file"));
+        free(aug_path);
+        aug_path = NULL;
     }
 
     if ((cur_op == AUGDS_OP_REPLACE) && lysc_is_userordered(diff_node->schema)) {

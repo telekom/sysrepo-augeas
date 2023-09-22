@@ -113,6 +113,9 @@ diff_file(const char *file1, const char *file2, char **output)
     if (access(file2, F_OK) == -1) {
         /* file does not even exist, empty diff */
         return 0;
+    } else if (access(file1, F_OK) == -1) {
+        /* original file does not exist, it was created */
+        file1 = "/dev/null";
     }
 
     /* create pipe */

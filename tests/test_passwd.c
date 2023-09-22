@@ -17,7 +17,7 @@
 #include "tconfig.h"
 
 /* augeas SR DS plugin */
-#define AUG_TEST_INPUT_FILES AUG_CONFIG_FILES_DIR "/passwd"
+#define AUG_TEST_INPUT_FILES AUG_CONFIG_FILES_DIR "/passwd;" AUG_CONFIG_FILES_DIR "/passwd2"
 #include "srds_augeas.c"
 #include "srdsa_init.c"
 #include "srdsa_load.c"
@@ -231,7 +231,8 @@ test_store_add(void **state)
     assert_int_equal(0, tdiff_files(state,
             "7a8,9\n"
             "> man:x:2000:200:duplicate man:/home/man:/bin/bash\n"
-            "> +\n"));
+            "> +\n",
+            ""));
 }
 
 static void
@@ -262,7 +263,8 @@ test_store_modify(void **state)
             "10c10\n"
             "< +::::::/sbin/nologin\n"
             "---\n"
-            "> +::::THE default::/sbin/nologin\n"));
+            "> +::::THE default::/sbin/nologin\n",
+            ""));
 }
 
 static void
@@ -284,7 +286,8 @@ test_store_remove(void **state)
     /* diff */
     assert_int_equal(0, tdiff_files(state,
             "3d2\n"
-            "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false\n"));
+            "< chrony:x:473:475:Chrony Daemon:/var/lib/chrony:/bin/false\n",
+            ""));
 }
 
 static void
@@ -308,7 +311,34 @@ test_store_move(void **state)
             "0a1\n"
             "> nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"
             "7d7\n"
-            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n"));
+            "< nobody:x:65534:65534:nobody:/var/lib/nobody:/bin/bash\n",
+            ""));
+}
+
+static void
+test_store_file_create(void **state)
+{
+    struct tstate *st = (struct tstate *)*state;
+    struct lyd_node *config_file;
+
+    /* load current data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->load_cb(st->mod, SR_DS_STARTUP, NULL, 0, &st->data));
+
+    /* create a new config file */
+    assert_int_equal(LY_SUCCESS, lyd_new_path(st->data, NULL, "/passwd:passwd[config-file='" AUG_CONFIG_FILES_DIR "/passwd2']",
+            NULL, 0, &config_file));
+
+    /* create a user in the new file */
+    assert_int_equal(LY_SUCCESS, lyd_new_path(config_file, NULL, "config-entries[_id='1']/nisdefault", NULL, 0, NULL));
+
+    /* store new data */
+    assert_int_equal(SR_ERR_OK, st->ds_plg->store_cb(st->mod, SR_DS_STARTUP, NULL, st->data));
+
+    /* diff */
+    assert_int_equal(0, tdiff_files(state,
+            "",
+            "0a1\n"
+            "> +\n"));
 }
 
 int
@@ -320,6 +350,7 @@ main(void)
         cmocka_unit_test_teardown(test_store_modify, tteardown),
         cmocka_unit_test_teardown(test_store_remove, tteardown),
         cmocka_unit_test_teardown(test_store_move, tteardown),
+        cmocka_unit_test_teardown(test_store_file_create, tteardown),
     };
 
     return cmocka_run_group_tests(tests, setup_f, tteardown_glob);
